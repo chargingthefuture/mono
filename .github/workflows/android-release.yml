@@ -19,11 +19,11 @@ jobs:
         distribution: 'temurin'
         java-version: '17'
         
-    - name: Install Gradle 8.2
+    - name: Install Gradle 8.9
       run: |
-        wget -q https://services.gradle.org/distributions/gradle-8.2-bin.zip
-        unzip -q gradle-8.2-bin.zip
-        echo "$PWD/gradle-8.2/bin" >> $GITHUB_PATH
+        wget -q https://services.gradle.org/distributions/gradle-8.9-bin.zip
+        unzip -q gradle-8.9-bin.zip
+        echo "$PWD/gradle-8.9/bin" >> $GITHUB_PATH
         
     - name: Make gradlew executable
       working-directory: chyme-android

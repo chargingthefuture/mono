@@ -8,7 +8,7 @@ plugins {
 
 android {
     namespace = "com.chyme.android"
-    compileSdk = 34
+    compileSdk = 35
 
     // Load local.properties (for local development)
     val localProperties = Properties()
