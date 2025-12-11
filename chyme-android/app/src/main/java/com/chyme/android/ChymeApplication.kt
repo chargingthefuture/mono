@@ -1,7 +1,7 @@
 package com.chyme.android
 
 import android.app.Application
-import com.clerk.android.core.Clerk
+import com.clerk.Clerk
 import com.chyme.android.BuildConfig
 
 class ChymeApplication : Application() {

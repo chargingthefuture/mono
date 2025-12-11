@@ -98,7 +98,7 @@ dependencies {
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     
     // Clerk Authentication
-    implementation("com.clerk.android:clerk-android:1.0.0")
+    implementation("com.clerk:clerk-android:0.1.4")
     
     // Gson for JSON parsing (needed for Clerk and API)
     implementation("com.google.code.gson:gson:2.10.1")

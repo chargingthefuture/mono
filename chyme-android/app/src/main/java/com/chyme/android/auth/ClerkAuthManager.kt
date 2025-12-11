@@ -3,8 +3,8 @@ package com.chyme.android.auth
 import android.content.Context
 import com.chyme.android.BuildConfig
 import com.chyme.android.data.model.User
-import com.clerk.android.core.Clerk
-import com.clerk.android.core.models.User as ClerkUser
+import com.clerk.Clerk
+import com.clerk.models.User as ClerkUser
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
