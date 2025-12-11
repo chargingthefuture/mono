@@ -1,4 +1,4 @@
-name: Build and Release APK
+name: Build and Release Android APK
 
 on:
   release:
@@ -25,10 +25,14 @@ jobs:
         gradle-version: '8.2'
         
     - name: Make gradlew executable
-      if: hashFiles('gradlew') != ''
-      run: chmod +x gradlew
+      working-directory: chyme-android
+      run: |
+        if [ -f "./gradlew" ]; then
+          chmod +x gradlew
+        fi
         
     - name: Build release APK
+      working-directory: chyme-android
       env:
         CLERK_PUBLISHABLE_KEY: ${{ secrets.CLERK_PUBLISHABLE_KEY }}
         PLATFORM_API_BASE_URL: ${{ secrets.PLATFORM_API_BASE_URL }}
@@ -41,6 +45,7 @@ jobs:
       
     - name: Get version name
       id: version
+      working-directory: chyme-android
       run: |
         VERSION=$(grep -oP 'versionName\s+"\K[^"]+' app/build.gradle.kts || echo "unknown")
         echo "version=$VERSION" >> $GITHUB_OUTPUT
@@ -49,14 +54,14 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: app-release
-        path: app/build/outputs/apk/release/app-release.apk
+        path: chyme-android/app/build/outputs/apk/release/app-release.apk
         retention-days: 30
         
     - name: Upload APK to Release
       if: github.event_name == 'release'
       uses: softprops/action-gh-release@v1
       with:
-        files: app/build/outputs/apk/release/app-release.apk
+        files: chyme-android/app/build/outputs/apk/release/app-release.apk
         body: |
           ## Chyme Android App
           
