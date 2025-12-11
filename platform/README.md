@@ -1,4 +1,4 @@
-[![CircleCI](https://dl.circleci.com/status-badge/img/gh/chargingthefuture/app/tree/main.svg?style=svg)](https://dl.circleci.com/status-badge/redirect/gh/chargingthefuture/app/tree/main)
+[![Platform Release](https://github.com/chargingthefuture/app/actions/workflows/platform-release.yml/badge.svg)](https://github.com/chargingthefuture/app/actions/workflows/platform-release.yml)
 
 A secure, invite-only platform designed specifically for survivors, offering essential services and support with dignity, privacy, and respect.
 
@@ -186,6 +186,29 @@ This platform is invite-only. If you have received an invitation, you can create
 - **Transparent Policies**: Clear terms of service and privacy policies
 - **Admin Oversight**: Comprehensive moderation tools and safety reporting
 - **Regular Security Audits**: Ongoing security improvements and updates
+
+---
+
+## Releases
+
+The platform uses GitHub Actions for automated builds and releases. When a new release is created on GitHub, the workflow automatically:
+
+- Builds the application with all dependencies
+- Runs type checking and tests
+- Creates a Docker image for deployment
+- Uploads build artifacts to the GitHub release
+
+### Release Process
+
+1. **Automatic Builds**: Every push to `main` triggers a build and test run
+2. **Release Creation**: Create a new release on GitHub to generate deployable artifacts
+3. **Docker Deployment**: The Docker image can be deployed to Railway or any Docker-compatible platform
+
+### Viewing Releases
+
+- Check the [GitHub Actions workflow](https://github.com/chargingthefuture/app/actions/workflows/platform-release.yml) for build status
+- Visit the [Releases page](https://github.com/chargingthefuture/app/releases) to download artifacts
+- Each release includes a Docker image and build artifacts
 
 ---
 
