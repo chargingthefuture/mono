@@ -67,7 +67,19 @@ export function HeroSection() {
               size="lg"
               className="font-[var(--font-bangers)] text-base sm:text-lg md:text-xl lg:text-2xl px-4 py-3 sm:px-6 sm:py-4 md:px-8 md:py-6 bg-foreground text-background hover:bg-accent hover:text-foreground border-[3px] border-foreground transition-all"
             >
-              GET STARTED
+              START NOW
+            </Button></a>
+            <a
+                href="https://github.com/chargingthefuture/mono/releases/latest/download/app-release.apk"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+            <Button
+              size="lg"
+              variant="outline"
+              className="font-[var(--font-bangers)] text-base sm:text-lg md:text-xl lg:text-2xl px-4 py-3 sm:px-6 sm:py-4 md:px-8 md:py-6 bg-background text-foreground hover:bg-secondary border-[3px] border-foreground transition-all"
+            >
+              JOIN TOWNHALL
             </Button></a>
           </div>
         </div>
