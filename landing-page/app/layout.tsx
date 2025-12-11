@@ -19,7 +19,15 @@ export const metadata: Metadata = {
   title: "Psyop-Free Economy | Survivor Support Platform",
   description:
     "Secure, invite-only platform for human trafficking survivors. Access 12+ essential services including housing, transportation, job search, and community support in one unified app.",
-    generator: 'v0.app'
+  generator: 'v0.app',
+  icons: {
+    icon: [
+      { url: '/icon.svg', type: 'image/svg+xml' },
+      { url: '/icon-light-32x32.png', type: 'image/png', sizes: '32x32' },
+      { url: '/icon-dark-32x32.png', type: 'image/png', sizes: '32x32', media: '(prefers-color-scheme: dark)' },
+    ],
+    apple: '/apple-icon.png',
+  },
 }
 
 export default function RootLayout({

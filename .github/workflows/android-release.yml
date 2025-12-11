@@ -18,14 +18,8 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '17'
-        
-    - name: Setup Gradle
-      uses: gradle/gradle-build-action@v2
-      with:
-        gradle-version: '8.2'
-        # Use read-only cache to avoid failures when GitHub cache service is unavailable
-        # This still allows reading from cache but won't try to save (preventing errors)
-        cache-read-only: true
+        cache: 'gradle'
+        cache-dependency-path: chyme-android/**/*.gradle*
         
     - name: Make gradlew executable
       working-directory: chyme-android
