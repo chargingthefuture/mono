@@ -20,7 +20,9 @@ export function Footer() {
                 <span className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0" />
                 Active and continuously improving
               </li>
-              <li>Access: Invite-only registration</li>
+              <a href="https://github.com/chargingthefuture"
+                              target="_blank"
+                rel="noopener noreferrer"><li>Access: Open source code</li></a>
               <a href="https://chargingthefuture.discourse.group"
                               target="_blank"
                 rel="noopener noreferrer"><li>Support: Townsquare forum</li></a>
