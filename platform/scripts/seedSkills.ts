@@ -741,8 +741,21 @@ const skillsData: {
         ],
       },
       {
-        name: "Tax Officers",
+        name: "Financial Advisors",
         displayOrder: 3,
+        skills: [
+          "Investment planning and portfolio management",
+          "Retirement planning",
+          "Estate planning",
+          "Financial risk assessment",
+          "Client relationship management",
+          "Regulatory compliance (fiduciary standards)",
+          "Tax-efficient investment strategies",
+        ],
+      },
+      {
+        name: "Tax Officers",
+        displayOrder: 4,
         skills: [
           "Tax assessment and collection",
           "Compliance audits",
@@ -751,7 +764,7 @@ const skillsData: {
       },
       {
         name: "Civil Servants (general)",
-        displayOrder: 4,
+        displayOrder: 5,
         skills: [
           "Policy implementation",
           "Program management",
@@ -760,7 +773,7 @@ const skillsData: {
       },
       {
         name: "Regulators",
-        displayOrder: 5,
+        displayOrder: 6,
         skills: [
           "Licensing and enforcement",
           "Monitoring compliance",
@@ -769,7 +782,7 @@ const skillsData: {
       },
       {
         name: "Economists / Analysts",
-        displayOrder: 6,
+        displayOrder: 7,
         skills: [
           "Data analysis and forecasting",
           "Policy evaluation",
@@ -778,7 +791,7 @@ const skillsData: {
       },
       {
         name: "Procurement Officers",
-        displayOrder: 7,
+        displayOrder: 8,
         skills: [
           "Tendering and contract management",
           "Supplier assessment",
@@ -1285,6 +1298,10 @@ const skillsData: {
           "Audio recording and mixing",
           "Music arrangement",
           "Lyric writing",
+          "Live performance",
+          "Music software and DAW operation",
+          "Music mastering",
+          "Music collaboration and session work",
         ],
       },
     ],
