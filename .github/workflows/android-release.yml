@@ -23,8 +23,9 @@ jobs:
       uses: gradle/gradle-build-action@v2
       with:
         gradle-version: '8.2'
-        # Cache will be read/written, but if cache service is down, build will still succeed
-        cache-read-only: false
+        # Use read-only cache to avoid failures when GitHub cache service is unavailable
+        # This still allows reading from cache but won't try to save (preventing errors)
+        cache-read-only: true
         
     - name: Make gradlew executable
       working-directory: chyme-android
