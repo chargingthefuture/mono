@@ -25,8 +25,10 @@ export function Footer() {
                 rel="noopener noreferrer"><li>Access: Open source code</li></a>
               <a href="https://chargingthefuture.discourse.group"
                               target="_blank"
-                rel="noopener noreferrer"><li>Support: Townsquare forum</li></a>
-              <li>Updates: Regular improvements</li>
+                rel="noopener noreferrer"><li>Support: Townsquare</li></a>
+              <a href="https://signal.group/#CjQKILHj7074l2Kl-oYy0qGSFdydXbtu0Pf66Z_88K9IlSCtEhDDdqV_BFAW2qm2EiTGEaNs"
+                              target="_blank"
+                rel="noopener noreferrer"><li>Chat: Signal group</li></a>
             </ul>
           </div>
 
