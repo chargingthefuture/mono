@@ -2522,6 +2522,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(request);
   }));
 
+  // Update an existing request
+  app.put('/api/socketrelay/requests/:id', isAuthenticated, asyncHandler(async (req: any, res) => {
+    const userId = getUserId(req);
+    const requestId = req.params.id;
+    const validated = validateWithZod(insertSocketrelayRequestSchema, req.body, 'Invalid request data');
+    
+    const request = await withDatabaseErrorHandling(
+      () => storage.updateSocketrelayRequest(requestId, userId, validated.description, validated.isPublic || false),
+      'updateSocketrelayRequest'
+    );
+    res.json(request);
+  }));
+
   // Public SocketRelay request routes (no auth required, with rate limiting)
   app.get('/api/socketrelay/public', publicListingLimiter, asyncHandler(async (req, res) => {
     // Add delay for suspicious requests

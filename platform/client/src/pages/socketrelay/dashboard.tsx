@@ -6,10 +6,18 @@ import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useState } from "react";
 import { queryClient, apiRequest } from "@/lib/queryClient";
-import { Package, Clock, CheckCircle2, MapPin, Settings, Share2, ExternalLink, Copy, Check, Bell, RefreshCw } from "lucide-react";
+import { Package, Clock, CheckCircle2, MapPin, Settings, Share2, ExternalLink, Copy, Check, Bell, RefreshCw, Edit2, X } from "lucide-react";
 import { formatDistanceToNow, isPast } from "date-fns";
 import type { SocketrelayRequest, SocketrelayProfile } from "@shared/schema";
 import { Link } from "wouter";
@@ -23,6 +31,9 @@ export default function SocketRelayDashboard() {
   const [newRequest, setNewRequest] = useState("");
   const [isPublic, setIsPublic] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+  const [editingRequestId, setEditingRequestId] = useState<string | null>(null);
+  const [editDescription, setEditDescription] = useState("");
+  const [editIsPublic, setEditIsPublic] = useState(false);
 
   const { data: profile, isLoading: profileLoading } = useQuery<SocketrelayProfile | null>({
     queryKey: ["/api/socketrelay/profile"],
@@ -117,6 +128,33 @@ export default function SocketRelayDashboard() {
     },
   });
 
+  const updateMutation = useMutation({
+    mutationFn: async (data: { requestId: string; description: string; isPublic: boolean }) => {
+      return await apiRequest('PUT', `/api/socketrelay/requests/${data.requestId}`, {
+        description: data.description,
+        isPublic: data.isPublic,
+      });
+    },
+    onSuccess: async () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/socketrelay/requests'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/socketrelay/my-requests'] });
+      setEditingRequestId(null);
+      setEditDescription("");
+      setEditIsPublic(false);
+      toast({
+        title: "Request updated",
+        description: "Your request has been updated successfully.",
+      });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update request",
+        variant: "destructive",
+      });
+    },
+  });
+
   const handleCreateRequest = () => {
     if (newRequest.trim().length === 0) {
       toast({
@@ -159,6 +197,46 @@ export default function SocketRelayDashboard() {
 
   const handleFulfill = (requestId: string) => {
     fulfillMutation.mutate(requestId);
+  };
+
+  const handleEditRequest = (request: SocketrelayRequest) => {
+    setEditingRequestId(request.id);
+    setEditDescription(request.description);
+    setEditIsPublic(request.isPublic);
+  };
+
+  const handleSaveEdit = () => {
+    if (!editingRequestId) return;
+
+    if (editDescription.trim().length === 0) {
+      toast({
+        title: "Error",
+        description: "Please enter a description",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (editDescription.trim().length > 140) {
+      toast({
+        title: "Error",
+        description: "Description must be 140 characters or less",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    updateMutation.mutate({
+      requestId: editingRequestId,
+      description: editDescription.trim(),
+      isPublic: editIsPublic,
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingRequestId(null);
+    setEditDescription("");
+    setEditIsPublic(false);
   };
 
   const activeRequests = requests.filter(r => r.status === 'active' && !isPast(new Date(r.expiresAt)));
@@ -399,6 +477,19 @@ export default function SocketRelayDashboard() {
                         <span>Expires {formatDistanceToNow(new Date(request.expiresAt), { addSuffix: true })}</span>
                         <span>Posted {formatDistanceToNow(new Date(request.createdAt), { addSuffix: true })}</span>
                       </div>
+                      {request.status === 'active' && !isPast(new Date(request.expiresAt)) && (
+                        <div className="pt-2 border-t">
+                          <Button
+                            onClick={() => handleEditRequest(request)}
+                            variant="outline"
+                            size="sm"
+                            data-testid={`button-edit-${request.id}`}
+                          >
+                            <Edit2 className="w-4 h-4 mr-2" />
+                            Edit Request
+                          </Button>
+                        </div>
+                      )}
                       {isPast(new Date(request.expiresAt)) && request.status === 'active' && (
                         <div className="pt-2 border-t">
                           <Button
@@ -591,6 +682,60 @@ export default function SocketRelayDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Edit Request Dialog */}
+      <Dialog open={editingRequestId !== null} onOpenChange={(open) => !open && handleCancelEdit()}>
+        <DialogContent data-testid="dialog-edit-request">
+          <DialogHeader>
+            <DialogTitle>Edit Request</DialogTitle>
+            <DialogDescription>
+              Update your request description and visibility settings.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="edit-description">Description</Label>
+              <Textarea
+                id="edit-description"
+                value={editDescription}
+                onChange={(e) => setEditDescription(e.target.value)}
+                placeholder="I'm looking for..."
+                maxLength={140}
+                rows={3}
+                data-testid="input-edit-description"
+              />
+              <div className="flex items-center justify-between">
+                <span className="text-sm text-muted-foreground">
+                  {editDescription.length}/140 characters
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Checkbox 
+                id="edit-make-public" 
+                checked={editIsPublic} 
+                onCheckedChange={(checked) => setEditIsPublic(!!checked)}
+                data-testid="checkbox-edit-make-public"
+              />
+              <Label htmlFor="edit-make-public" className="text-sm cursor-pointer">
+                Make this request public (shareable link)
+              </Label>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancelEdit} data-testid="button-cancel-edit">
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSaveEdit}
+              disabled={updateMutation.isPending || editDescription.trim().length === 0 || editDescription.trim().length > 140}
+              data-testid="button-save-edit"
+            >
+              {updateMutation.isPending ? "Saving..." : "Save Changes"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <ExternalLinkDialog />
     </div>

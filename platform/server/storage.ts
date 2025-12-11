@@ -404,6 +404,7 @@ export interface IStorage {
   getSocketrelayRequestsByUser(userId: string): Promise<SocketrelayRequest[]>;
   getPublicSocketrelayRequestById(id: string): Promise<SocketrelayRequest | undefined>;
   listPublicSocketrelayRequests(): Promise<SocketrelayRequest[]>;
+  updateSocketrelayRequest(id: string, userId: string, description: string, isPublic?: boolean): Promise<SocketrelayRequest>;
   updateSocketrelayRequestStatus(id: string, status: string): Promise<SocketrelayRequest>;
   repostSocketrelayRequest(id: string, userId: string): Promise<SocketrelayRequest>;
   deleteSocketrelayRequest(id: string): Promise<void>;
@@ -3197,6 +3198,42 @@ export class DatabaseStorage implements IStorage {
       .where(eq(socketrelayRequests.id, id))
       .returning();
     return request;
+  }
+
+  async updateSocketrelayRequest(id: string, userId: string, description: string, isPublic: boolean = false): Promise<SocketrelayRequest> {
+    // Get the request to verify ownership
+    const request = await this.getSocketrelayRequestById(id);
+    if (!request) {
+      throw new Error("Request not found");
+    }
+
+    // Verify ownership
+    if (request.userId !== userId) {
+      throw new Error("You can only edit your own requests");
+    }
+
+    // Only allow editing active requests that haven't expired
+    if (request.status !== 'active') {
+      throw new Error("You can only edit active requests");
+    }
+
+    const now = new Date();
+    if (new Date(request.expiresAt) < now) {
+      throw new Error("You cannot edit expired requests");
+    }
+
+    // Update the request
+    const [updated] = await db
+      .update(socketrelayRequests)
+      .set({
+        description,
+        isPublic: !!isPublic,
+        updatedAt: new Date(),
+      })
+      .where(eq(socketrelayRequests.id, id))
+      .returning();
+    
+    return updated;
   }
 
   async repostSocketrelayRequest(id: string, userId: string): Promise<SocketrelayRequest> {
