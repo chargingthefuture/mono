@@ -1,3 +1,6 @@
+import java.util.Properties
+import java.io.FileInputStream
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
@@ -8,10 +11,10 @@ android {
     compileSdk = 34
 
     // Load local.properties (for local development)
-    val localProperties = java.util.Properties()
+    val localProperties = Properties()
     val localPropertiesFile = rootProject.file("local.properties")
     if (localPropertiesFile.exists()) {
-        localProperties.load(java.io.FileInputStream(localPropertiesFile))
+        localProperties.load(FileInputStream(localPropertiesFile))
     }
 
     defaultConfig {
