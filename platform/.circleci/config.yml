@@ -1,0 +1,105 @@
+version: 2.1
+
+# Use orbs for common functionality
+orbs:
+  node: circleci/node@5.1.0
+
+jobs:
+  unit-tests:
+    docker:
+      - image: cimg/node:20.19.0
+    resource_class: medium
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package-lock.json" }}
+            - v1-dependencies-
+      - run:
+          name: Install dependencies
+          command: npm ci
+          no_output_timeout: 10m
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ checksum "package-lock.json" }}
+      - run:
+          name: Run unit tests
+          command: npm run test:run
+          no_output_timeout: 15m
+          environment:
+            CI: true
+      - run:
+          name: Verify test results exist
+          command: |
+            mkdir -p test-results
+            echo "Checking for test result files..."
+            ls -la test-results/ || echo "test-results directory is empty"
+            find test-results -name "*.xml" -type f || echo "No XML files found"
+          when: always
+      - store_test_results:
+          path: test-results
+      - store_artifacts:
+          path: test-results
+
+  e2e-tests:
+    docker:
+      - image: cimg/node:20.19.0
+    # Use large resource class for faster execution
+    # Note: If you're on the free tier and don't have access to 'large', 
+    # change this to 'medium' and increase PLAYWRIGHT_WORKERS to 4-5
+    resource_class: large
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package-lock.json" }}
+            - v1-dependencies-
+      - run:
+          name: Install dependencies
+          command: npm ci
+          no_output_timeout: 10m
+      - run:
+          name: Install Playwright browsers
+          command: npx playwright install --with-deps chromium
+          no_output_timeout: 10m
+      - run:
+          name: Run E2E tests
+          command: npm run test:e2e
+          no_output_timeout: 45m
+          environment:
+            CI: true
+            # Increase workers for parallel execution (2-3 workers for better performance)
+            PLAYWRIGHT_WORKERS: 3
+      - run:
+          name: Verify test results exist
+          command: |
+            mkdir -p test-results
+            echo "Checking for test result files..."
+            ls -la test-results/ || echo "test-results directory is empty"
+            find test-results -name "*.xml" -type f || echo "No XML files found"
+          when: always
+      - store_test_results:
+          path: test-results
+      - store_artifacts:
+          path: test-results
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - unit-tests:
+          filters:
+            # Strategy: Only run on main/master branch pushes
+            # This significantly reduces CI usage while maintaining quality checks
+            # PRs will still run automatically when targeting main
+            branches:
+              only:
+                - main
+      - e2e-tests:
+          filters:
+            branches:
+              only:
+                - main
+            # To skip CI on a specific commit, include [ci skip] in the commit message:
+            # git commit -m "your message [ci skip]"

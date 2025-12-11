@@ -1,0 +1,56 @@
+name: Neon Database Migration
+
+on:
+  push:
+    branches:
+      - main
+      - staging
+    paths:
+      - 'shared/schema.ts'
+      - 'drizzle.config.ts'
+      - 'package.json'
+      - '.github/workflows/neon_workflow.yml'
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Force push (ignore warnings)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
+
+jobs:
+  migrate:
+    name: Push Schema to Neon Database
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Push database schema
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          if [ "${{ github.event.inputs.force }}" == "true" ]; then
+            npm run db:push -- --force
+          else
+            npm run db:push
+          fi
+
+      - name: Verify migration
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          echo "✅ Database schema push completed successfully"

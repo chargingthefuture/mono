@@ -1,0 +1,57 @@
+1. User Registration and Management
+make the landing page also the login page
+   - Implement a user authentication system with functionalities for registration, login, and password recovery.
+   - Securely store essential user information, including demographics and subscription status.
+   - This app is invite only. Therefore there should be a mechanism to issue out invite codes to enable someone to register. This way only human trafficking victims are on the platform.
+Invite Code System:
+Admin-generated invite codes with custom parameters
+Configurable max uses (1, 5, 10, 25, 100)
+Optional expiration dates
+Usage tracking and analytics
+Auto-consumption on registration
+
+2. Payment Processing:
+   - Integrate a payment system to support a subscription model ($1/month).
+   - Link payment details with user profiles for managing active subscriptions.
+   - The subscription model needs to be dynamic. If someone subscribes for $1/month today. They are grandfathered in. In the future however, the price may increase to $2/month. And that will apply only to the new users and they are grandfathered into that subscription.
+
+3. Product Database Design:
+   - Create a Products table to store information about various services.
+   Include the following fields:
+     - Product ID
+     - Product Name
+     - Product Description
+     - Product Type (e.g., transportation, accommodation)
+     - Common Pricing Field
+     - A JSON field for type-specific attributes.
+     The current list of products are:
+        - Incident Report: canceled or disrupted service
+        - Incident Report: lost mail
+        - Uber
+        - Airbnb
+        - Gated community
+        - Farming
+        - Mechanics
+        - Telehealth
+        - SupportMatch
+        - Art
+        - Goods
+        - Games
+        - Meditation & Sleep
+        - End of Life planning
+        - Resource Bridge
+
+4. Admin Dashboard:
+   - Develop an admin interface for managing user accounts
+   - Ensure that admin actions are secure and logged for accountability.
+
+5. Scalable Architecture:
+   - Design the application using modular components to facilitate the addition of new products in the future.
+   - Ensure that each new app or service can communicate with the main user and product database through API calls.
+
+6. Data Security and Privacy:
+   - Implement robust security measures to protect sensitive user information and transaction details.
+   - Utilize encrypted storage for sensitive data and ensure compliance with relevant privacy regulations.
+modifications or specific prompts for individual services later, just let me know!
+
+Make the primary color of the app #49dse80. You may choose all other colors that complement this color. 

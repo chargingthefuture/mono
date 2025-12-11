@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.19.0'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Create test results directory
+        run: mkdir -p test-results
+
+      - name: Run tests
+        run: npm run test:run
+
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Run E2E tests
+        run: npm run test:e2e
+
+      - name: Merge JUnit test results
+        if: ${{ !cancelled() }}
+        run: |
+          # Create a simple merge script
+          cat > merge-junit.js << 'EOF'
+          const fs = require('fs');
+          const vitestFile = 'test-results/vitest-junit.xml';
+          const playwrightFile = 'test-results/junit.xml';
+          const outputFile = 'test-results/junit.xml';
+          
+          function extractTestsuites(filePath) {
+            if (!fs.existsSync(filePath)) return [];
+            const content = fs.readFileSync(filePath, 'utf8');
+            const suites = [];
+            // Match testsuite elements (handles both wrapped and unwrapped)
+            const suiteRegex = /<testsuite[^>]*>[\s\S]*?<\/testsuite>/g;
+            let match;
+            while ((match = suiteRegex.exec(content)) !== null) {
+              suites.push(match[0]);
+            }
+            return suites;
+          }
+          
+          const vitestSuites = extractTestsuites(vitestFile);
+          const playwrightSuites = extractTestsuites(playwrightFile);
+          const allSuites = [...vitestSuites, ...playwrightSuites];
+          
+          if (allSuites.length > 0) {
+            const mergedXml = `<?xml version="1.0" encoding="UTF-8"?>
+<testsuites>
+${allSuites.join('\n')}
+</testsuites>`;
+            fs.writeFileSync(outputFile, mergedXml);
+          } else if (fs.existsSync(playwrightFile)) {
+            fs.copyFileSync(playwrightFile, outputFile);
+          } else if (fs.existsSync(vitestFile)) {
+            fs.copyFileSync(vitestFile, outputFile);
+          }
+          EOF
+          node merge-junit.js
+
+      - name: Upload test results to Sentry Prevent
+        if: ${{ !cancelled() }}
+        uses: getsentry/prevent-action@v0
+

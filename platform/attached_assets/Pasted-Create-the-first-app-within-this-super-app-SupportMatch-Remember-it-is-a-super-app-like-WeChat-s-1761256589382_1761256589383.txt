@@ -1,0 +1,217 @@
+Create the first app within this super app "SupportMatch." Remember it is a super app, like WeChat so the user database must be shared across all apps.
+
+Support Match - Feature List
+Support Match is a web-based accountability partner matching platform for human trafficking victims, featuring monthly partnership cycles, real-time messaging, comprehensive admin tools, and robust safety features.
+
+Feature Breakdown
+
+User Profiles:
+First name, last name, nickname, email, gender matching preference, timezone
+Profile image URL support
+Active/inactive status toggle
+Created/updated timestamps
+Gender with an option to "prefer not to say"
+
+
+Monthly Partnership Cycles:
+Admin-triggered manual match creation
+30-day partnership duration
+Automatic start/end date calculation
+
+Smart Matching Logic:
+Gender-based matching (users matched with based on gender preference)
+"Prefer not to say" users only matched with others who selected same
+Mutual exclusion checking before pairing
+Active user filtering
+Random shuffling for fairness
+
+Partnership Management:
+Status tracking: active, completed, ended early, cancelled
+Success rate tracking (JSON format)
+Partnership history access
+One active partnership per user limit
+
+Communication System
+Real-time Messaging:
+Partnership-scoped message threads
+Sender identification with profile info
+Message persistence and retrieval
+Timestamp tracking
+Auto-scroll to latest messages
+
+Message Features:
+Text-based communication
+Message history retrieval
+Sender avatar display with initials
+Time-stamped messages
+Safety & Moderation
+User Exclusion System:
+
+Self-service user blocking
+Permanent exclusion from future matches
+Optional reason field
+Removal capability
+Bilateral exclusion checking
+
+Reporting System:
+User-to-user safety reports
+Partnership-linked reports
+Report reasons and descriptions
+Status tracking: pending → investigating → resolved/dismissed
+Reporter/reported user details
+Admin review workflow
+
+Announcement System
+Announcement Types:
+Info, Warning, Maintenance, Update, Promotion
+Type-specific icons and color coding
+Display Controls:
+Active/inactive toggle
+Show on login (post-authentication)
+Show on sign-in page (pre-authentication)
+Optional expiration dates
+Created/updated timestamps
+
+Statistics Overview:
+Active user count
+Current partnerships count
+Pending reports count
+Partnership Management:
+
+View all partnerships with user details
+Start/end dates display
+Duration calculation
+Status badges
+Manual match creation button
+Report Management:
+
+View all safety reports
+Reporter and reported user details
+Status workflow actions
+Investigation and resolution tracking
+Invite Code Management:
+
+Generate new codes with custom parameters
+View all codes with usage statistics
+Creator and user tracking
+Deactivate codes
+Copy-to-clipboard functionality
+
+Announcement Management:
+
+Create/edit/deactivate announcements
+Type, title, content, expiration
+Display location toggles
+Preview and editing dialogs
+System Health:
+
+Operational status indicators
+Health check utilities
+Cache clearing
+Backup creation (UI only)
+User Interface & Experience
+Theme System:
+
+Light/Dark/System modes
+Persistent theme preference
+CSS custom properties
+Smooth transitions
+Responsive Design:
+
+Mobile-first approach
+Desktop/tablet/mobile layouts
+Collapsible navigation
+Touch-friendly controls
+Component Library:
+
+Radix UI primitives (30+ components)
+shadcn/ui design system
+Tailwind CSS styling
+Consistent design tokens
+Navigation:
+
+Home/Dashboard/Profile/Admin/Announcements pages
+Conditional admin access
+Active match indicator in header
+Profile dropdown menu
+Technical Infrastructure
+Database (PostgreSQL via Neon):
+
+8 main tables: users, partnerships, messages, exclusions, reports, invite_codes, announcements, sessions
+Drizzle ORM with type safety
+Schema migrations via Drizzle Kit
+Environment-scoped databases
+API Architecture:
+
+RESTful endpoints
+Rate limiting on sensitive routes
+Error sanitization (production vs development)
+Health/readiness/liveness endpoints
+Security:
+
+Password hashing with bcrypt (12 rounds)
+Session regeneration on auth
+CSRF protection via session tokens
+Input validation with Zod
+Sensitive data sanitization
+Performance:
+
+TanStack Query for client-side caching
+Optimistic updates
+Lazy query loading
+Database connection pooling
+
+Replication Prompt
+Create a full-stack accountability partner matching platform with the following specifications:
+**Core Features:**
+2. Monthly partnership matching algorithm
+3. Real-time messaging between partners
+4. User exclusion/blocking system
+5. Safety reporting with admin workflow
+6. Announcement system (multi-type, location-aware display)
+7. Comprehensive admin dashboard with:
+   - Statistics overview
+   - Partnership management
+   - Report moderation
+   - Invite code generation
+   - Announcement management
+   - System health monitoring
+8. User profile management (name, gender, timezone)
+9. Match history tracking
+**Database Schema:**
+- partnerships (id, user1Id, user2Id, startDate, endDate, status)
+- messages (id, partnershipId, senderId, content, createdAt)
+- exclusions (id, userId, excludedUserId, reason, createdAt)
+- reports (id, reporterId, reportedUserId, partnershipId, reason, status)
+- inviteCodes (id, code, createdBy, usedBy, isActive, maxUses, expiresAt)
+- announcements (id, title, content, type, isActive, showOnLogin, showOnSignInPage, expiresAt)
+- sessions (sid, sess, expire)
+**Key Business Logic:**
+- Matching algorithm: gender preference, no mutual exclusions, active users only
+- One active partnership per user at a time
+- 30-day partnership cycles with fixed start/end dates
+- Admin-triggered manual match creation
+- Rate limiting on auth endpoints (5/15min)
+- Session-based authentication with PostgreSQL storage
+**Security Requirements:**
+- Password hashing with bcrypt (12 rounds)
+- Session regeneration on authentication
+- Input validation using Zod schemas
+- Sensitive data sanitization in responses
+- CSRF protection via session tokens
+- Environment-based error messaging (dev vs production)
+**Pages:**
+- SupportMatch Home (post-auth): Quick navigation dashboard
+- SupportMatch Dashboard: Active partnership + messaging + match history
+- SupportMatch Profile: User settings + exclusions + privacy + appearance
+- SupportMatch Announcements: Filterable announcement list
+- SupportMatch Admin: Stats + partnerships + reports + invites + announcements + system
+**Special Features:**
+- Copy-to-clipboard for invite codes
+- Announcement type icons (Info, Warning, Maintenance, Update, Promotion)
+- Profile initials avatars
+- Toast notifications
+- Form validation with React Hook Form + Zod
+- Health check endpoints (/api/health, /api/ready, /api/live)
+- Database connection validation with cold start detection
+Use port 5000, bind to 0.0.0.0, and ensure all features are production-ready with proper error handling and user feedback.
