@@ -17,6 +17,7 @@ import com.chyme.android.R
 import com.chyme.android.data.model.Message
 import com.chyme.android.ui.viewmodel.RoomDetailViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RoomDetailScreen(
     roomId: String,

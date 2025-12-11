@@ -1,0 +1,47 @@
+name: Check Service Status
+
+on:
+  schedule:
+    # Run every 5 minutes
+    - cron: '*/5 * * * *'
+  workflow_dispatch: # Allow manual triggering
+  push:
+    branches:
+      - main
+    paths:
+      - 'status/**'
+
+jobs:
+  check-status:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write  # Required to push commits
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: true  # Required to push commits
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run health checks
+        env:
+          BASE_URL: ${{ secrets.BASE_URL || 'https://app.chargingthefuture.com' }}
+        run: |
+          cd status
+          node check-health.js
+
+      - name: Commit and push if changed
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add status/history/ status/public/
+          git diff --staged --quiet || (git commit -m "Update status: $(date -u +%Y-%m-%dT%H:%M:%SZ)" && git push)
+
+

@@ -18,6 +18,7 @@ import com.chyme.android.R
 import com.chyme.android.data.model.Room
 import com.chyme.android.ui.viewmodel.RoomListViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RoomListScreen(
     onRoomClick: (String) -> Unit,

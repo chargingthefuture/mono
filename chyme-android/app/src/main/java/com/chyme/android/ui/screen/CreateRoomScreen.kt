@@ -12,6 +12,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.chyme.android.R
 import com.chyme.android.ui.viewmodel.CreateRoomViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun CreateRoomScreen(
     onBackClick: () -> Unit,

@@ -4,11 +4,13 @@ import android.content.Context
 import com.chyme.android.BuildConfig
 import com.chyme.android.data.model.User
 import com.clerk.Clerk
-import com.clerk.models.User as ClerkUser
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.tasks.await
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.launch
 
 class ClerkAuthManager(private val context: Context) {
     private val _isSignedIn = MutableStateFlow<Boolean?>(null)
@@ -20,11 +22,13 @@ class ClerkAuthManager(private val context: Context) {
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
     
-    private val clerk = Clerk.instance
+    private val coroutineScope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     
     init {
-        // Check initial auth state
-        checkAuthState()
+        // Check initial auth state in a coroutine
+        coroutineScope.launch {
+            checkAuthState()
+        }
     }
     
     /**
@@ -32,8 +36,8 @@ class ClerkAuthManager(private val context: Context) {
      */
     suspend fun getSessionToken(): String? {
         return try {
-            val session = clerk.session
-            session?.getToken()?.await()
+            val session = Clerk.session
+            session?.getToken()
         } catch (e: Exception) {
             android.util.Log.e("ClerkAuthManager", "Error getting session token", e)
             null
@@ -46,8 +50,8 @@ class ClerkAuthManager(private val context: Context) {
     suspend fun checkAuthState() {
         _isLoading.value = true
         try {
-            val clerkUser = clerk.user
-            val session = clerk.session
+            val clerkUser = Clerk.user
+            val session = Clerk.session
             
             _isSignedIn.value = clerkUser != null && session != null
             
@@ -103,7 +107,7 @@ class ClerkAuthManager(private val context: Context) {
     suspend fun signOut() {
         _isLoading.value = true
         try {
-            clerk.signOut()
+            Clerk.signOut()
             _isSignedIn.value = false
             _user.value = null
         } catch (e: Exception) {
@@ -117,14 +121,14 @@ class ClerkAuthManager(private val context: Context) {
      * Get current Clerk user ID
      */
     fun getUserId(): String? {
-        return clerk.user?.id
+        return Clerk.user?.id
     }
     
     /**
      * Get current Clerk user
      */
-    fun getClerkUser(): ClerkUser? {
-        return clerk.user
+    fun getClerkUser(): Any? {
+        return Clerk.user
     }
     
     /**
