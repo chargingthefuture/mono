@@ -1,0 +1,13 @@
+# Clerk Configuration
+# Copy this file to local.properties and add your actual keys
+# DO NOT commit local.properties to version control
+
+# Your Clerk Publishable Key (starts with pk_test_ or pk_live_)
+CLERK_PUBLISHABLE_KEY=pk_test_your_key_here
+
+# Your Platform API Base URL
+PLATFORM_API_BASE_URL=https://your-platform-domain.com
+
+# Optional: For local development with Android emulator
+# PLATFORM_API_BASE_URL=http://10.0.2.2:3000
+

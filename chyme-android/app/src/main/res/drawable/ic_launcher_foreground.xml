@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Green heart with ECG waveform -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M54,20C48,15 40,15 34,20C28,25 20,33 20,42C20,51 25,58 34,65C40,70 48,78 54,88C60,78 68,70 74,65C83,58 88,51 88,42C88,33 80,25 74,20C68,15 60,15 54,20Z"/>
+    <!-- ECG waveform line in black -->
+    <path
+        android:strokeColor="#000000"
+        android:strokeWidth="3"
+        android:strokeLinecap="round"
+        android:pathData="M25,54 L30,54 L32,48 L35,60 L38,42 L40,54 L45,54 L50,54"/>
+</vector>
+

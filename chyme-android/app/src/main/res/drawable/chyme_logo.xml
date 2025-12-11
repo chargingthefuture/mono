@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="200dp"
+    android:height="200dp"
+    android:viewportWidth="200"
+    android:viewportHeight="200">
+    <!-- Green heart shape -->
+    <path
+        android:fillColor="#4CAF50"
+        android:pathData="M100,40C90,30 75,30 65,40C55,50 40,65 40,85C40,105 50,120 65,135C75,145 90,160 100,180C110,160 125,145 135,135C150,120 160,105 160,85C160,65 145,50 135,40C125,30 110,30 100,40Z"/>
+    <!-- ECG waveform line in black -->
+    <path
+        android:strokeColor="#000000"
+        android:strokeWidth="4"
+        android:strokeLinecap="round"
+        android:pathData="M50,100 L60,100 L65,85 L70,115 L75,75 L80,100 L90,100 L100,100"/>
+</vector>
+
