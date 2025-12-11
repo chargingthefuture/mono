@@ -23,6 +23,8 @@ jobs:
       uses: gradle/gradle-build-action@v2
       with:
         gradle-version: '8.2'
+        # Cache will be read/written, but if cache service is down, build will still succeed
+        cache-read-only: false
         
     - name: Make gradlew executable
       working-directory: chyme-android
@@ -38,9 +40,9 @@ jobs:
         PLATFORM_API_BASE_URL: ${{ secrets.PLATFORM_API_BASE_URL }}
       run: |
         if [ -f "./gradlew" ]; then
-          ./gradlew assembleRelease
+          ./gradlew assembleRelease --no-daemon
         else
-          gradle assembleRelease
+          gradle assembleRelease --no-daemon
         fi
       
     - name: Get version name
