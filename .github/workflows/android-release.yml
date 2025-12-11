@@ -18,8 +18,6 @@ jobs:
       with:
         distribution: 'temurin'
         java-version: '17'
-        # Disable cache to avoid GitHub cache service issues
-        cache: 'none'
         
     - name: Make gradlew executable
       working-directory: chyme-android
