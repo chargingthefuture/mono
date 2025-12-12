@@ -142,8 +142,19 @@ export const generateTestUserId = () => `test-user-${Date.now()}-${Math.random()
 
 /**
  * Mock request object for testing
+ * Supports both Clerk auth (req.auth) and legacy auth (req.user)
  */
 export const createMockRequest = (userId?: string, isAdmin = false) => ({
+  // Clerk auth structure (req.auth)
+  auth: userId
+    ? {
+        userId,
+        sessionClaims: {
+          sub: userId,
+        },
+      }
+    : undefined,
+  // Legacy auth structure (req.user) - for backward compatibility
   user: userId
     ? {
         claims: { sub: userId },
@@ -157,6 +168,8 @@ export const createMockRequest = (userId?: string, isAdmin = false) => ({
   params: {},
   query: {},
   headers: {},
+  path: '/',
+  method: 'GET',
   get: () => 'test-host',
   hostname: 'localhost',
 } as any);

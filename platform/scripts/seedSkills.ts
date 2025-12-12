@@ -10,7 +10,7 @@ import {
 import { eq, and } from "drizzle-orm";
 
 // Comprehensive skills data structure: Sector → Job Title → Skills
-const skillsData: {
+export const skillsData: {
   sector: {
     name: string;
     estimatedWorkforceShare?: number;
@@ -60,7 +60,7 @@ const skillsData: {
           "Crop physiology",
           "Soil science",
           "Field trial design",
-          "Data analysis and agronomic modelling",
+          "Data analysis and agronomic modeling",
           "Pest and nutrient management planning",
           "Extension/communication",
           "Soil fertility assessment",
@@ -128,7 +128,7 @@ const skillsData: {
           "Hydraulic design",
           "Water resource management",
           "Treatment process design",
-          "GIS and hydrological modelling",
+          "GIS and hydrological modeling",
           "Project management",
         ],
       },
@@ -879,7 +879,7 @@ const skillsData: {
         displayOrder: 1,
         skills: [
           "Resource surveying and sampling",
-          "Geological modelling",
+          "Geological modeling",
           "Mineral exploration techniques",
         ],
       },
@@ -1041,7 +1041,7 @@ const skillsData: {
           "Operational improvement (Lean/Six Sigma)",
           "Change management",
           "Stakeholder facilitation",
-          "Business modelling and financial case building",
+          "Business modeling and financial case building",
         ],
       },
       {
@@ -1383,7 +1383,7 @@ const skillsData: {
         name: "Waste Policy & Planning Analysts",
         displayOrder: 7,
         skills: [
-          "Waste-flow modelling and policy evaluation",
+          "Waste-flow modeling and policy evaluation",
           "Circular-economy program design",
           "Stakeholder consultation and financing models",
         ],

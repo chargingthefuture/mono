@@ -618,15 +618,56 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // User route - Update own Quora profile URL
   app.put('/api/user/quora-profile-url', isAuthenticated, async (req: any, res) => {
     try {
-      const userId = getUserId(req);
+      // Log request details for debugging
+      const requestInfo = {
+        hasAuth: !!req.auth,
+        authUserId: req.auth?.userId,
+        path: req.path,
+        method: req.method,
+        timestamp: new Date().toISOString(),
+      };
+      
+      let userId: string;
+      try {
+        userId = getUserId(req);
+      } catch (getUserIdError: any) {
+        console.error("Error getting userId from request:", {
+          ...requestInfo,
+          error: getUserIdError.message,
+          stack: getUserIdError.stack,
+        });
+        return res.status(401).json({ 
+          message: "Authentication failed: Unable to extract user ID. Please try signing in again." 
+        });
+      }
+      
+      // Validate userId is present
+      if (!userId || userId.trim() === "") {
+        console.error("Error: userId is missing or empty", requestInfo);
+        return res.status(401).json({ 
+          message: "Authentication failed: User ID not found. Please try signing in again." 
+        });
+      }
+      
       const { quoraProfileUrl } = req.body;
       const user = await storage.updateUserQuoraProfileUrl(userId, quoraProfileUrl || null);
       if (!user) {
+        console.error("Error: User not found after update attempt", {
+          ...requestInfo,
+          userId,
+        });
         return res.status(404).json({ message: "User not found" });
       }
       res.json(user);
     } catch (error: any) {
-      console.error("Error updating Quora profile URL:", error);
+      console.error("Error updating Quora profile URL:", {
+        error: error.message,
+        stack: error.stack,
+        hasAuth: !!req.auth,
+        authUserId: req.auth?.userId,
+        path: req.path,
+        timestamp: new Date().toISOString(),
+      });
       // Return 404 for "User not found" errors, 400 for other errors
       const statusCode = error.message === "User not found" ? 404 : 400;
       res.status(statusCode).json({ message: error.message || "Failed to update Quora profile URL" });
