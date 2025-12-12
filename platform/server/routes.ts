@@ -4094,13 +4094,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     }
 
-    const validatedData = validateWithZod(insertResearchItemSchema, { ...body, userId }, 'Invalid research item data');
+    const validatedData = validateWithZod(insertResearchItemSchema, { ...body, userId }, 'Invalid question data');
     const item = await withDatabaseErrorHandling(
       () => storage.createResearchItem(validatedData),
       'createResearchItem'
     );
     
-    console.log(`Research item created: ${item.id} by ${userId}`);
+    console.log(`CompareNotes question created: ${item.id} by ${userId}`);
     res.json(item);
   }));
 
@@ -4142,11 +4142,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       'getResearchItemById'
     );
     if (!item) {
-      throw new NotFoundError('Research item', req.params.id);
+      throw new NotFoundError('Question', req.params.id);
     }
     
     if (!item.isPublic) {
-      throw new NotFoundError('Research item', req.params.id);
+      throw new NotFoundError('Question', req.params.id);
     }
     
     // Increment view count
@@ -4164,7 +4164,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       'getResearchItemById'
     );
     if (!item) {
-      throw new NotFoundError('Research item', req.params.id);
+      throw new NotFoundError('Question', req.params.id);
     }
     
     // Increment view count
@@ -4184,7 +4184,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     );
     
     if (!item) {
-      throw new NotFoundError('Research item', req.params.id);
+      throw new NotFoundError('Question', req.params.id);
     }
     
     if (item.userId !== userId && !(await isUserAdmin(req))) {
@@ -4246,7 +4246,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       setImmediate(async () => {
         for (const url of validatedData.links || []) {
           try {
-            await verifyResearchLink(answer.id, url);
+            await verifyCompareNotesLink(answer.id, url);
           } catch (error) {
             console.error(`Error verifying link ${url}:`, error);
           }
@@ -4436,7 +4436,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       'getResearchBookmarks'
     );
     
-    // Fetch full research items for each bookmark
+    // Fetch full questions for each bookmark
     const items = await Promise.all(
       bookmarks.map(async (bookmark) => {
         const item = await withDatabaseErrorHandling(
@@ -4520,7 +4520,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Queue verification (non-blocking)
     setImmediate(async () => {
       try {
-        await verifyResearchLink(answerId, url);
+        await verifyCompareNotesLink(answerId, url);
       } catch (error) {
         console.error(`Error verifying link ${url}:`, error);
       }
@@ -4575,7 +4575,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ reputation });
   }));
 
-  // Research Admin Announcement routes
+  // CompareNotes Admin Announcement routes
   app.get('/api/comparenotes/admin/announcements', isAuthenticated, isAdmin, asyncHandler(async (_req, res) => {
     const announcements = await withDatabaseErrorHandling(
       () => storage.getAllResearchAnnouncements(),
@@ -4595,7 +4595,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     await logAdminAction(
       userId,
-      "create_research_announcement",
+      "create_comparenotes_announcement",
       "announcement",
       announcement.id,
       { title: announcement.title, type: announcement.type }
@@ -4614,7 +4614,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     await logAdminAction(
       userId,
-      "update_research_announcement",
+      "update_comparenotes_announcement",
       "announcement",
       announcement.id,
       { title: announcement.title }
@@ -4632,7 +4632,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     await logAdminAction(
       userId,
-      "deactivate_research_announcement",
+      "deactivate_comparenotes_announcement",
       "announcement",
       announcement.id,
       { title: announcement.title }
@@ -4642,7 +4642,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   // Link verification helper function (simplified - fetches link and computes fake similarity)
-  async function verifyResearchLink(answerId: string, url: string): Promise<void> {
+  async function verifyCompareNotesLink(answerId: string, url: string): Promise<void> {
     try {
       const urlObj = new URL(url);
       const domain = urlObj.hostname;
