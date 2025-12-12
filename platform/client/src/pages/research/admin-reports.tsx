@@ -53,7 +53,7 @@ export default function CompareNotesAdminReports() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl md:text-4xl font-semibold">Research Reports</h1>
+          <h1 className="text-3xl md:text-4xl font-semibold">CompareNotes Reports</h1>
           <p className="text-muted-foreground">
             Review and manage reported content
           </p>
@@ -109,7 +109,7 @@ export default function CompareNotesAdminReports() {
                     {report.researchItemId && (
                       <Link href={`/apps/comparenotes/item/${report.researchItemId}`}>
                         <Button variant="ghost" size="sm">
-                          View Research Item
+                          View Question
                         </Button>
                       </Link>
                     )}

@@ -55,7 +55,7 @@ const services = [
   },
   {
     title: "CompareNotes",
-    description: "Post research questions, receive sourced answers, and collaboratively surface the most relevant, accurate responses with voting and tagging.",
+    description: "Post questions, receive sourced answers, and collaboratively surface the most relevant, accurate responses with voting and tagging.",
     icon: Search,
     href: "/apps/comparenotes",
     testId: "card-service-research",

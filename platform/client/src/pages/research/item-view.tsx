@@ -13,7 +13,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { ResearchItem, ResearchAnswer, ResearchComment } from "@shared/schema";
-import ResearchAnswerComposer from "./answer-composer";
+import AnswerComposer from "./answer-composer";
 import { useExternalLink } from "@/hooks/useExternalLink";
 
 export default function CompareNotesItemView() {
@@ -80,7 +80,7 @@ export default function CompareNotesItemView() {
       });
     },
     onSuccess: () => {
-      toast({ title: "Bookmarked", description: "Research item bookmarked" });
+      toast({ title: "Bookmarked", description: "Question bookmarked" });
       queryClient.invalidateQueries({ queryKey: ["/api/comparenotes/bookmarks"] });
     },
   });
@@ -110,7 +110,7 @@ export default function CompareNotesItemView() {
     return (
       <div className="p-6 md:p-8">
         <div className="text-center py-12">
-          <p className="text-muted-foreground">Research item not found</p>
+          <p className="text-muted-foreground">Question not found</p>
           <Link href="/apps/comparenotes">
             <Button variant="outline" className="mt-4">
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -270,7 +270,7 @@ export default function CompareNotesItemView() {
               <Card>
                 <CardContent className="py-12 text-center">
                   <p className="text-muted-foreground mb-4">No answers yet</p>
-                  {user && <ResearchAnswerComposer researchItemId={itemId!} />}
+                  {user && <AnswerComposer researchItemId={itemId!} />}
                 </CardContent>
               </Card>
             ) : (
@@ -349,7 +349,7 @@ export default function CompareNotesItemView() {
                   <CardTitle>Your Answer</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <ResearchAnswerComposer researchItemId={itemId!} />
+                  <AnswerComposer researchItemId={itemId!} />
                 </CardContent>
               </Card>
             )}

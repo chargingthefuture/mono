@@ -54,7 +54,7 @@ export default function CompareNotesMyItems() {
           <div>
             <h1 className="text-2xl sm:text-3xl font-semibold mb-2">My Questions</h1>
             <p className="text-muted-foreground">
-              Research items you've created
+              Questions you've created
             </p>
           </div>
         </div>
@@ -69,7 +69,7 @@ export default function CompareNotesMyItems() {
       {items.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground mb-4">You haven't created any research items yet</p>
+            <p className="text-muted-foreground mb-4">You haven't created any questions yet</p>
             <Link href="/apps/comparenotes/new">
               <Button data-testid="button-create-first">
                 <Plus className="w-4 h-4 mr-2" />

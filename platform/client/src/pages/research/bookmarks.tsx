@@ -73,7 +73,7 @@ export default function CompareNotesBookmarks() {
           <div>
             <h1 className="text-2xl sm:text-3xl font-semibold mb-2">Bookmarks</h1>
             <p className="text-muted-foreground">
-              Research items you've saved
+              Questions you've saved
             </p>
           </div>
         </div>
@@ -85,7 +85,7 @@ export default function CompareNotesBookmarks() {
             <Bookmark className="w-12 h-12 mx-auto mb-4 text-muted-foreground" />
             <p className="text-muted-foreground mb-4">No bookmarks yet</p>
             <p className="text-sm text-muted-foreground">
-              Bookmark research items to save them for later
+              Bookmark questions to save them for later
             </p>
           </CardContent>
         </Card>

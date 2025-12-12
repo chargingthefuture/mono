@@ -7,6 +7,7 @@ import com.clerk.Clerk
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -37,28 +38,41 @@ class ClerkAuthManager(private val context: Context) {
     suspend fun getSessionToken(): String? {
         return try {
             val session = Clerk.session ?: return null
-            // Use fetchToken() which is the suspend function in Clerk Android SDK
-            // According to Clerk Android SDK docs: https://github.com/clerk/clerk-android
-            val tokenResult = session.fetchToken()
-            // fetchToken() may return String directly or TokenResource with token property
-            when {
-                tokenResult is String -> tokenResult
-                tokenResult != null -> {
-                    // Try to access token property if it's a TokenResource object
+            // Try different methods to get the token from Clerk Android SDK
+            // The API may vary by version, so we try multiple approaches
+            try {
+                // Try getToken() method
+                val getTokenMethod = session.javaClass.getMethod("getToken")
+                val result = getTokenMethod.invoke(session)
+                
+                // Check if result is a Flow (for reactive APIs)
+                if (result != null) {
+                    val flowInterface = kotlinx.coroutines.flow.Flow::class.java
+                    if (flowInterface.isAssignableFrom(result.javaClass)) {
+                        @Suppress("UNCHECKED_CAST")
+                        (result as kotlinx.coroutines.flow.Flow<*>).first() as? String
+                    } else {
+                        result as? String
+                    }
+                } else {
+                    null
+                }
+            } catch (e: NoSuchMethodException) {
+                // Try accessing token as a property
+                try {
+                    val tokenField = session.javaClass.getDeclaredField("token")
+                    tokenField.isAccessible = true
+                    val tokenValue = tokenField.get(session)
+                    tokenValue as? String
+                } catch (e2: NoSuchFieldException) {
+                    // Try other common method names
                     try {
-                        val tokenField = tokenResult.javaClass.getDeclaredField("token")
-                        tokenField.isAccessible = true
-                        tokenField.get(tokenResult) as? String
-                    } catch (e: NoSuchFieldException) {
-                        // Try getToken() method as fallback
-                        try {
-                            tokenResult.javaClass.getMethod("getToken").invoke(tokenResult) as? String
-                        } catch (e2: Exception) {
-                            null
-                        }
+                        session.javaClass.getMethod("token").invoke(session) as? String
+                    } catch (e3: Exception) {
+                        android.util.Log.w("ClerkAuthManager", "Could not find token accessor method or property", e3)
+                        null
                     }
                 }
-                else -> null
             }
         } catch (e: Exception) {
             android.util.Log.e("ClerkAuthManager", "Error getting session token", e)

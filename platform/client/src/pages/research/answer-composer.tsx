@@ -18,11 +18,11 @@ const answerFormSchema = insertResearchAnswerSchema.omit({
 
 type AnswerFormData = z.infer<typeof answerFormSchema>;
 
-interface ResearchAnswerComposerProps {
+interface AnswerComposerProps {
   researchItemId: string;
 }
 
-export default function ResearchAnswerComposer({ researchItemId }: ResearchAnswerComposerProps) {
+export default function AnswerComposer({ researchItemId }: AnswerComposerProps) {
   const { toast } = useToast();
   const [links, setLinks] = useState<string[]>([]);
   const [newLink, setNewLink] = useState("");
