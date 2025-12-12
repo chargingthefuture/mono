@@ -40,37 +40,10 @@ describe('API - Chyme Profile', () => {
     it('should accept valid profile data', () => {
       const validData = {
         userId: testUserId,
-        displayName: 'Test User',
-        isAnonymous: false,
       };
 
       const result = insertChymeProfileSchema.parse(validData);
-      expect(result.displayName).toBe('Test User');
-      expect(result.isAnonymous).toBe(false);
-    });
-
-    it('should accept profile with null displayName (optional)', () => {
-      const validData = {
-        userId: testUserId,
-        displayName: null,
-        isAnonymous: true,
-      };
-
-      const result = insertChymeProfileSchema.parse(validData);
-      expect(result.displayName).toBeNull();
-      expect(result.isAnonymous).toBe(true);
-    });
-
-    it('should reject displayName exceeding max length', () => {
-      const invalidData = {
-        userId: testUserId,
-        displayName: 'a'.repeat(101), // Exceeds max 100 characters
-        isAnonymous: false,
-      };
-
-      expect(() => {
-        insertChymeProfileSchema.parse(invalidData);
-      }).toThrow();
+      expect(result.userId).toBe(testUserId);
     });
 
     it('should require authentication', () => {
@@ -100,24 +73,15 @@ describe('API - Chyme Profile', () => {
     it('should validate partial update data', () => {
       const partialSchema = insertChymeProfileSchema.partial();
       
-      // Valid partial update
-      const validUpdate = {
-        displayName: 'Updated Name',
-      };
+      // Valid partial update (empty object is valid for chyme profiles)
+      const validUpdate = {};
       expect(() => partialSchema.parse(validUpdate)).not.toThrow();
-
-      // Invalid partial update (exceeds max length)
-      const invalidUpdate = {
-        displayName: 'a'.repeat(101),
-      };
-      expect(() => partialSchema.parse(invalidUpdate)).toThrow();
     });
 
     it('should reject attempts to update userId (security check)', () => {
       const req = createMockRequest(testUserId);
       req.body = {
         userId: otherUserId, // Attempt to change userId
-        displayName: 'Updated Name',
       };
       
       // In actual route, userId is extracted from req.user.claims.sub, not from body

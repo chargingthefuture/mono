@@ -46,7 +46,6 @@ test.describe('LightHouse Profile Management', () => {
     await expect(page.locator('h1')).toContainText(/profile/i, { timeout: 15000 });
     
     // Fill profile form
-    await page.fill('[data-testid="input-displayName"]', 'Test User');
     await page.selectOption('[data-testid="select-profileType"]', 'seeker');
     
     // Submit form
@@ -103,8 +102,8 @@ test.describe('LightHouse Profile Management', () => {
     
     await expect(page.locator('h1')).toContainText(/edit.*profile|create.*profile/i, { timeout: 5000 });
     
-    // Update display name
-    await page.fill('[data-testid="input-displayName"]', 'Updated Name');
+    // Update bio
+    await page.fill('[data-testid="textarea-bio"]', 'Updated bio');
     
     // Submit update
     await page.click('[data-testid="button-submit"]');

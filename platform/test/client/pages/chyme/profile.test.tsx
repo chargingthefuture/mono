@@ -56,8 +56,7 @@ describe('ChymeProfile', () => {
     const mockProfile = {
       id: 'test-id',
       userId: 'test-user-id',
-      displayName: 'Test User',
-      isAnonymous: false,
+      isVerified: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     };
@@ -82,8 +81,7 @@ describe('ChymeProfile', () => {
     const mockProfile = {
       id: 'test-id',
       userId: 'test-user-id',
-      displayName: 'Test User',
-      isAnonymous: false,
+      isVerified: false,
       createdAt: new Date(),
       updatedAt: new Date(),
     };

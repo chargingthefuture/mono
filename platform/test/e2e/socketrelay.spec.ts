@@ -12,7 +12,6 @@ test.describe('SocketRelay Profile Management', () => {
     await expect(page.locator('h1')).toContainText(/profile/i);
     
     // Fill profile form
-    await page.fill('[data-testid="input-displayName"]', 'Test User');
     await page.fill('[data-testid="input-city"]', 'New York');
     await page.fill('[data-testid="input-state"]', 'NY');
     await page.fill('[data-testid="input-country"]', 'USA');
@@ -30,8 +29,8 @@ test.describe('SocketRelay Profile Management', () => {
     // Wait for edit form to load
     await expect(page.locator('h1')).toContainText(/edit.*profile/i);
     
-    // Update display name
-    await page.fill('[data-testid="input-displayName"]', 'Updated Name');
+    // Update city
+    await page.fill('[data-testid="input-city"]', 'Updated City');
     
     // Submit update
     await page.click('[data-testid="button-submit"]');

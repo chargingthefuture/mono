@@ -336,7 +336,6 @@ describe.skipIf(!hasDatabaseUrl)('Storage Layer - Workforce Recruiter Profile Op
 
     expect(created).toBeDefined();
     expect(created.userId).toBe(testUserId);
-    expect(created.displayName).toBe(profileData.displayName);
     expect(created.notes).toBe(profileData.notes);
   });
 
@@ -347,7 +346,6 @@ describe.skipIf(!hasDatabaseUrl)('Storage Layer - Workforce Recruiter Profile Op
     const retrieved = await storage.getWorkforceRecruiterProfile(testUserId);
     expect(retrieved).toBeDefined();
     expect(retrieved?.userId).toBe(testUserId);
-    expect(retrieved?.displayName).toBe(profileData.displayName);
   });
 
   it.skipIf(!canConnectToDatabase)('should update a Workforce Recruiter profile', async () => {
@@ -355,11 +353,9 @@ describe.skipIf(!hasDatabaseUrl)('Storage Layer - Workforce Recruiter Profile Op
     await storage.createWorkforceRecruiterProfile(profileData);
 
     const updated = await storage.updateWorkforceRecruiterProfile(testUserId, {
-      displayName: 'Updated Name',
       notes: 'Updated notes',
     });
 
-    expect(updated.displayName).toBe('Updated Name');
     expect(updated.notes).toBe('Updated notes');
   });
 
@@ -407,7 +403,6 @@ describe.skipIf(!hasDatabaseUrl)('Storage Layer - TrustTransport Profile Operati
 
     expect(created).toBeDefined();
     expect(created.userId).toBe(testUserId);
-    expect(created.displayName).toBe(profileData.displayName);
     expect(created.isRider).toBe(true);
   });
 
@@ -425,11 +420,9 @@ describe.skipIf(!hasDatabaseUrl)('Storage Layer - TrustTransport Profile Operati
     await storage.createTrusttransportProfile(profileData);
 
     const updated = await storage.updateTrusttransportProfile(testUserId, {
-      displayName: 'Updated Name',
       bio: 'Updated bio',
     });
 
-    expect(updated.displayName).toBe('Updated Name');
     expect(updated.bio).toBe('Updated bio');
   });
 
@@ -472,7 +465,6 @@ describe.skipIf(!hasDatabaseUrl)('Storage Layer - MechanicMatch Profile Operatio
 
     expect(created).toBeDefined();
     expect(created.userId).toBe(testUserId);
-    expect(created.displayName).toBe(profileData.displayName);
     expect(created.isCarOwner).toBe(true);
   });
 
@@ -490,11 +482,9 @@ describe.skipIf(!hasDatabaseUrl)('Storage Layer - MechanicMatch Profile Operatio
     await storage.createMechanicmatchProfile(profileData);
 
     const updated = await storage.updateMechanicmatchProfile(testUserId, {
-      displayName: 'Updated Name',
       ownerBio: 'Updated bio',
     });
 
-    expect(updated.displayName).toBe('Updated Name');
     expect(updated.ownerBio).toBe('Updated bio');
   });
 
@@ -537,8 +527,6 @@ describe.skipIf(!hasDatabaseUrl)('Storage Layer - Chyme Profile Operations', () 
 
     expect(created).toBeDefined();
     expect(created.userId).toBe(testUserId);
-    expect(created.displayName).toBe(profileData.displayName);
-    expect(created.isAnonymous).toBe(false);
   });
 
   it.skipIf(!canConnectToDatabase)('should retrieve a Chyme profile by userId', async () => {
@@ -554,13 +542,8 @@ describe.skipIf(!hasDatabaseUrl)('Storage Layer - Chyme Profile Operations', () 
     const profileData = createTestChymeProfile(testUserId);
     await storage.createChymeProfile(profileData);
 
-    const updated = await storage.updateChymeProfile(testUserId, {
-      displayName: 'Updated Name',
-      isAnonymous: true,
-    });
-
-    expect(updated.displayName).toBe('Updated Name');
-    expect(updated.isAnonymous).toBe(true);
+    const updated = await storage.updateChymeProfile(testUserId, {});
+    expect(updated).toBeDefined();
   });
 
   it.skipIf(!canConnectToDatabase)('should delete Chyme profile and log deletion', async () => {

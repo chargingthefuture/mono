@@ -33,7 +33,6 @@ describe('API - Workforce Recruiter Profile', () => {
   describe('POST /api/workforce-recruiter/profile', () => {
     it('should validate profile data with Zod schema', () => {
       const validData = {
-        displayName: 'Test User',
         notes: 'Test notes',
       };
       
@@ -50,15 +49,6 @@ describe('API - Workforce Recruiter Profile', () => {
       }).not.toThrow();
     });
 
-    it('should enforce max length on displayName', () => {
-      const invalidData = {
-        displayName: 'a'.repeat(101), // Exceeds max length of 100
-      };
-      
-      expect(() => {
-        insertWorkforceRecruiterProfileSchema.parse(invalidData);
-      }).toThrow();
-    });
 
     it('should require authentication', () => {
       const req = createMockRequest(undefined);
@@ -69,10 +59,10 @@ describe('API - Workforce Recruiter Profile', () => {
   describe('PUT /api/workforce-recruiter/profile', () => {
     it('should allow partial updates', () => {
       const req = createMockRequest(testUserId);
-      req.body = { displayName: 'Updated Name' };
+      req.body = { notes: 'Updated notes' };
       
       expect(req.isAuthenticated()).toBe(true);
-      expect(req.body.displayName).toBe('Updated Name');
+      expect(req.body.notes).toBe('Updated notes');
     });
 
     it('should require authentication', () => {

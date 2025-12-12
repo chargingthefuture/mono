@@ -58,7 +58,6 @@ describe('WorkforceRecruiterProfile', () => {
     const mockProfile = {
       id: 'test-id',
       userId: 'test-user-id',
-      displayName: 'Test User',
       notes: 'Test notes',
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -86,7 +85,6 @@ describe('WorkforceRecruiterProfile', () => {
     const mockProfile = {
       id: 'test-id',
       userId: 'test-user-id',
-      displayName: 'Test User',
       notes: 'Test notes',
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -137,7 +135,6 @@ describe('WorkforceRecruiterProfile', () => {
     renderWithProviders(<WorkforceRecruiterProfile />);
 
     await waitFor(() => {
-      expect(screen.getByTestId('input-display-name')).toBeInTheDocument();
       expect(screen.getByTestId('input-notes')).toBeInTheDocument();
       expect(screen.getByTestId('button-submit')).toBeInTheDocument();
     });
@@ -149,7 +146,6 @@ describe('WorkforceRecruiterProfile', () => {
     const mockProfile = {
       id: 'test-id',
       userId: 'test-user-id',
-      displayName: 'Existing User',
       notes: 'Existing notes',
       createdAt: new Date(),
       updatedAt: new Date(),
@@ -173,9 +169,7 @@ describe('WorkforceRecruiterProfile', () => {
 
     // Wait for form fields to be pre-filled
     await waitFor(() => {
-      const displayNameInput = screen.getByTestId('input-display-name') as HTMLInputElement;
       const notesInput = screen.getByTestId('input-notes') as HTMLTextAreaElement;
-      expect(displayNameInput.value).toBe('Existing User');
       expect(notesInput.value).toBe('Existing notes');
     });
   });

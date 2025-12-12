@@ -50,7 +50,6 @@ export const createTestLighthouseProfile = (
 ): InsertLighthouseProfile => ({
   userId,
   profileType: 'seeker',
-  displayName: 'Test User',
   bio: 'Test bio',
   phoneNumber: '555-1234',
   desiredCountry: 'United States',
@@ -62,7 +61,6 @@ export const createTestSocketrelayProfile = (
   overrides: Partial<InsertSocketrelayProfile> = {}
 ): InsertSocketrelayProfile => ({
   userId,
-  displayName: 'Test User',
   country: 'United States',
   state: 'NY',
   city: 'New York',
@@ -91,7 +89,6 @@ export const createTestWorkforceRecruiterProfile = (
   overrides: Partial<InsertWorkforceRecruiterProfile> = {}
 ): InsertWorkforceRecruiterProfile => ({
   userId,
-  displayName: 'Test User',
   notes: 'Test notes',
   ...overrides,
 });
@@ -101,7 +98,6 @@ export const createTestTrusttransportProfile = (
   overrides: Partial<InsertTrusttransportProfile> = {}
 ): InsertTrusttransportProfile => ({
   userId,
-  displayName: 'Test User',
   isDriver: false,
   isRider: true,
   city: 'New York',
@@ -115,7 +111,6 @@ export const createTestMechanicmatchProfile = (
   overrides: Partial<InsertMechanicmatchProfile> = {}
 ): InsertMechanicmatchProfile => ({
   userId,
-  displayName: 'Test User',
   isCarOwner: true,
   isMechanic: false,
   city: 'New York',
@@ -130,8 +125,6 @@ export const createTestChymeProfile = (
   overrides: Partial<InsertChymeProfile> = {}
 ): InsertChymeProfile => ({
   userId,
-  displayName: 'Test User',
-  isAnonymous: false,
   ...overrides,
 });
 

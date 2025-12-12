@@ -40,7 +40,6 @@ describe('API - MechanicMatch Profile', () => {
     it('should accept valid profile data', () => {
       const validData = {
         userId: testUserId,
-        displayName: 'Test User',
         isCarOwner: true,
         isMechanic: false,
         city: 'New York',
@@ -50,50 +49,12 @@ describe('API - MechanicMatch Profile', () => {
       };
 
       const result = insertMechanicmatchProfileSchema.parse(validData);
-      expect(result.displayName).toBe('Test User');
       expect(result.isCarOwner).toBe(true);
-    });
-
-    it('should reject missing required displayName', () => {
-      const invalidData = {
-        userId: testUserId,
-        // Missing displayName
-        isCarOwner: true,
-      };
-
-      expect(() => {
-        insertMechanicmatchProfileSchema.parse(invalidData);
-      }).toThrow();
-    });
-
-    it('should reject empty displayName', () => {
-      const invalidData = {
-        userId: testUserId,
-        displayName: '',
-        isCarOwner: true,
-      };
-
-      expect(() => {
-        insertMechanicmatchProfileSchema.parse(invalidData);
-      }).toThrow();
-    });
-
-    it('should reject displayName exceeding max length', () => {
-      const invalidData = {
-        userId: testUserId,
-        displayName: 'a'.repeat(101), // Exceeds max 100 characters
-        isCarOwner: true,
-      };
-
-      expect(() => {
-        insertMechanicmatchProfileSchema.parse(invalidData);
-      }).toThrow();
     });
 
     it('should reject invalid experience (negative)', () => {
       const invalidData = {
         userId: testUserId,
-        displayName: 'Test User',
         isMechanic: true,
         experience: -1,
       };
@@ -106,7 +67,6 @@ describe('API - MechanicMatch Profile', () => {
     it('should reject invalid experience (exceeds max)', () => {
       const invalidData = {
         userId: testUserId,
-        displayName: 'Test User',
         isMechanic: true,
         experience: 101, // Exceeds max 100
       };
@@ -119,7 +79,6 @@ describe('API - MechanicMatch Profile', () => {
     it('should reject invalid hourlyRate (negative)', () => {
       const invalidData = {
         userId: testUserId,
-        displayName: 'Test User',
         isMechanic: true,
         hourlyRate: -1,
       };
@@ -132,7 +91,6 @@ describe('API - MechanicMatch Profile', () => {
     it('should reject invalid hourlyRate (exceeds max)', () => {
       const invalidData = {
         userId: testUserId,
-        displayName: 'Test User',
         isMechanic: true,
         hourlyRate: 10001, // Exceeds max 10000
       };
@@ -145,7 +103,6 @@ describe('API - MechanicMatch Profile', () => {
     it('should reject invalid averageRating (negative)', () => {
       const invalidData = {
         userId: testUserId,
-        displayName: 'Test User',
         isMechanic: true,
         averageRating: -1,
       };
@@ -158,7 +115,6 @@ describe('API - MechanicMatch Profile', () => {
     it('should reject invalid averageRating (exceeds max)', () => {
       const invalidData = {
         userId: testUserId,
-        displayName: 'Test User',
         isMechanic: true,
         averageRating: 6, // Exceeds max 5
       };
@@ -171,7 +127,6 @@ describe('API - MechanicMatch Profile', () => {
     it('should reject invalid signalUrl (not a valid URL)', () => {
       const invalidData = {
         userId: testUserId,
-        displayName: 'Test User',
         signalUrl: 'not-a-valid-url',
       };
 
@@ -183,7 +138,6 @@ describe('API - MechanicMatch Profile', () => {
     it('should accept valid signalUrl', () => {
       const validData = {
         userId: testUserId,
-        displayName: 'Test User',
         signalUrl: 'https://signal.me/#p/+1234567890',
       };
 
@@ -220,22 +174,16 @@ describe('API - MechanicMatch Profile', () => {
       
       // Valid partial update
       const validUpdate = {
-        displayName: 'Updated Name',
+        city: 'Updated City',
       };
       expect(() => partialSchema.parse(validUpdate)).not.toThrow();
-
-      // Invalid partial update (exceeds max length)
-      const invalidUpdate = {
-        displayName: 'a'.repeat(101),
-      };
-      expect(() => partialSchema.parse(invalidUpdate)).toThrow();
     });
 
     it('should reject attempts to update userId (security check)', () => {
       const req = createMockRequest(testUserId);
       req.body = {
         userId: otherUserId, // Attempt to change userId
-        displayName: 'Updated Name',
+        city: 'Updated City',
       };
       
       // In actual route, userId is extracted from req.user.claims.sub, not from body

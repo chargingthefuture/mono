@@ -41,7 +41,6 @@ describe('API - TrustTransport Profile', () => {
     it('should accept valid profile data', () => {
       const validData = {
         userId: testUserId,
-        displayName: 'Test User',
         isDriver: false,
         isRider: true,
         city: 'New York',
@@ -50,42 +49,13 @@ describe('API - TrustTransport Profile', () => {
       };
 
       const result = insertTrusttransportProfileSchema.parse(validData);
-      expect(result.displayName).toBe('Test User');
       expect(result.isRider).toBe(true);
     });
 
     it('should reject missing required fields', () => {
       const invalidData = {
         userId: testUserId,
-        // Missing displayName, city, state, country
-      };
-
-      expect(() => {
-        insertTrusttransportProfileSchema.parse(invalidData);
-      }).toThrow();
-    });
-
-    it('should reject empty displayName', () => {
-      const invalidData = {
-        userId: testUserId,
-        displayName: '',
-        city: 'New York',
-        state: 'NY',
-        country: 'United States',
-      };
-
-      expect(() => {
-        insertTrusttransportProfileSchema.parse(invalidData);
-      }).toThrow();
-    });
-
-    it('should reject displayName exceeding max length', () => {
-      const invalidData = {
-        userId: testUserId,
-        displayName: 'a'.repeat(101), // Exceeds max 100 characters
-        city: 'New York',
-        state: 'NY',
-        country: 'United States',
+        // Missing city, state, country
       };
 
       expect(() => {
@@ -96,7 +66,6 @@ describe('API - TrustTransport Profile', () => {
     it('should reject invalid vehicleYear (too old)', () => {
       const invalidData = {
         userId: testUserId,
-        displayName: 'Test User',
         city: 'New York',
         state: 'NY',
         country: 'United States',
@@ -111,7 +80,6 @@ describe('API - TrustTransport Profile', () => {
     it('should reject invalid vehicleYear (future year)', () => {
       const invalidData = {
         userId: testUserId,
-        displayName: 'Test User',
         city: 'New York',
         state: 'NY',
         country: 'United States',
@@ -126,7 +94,6 @@ describe('API - TrustTransport Profile', () => {
     it('should reject invalid signalUrl (not a valid URL)', () => {
       const invalidData = {
         userId: testUserId,
-        displayName: 'Test User',
         city: 'New York',
         state: 'NY',
         country: 'United States',
@@ -141,7 +108,6 @@ describe('API - TrustTransport Profile', () => {
     it('should accept valid signalUrl', () => {
       const validData = {
         userId: testUserId,
-        displayName: 'Test User',
         city: 'New York',
         state: 'NY',
         country: 'United States',
@@ -155,7 +121,6 @@ describe('API - TrustTransport Profile', () => {
     it('should accept empty string signalUrl and transform to null', () => {
       const validData = {
         userId: testUserId,
-        displayName: 'Test User',
         city: 'New York',
         state: 'NY',
         country: 'United States',
@@ -195,22 +160,16 @@ describe('API - TrustTransport Profile', () => {
       
       // Valid partial update
       const validUpdate = {
-        displayName: 'Updated Name',
+        city: 'Updated City',
       };
       expect(() => partialSchema.parse(validUpdate)).not.toThrow();
-
-      // Invalid partial update (exceeds max length)
-      const invalidUpdate = {
-        displayName: 'a'.repeat(101),
-      };
-      expect(() => partialSchema.parse(invalidUpdate)).toThrow();
     });
 
     it('should reject attempts to update userId (security check)', () => {
       const req = createMockRequest(testUserId);
       req.body = {
         userId: otherUserId, // Attempt to change userId
-        displayName: 'Updated Name',
+        city: 'Updated City',
       };
       
       // In actual route, userId is extracted from req.user.claims.sub, not from body
