@@ -130,5 +130,44 @@ describe('useExternalLink', () => {
 
     expect(screen.getByText(testUrl)).toBeInTheDocument();
   });
+
+  it('should show copy button for internal links', () => {
+    const { result } = renderHook(() => useExternalLink());
+
+    act(() => {
+      result.current.openExternal('/apps/directory/public');
+    });
+
+    const { ExternalLinkDialog } = result.current;
+    render(<ExternalLinkDialog />);
+    
+    // Dialog should show internal link title
+    expect(screen.getByText(/open link in new window/i)).toBeInTheDocument();
+    // Copy button should be present
+    expect(screen.getByRole('button', { name: /copy url/i })).toBeInTheDocument();
+  });
+
+  it('should copy URL when copy button is clicked', async () => {
+    const user = userEvent.setup();
+    const { result } = renderHook(() => useExternalLink());
+    const testUrl = '/apps/directory/public';
+    
+    // Mock clipboard API
+    const writeTextMock = vi.fn().mockResolvedValue(undefined);
+    Object.assign(navigator, { clipboard: { writeText: writeTextMock } });
+
+    act(() => {
+      result.current.openExternal(testUrl);
+    });
+
+    const { ExternalLinkDialog } = result.current;
+    render(<ExternalLinkDialog />);
+
+    const copyButton = screen.getByRole('button', { name: /copy url/i });
+    await user.click(copyButton);
+
+    expect(writeTextMock).toHaveBeenCalledWith(testUrl);
+    expect(screen.getByText(/copied/i)).toBeInTheDocument();
+  });
 });
 

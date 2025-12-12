@@ -14,6 +14,15 @@ import {
   lighthouseProperties,
   lighthouseMatches,
   lighthouseAnnouncements,
+  lighthouseBlocks,
+  type LighthouseBlock,
+  type InsertLighthouseBlock,
+  mechanicmatchBlocks,
+  type MechanicmatchBlock,
+  type InsertMechanicmatchBlock,
+  trusttransportBlocks,
+  type TrusttransportBlock,
+  type InsertTrusttransportBlock,
   socketrelayRequests,
   socketrelayFulfillments,
   socketrelayMessages,
@@ -395,6 +404,12 @@ export interface IStorage {
   getAllLighthouseAnnouncements(): Promise<LighthouseAnnouncement[]>;
   updateLighthouseAnnouncement(id: string, announcement: Partial<InsertLighthouseAnnouncement>): Promise<LighthouseAnnouncement>;
   deactivateLighthouseAnnouncement(id: string): Promise<LighthouseAnnouncement>;
+
+  // LightHouse Block operations
+  createLighthouseBlock(block: InsertLighthouseBlock): Promise<LighthouseBlock>;
+  getLighthouseBlocksByUser(userId: string): Promise<LighthouseBlock[]>;
+  checkLighthouseBlock(userId: string, blockedUserId: string): Promise<boolean>;
+  deleteLighthouseBlock(id: string): Promise<void>;
 
   // SocketRelay Request operations
   createSocketrelayRequest(userId: string, description: string, isPublic?: boolean): Promise<SocketrelayRequest>;

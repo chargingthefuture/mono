@@ -604,6 +604,36 @@ export const insertLighthouseAnnouncementSchema = createInsertSchema(lighthouseA
 export type InsertLighthouseAnnouncement = z.infer<typeof insertLighthouseAnnouncementSchema>;
 export type LighthouseAnnouncement = typeof lighthouseAnnouncements.$inferSelect;
 
+// LightHouse user blocking system - allows blocking hosts whose properties appear in feed
+export const lighthouseBlocks = pgTable("lighthouse_blocks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  blockedUserId: varchar("blocked_user_id").notNull().references(() => users.id),
+  reason: text("reason"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const lighthouseBlocksRelations = relations(lighthouseBlocks, ({ one }) => ({
+  blocker: one(users, {
+    fields: [lighthouseBlocks.userId],
+    references: [users.id],
+    relationName: "lighthouseBlocker",
+  }),
+  blocked: one(users, {
+    fields: [lighthouseBlocks.blockedUserId],
+    references: [users.id],
+    relationName: "lighthouseBlocked",
+  }),
+}));
+
+export const insertLighthouseBlockSchema = createInsertSchema(lighthouseBlocks).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertLighthouseBlock = z.infer<typeof insertLighthouseBlockSchema>;
+export type LighthouseBlock = typeof lighthouseBlocks.$inferSelect;
+
 // SocketRelay Requests - Users post requests for items they need
 export const socketrelayRequests = pgTable("socketrelay_requests", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -1152,6 +1182,36 @@ export const insertTrusttransportAnnouncementSchema = createInsertSchema(trusttr
 export type InsertTrusttransportAnnouncement = z.infer<typeof insertTrusttransportAnnouncementSchema>;
 export type TrusttransportAnnouncement = typeof trusttransportAnnouncements.$inferSelect;
 
+// TrustTransport user blocking system - allows blocking users they've interacted with
+export const trusttransportBlocks = pgTable("trusttransport_blocks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  blockedUserId: varchar("blocked_user_id").notNull().references(() => users.id),
+  reason: text("reason"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const trusttransportBlocksRelations = relations(trusttransportBlocks, ({ one }) => ({
+  blocker: one(users, {
+    fields: [trusttransportBlocks.userId],
+    references: [users.id],
+    relationName: "trusttransportBlocker",
+  }),
+  blocked: one(users, {
+    fields: [trusttransportBlocks.blockedUserId],
+    references: [users.id],
+    relationName: "trusttransportBlocked",
+  }),
+}));
+
+export const insertTrusttransportBlockSchema = createInsertSchema(trusttransportBlocks).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertTrusttransportBlock = z.infer<typeof insertTrusttransportBlockSchema>;
+export type TrusttransportBlock = typeof trusttransportBlocks.$inferSelect;
+
 // ========================================
 // PROFILE DELETION LOG TABLE
 // ========================================
@@ -1615,6 +1675,36 @@ export const insertMechanicmatchAnnouncementSchema = createInsertSchema(mechanic
 
 export type InsertMechanicmatchAnnouncement = z.infer<typeof insertMechanicmatchAnnouncementSchema>;
 export type MechanicmatchAnnouncement = typeof mechanicmatchAnnouncements.$inferSelect;
+
+// MechanicMatch user blocking system - allows blocking mechanics that appear in feed or have interacted
+export const mechanicmatchBlocks = pgTable("mechanicmatch_blocks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  blockedUserId: varchar("blocked_user_id").notNull().references(() => users.id),
+  reason: text("reason"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+
+export const mechanicmatchBlocksRelations = relations(mechanicmatchBlocks, ({ one }) => ({
+  blocker: one(users, {
+    fields: [mechanicmatchBlocks.userId],
+    references: [users.id],
+    relationName: "mechanicmatchBlocker",
+  }),
+  blocked: one(users, {
+    fields: [mechanicmatchBlocks.blockedUserId],
+    references: [users.id],
+    relationName: "mechanicmatchBlocked",
+  }),
+}));
+
+export const insertMechanicmatchBlockSchema = createInsertSchema(mechanicmatchBlocks).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertMechanicmatchBlock = z.infer<typeof insertMechanicmatchBlockSchema>;
+export type MechanicmatchBlock = typeof mechanicmatchBlocks.$inferSelect;
 
 // ========================================
 // LOSTMAIL APP TABLES
