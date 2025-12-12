@@ -1541,13 +1541,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!profile) {
       return res.json(null);
     }
-    // Get verification status from user
+    // Get user data to return firstName
     const user = await withDatabaseErrorHandling(
       () => storage.getUser(userId),
       'getUserVerificationForSupportMatchProfile'
     );
     const userIsVerified = user?.isVerified || false;
-    res.json({ ...profile, userIsVerified });
+    const userFirstName = user?.firstName || null;
+    res.json({ ...profile, userIsVerified, firstName: userFirstName });
   }));
 
   app.post('/api/supportmatch/profile', isAuthenticated, asyncHandler(async (req: any, res) => {
@@ -1872,13 +1873,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!profile) {
       return res.json(null);
     }
-    // Get verification status from user
+    // Get user data to return firstName
     const user = await withDatabaseErrorHandling(
       () => storage.getUser(userId),
       'getUserVerificationForLighthouseProfile'
     );
     const userIsVerified = user?.isVerified || false;
-    res.json({ ...profile, userIsVerified });
+    const userFirstName = user?.firstName || null;
+    res.json({ ...profile, userIsVerified, firstName: userFirstName });
   }));
 
   app.post('/api/lighthouse/profile', isAuthenticated, asyncHandler(async (req: any, res) => {
@@ -2436,13 +2438,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!profile) {
       return res.json(null);
     }
-    // Get verification status from user
+    // Get user data to return firstName
     const user = await withDatabaseErrorHandling(
       () => storage.getUser(userId),
       'getUserVerificationForSocketrelayProfile'
     );
     const userIsVerified = user?.isVerified || false;
-    res.json({ ...profile, userIsVerified });
+    const userFirstName = user?.firstName || null;
+    res.json({ ...profile, userIsVerified, firstName: userFirstName });
   }));
 
   app.post('/api/socketrelay/profile', isAuthenticated, asyncHandler(async (req: any, res) => {
@@ -3032,13 +3035,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!profile) {
       return res.json(null);
     }
-    // Get verification status from user
+    // Get user data to return firstName
     const user = await withDatabaseErrorHandling(
       () => storage.getUser(userId),
       'getUserVerificationForTrusttransportProfile'
     );
     const userIsVerified = user?.isVerified || false;
-    res.json({ ...profile, userIsVerified });
+    const userFirstName = user?.firstName || null;
+    res.json({ ...profile, userIsVerified, firstName: userFirstName });
   }));
 
   app.post('/api/trusttransport/profile', isAuthenticated, asyncHandler(async (req: any, res) => {
@@ -3365,13 +3369,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!profile) {
       return res.json(null);
     }
-    // Get verification status from user
+    // Get user data to return firstName
     const user = await withDatabaseErrorHandling(
       () => storage.getUser(userId),
       'getUserVerificationForMechanicmatchProfile'
     );
     const userIsVerified = user?.isVerified || false;
-    res.json({ ...profile, userIsVerified });
+    const userFirstName = user?.firstName || null;
+    res.json({ ...profile, userIsVerified, firstName: userFirstName });
   }));
 
   app.post('/api/mechanicmatch/profile', isAuthenticated, asyncHandler(async (req: any, res) => {
@@ -5330,13 +5335,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!profile) {
       return res.json(null);
     }
-    // Get verification status from user
+    // Get user data to build displayName
+    let displayName: string | null = null;
+    let userIsVerified = false;
+    let userFirstName: string | null = null;
+    let userLastName: string | null = null;
+    
     const user = await withDatabaseErrorHandling(
       () => storage.getUser(userId),
       'getUserVerificationForChymeProfile'
     );
-    const userIsVerified = user?.isVerified || false;
-    res.json({ ...profile, userIsVerified });
+    if (user) {
+      userFirstName = user.firstName || null;
+      userLastName = user.lastName || null;
+      userIsVerified = user.isVerified || false;
+      // Build display name from firstName and lastName
+      if (userFirstName && userLastName) {
+        displayName = `${userFirstName} ${userLastName}`;
+      } else if (userFirstName) {
+        displayName = userFirstName;
+      }
+    }
+    res.json({ ...profile, displayName, userIsVerified, firstName: userFirstName, lastName: userLastName });
   }));
 
   app.post('/api/chyme/profile', isAuthenticated, asyncHandler(async (req: any, res) => {
@@ -5746,13 +5766,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!profile) {
       return res.json(null);
     }
-    // Get verification status from user
+    // Get user data to return firstName
     const user = await withDatabaseErrorHandling(
       () => storage.getUser(userId),
       'getUserVerificationForWorkforceRecruiterProfile'
     );
     const userIsVerified = user?.isVerified || false;
-    res.json({ ...profile, userIsVerified });
+    const userFirstName = user?.firstName || null;
+    res.json({ ...profile, userIsVerified, firstName: userFirstName });
   }));
 
   app.post('/api/workforce-recruiter/profile', isAuthenticated, asyncHandler(async (req: any, res) => {

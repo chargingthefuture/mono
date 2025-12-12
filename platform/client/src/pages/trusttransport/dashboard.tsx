@@ -399,7 +399,7 @@ export default function TrustTransportDashboard() {
           <div>
             <CardTitle>Your Profile</CardTitle>
             <CardDescription>
-              {profile.displayName} • {roleLabel.join(" & ")}
+              {profile.firstName || '—'} • {roleLabel.join(" & ")}
             </CardDescription>
           </div>
           <Link href="/apps/trusttransport/profile">

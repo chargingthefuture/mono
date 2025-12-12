@@ -130,7 +130,7 @@ export default function LighthouseDashboard() {
           <div>
             <CardTitle>Your Profile</CardTitle>
             <CardDescription>
-              {profile.displayName} • {isSeeker ? "Housing Seeker" : "Housing Host"}
+              {profile.firstName || '—'} • {isSeeker ? "Housing Seeker" : "Housing Host"}
             </CardDescription>
           </div>
           <Link href="/apps/lighthouse/profile">
