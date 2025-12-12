@@ -36,8 +36,30 @@ class ClerkAuthManager(private val context: Context) {
      */
     suspend fun getSessionToken(): String? {
         return try {
-            val session = Clerk.session
-            session?.getToken()
+            val session = Clerk.session ?: return null
+            // Use fetchToken() which is the suspend function in Clerk Android SDK
+            // According to Clerk Android SDK docs: https://github.com/clerk/clerk-android
+            val tokenResult = session.fetchToken()
+            // fetchToken() may return String directly or TokenResource with token property
+            when {
+                tokenResult is String -> tokenResult
+                tokenResult != null -> {
+                    // Try to access token property if it's a TokenResource object
+                    try {
+                        val tokenField = tokenResult.javaClass.getDeclaredField("token")
+                        tokenField.isAccessible = true
+                        tokenField.get(tokenResult) as? String
+                    } catch (e: NoSuchFieldException) {
+                        // Try getToken() method as fallback
+                        try {
+                            tokenResult.javaClass.getMethod("getToken").invoke(tokenResult) as? String
+                        } catch (e2: Exception) {
+                            null
+                        }
+                    }
+                }
+                else -> null
+            }
         } catch (e: Exception) {
             android.util.Log.e("ClerkAuthManager", "Error getting session token", e)
             null
