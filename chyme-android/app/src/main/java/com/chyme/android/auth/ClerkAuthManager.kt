@@ -37,7 +37,7 @@ class ClerkAuthManager(private val context: Context) {
     suspend fun getSessionToken(): String? {
         return try {
             val session = Clerk.session
-            session?.token
+            session?.getToken()
         } catch (e: Exception) {
             android.util.Log.e("ClerkAuthManager", "Error getting session token", e)
             null
