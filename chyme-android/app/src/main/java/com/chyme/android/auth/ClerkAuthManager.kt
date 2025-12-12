@@ -37,7 +37,7 @@ class ClerkAuthManager(private val context: Context) {
     suspend fun getSessionToken(): String? {
         return try {
             val session = Clerk.session
-            session?.getToken()
+            session?.token
         } catch (e: Exception) {
             android.util.Log.e("ClerkAuthManager", "Error getting session token", e)
             null
@@ -121,7 +121,31 @@ class ClerkAuthManager(private val context: Context) {
      * Get current Clerk user ID
      */
     fun getUserId(): String? {
-        return Clerk.user?.id
+        return try {
+            val user = Clerk.user
+            // Clerk user object - try to access id using reflection as a fallback
+            // The exact property name may vary by SDK version
+            user?.let {
+                try {
+                    // Try direct property access first (if it's a data class with id property)
+                    val idField = it.javaClass.getDeclaredField("id")
+                    idField.isAccessible = true
+                    idField.get(it) as? String
+                } catch (e: NoSuchFieldException) {
+                    // Try getId() method
+                    try {
+                        it.javaClass.getMethod("getId").invoke(it) as? String
+                    } catch (e2: Exception) {
+                        null
+                    }
+                } catch (e: Exception) {
+                    null
+                }
+            }
+        } catch (e: Exception) {
+            android.util.Log.e("ClerkAuthManager", "Error getting user ID", e)
+            null
+        }
     }
     
     /**
