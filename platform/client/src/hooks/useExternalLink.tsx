@@ -8,7 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Copy, Check } from "lucide-react";
 
 /**
  * Determines if a URL is internal (same origin) or external
@@ -32,6 +32,7 @@ function isInternalLink(url: string): boolean {
 export function useExternalLink() {
   const [url, setUrl] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
 
   const isInternal = useMemo(() => {
     return url ? isInternalLink(url) : false;
@@ -40,6 +41,7 @@ export function useExternalLink() {
   const openExternal = (linkUrl: string) => {
     setUrl(linkUrl);
     setIsOpen(true);
+    setCopied(false);
   };
 
   const handleConfirm = () => {
@@ -47,12 +49,27 @@ export function useExternalLink() {
       window.open(url, "_blank", "noopener,noreferrer");
       setIsOpen(false);
       setUrl(null);
+      setCopied(false);
     }
   };
 
   const handleCancel = () => {
     setIsOpen(false);
     setUrl(null);
+    setCopied(false);
+  };
+
+  const handleCopy = async () => {
+    if (url) {
+      try {
+        await navigator.clipboard.writeText(url);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      } catch (err) {
+        // Fallback for older browsers
+        console.error("Failed to copy URL:", err);
+      }
+    }
   };
 
   const ExternalLinkDialog = () => (
@@ -74,6 +91,19 @@ export function useExternalLink() {
         <DialogFooter>
           <Button variant="outline" onClick={handleCancel}>
             Cancel
+          </Button>
+          <Button variant="outline" onClick={handleCopy}>
+            {copied ? (
+              <>
+                <Check className="w-4 h-4 mr-2" />
+                Copied
+              </>
+            ) : (
+              <>
+                <Copy className="w-4 h-4 mr-2" />
+                Copy URL
+              </>
+            )}
           </Button>
           <Button onClick={handleConfirm}>
             <ExternalLink className="w-4 h-4 mr-2" />
