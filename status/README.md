@@ -38,14 +38,32 @@ Or set it as a GitHub secret named `BASE_URL`.
 
 ### 2. Enable GitHub Pages
 
-1. Go to your repository settings
-2. Navigate to Pages
-3. Set source to `Deploy from a branch`
-4. Select branch: `main` (or your default branch)
-5. Select folder: `/status/public`
-6. Save
+**Recommended: Use GitHub Actions (bypasses dropdown limitation)**
 
-The status page will be available at: `https://{username}.github.io/{repo-name}/status/`
+The repository includes a GitHub Actions workflow (`.github/workflows/deploy-status-pages.yml`) that automatically deploys the status page to GitHub Pages. This bypasses the dropdown limitation.
+
+1. Go to your repository settings
+2. Navigate to **Pages**
+3. Under **Source**, select **GitHub Actions** (not "Deploy from a branch")
+4. The workflow will automatically deploy when you push changes to `status/public/`
+
+**Alternative: Manual branch deployment (if dropdown limitation exists)**
+
+If you prefer to use branch deployment but the dropdown only shows `/` (root) and `/docs`:
+
+1. Go to your repository settings → **Pages**
+2. Set source to `Deploy from a branch`
+3. Select branch: `main` (or your default branch)
+4. **Important**: The folder dropdown may only show `/` (root) and `/docs` folders. This is a GitHub Pages limitation - it only shows folders with an `index.html` at their root level.
+5. If the dropdown allows manual input, type `/status/public` in the folder field
+6. If only a dropdown is available, use the GitHub Actions method above instead
+
+**Using GitHub CLI** (alternative):
+```bash
+gh api repos/{owner}/{repo}/pages -X PUT -f source='{"branch":"main","path":"/status/public"}'
+```
+
+The status page will be available at: `https://{username}.github.io/{repo-name}/`
 
 ### 3. Initial Run
 
