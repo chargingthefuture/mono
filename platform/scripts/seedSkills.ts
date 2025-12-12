@@ -1530,7 +1530,7 @@ const skillsData: {
         skills: [
           "Crisis communication and public information",
           "Emergency alerting systems operation",
-          "Community liaison and rumor management",
+          "Community liaison",
         ],
       },
       {
