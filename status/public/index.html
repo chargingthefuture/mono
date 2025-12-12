@@ -5,6 +5,32 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Platform Status</title>
   <style>
+    :root {
+      --bg-primary: #f5f5f5;
+      --bg-secondary: #ffffff;
+      --text-primary: #333333;
+      --text-secondary: #666666;
+      --text-tertiary: #999999;
+      --border-color: rgba(0, 0, 0, 0.1);
+      --shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      --shadow-hover: 0 4px 8px rgba(0, 0, 0, 0.15);
+      --error-bg: #fee2e2;
+      --error-text: #991b1b;
+    }
+
+    [data-theme="dark"] {
+      --bg-primary: #1a1a1a;
+      --bg-secondary: #2d2d2d;
+      --text-primary: #e5e5e5;
+      --text-secondary: #b3b3b3;
+      --text-tertiary: #808080;
+      --border-color: rgba(255, 255, 255, 0.1);
+      --shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      --shadow-hover: 0 4px 8px rgba(0, 0, 0, 0.4);
+      --error-bg: #4a1f1f;
+      --error-text: #ff6b6b;
+    }
+
     * {
       margin: 0;
       padding: 0;
@@ -13,9 +39,10 @@
 
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      background: #f5f5f5;
-      color: #333;
+      background: var(--bg-primary);
+      color: var(--text-primary);
       line-height: 1.6;
+      transition: background-color 0.3s ease, color 0.3s ease;
     }
 
     .container {
@@ -24,31 +51,63 @@
       padding: 20px;
     }
 
+    .theme-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 50%;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s, box-shadow 0.2s;
+      z-index: 1000;
+    }
+
+    .theme-toggle:hover {
+      transform: scale(1.1);
+      box-shadow: var(--shadow-hover);
+    }
+
+    .theme-toggle svg {
+      width: 24px;
+      height: 24px;
+      fill: var(--text-primary);
+    }
+
     header {
-      background: white;
+      background: var(--bg-secondary);
       padding: 30px 20px;
       border-radius: 8px;
       margin-bottom: 20px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      box-shadow: var(--shadow);
+      position: relative;
+      transition: background-color 0.3s ease;
     }
 
     h1 {
       font-size: 2.5em;
       margin-bottom: 10px;
-      color: #1a1a1a;
+      color: var(--text-primary);
     }
 
     .subtitle {
-      color: #666;
+      color: var(--text-secondary);
       font-size: 1.1em;
     }
 
     .overall-status {
-      background: white;
+      background: var(--bg-secondary);
       padding: 20px;
       border-radius: 8px;
       margin-bottom: 20px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      box-shadow: var(--shadow);
+      transition: background-color 0.3s ease;
     }
 
     .status-indicator {
@@ -82,16 +141,16 @@
     }
 
     .service-card {
-      background: white;
+      background: var(--bg-secondary);
       padding: 20px;
       border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      transition: transform 0.2s, box-shadow 0.2s;
+      box-shadow: var(--shadow);
+      transition: transform 0.2s, box-shadow 0.2s, background-color 0.3s ease;
     }
 
     .service-card:hover {
       transform: translateY(-2px);
-      box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+      box-shadow: var(--shadow-hover);
     }
 
     .service-header {
@@ -121,7 +180,7 @@
     }
 
     .service-details {
-      color: #666;
+      color: var(--text-secondary);
       font-size: 0.9em;
       margin-top: 10px;
     }
@@ -132,7 +191,7 @@
 
     .last-updated {
       text-align: center;
-      color: #999;
+      color: var(--text-tertiary);
       font-size: 0.9em;
       margin-top: 20px;
     }
@@ -140,15 +199,27 @@
     .loading {
       text-align: center;
       padding: 40px;
-      color: #666;
+      color: var(--text-secondary);
     }
 
     .error {
-      background: #fee2e2;
-      color: #991b1b;
+      background: var(--error-bg);
+      color: var(--error-text);
       padding: 15px;
       border-radius: 8px;
       margin: 20px 0;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-secondary);
+    }
+
+    .empty-state p {
+      margin-top: 10px;
+      font-size: 0.9em;
+      color: var(--text-tertiary);
     }
 
     @media (max-width: 768px) {
@@ -163,6 +234,12 @@
   </style>
 </head>
 <body>
+  <button class="theme-toggle" id="theme-toggle" aria-label="Toggle theme">
+    <svg id="theme-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.75 7.5a.75.75 0 00-1.5 0v2.25a.75.75 0 001.5 0V7.5zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.757 17.657a.75.75 0 00-1.061-1.061l-1.59 1.59a.75.75 0 001.06 1.06l1.59-1.59zM6 10.5a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 10.5zM18.657 7.757a.75.75 0 001.06-1.06l-1.59-1.59a.75.75 0 00-1.061 1.06l1.59 1.59zM21 12a.75.75 0 01-.75.75H18a.75.75 0 010-1.5h2.25A.75.75 0 0121 12zM17.657 18.243a.75.75 0 00-1.06-1.06l-1.59 1.59a.75.75 0 001.061 1.06l1.59-1.59zM16.5 10.5a.75.75 0 01.75-.75H21a.75.75 0 010 1.5h-3.75a.75.75 0 01-.75-.75zM13 12a1 1 0 11-2 0 1 1 0 012 0zM11.25 7.5a.75.75 0 100-1.5.75.75 0 000 1.5zM12 15.75a.75.75 0 100-1.5.75.75 0 000 1.5z"/>
+    </svg>
+  </button>
+
   <div class="container">
     <header>
       <h1>Platform Status</h1>
@@ -186,6 +263,33 @@
     const STATUS_FILE = 'status.json';
     const UPDATE_INTERVAL = 60000; // Update every minute
 
+    // Theme management
+    function initTheme() {
+      const theme = localStorage.getItem('theme') || 'light';
+      document.documentElement.setAttribute('data-theme', theme);
+      updateThemeIcon(theme);
+    }
+
+    function toggleTheme() {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      localStorage.setItem('theme', newTheme);
+      updateThemeIcon(newTheme);
+    }
+
+    function updateThemeIcon(theme) {
+      const icon = document.getElementById('theme-icon');
+      if (theme === 'dark') {
+        icon.innerHTML = '<path d="M9.528 1.718a.75.75 0 01.162.819A8.97 8.97 0 009 6a9 9 0 009 9 8.97 8.97 0 003.463-.69.75.75 0 01.981.98 10 10 0 01-9.694 6.46c-5.799 0-10.65-4.66-9.995-10.657a.75.75 0 01.936-.936z"/>';
+      } else {
+        icon.innerHTML = '<path d="M12 2.25a.75.75 0 01.75.75v2.25a.75.75 0 01-1.5 0V3a.75.75 0 01.75-.75zM7.5 12a4.5 4.5 0 119 0 4.5 4.5 0 01-9 0zM18.75 7.5a.75.75 0 00-1.5 0v2.25a.75.75 0 001.5 0V7.5zM12 18a.75.75 0 01.75.75V21a.75.75 0 01-1.5 0v-2.25A.75.75 0 0112 18zM7.757 17.657a.75.75 0 00-1.061-1.061l-1.59 1.59a.75.75 0 001.06 1.06l1.59-1.59zM6 10.5a.75.75 0 01-.75.75H3a.75.75 0 010-1.5h2.25A.75.75 0 016 10.5zM18.657 7.757a.75.75 0 001.06-1.06l-1.59-1.59a.75.75 0 00-1.061 1.06l1.59 1.59zM21 12a.75.75 0 01-.75.75H18a.75.75 0 010-1.5h2.25A.75.75 0 0121 12zM17.657 18.243a.75.75 0 00-1.06-1.06l-1.59 1.59a.75.75 0 001.061 1.06l1.59-1.59zM16.5 10.5a.75.75 0 01.75-.75H21a.75.75 0 010 1.5h-3.75a.75.75 0 01-.75-.75zM13 12a1 1 0 11-2 0 1 1 0 012 0zM11.25 7.5a.75.75 0 100-1.5.75.75 0 000 1.5zM12 15.75a.75.75 0 100-1.5.75.75 0 000 1.5z"/>';
+      }
+    }
+
+    document.getElementById('theme-toggle').addEventListener('click', toggleTheme);
+    initTheme();
+
     function formatTimestamp(isoString) {
       if (!isoString) return '-';
       const date = new Date(isoString);
@@ -204,6 +308,20 @@
 
     function renderOverallStatus(summary) {
       const container = document.getElementById('overall-status');
+      
+      // Handle empty or invalid data
+      if (!summary.overall || summary.overall.total === 0) {
+        container.innerHTML = `
+          <div style="text-align: center; padding: 20px;">
+            <strong style="font-size: 1.3em;">Waiting for health check data</strong>
+            <div style="margin-top: 10px; color: var(--text-secondary); font-size: 0.9em;">
+              The health check script needs to run to populate status data.
+            </div>
+          </div>
+        `;
+        return;
+      }
+
       const allUp = summary.overall.down === 0;
       const someDown = summary.overall.down > 0 && summary.overall.down < summary.overall.total;
       
@@ -224,7 +342,7 @@
             <span class="status-indicator ${statusClass}"></span>
             <strong style="font-size: 1.3em;">${statusText}</strong>
           </div>
-          <div style="text-align: right; color: #666;">
+          <div style="text-align: right; color: var(--text-secondary);">
             <div>${summary.overall.up} / ${summary.overall.total} services operational</div>
             <div style="font-size: 0.9em; margin-top: 5px;">Last checked: ${formatTimestamp(summary.timestamp)}</div>
           </div>
@@ -235,8 +353,13 @@
     function renderServices(services) {
       const container = document.getElementById('services-container');
       
-      if (services.length === 0) {
-        container.innerHTML = '<div class="error">No services found</div>';
+      if (!services || services.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <strong>No services found</strong>
+            <p>The health check script needs to run to populate service data. Check the GitHub Actions workflow.</p>
+          </div>
+        `;
         return;
       }
 
