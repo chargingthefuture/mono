@@ -17,11 +17,12 @@ import { useLocation } from "wouter";
 import { MiniAppBackButton } from "@/components/mini-app-back-button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
-import { Check, ChevronsUpDown } from "lucide-react";
+import { Check, ChevronsUpDown, Copy, ExternalLink } from "lucide-react";
 import { COUNTRIES } from "@/lib/countries";
 import { US_STATES } from "@/lib/usStates";
 import { cn } from "@/lib/utils";
 import { VerifiedBadge } from "@/components/verified-badge";
+import { useExternalLink } from "@/hooks/useExternalLink";
 
 const profileFormSchema = insertMechanicmatchProfileSchema.omit({ userId: true });
 
@@ -30,9 +31,11 @@ type ProfileFormData = z.infer<typeof profileFormSchema>;
 export default function MechanicMatchProfile() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
+  const { openExternal, ExternalLinkDialog } = useExternalLink();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [countryOpen, setCountryOpen] = useState(false);
   const [stateOpen, setStateOpen] = useState(false);
+  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
 
   const { data: profileData, isLoading } = useQuery<MechanicmatchProfile & { userIsVerified?: boolean } | null>({
     queryKey: ["/api/mechanicmatch/profile"],
@@ -186,6 +189,26 @@ export default function MechanicMatchProfile() {
   const isSubmitting = createMutation.isPending || updateMutation.isPending;
   const countryValue = form.watch("country");
   const stateValue = form.watch("state");
+  const isPublic = form.watch("isPublic");
+  const publicProfileUrl = profile && isPublic ? `${window.location.origin}/apps/mechanicmatch/public/${profile.id}` : null;
+
+  const copyUrl = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedUrl(url);
+      toast({
+        title: "Copied!",
+        description: "Public profile link copied to clipboard",
+      });
+      setTimeout(() => setCopiedUrl(null), 2000);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to copy link",
+        variant: "destructive",
+      });
+    }
+  };
 
   if (isLoading) {
     return (
@@ -619,6 +642,40 @@ export default function MechanicMatchProfile() {
                     </FormItem>
                   )}
                 />
+                {publicProfileUrl && (
+                  <div className="mt-4 space-y-2 p-4 bg-muted/50 rounded-lg">
+                    <label className="text-sm font-medium">Public Profile URL</label>
+                    <p className="text-sm text-muted-foreground">Share this link to let others view your public profile</p>
+                    <div className="flex items-center gap-2">
+                      <code className="flex-1 font-mono text-xs sm:text-sm bg-background px-2 py-1.5 rounded break-all">
+                        {publicProfileUrl}
+                      </code>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => copyUrl(publicProfileUrl)}
+                        className="flex-shrink-0"
+                        data-testid="button-copy-public-profile-url"
+                        aria-label="Copy public profile URL"
+                      >
+                        {copiedUrl === publicProfileUrl ? (
+                          <Check className="w-4 h-4 text-primary" />
+                        ) : (
+                          <Copy className="w-4 h-4" />
+                        )}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openExternal(publicProfileUrl)}
+                        className="flex-shrink-0"
+                        data-testid="button-open-public-profile-url"
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2" /> Open
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="flex gap-3 pt-4">
@@ -665,6 +722,7 @@ export default function MechanicMatchProfile() {
           isDeleting={deleteMutation.isPending}
         />
       )}
+      <ExternalLinkDialog />
     </div>
   );
 }
