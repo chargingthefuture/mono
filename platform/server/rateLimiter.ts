@@ -1,12 +1,22 @@
 import rateLimit, { ipKeyGenerator } from "express-rate-limit";
+import { Request } from "express";
 
 /**
  * Rate limiting middleware to prevent scraping and abuse of public endpoints
  * Designed to protect user privacy while allowing legitimate browsing
  */
 
+// Extend Express Request type to include rateLimit
+declare module "express-serve-static-core" {
+  interface Request {
+    rateLimit?: {
+      resetTime?: number;
+    };
+  }
+}
+
 // Helper function to get IP address with proper IPv6 support
-const getIpAddress = (req: any): string => {
+const getIpAddress = (req: Request): string => {
   // Check for forwarded IP (behind proxy/load balancer)
   const forwarded = req.headers['x-forwarded-for'];
   if (typeof forwarded === 'string') {

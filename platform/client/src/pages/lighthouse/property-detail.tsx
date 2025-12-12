@@ -207,10 +207,10 @@ export default function PropertyDetailPage() {
             </div>
           )}
 
-          {property.housingRules && (
+          {property.houseRules && (
             <div>
               <h3 className="font-semibold mb-2">Housing Rules</h3>
-              <p className="text-muted-foreground">{property.housingRules}</p>
+              <p className="text-muted-foreground">{property.houseRules}</p>
             </div>
           )}
 

@@ -118,7 +118,7 @@ export default function ChymeAdminRoomForm() {
 
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-6">
-      <MiniAppBackButton href="/apps/chyme/admin" />
+      <MiniAppBackButton />
       
       <h1 className="text-2xl sm:text-3xl font-semibold mb-2">
         {isEditing ? "Edit Room" : "Create New Room"}

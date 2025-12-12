@@ -82,7 +82,7 @@ import {
 import { asyncHandler } from "./errorHandler";
 import { validateWithZod } from "./validationErrorFormatter";
 import { withDatabaseErrorHandling } from "./databaseErrorHandler";
-import { NotFoundError, ForbiddenError, ValidationError, UnauthorizedError } from "./errors";
+import { NotFoundError, ForbiddenError, ValidationError, UnauthorizedError, ExternalServiceError } from "./errors";
 import * as Sentry from '@sentry/node';
 
 export async function registerRoutes(app: Express): Promise<Server> {

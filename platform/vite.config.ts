@@ -25,7 +25,7 @@ export default defineConfig({
               ignore: ["node_modules"],
               // Delete source maps after upload (recommended for security)
               // This prevents source maps from being publicly accessible
-              deleteSourcemapsAfterUpload: true,
+              filesToDeleteAfterUpload: ["**/*.map"],
             },
           }),
         ]

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { useRoute, useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -29,13 +29,14 @@ export default function LostMailAdminIncidentDetail() {
   const { data: incident, isLoading } = useQuery<LostmailIncident>({
     queryKey: [`/api/lostmail/incidents/${incidentId}`],
     enabled: !!incidentId,
-    onSuccess: (data) => {
-      if (data) {
-        setStatus(data.status);
-        setAssignedTo(data.assignedTo || "");
-      }
-    },
   });
+
+  useEffect(() => {
+    if (incident) {
+      setStatus(incident.status);
+      setAssignedTo(incident.assignedTo || "");
+    }
+  }, [incident]);
 
   const { data: auditTrail = [] } = useQuery<LostmailAuditTrail[]>({
     queryKey: [`/api/lostmail/incidents/${incidentId}/audit-trail`],
@@ -72,7 +73,7 @@ export default function LostMailAdminIncidentDetail() {
     }
     
     if (assignedTo !== (incident?.assignedTo || "")) {
-      updateData.assignedTo = assignedTo || null;
+      updateData.assignedTo = assignedTo || undefined;
     }
     
     if (note.trim()) {

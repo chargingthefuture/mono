@@ -146,6 +146,7 @@ export default function ResearchAnswerComposer({ researchItemId }: ResearchAnswe
                   min="0"
                   max="100"
                   {...field}
+                  value={field.value ?? ""}
                   onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
                   placeholder="Optional"
                   data-testid="input-confidence"

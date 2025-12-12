@@ -20,13 +20,15 @@ const requestFormSchema = insertMechanicmatchServiceRequestSchema.omit({
   status: true,
 });
 
-type RequestFormData = z.infer<typeof requestFormSchema>;
+type RequestFormData = z.infer<typeof requestFormSchema> & {
+  requestType?: "advice_only" | "remote_diagnosis" | "in_person";
+};
 
 export default function CreateServiceRequest() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
 
-  const { data: vehicles = [] } = useQuery({
+  const { data: vehicles = [] } = useQuery<any[]>({
     queryKey: ["/api/mechanicmatch/vehicles"],
   });
 
@@ -111,7 +113,7 @@ export default function CreateServiceRequest() {
                       </FormControl>
                       <SelectContent>
                         <SelectItem value="none">Not in my list</SelectItem>
-                        {vehicles.map((vehicle) => (
+                        {vehicles.map((vehicle: any) => (
                           <SelectItem key={vehicle.id} value={vehicle.id}>
                             {vehicle.year} {vehicle.make} {vehicle.model}
                           </SelectItem>

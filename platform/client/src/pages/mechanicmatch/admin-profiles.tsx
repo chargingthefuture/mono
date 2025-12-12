@@ -273,7 +273,7 @@ export default function MechanicMatchAdminProfiles() {
                     <FormItem>
                       <FormLabel>City</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="City" data-testid="input-city-create" />
+                        <Input {...field} value={field.value ?? ""} placeholder="City" data-testid="input-city-create" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -291,7 +291,7 @@ export default function MechanicMatchAdminProfiles() {
                     <FormItem>
                       <FormLabel>Phone Number</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="+1 555 123 4567" data-testid="input-phone-create" />
+                        <Input {...field} value={field.value ?? ""} placeholder="+1 555 123 4567" data-testid="input-phone-create" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -304,7 +304,7 @@ export default function MechanicMatchAdminProfiles() {
                     <FormItem>
                       <FormLabel>Signal Link</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="https://signal.me/#p/+1..." data-testid="input-signal-create" />
+                        <Input {...field} value={field.value ?? ""} placeholder="https://signal.me/#p/+1..." data-testid="input-signal-create" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -499,7 +499,7 @@ export default function MechanicMatchAdminProfiles() {
                     <FormItem>
                       <FormLabel>City</FormLabel>
                       <FormControl>
-                        <Input {...field} data-testid="input-city-edit" />
+                        <Input {...field} value={field.value ?? ""} data-testid="input-city-edit" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -517,7 +517,7 @@ export default function MechanicMatchAdminProfiles() {
                     <FormItem>
                       <FormLabel>Phone Number</FormLabel>
                       <FormControl>
-                        <Input {...field} data-testid="input-phone-edit" />
+                        <Input {...field} value={field.value ?? ""} data-testid="input-phone-edit" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -530,7 +530,7 @@ export default function MechanicMatchAdminProfiles() {
                     <FormItem>
                       <FormLabel>Signal Link</FormLabel>
                       <FormControl>
-                        <Input {...field} data-testid="input-signal-edit" />
+                        <Input {...field} value={field.value ?? ""} data-testid="input-signal-edit" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>

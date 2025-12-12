@@ -3,7 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, Info, Wrench, Bell, Megaphone, X } from "lucide-react";
 import { format } from "date-fns";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
 
@@ -14,7 +14,7 @@ export interface AnnouncementBannerProps {
 
 export function AnnouncementBanner({ apiEndpoint, queryKey }: AnnouncementBannerProps) {
   const { handleError } = useErrorHandler({ showToast: true, toastTitle: "Announcements Error" });
-  const { data: announcements, isLoading } = useQuery<any[]>({
+  const { data: announcements, isLoading, error } = useQuery<any[]>({
     queryKey: [queryKey || apiEndpoint],
     // Provide an explicit queryFn because tests use a QueryClient without a default queryFn.
     queryFn: async () => {
@@ -29,8 +29,13 @@ export function AnnouncementBanner({ apiEndpoint, queryKey }: AnnouncementBanner
       // Ensure we always return an array, even if the API returns something else
       return Array.isArray(data) ? data : [];
     },
-    onError: (err) => handleError(err),
   });
+
+  useEffect(() => {
+    if (error) {
+      handleError(error);
+    }
+  }, [error, handleError]);
 
   const [dismissedIds, setDismissedIds] = useState<Set<string>>(
     new Set(JSON.parse(localStorage.getItem(`dismissed-announcements-${apiEndpoint}`) || "[]"))

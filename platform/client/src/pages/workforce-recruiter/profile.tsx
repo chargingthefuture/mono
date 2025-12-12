@@ -121,6 +121,7 @@ export default function WorkforceRecruiterProfile() {
                     <FormControl>
                       <Input
                         {...field}
+                        value={field.value ?? ""}
                         placeholder="Enter your display name"
                         maxLength={100}
                         data-testid="input-display-name"
@@ -140,6 +141,7 @@ export default function WorkforceRecruiterProfile() {
                     <FormControl>
                       <Textarea
                         {...field}
+                        value={field.value ?? ""}
                         placeholder="Add any notes about your profile"
                         rows={4}
                         data-testid="input-notes"

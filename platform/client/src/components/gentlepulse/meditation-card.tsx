@@ -95,7 +95,7 @@ export function MeditationCard({ meditation }: MeditationCardProps) {
     favoriteMutation.mutate(!favoriteData?.isFavorite);
   };
 
-  const currentRating = userRating?.rating || 0;
+  const currentRating = userRating || 0;
 
   return (
     <>

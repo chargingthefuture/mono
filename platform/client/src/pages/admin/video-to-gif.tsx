@@ -163,11 +163,15 @@ export default function VideoToGifConverter() {
           resolve(blob);
         });
         
-        gif.on("error", (error: Error) => {
-          reject(error);
+        gif.on("progress", () => {
+          // Progress handler
         });
         
-        gif.render();
+        try {
+          gif.render();
+        } catch (error) {
+          reject(error as Error);
+        }
       });
 
       const gifUrl = URL.createObjectURL(gifBlob);

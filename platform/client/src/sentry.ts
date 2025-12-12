@@ -87,8 +87,7 @@ export function initSentry() {
     // - Sentry.metrics.distribution('metric_name', value)
 
     // Capture unhandled exceptions and rejections
-    captureUnhandledRejections: true,
-    captureUncaughtException: true,
+    // Note: captureUncaughtException is handled automatically by Sentry
 
     // Send default PII (Personally Identifiable Information)
     // Setting this to true will send default PII data to Sentry

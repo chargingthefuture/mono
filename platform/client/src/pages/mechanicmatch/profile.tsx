@@ -289,7 +289,7 @@ export default function MechanicMatchProfile() {
                     <FormItem>
                       <FormLabel>City</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="City" data-testid="input-city" />
+                        <Input {...field} value={field.value ?? ""} placeholder="City" data-testid="input-city" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -418,7 +418,7 @@ export default function MechanicMatchProfile() {
                   <FormItem>
                     <FormLabel>Phone Number</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="Phone number" data-testid="input-phone" />
+                      <Input {...field} value={field.value ?? ""} placeholder="Phone number" data-testid="input-phone" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -432,7 +432,7 @@ export default function MechanicMatchProfile() {
                   <FormItem>
                     <FormLabel>Signal Profile URL</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="https://signal.me/..." data-testid="input-signal-url" />
+                      <Input {...field} value={field.value ?? ""} placeholder="https://signal.me/..." data-testid="input-signal-url" />
                     </FormControl>
                     <FormDescription>Link to your Signal profile for secure communication</FormDescription>
                     <FormMessage />
@@ -451,7 +451,7 @@ export default function MechanicMatchProfile() {
                       <FormItem>
                         <FormLabel>Bio</FormLabel>
                         <FormControl>
-                          <Textarea {...field} placeholder="Tell us about yourself as a car owner" rows={3} />
+                          <Textarea {...field} value={field.value ?? ""} placeholder="Tell us about yourself as a car owner" rows={3} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -472,7 +472,7 @@ export default function MechanicMatchProfile() {
                       <FormItem>
                         <FormLabel>Professional Bio</FormLabel>
                         <FormControl>
-                          <Textarea {...field} placeholder="Tell us about your experience and expertise" rows={3} />
+                          <Textarea {...field} value={field.value ?? ""} placeholder="Tell us about your experience and expertise" rows={3} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -522,6 +522,7 @@ export default function MechanicMatchProfile() {
                             <Input
                               type="number"
                               {...field}
+                              value={field.value ?? ""}
                               onChange={(e) => field.onChange(e.target.value ? parseFloat(e.target.value) : null)}
                               placeholder="Rate per hour"
                               data-testid="input-hourly-rate"
@@ -540,7 +541,7 @@ export default function MechanicMatchProfile() {
                       <FormItem>
                         <FormLabel>Shop Location</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="Physical shop address (optional)" />
+                          <Input {...field} value={field.value ?? ""} placeholder="Physical shop address (optional)" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -578,6 +579,7 @@ export default function MechanicMatchProfile() {
                         <FormControl>
                           <Textarea
                             {...field}
+                            value={field.value ?? ""}
                             placeholder="Comma-separated list (e.g., Engine Repair, Transmission, Brakes)"
                             rows={2}
                           />
@@ -597,6 +599,7 @@ export default function MechanicMatchProfile() {
                         <FormControl>
                           <Textarea
                             {...field}
+                            value={field.value ?? ""}
                             placeholder="List your certifications (JSON format or plain text)"
                             rows={2}
                           />

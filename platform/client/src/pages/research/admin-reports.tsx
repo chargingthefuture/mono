@@ -108,7 +108,7 @@ export default function ResearchAdminReports() {
                     )}
                     {report.researchItemId && (
                       <Link href={`/apps/research/item/${report.researchItemId}`}>
-                        <Button variant="link" size="sm">
+                        <Button variant="ghost" size="sm">
                           View Research Item
                         </Button>
                       </Link>

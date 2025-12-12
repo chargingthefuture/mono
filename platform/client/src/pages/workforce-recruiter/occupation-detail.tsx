@@ -114,10 +114,10 @@ export default function WorkforceRecruiterOccupationDetail() {
                 {occupation.skillLevel}
               </Badge>
             </div>
-            {occupation.description && (
+            {occupation.notes && (
               <div>
                 <p className="text-sm text-muted-foreground">Description</p>
-                <p className="text-base">{occupation.description}</p>
+                <p className="text-base">{occupation.notes}</p>
               </div>
             )}
           </CardContent>
@@ -167,12 +167,6 @@ export default function WorkforceRecruiterOccupationDetail() {
               <p className="text-sm text-muted-foreground mb-2">Annual Training Target</p>
               <p className="text-2xl font-bold">{occupation.annualTrainingTarget.toLocaleString()}</p>
             </div>
-            {occupation.trainingDuration && (
-              <div>
-                <p className="text-sm text-muted-foreground mb-2">Training Duration</p>
-                <p className="text-xl font-semibold">{occupation.trainingDuration}</p>
-              </div>
-            )}
           </div>
         </CardContent>
       </Card>

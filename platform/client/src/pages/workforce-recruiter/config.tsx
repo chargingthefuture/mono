@@ -104,7 +104,7 @@ export default function WorkforceRecruiterConfigPage() {
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-6">
       <div className="flex items-center gap-4">
-        <MiniAppBackButton href="/apps/workforce-recruiter/admin" />
+        <MiniAppBackButton />
         <div>
           <h1 className="text-2xl sm:text-3xl font-semibold mb-2">Configuration</h1>
           <p className="text-muted-foreground">

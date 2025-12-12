@@ -240,7 +240,7 @@ export default function ChymeRoom() {
       <div className="p-6 border-b bg-background">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <MiniAppBackButton href="/apps/chyme" />
+            <MiniAppBackButton />
             <div>
               <div className="flex items-center gap-3 mb-2">
                 <h1 className="text-2xl font-semibold">{room.name}</h1>

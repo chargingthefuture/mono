@@ -39,9 +39,7 @@ export function initSentry() {
     // Performance monitoring
     integrations: [
       // HTTP integration for Express
-      Sentry.httpIntegration({
-        tracing: true,
-      }),
+      Sentry.httpIntegration(),
       // Console logging integration to send console.log, console.warn, and console.error calls as logs to Sentry
       Sentry.consoleLoggingIntegration({ levels: ['log', 'warn', 'error'] }),
     ],
@@ -66,7 +64,6 @@ export function initSentry() {
     // - Sentry.metrics.distribution('metric_name', value)
 
     // Capture unhandled exceptions and rejections
-    captureUnhandledRejections: true,
     captureUncaughtException: true,
 
     // Send default PII (Personally Identifiable Information)

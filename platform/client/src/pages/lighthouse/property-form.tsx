@@ -34,7 +34,7 @@ export default function PropertyFormPage() {
 
   const { data: property, isLoading: propertyLoading } = useQuery<LighthouseProperty>({
     queryKey: ["/api/lighthouse/properties", id],
-    enabled: isEditing,
+    enabled: !!isEditing,
   });
 
   const form = useForm({
@@ -59,7 +59,7 @@ export default function PropertyFormPage() {
       bathrooms: null,
       monthlyRent: null,
       availableFrom: null,
-      housingRules: "",
+      houseRules: "",
       airbnbProfileUrl: null,
       isActive: true,
     },
@@ -73,14 +73,14 @@ export default function PropertyFormPage() {
         propertyType: property.propertyType,
         address: property.address,
         city: property.city,
-        state: property.state || null,
+        state: property.state || undefined,
         zipCode: property.zipCode,
-        bedrooms: property.bedrooms,
-        bathrooms: property.bathrooms,
-        monthlyRent: property.monthlyRent,
-        availableFrom: property.availableFrom ? new Date(property.availableFrom) : null,
-        housingRules: property.housingRules || "",
-        airbnbProfileUrl: property.airbnbProfileUrl || null,
+        bedrooms: property.bedrooms?.toString() || undefined,
+        bathrooms: property.bathrooms?.toString() || undefined,
+        monthlyRent: property.monthlyRent?.toString() || undefined,
+        availableFrom: property.availableFrom ? new Date(property.availableFrom) : undefined,
+        houseRules: property.houseRules || "",
+        airbnbProfileUrl: property.airbnbProfileUrl || undefined,
         isActive: property.isActive,
       });
       if (property.photos) setPhotos(property.photos);
@@ -517,7 +517,7 @@ export default function PropertyFormPage() {
 
               <FormField
                 control={form.control}
-                name="housingRules"
+                name="houseRules"
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Housing Rules (Optional)</FormLabel>

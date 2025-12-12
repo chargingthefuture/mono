@@ -41,10 +41,11 @@ export function MoodCheckDialog({ open, onOpenChange, onMoodSubmitted }: MoodChe
 
   const moodMutation = useMutation({
     mutationFn: async (moodValue: number) => {
-      return apiRequest<{ showSafetyMessage: boolean }>("POST", "/api/gentlepulse/mood", {
+      const response = await apiRequest("POST", "/api/gentlepulse/mood", {
         clientId,
         moodValue,
       });
+      return response.json() as Promise<{ showSafetyMessage: boolean }>;
     },
     onSuccess: (data) => {
       toast({

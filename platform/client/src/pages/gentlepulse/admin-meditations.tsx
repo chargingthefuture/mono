@@ -134,7 +134,7 @@ export default function GentlePulseAdminMeditations() {
                   <FormItem>
                     <FormLabel>Thumbnail URL</FormLabel>
                     <FormControl>
-                      <Input {...field} placeholder="https://..." />
+                      <Input {...field} value={field.value ?? ""} placeholder="https://..." />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -153,6 +153,7 @@ export default function GentlePulseAdminMeditations() {
                       <Input
                         type="number"
                         {...field}
+                        value={field.value ?? ""}
                         onChange={(e) => field.onChange(e.target.value ? parseInt(e.target.value) : null)}
                         placeholder="Optional"
                       />

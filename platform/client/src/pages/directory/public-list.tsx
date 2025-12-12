@@ -132,7 +132,7 @@ export default function PublicDirectoryList() {
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2 flex-1 min-w-0">
                           <CardTitle className="text-base sm:text-lg line-clamp-1 flex-1">
-                            {profile.displayName || profile.nickname || 'Directory Profile'}
+                            {profile.displayName || 'Directory Profile'}
                           </CardTitle>
                           <VerifiedBadge isVerified={profile.userIsVerified || false} testId={`badge-verified-${profile.id}`} />
                         </div>

@@ -34,12 +34,12 @@ export default function LostMailReport() {
     defaultValues: {
       reporterName: "",
       reporterEmail: "",
-      reporterPhone: "",
+      reporterPhone: null,
       incidentType: "lost",
-      carrier: "",
+      carrier: null,
       trackingNumber: "",
-      expectedDeliveryDate: "",
-      noticedDate: "",
+      expectedDeliveryDate: new Date(),
+      noticedDate: null,
       description: "",
       photos: null,
       severity: "medium",
@@ -51,12 +51,14 @@ export default function LostMailReport() {
     setIsSubmitting(true);
     
     try {
-      const incident = await apiRequest<LostmailIncident>("POST", "/api/lostmail/incidents", {
+      const response = await apiRequest("POST", "/api/lostmail/incidents", {
         ...data,
         photos: null,
-        expectedDeliveryDate: new Date(data.expectedDeliveryDate as string).toISOString(),
-        noticedDate: data.noticedDate ? new Date(data.noticedDate as string).toISOString() : null,
+        expectedDeliveryDate: data.expectedDeliveryDate instanceof Date ? data.expectedDeliveryDate : new Date(data.expectedDeliveryDate),
+        noticedDate: data.noticedDate instanceof Date ? data.noticedDate : (data.noticedDate ? new Date(data.noticedDate) : null),
       });
+      
+      const incident: LostmailIncident = await response.json();
       
       toast({
         title: "Report Submitted",
@@ -140,7 +142,7 @@ export default function LostMailReport() {
                       <FormItem>
                         <FormLabel>Phone Number</FormLabel>
                         <FormControl>
-                          <Input {...field} placeholder="(555) 123-4567" data-testid="input-phone" />
+                          <Input {...field} value={field.value ?? ""} placeholder="(555) 123-4567" data-testid="input-phone" />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -223,7 +225,7 @@ export default function LostMailReport() {
                     <FormItem>
                       <FormLabel>Mail Carrier</FormLabel>
                       <FormControl>
-                        <Input {...field} placeholder="USPS, FedEx, UPS, etc." data-testid="input-carrier" />
+                        <Input {...field} value={field.value ?? ""} placeholder="USPS, FedEx, UPS, etc." data-testid="input-carrier" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
@@ -238,7 +240,13 @@ export default function LostMailReport() {
                       <FormItem>
                         <FormLabel>Expected Delivery Date *</FormLabel>
                         <FormControl>
-                          <Input type="date" {...field} data-testid="input-expected-date" />
+                          <Input 
+                            type="date" 
+                            {...field} 
+                            value={field.value instanceof Date ? field.value.toISOString().split('T')[0] : (field.value || '')}
+                            onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)}
+                            data-testid="input-expected-date" 
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -252,7 +260,13 @@ export default function LostMailReport() {
                       <FormItem>
                         <FormLabel>Date Noticed</FormLabel>
                         <FormControl>
-                          <Input type="date" {...field} data-testid="input-noticed-date" />
+                          <Input 
+                            type="date" 
+                            {...field} 
+                            value={field.value instanceof Date ? field.value.toISOString().split('T')[0] : (field.value ? new Date(field.value).toISOString().split('T')[0] : '')}
+                            onChange={(e) => field.onChange(e.target.value ? new Date(e.target.value) : null)}
+                            data-testid="input-noticed-date" 
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>

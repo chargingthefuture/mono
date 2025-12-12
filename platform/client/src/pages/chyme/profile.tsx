@@ -91,7 +91,7 @@ export default function ChymeProfile() {
 
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-6">
-      <MiniAppBackButton href="/apps/chyme" />
+      <MiniAppBackButton />
       
       <div className="flex items-center gap-3 mb-2">
         <h1 className="text-2xl sm:text-3xl font-semibold">

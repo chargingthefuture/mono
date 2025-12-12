@@ -182,7 +182,7 @@ export default function ChymeAdminAnnouncements() {
   return (
     <div className="p-6 md:p-8 space-y-8">
       <div className="flex items-center gap-4">
-        <MiniAppBackButton href="/apps/chyme/admin" />
+        <MiniAppBackButton />
         <div>
           <h1 className="text-3xl md:text-4xl font-semibold">Manage Announcements</h1>
           <p className="text-muted-foreground">

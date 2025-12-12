@@ -161,7 +161,7 @@ export function logError(
   if (process.env.SENTRY_DSN) {
     Sentry.captureException(error, {
       level: level === 'warn' ? 'warning' : 'error',
-      extra: logEntry.context,
+      extra: logEntry.context as Record<string, any>,
       tags: {
         logLevel: level,
         environment: logEntry.environment,

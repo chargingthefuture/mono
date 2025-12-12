@@ -89,7 +89,6 @@ export function AppClerkProvider({ children }: { children: ReactNode }) {
       // Use Clerk's hosted Account Portal (dev or prod based on environment)
       signInUrl={signInUrl}
       signUpUrl={signUpUrl}
-      unauthorizedSignInUrl={unauthorizedSignInUrl}
       // Redirect to home after sign-up (users need admin approval)
       fallbackRedirectUrl={`${baseUrl}/`}
       // Redirect to home after sign-in (if approved) or show pending message (if not)
