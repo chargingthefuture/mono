@@ -3877,8 +3877,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Ensure all required fields with defaults are explicitly set
     const payload = {
       ...req.body,
-      userId: req.body.userId || null,
-      isClaimed: !!req.body.userId,
+      userId: req.body.userId && req.body.userId.trim() !== "" ? req.body.userId : null,
+      isClaimed: !!(req.body.userId && req.body.userId.trim() !== ""),
       // Explicitly set defaults for fields that have NOT NULL constraints
       isCarOwner: req.body.isCarOwner ?? false,
       isMechanic: req.body.isMechanic ?? false,
@@ -4134,6 +4134,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
       'getResearchItems'
     );
     res.json(result.items);
+  }));
+
+  app.get('/api/research/public/:id', publicListingLimiter, asyncHandler(async (req, res) => {
+    const item = await withDatabaseErrorHandling(
+      () => storage.getResearchItemById(req.params.id),
+      'getResearchItemById'
+    );
+    if (!item) {
+      throw new NotFoundError('Research item', req.params.id);
+    }
+    
+    if (!item.isPublic) {
+      throw new NotFoundError('Research item', req.params.id);
+    }
+    
+    // Increment view count
+    await withDatabaseErrorHandling(
+      () => storage.incrementResearchItemViewCount(req.params.id),
+      'incrementResearchItemViewCount'
+    );
+    
+    res.json(item);
   }));
 
   app.get('/api/research/items/:id', asyncHandler(async (req, res) => {

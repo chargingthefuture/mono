@@ -2,7 +2,7 @@ import { Link, useLocation } from "wouter";
 import { Home, Clock, FileText, Bookmark, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export function ResearchBottomNav() {
+export function CompareNotesBottomNav() {
   const [location] = useLocation();
 
   const navItems = [

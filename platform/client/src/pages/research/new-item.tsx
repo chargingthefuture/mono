@@ -20,7 +20,7 @@ const itemFormSchema = insertResearchItemSchema.omit({ userId: true });
 
 type ItemFormData = z.infer<typeof itemFormSchema>;
 
-export default function NewResearchItem() {
+export default function NewCompareNotesItem() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [tags, setTags] = useState<string[]>([]);

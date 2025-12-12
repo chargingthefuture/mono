@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { AnnouncementBanner } from "@/components/announcement-banner";
 import type { ResearchItem } from "@shared/schema";
 
-export default function ResearchDashboard() {
+export default function CompareNotesDashboard() {
   const { user } = useAuth();
 
   const { data: myItemsData } = useQuery<{ items: ResearchItem[]; total: number }>({
@@ -39,7 +39,7 @@ export default function ResearchDashboard() {
             </Badge>
           </div>
           <p className="text-muted-foreground">
-            Collaborative research questions and answers
+            Collaborative questions and answers
           </p>
         </div>
         <Link href="/apps/research/new">
@@ -65,7 +65,7 @@ export default function ResearchDashboard() {
                 </div>
                 <div>
                   <CardTitle>Timeline</CardTitle>
-                  <CardDescription>Latest research items from your network</CardDescription>
+                  <CardDescription>Latest questions from your network</CardDescription>
                 </div>
               </div>
             </div>
@@ -104,7 +104,7 @@ export default function ResearchDashboard() {
                 </div>
                 <div>
                   <CardTitle>My Questions</CardTitle>
-                  <CardDescription>Research items you've created</CardDescription>
+                  <CardDescription>Questions you've created</CardDescription>
                 </div>
               </div>
             </div>
@@ -112,7 +112,7 @@ export default function ResearchDashboard() {
           <CardContent className="space-y-4">
             {myItems.length === 0 ? (
               <div className="space-y-2">
-                <p className="text-sm text-muted-foreground">You haven't created any research items yet</p>
+                <p className="text-sm text-muted-foreground">You haven't created any questions yet</p>
                 <Link href="/apps/research/new">
                   <Button variant="outline" className="w-full" data-testid="button-create-first">
                     <Plus className="w-4 h-4 mr-2" />
@@ -151,7 +151,7 @@ export default function ResearchDashboard() {
                 </div>
                 <div>
                   <CardTitle>Bookmarks</CardTitle>
-                  <CardDescription>Research items you've saved</CardDescription>
+                  <CardDescription>Questions you've saved</CardDescription>
                 </div>
               </div>
             </div>

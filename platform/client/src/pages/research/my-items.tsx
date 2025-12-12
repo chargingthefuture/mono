@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/useAuth";
 import type { ResearchItem } from "@shared/schema";
 import { PaginationControls } from "@/components/pagination-controls";
 
-export default function ResearchMyItems() {
+export default function CompareNotesMyItems() {
   const { user } = useAuth();
   const [page, setPage] = useState(0);
   const limit = 20;

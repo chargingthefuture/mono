@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Link } from "wouter";
 import { MessageSquare, FileText, AlertTriangle } from "lucide-react";
 
-export default function ResearchAdmin() {
+export default function CompareNotesAdmin() {
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-6">
       <div>

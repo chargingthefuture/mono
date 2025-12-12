@@ -11,7 +11,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import { PaginationControls } from "@/components/pagination-controls";
 import type { ResearchReport } from "@shared/schema";
 
-export default function ResearchAdminReports() {
+export default function CompareNotesAdminReports() {
   const { toast } = useToast();
   const [statusFilter, setStatusFilter] = useState("pending");
   const [page, setPage] = useState(0);

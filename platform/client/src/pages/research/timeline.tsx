@@ -11,7 +11,7 @@ import type { ResearchItem } from "@shared/schema";
 import { AnnouncementBanner } from "@/components/announcement-banner";
 import { PaginationControls } from "@/components/pagination-controls";
 
-export default function ResearchTimeline() {
+export default function CompareNotesTimeline() {
   const { user } = useAuth();
   const [page, setPage] = useState(0);
   const limit = 20;

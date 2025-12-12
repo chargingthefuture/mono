@@ -107,6 +107,9 @@ import NewResearchItem from "@/pages/research/new-item";
 import ResearchAdmin from "@/pages/research/admin";
 import ResearchAdminAnnouncements from "@/pages/research/admin-announcements";
 import ResearchAdminReports from "@/pages/research/admin-reports";
+import PublicCompareNotesQuestion from "@/pages/research/public";
+import PublicCompareNotesQuestion from "@/pages/research/public";
+import PublicResearchItem from "@/pages/research/public";
 import GentlePulseLibrary from "@/pages/gentlepulse/library";
 import GentlePulseSupport from "@/pages/gentlepulse/support";
 import GentlePulseSettings from "@/pages/gentlepulse/settings";
@@ -290,6 +293,8 @@ function Router() {
       {/* Publicly viewable MechanicMatch profiles */}
       <Route path="/apps/mechanicmatch/public" component={PublicMechanicMatchList} />
       <Route path="/apps/mechanicmatch/public/:id" component={PublicMechanicMatchProfile} />
+      {/* Publicly viewable CompareNotes questions */}
+      <Route path="/apps/comparenotes/public/:id" component={PublicCompareNotesQuestion} />
       
       {/* Public Terms page */}
       <Route path="/terms" component={Terms} />
@@ -676,47 +681,47 @@ function Router() {
           <LostMailAdminIncidentDetail />
         </ProtectedRoute>
       </Route>
-      <Route path="/apps/research">
+      <Route path="/apps/comparenotes">
         <ProtectedRoute>
           <ResearchDashboard />
         </ProtectedRoute>
       </Route>
-      <Route path="/apps/research/timeline">
+      <Route path="/apps/comparenotes/timeline">
         <ProtectedRoute>
           <ResearchTimeline />
         </ProtectedRoute>
       </Route>
-      <Route path="/apps/research/my-items">
+      <Route path="/apps/comparenotes/my-items">
         <ProtectedRoute>
           <ResearchMyItems />
         </ProtectedRoute>
       </Route>
-      <Route path="/apps/research/bookmarks">
+      <Route path="/apps/comparenotes/bookmarks">
         <ProtectedRoute>
           <ResearchBookmarks />
         </ProtectedRoute>
       </Route>
-      <Route path="/apps/research/item/:id">
+      <Route path="/apps/comparenotes/item/:id">
         <ProtectedRoute>
           <ResearchItemView />
         </ProtectedRoute>
       </Route>
-      <Route path="/apps/research/new">
+      <Route path="/apps/comparenotes/new">
         <ProtectedRoute>
           <NewResearchItem />
         </ProtectedRoute>
       </Route>
-      <Route path="/apps/research/admin">
+      <Route path="/apps/comparenotes/admin">
         <ProtectedRoute>
           <ResearchAdmin />
         </ProtectedRoute>
       </Route>
-      <Route path="/apps/research/admin/announcements">
+      <Route path="/apps/comparenotes/admin/announcements">
         <ProtectedRoute>
           <ResearchAdminAnnouncements />
         </ProtectedRoute>
       </Route>
-      <Route path="/apps/research/admin/reports">
+      <Route path="/apps/comparenotes/admin/reports">
         <ProtectedRoute>
           <ResearchAdminReports />
         </ProtectedRoute>

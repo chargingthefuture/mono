@@ -11,7 +11,7 @@ import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { ResearchItem } from "@shared/schema";
 import { PaginationControls } from "@/components/pagination-controls";
 
-export default function ResearchBookmarks() {
+export default function CompareNotesBookmarks() {
   const { toast } = useToast();
   const [page, setPage] = useState(0);
   const limit = 20;

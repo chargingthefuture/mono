@@ -40,7 +40,7 @@ const announcementFormSchema = z.object({
 
 type AnnouncementFormValues = z.infer<typeof announcementFormSchema>;
 
-export default function ResearchAdminAnnouncements() {
+export default function CompareNotesAdminAnnouncements() {
   const { toast } = useToast();
   const [editingId, setEditingId] = useState<string | null>(null);
 

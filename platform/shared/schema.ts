@@ -1339,6 +1339,8 @@ export const insertMechanicmatchProfileSchema = createInsertSchema(mechanicmatch
   updatedAt: true,
   totalJobsCompleted: true,
 }).extend({
+  // userId is optional to allow unclaimed profile creation by admin
+  userId: z.string().optional().nullable().transform(val => val === "" || val === undefined ? null : val),
   isCarOwner: z.boolean().default(false),
   isMechanic: z.boolean().default(false),
   city: z.string().max(100).optional().nullable(),

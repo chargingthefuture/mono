@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Check, ArrowUp, ArrowDown, Bookmark, Share2 } from "lucide-react";
+import { ArrowLeft, Check, ArrowUp, ArrowDown, Bookmark, Share2, Copy, ExternalLink } from "lucide-react";
 import { Link } from "wouter";
 import { format } from "date-fns";
 import { useAuth } from "@/hooks/useAuth";
@@ -14,13 +14,16 @@ import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { ResearchItem, ResearchAnswer, ResearchComment } from "@shared/schema";
 import ResearchAnswerComposer from "./answer-composer";
+import { useExternalLink } from "@/hooks/useExternalLink";
 
-export default function ResearchItemView() {
+export default function CompareNotesItemView() {
   const [, params] = useRoute("/apps/research/item/:id");
   const itemId = params?.id;
   const { user } = useAuth();
   const { toast } = useToast();
+  const { openExternal, ExternalLinkDialog } = useExternalLink();
   const [sortBy, setSortBy] = useState("relevance");
+  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
 
   const { data: item, isLoading: itemLoading } = useQuery<ResearchItem>({
     queryKey: [`/api/research/items/${itemId}`],
@@ -121,6 +124,25 @@ export default function ResearchItemView() {
 
   const tags = item.tags ? JSON.parse(item.tags) : [];
   const isOwner = user && item.userId === user.id;
+  const publicUrl = item.isPublic ? `${window.location.origin}/apps/research/public/${itemId}` : null;
+
+  const copyUrl = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedUrl(url);
+      toast({
+        title: "Copied!",
+        description: "Public CompareNotes link copied to clipboard",
+      });
+      setTimeout(() => setCopiedUrl(null), 2000);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to copy link",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-6">
@@ -146,6 +168,48 @@ export default function ResearchItemView() {
           </Button>
         </div>
       </div>
+
+      {item.isPublic && publicUrl && (
+        <Card>
+          <CardHeader>
+            <CardTitle>Public Question</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Public CompareNotes Link</label>
+              <p className="text-sm text-muted-foreground">This question is public and can be shared with anyone.</p>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 font-mono text-xs sm:text-sm bg-muted px-2 py-1.5 rounded break-all">
+                  {publicUrl}
+                </code>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => copyUrl(publicUrl)}
+                  className="flex-shrink-0"
+                  data-testid="button-copy-public-url"
+                  aria-label="Copy public CompareNotes link"
+                >
+                  {copiedUrl === publicUrl ? (
+                    <Check className="w-4 h-4 text-primary" />
+                  ) : (
+                    <Copy className="w-4 h-4" />
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => openExternal(publicUrl)}
+                  className="flex-shrink-0"
+                  data-testid="button-open-public-url"
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" /> Open
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="space-y-6">
           <Card>
@@ -291,6 +355,7 @@ export default function ResearchItemView() {
             )}
           </div>
         </div>
+      <ExternalLinkDialog />
     </div>
   );
 }

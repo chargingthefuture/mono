@@ -130,7 +130,7 @@ const baseAdminMenuItems = [
   },
   {
     title: "CompareNotes Admin",
-    url: "/apps/research/admin",
+    url: "/apps/comparenotes/admin",
     icon: Search,
     testId: "link-research-admin",
   },
@@ -247,7 +247,7 @@ const miniAppMenuItems = [
   },
   {
     title: "CompareNotes",
-    url: "/apps/research",
+    url: "/apps/comparenotes",
     icon: Search,
     testId: "link-research",
     showBeta: true,
