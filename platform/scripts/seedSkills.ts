@@ -313,7 +313,6 @@ const skillsData: {
           "Basic first aid",
           "First Aid & CPR",
           "Household-level data collection",
-          "Community Organizer",
         ],
       },
       {
@@ -796,6 +795,17 @@ const skillsData: {
           "Tendering and contract management",
           "Supplier assessment",
           "Procurement rules compliance",
+        ],
+      },
+      {
+        name: "Community Development Officers",
+        displayOrder: 9,
+        skills: [
+          "Community Organizer",
+          "Stakeholder engagement and mobilization",
+          "Program planning and implementation",
+          "Community needs assessment",
+          "Grassroots organizing and leadership development",
         ],
       },
     ],
