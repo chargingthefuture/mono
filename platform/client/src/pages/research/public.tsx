@@ -16,7 +16,7 @@ export default function PublicCompareNotesQuestion() {
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   const { id } = useParams<{ id: string }>();
   
-  const publicCompareNotesUrl = `${window.location.origin}/apps/research/public`;
+  const publicCompareNotesUrl = `${window.location.origin}/apps/comparenotes/public`;
   
   const copyUrl = async (url: string) => {
     try {
@@ -37,16 +37,16 @@ export default function PublicCompareNotesQuestion() {
   };
 
   const { data: item, isLoading, error } = useQuery<ResearchItem | null>({
-    queryKey: ["/api/research/public", id],
+    queryKey: ["/api/comparenotes/public", id],
     queryFn: async () => {
-      const res = await fetch(`/api/research/public/${id}`);
+      const res = await fetch(`/api/comparenotes/public/${id}`);
       if (!res.ok) throw new Error(await res.text());
       return await res.json();
     }
   });
 
   const { data: answers = [] } = useQuery<ResearchAnswer[]>({
-    queryKey: [`/api/research/items/${id}/answers?sortBy=score`],
+    queryKey: [`/api/comparenotes/items/${id}/answers?sortBy=score`],
     enabled: !!item && !!id,
   });
 
@@ -71,7 +71,7 @@ export default function PublicCompareNotesQuestion() {
   }
 
   const tags = item.tags ? JSON.parse(item.tags) : [];
-  const publicQuestionUrl = `${window.location.origin}/apps/research/public/${id}`;
+  const publicQuestionUrl = `${window.location.origin}/apps/comparenotes/public/${id}`;
 
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8">

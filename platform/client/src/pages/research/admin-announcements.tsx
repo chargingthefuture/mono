@@ -45,7 +45,7 @@ export default function CompareNotesAdminAnnouncements() {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   const { data: announcements, isLoading } = useQuery<ResearchAnnouncement[]>({
-    queryKey: ["/api/research/admin/announcements"],
+    queryKey: ["/api/comparenotes/admin/announcements"],
   });
 
   const form = useForm<AnnouncementFormValues>({
@@ -64,11 +64,11 @@ export default function CompareNotesAdminAnnouncements() {
         ...data,
         expiresAt: data.expiresAt ? new Date(data.expiresAt) : undefined,
       };
-      return apiRequest("POST", "/api/research/admin/announcements", payload);
+      return apiRequest("POST", "/api/comparenotes/admin/announcements", payload);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/research/admin/announcements"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/research/announcements"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/comparenotes/admin/announcements"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/comparenotes/announcements"] });
       form.reset();
       toast({
         title: "Success",
@@ -90,11 +90,11 @@ export default function CompareNotesAdminAnnouncements() {
         ...data,
         expiresAt: data.expiresAt ? new Date(data.expiresAt) : undefined,
       };
-      return apiRequest("PUT", `/api/research/admin/announcements/${id}`, payload);
+      return apiRequest("PUT", `/api/comparenotes/admin/announcements/${id}`, payload);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/research/admin/announcements"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/research/announcements"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/comparenotes/admin/announcements"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/comparenotes/announcements"] });
       form.reset();
       setEditingId(null);
       toast({
@@ -113,11 +113,11 @@ export default function CompareNotesAdminAnnouncements() {
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => {
-      return apiRequest("DELETE", `/api/research/admin/announcements/${id}`);
+      return apiRequest("DELETE", `/api/comparenotes/admin/announcements/${id}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/research/admin/announcements"] });
-      queryClient.invalidateQueries({ queryKey: ["/api/research/announcements"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/comparenotes/admin/announcements"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/comparenotes/announcements"] });
       toast({
         title: "Success",
         description: "Announcement deactivated successfully",
@@ -168,7 +168,7 @@ export default function CompareNotesAdminAnnouncements() {
   return (
     <div className="p-6 md:p-8 space-y-8">
       <div className="flex items-center gap-4">
-        <Link href="/apps/research/admin">
+        <Link href="/apps/comparenotes/admin">
           <Button variant="ghost" size="icon" data-testid="button-back">
             <ArrowLeft className="w-5 h-5" />
           </Button>
@@ -176,7 +176,7 @@ export default function CompareNotesAdminAnnouncements() {
         <div>
           <h1 className="text-3xl md:text-4xl font-semibold">Manage Announcements</h1>
           <p className="text-muted-foreground">
-            Create and manage Research announcements
+            Create and manage CompareNotes announcements
           </p>
         </div>
       </div>

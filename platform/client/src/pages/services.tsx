@@ -54,10 +54,10 @@ const services = [
     testId: "card-service-lostmail",
   },
   {
-    title: "Research",
+    title: "CompareNotes",
     description: "Post research questions, receive sourced answers, and collaboratively surface the most relevant, accurate responses with voting and tagging.",
     icon: Search,
-    href: "/apps/research",
+    href: "/apps/comparenotes",
     testId: "card-service-research",
   },
   {

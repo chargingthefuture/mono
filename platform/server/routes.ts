@@ -4065,7 +4065,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ========================================
 
   // Research Announcement routes (public)
-  app.get('/api/research/announcements', asyncHandler(async (_req, res) => {
+  app.get('/api/comparenotes/announcements', asyncHandler(async (_req, res) => {
     const announcements = await withDatabaseErrorHandling(
       () => storage.getActiveResearchAnnouncements(),
       'getActiveResearchAnnouncements'
@@ -4074,7 +4074,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   // Research Item routes
-  app.post('/api/research/items', isAuthenticated, asyncHandler(async (req: any, res) => {
+  app.post('/api/comparenotes/items', isAuthenticated, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const body = req.body;
     
@@ -4104,7 +4104,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(item);
   }));
 
-  app.get('/api/research/items', asyncHandler(async (req, res) => {
+  app.get('/api/comparenotes/items', asyncHandler(async (req, res) => {
     const filters: any = {};
     if (req.query.userId) filters.userId = req.query.userId as string;
     if (req.query.tag) filters.tag = req.query.tag as string;
@@ -4122,7 +4122,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(result);
   }));
 
-  app.get('/api/research/items/public', publicListingLimiter, asyncHandler(async (req, res) => {
+  app.get('/api/comparenotes/items/public', publicListingLimiter, asyncHandler(async (req, res) => {
     const filters: any = { isPublic: true };
     if (req.query.tag) filters.tag = req.query.tag as string;
     if (req.query.search) filters.search = req.query.search as string;
@@ -4136,7 +4136,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(result.items);
   }));
 
-  app.get('/api/research/public/:id', publicListingLimiter, asyncHandler(async (req, res) => {
+  app.get('/api/comparenotes/public/:id', publicListingLimiter, asyncHandler(async (req, res) => {
     const item = await withDatabaseErrorHandling(
       () => storage.getResearchItemById(req.params.id),
       'getResearchItemById'
@@ -4158,7 +4158,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(item);
   }));
 
-  app.get('/api/research/items/:id', asyncHandler(async (req, res) => {
+  app.get('/api/comparenotes/items/:id', asyncHandler(async (req, res) => {
     const item = await withDatabaseErrorHandling(
       () => storage.getResearchItemById(req.params.id),
       'getResearchItemById'
@@ -4176,7 +4176,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(item);
   }));
 
-  app.put('/api/research/items/:id', isAuthenticated, asyncHandler(async (req: any, res) => {
+  app.put('/api/comparenotes/items/:id', isAuthenticated, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const item = await withDatabaseErrorHandling(
       () => storage.getResearchItemById(req.params.id),
@@ -4215,7 +4215,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   // Research Answer routes
-  app.post('/api/research/answers', isAuthenticated, asyncHandler(async (req: any, res) => {
+  app.post('/api/comparenotes/answers', isAuthenticated, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const body = req.body;
     
@@ -4257,7 +4257,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(answer);
   }));
 
-  app.get('/api/research/items/:id/answers', asyncHandler(async (req, res) => {
+  app.get('/api/comparenotes/items/:id/answers', asyncHandler(async (req, res) => {
     const sortBy = req.query.sortBy as string || "relevance";
     const answers = await withDatabaseErrorHandling(
       () => storage.getResearchAnswersByItemId(req.params.id, sortBy),
@@ -4266,7 +4266,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(answers);
   }));
 
-  app.get('/api/research/answers/:id', asyncHandler(async (req, res) => {
+  app.get('/api/comparenotes/answers/:id', asyncHandler(async (req, res) => {
     const answer = await withDatabaseErrorHandling(
       () => storage.getResearchAnswerById(req.params.id),
       'getResearchAnswerById'
@@ -4277,7 +4277,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(answer);
   }));
 
-  app.put('/api/research/answers/:id', isAuthenticated, asyncHandler(async (req: any, res) => {
+  app.put('/api/comparenotes/answers/:id', isAuthenticated, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const answer = await withDatabaseErrorHandling(
       () => storage.getResearchAnswerById(req.params.id),
@@ -4309,7 +4309,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   // Accept answer endpoint
-  app.post('/api/research/items/:itemId/accept-answer/:answerId', isAuthenticated, asyncHandler(async (req: any, res) => {
+  app.post('/api/comparenotes/items/:itemId/accept-answer/:answerId', isAuthenticated, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const item = await withDatabaseErrorHandling(
       () => storage.getResearchItemById(req.params.itemId),
@@ -4328,7 +4328,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   // Research Comment routes
-  app.post('/api/research/comments', isAuthenticated, asyncHandler(async (req: any, res) => {
+  app.post('/api/comparenotes/comments', isAuthenticated, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const validatedData = validateWithZod(insertResearchCommentSchema, { ...req.body, userId }, 'Invalid comment data');
     const comment = await withDatabaseErrorHandling(
@@ -4338,7 +4338,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(comment);
   }));
 
-  app.get('/api/research/comments', asyncHandler(async (req, res) => {
+  app.get('/api/comparenotes/comments', asyncHandler(async (req, res) => {
     const filters: any = {};
     if (req.query.researchItemId) filters.researchItemId = req.query.researchItemId as string;
     if (req.query.answerId) filters.answerId = req.query.answerId as string;
@@ -4350,7 +4350,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(comments);
   }));
 
-  app.put('/api/research/comments/:id', isAuthenticated, asyncHandler(async (req: any, res) => {
+  app.put('/api/comparenotes/comments/:id', isAuthenticated, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const comment = await withDatabaseErrorHandling(
       () => storage.getResearchComments({ researchItemId: undefined, answerId: undefined }).then(cs => cs.find(c => c.id === req.params.id)),
@@ -4368,7 +4368,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(updated);
   }));
 
-  app.delete('/api/research/comments/:id', isAuthenticated, asyncHandler(async (req: any, res) => {
+  app.delete('/api/comparenotes/comments/:id', isAuthenticated, asyncHandler(async (req: any, res) => {
     // Note: In production, check ownership or admin status
     await withDatabaseErrorHandling(
       () => storage.deleteResearchComment(req.params.id),
@@ -4378,7 +4378,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   // Research Vote routes
-  app.post('/api/research/votes', isAuthenticated, asyncHandler(async (req: any, res) => {
+  app.post('/api/comparenotes/votes', isAuthenticated, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const validatedData = validateWithZod(insertResearchVoteSchema, { ...req.body, userId }, 'Invalid vote data');
     const vote = await withDatabaseErrorHandling(
@@ -4388,7 +4388,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(vote);
   }));
 
-  app.get('/api/research/votes', isAuthenticated, asyncHandler(async (req: any, res) => {
+  app.get('/api/comparenotes/votes', isAuthenticated, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const researchItemId = req.query.researchItemId as string;
     const answerId = req.query.answerId as string;
@@ -4400,7 +4400,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(vote || null);
   }));
 
-  app.delete('/api/research/votes', isAuthenticated, asyncHandler(async (req: any, res) => {
+  app.delete('/api/comparenotes/votes', isAuthenticated, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const researchItemId = req.query.researchItemId as string;
     const answerId = req.query.answerId as string;
@@ -4410,7 +4410,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   // Research Bookmark routes
-  app.post('/api/research/bookmarks', isAuthenticated, asyncHandler(async (req: any, res) => {
+  app.post('/api/comparenotes/bookmarks', isAuthenticated, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const validatedData = validateWithZod(insertResearchBookmarkSchema, { ...req.body, userId }, 'Invalid bookmark data');
     const bookmark = await withDatabaseErrorHandling(
@@ -4420,7 +4420,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(bookmark);
   }));
 
-  app.delete('/api/research/bookmarks/:itemId', isAuthenticated, asyncHandler(async (req: any, res) => {
+  app.delete('/api/comparenotes/bookmarks/:itemId', isAuthenticated, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     await withDatabaseErrorHandling(
       () => storage.deleteResearchBookmark(userId, req.params.itemId),
@@ -4429,7 +4429,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ message: "Bookmark deleted" });
   }));
 
-  app.get('/api/research/bookmarks', isAuthenticated, asyncHandler(async (req: any, res) => {
+  app.get('/api/comparenotes/bookmarks', isAuthenticated, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const bookmarks = await withDatabaseErrorHandling(
       () => storage.getResearchBookmarks(userId),
@@ -4454,7 +4454,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   // Research Follow routes
-  app.post('/api/research/follows', isAuthenticated, asyncHandler(async (req: any, res) => {
+  app.post('/api/comparenotes/follows', isAuthenticated, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const validatedData = validateWithZod(insertResearchFollowSchema, { ...req.body, userId }, 'Invalid follow data');
     const follow = await withDatabaseErrorHandling(
@@ -4464,7 +4464,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(follow);
   }));
 
-  app.delete('/api/research/follows', isAuthenticated, asyncHandler(async (req: any, res) => {
+  app.delete('/api/comparenotes/follows', isAuthenticated, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const filters: any = {};
     if (req.query.followedUserId) filters.followedUserId = req.query.followedUserId as string;
@@ -4478,7 +4478,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ message: "Follow deleted" });
   }));
 
-  app.get('/api/research/follows', isAuthenticated, asyncHandler(async (req: any, res) => {
+  app.get('/api/comparenotes/follows', isAuthenticated, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const follows = await withDatabaseErrorHandling(
       () => storage.getResearchFollows(userId),
@@ -4488,7 +4488,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   // Research Timeline/Feed
-  app.get('/api/research/timeline', isAuthenticated, asyncHandler(async (req: any, res) => {
+  app.get('/api/comparenotes/timeline', isAuthenticated, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const limit = parseInt(req.query.limit as string || "50");
     const offset = parseInt(req.query.offset as string || "0");
@@ -4501,7 +4501,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   // Research Link Provenance routes
-  app.get('/api/research/answers/:answerId/links', asyncHandler(async (req, res) => {
+  app.get('/api/comparenotes/answers/:answerId/links', asyncHandler(async (req, res) => {
     const provenances = await withDatabaseErrorHandling(
       () => storage.getResearchLinkProvenancesByAnswerId(req.params.answerId),
       'getResearchLinkProvenancesByAnswerId'
@@ -4510,7 +4510,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   // Link verification endpoint (triggers async verification)
-  app.post('/api/research/verify-link', isAuthenticated, asyncHandler(async (req: any, res) => {
+  app.post('/api/comparenotes/verify-link', isAuthenticated, asyncHandler(async (req: any, res) => {
     const { answerId, url } = req.body;
     
     if (!answerId || !url) {
@@ -4530,7 +4530,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   // Research Report routes
-  app.post('/api/research/reports', isAuthenticated, asyncHandler(async (req: any, res) => {
+  app.post('/api/comparenotes/reports', isAuthenticated, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const validatedData = validateWithZod(insertResearchReportSchema, { ...req.body, userId }, 'Invalid report data');
     const report = await withDatabaseErrorHandling(
@@ -4540,7 +4540,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(report);
   }));
 
-  app.get('/api/research/admin/reports', isAuthenticated, isAdmin, asyncHandler(async (req, res) => {
+  app.get('/api/comparenotes/admin/reports', isAuthenticated, isAdmin, asyncHandler(async (req, res) => {
     const filters: any = {};
     if (req.query.status) filters.status = req.query.status as string;
     filters.limit = parseInt(req.query.limit as string || "50");
@@ -4553,7 +4553,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(result);
   }));
 
-  app.put('/api/research/admin/reports/:id', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
+  app.put('/api/comparenotes/admin/reports/:id', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const updated = await withDatabaseErrorHandling(
       () => storage.updateResearchReport(req.params.id, {
@@ -4567,7 +4567,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   // Research User Reputation
-  app.get('/api/research/users/:userId/reputation', asyncHandler(async (req, res) => {
+  app.get('/api/comparenotes/users/:userId/reputation', asyncHandler(async (req, res) => {
     const reputation = await withDatabaseErrorHandling(
       () => storage.getUserReputation(req.params.userId),
       'getUserReputation'
@@ -4576,7 +4576,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   // Research Admin Announcement routes
-  app.get('/api/research/admin/announcements', isAuthenticated, isAdmin, asyncHandler(async (_req, res) => {
+  app.get('/api/comparenotes/admin/announcements', isAuthenticated, isAdmin, asyncHandler(async (_req, res) => {
     const announcements = await withDatabaseErrorHandling(
       () => storage.getAllResearchAnnouncements(),
       'getAllResearchAnnouncements'
@@ -4584,7 +4584,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(announcements);
   }));
 
-  app.post('/api/research/admin/announcements', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
+  app.post('/api/comparenotes/admin/announcements', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const validatedData = validateWithZod(insertResearchAnnouncementSchema, req.body, 'Invalid announcement data');
 
@@ -4604,7 +4604,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(announcement);
   }));
 
-  app.put('/api/research/admin/announcements/:id', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
+  app.put('/api/comparenotes/admin/announcements/:id', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const validatedData = validateWithZod(insertResearchAnnouncementSchema.partial() as any, req.body, 'Invalid announcement data');
     const announcement = await withDatabaseErrorHandling(
@@ -4623,7 +4623,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(announcement);
   }));
 
-  app.delete('/api/research/admin/announcements/:id', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
+  app.delete('/api/comparenotes/admin/announcements/:id', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const announcement = await withDatabaseErrorHandling(
       () => storage.deactivateResearchAnnouncement(req.params.id),

@@ -54,7 +54,7 @@ export default function ResearchAnswerComposer({ researchItemId }: ResearchAnswe
 
   const onSubmit = async (data: AnswerFormData) => {
     try {
-      await apiRequest("POST", "/api/research/answers", {
+      await apiRequest("POST", "/api/comparenotes/answers", {
         ...data,
         researchItemId,
         links: links.length > 0 ? links : null,
@@ -67,7 +67,7 @@ export default function ResearchAnswerComposer({ researchItemId }: ResearchAnswe
       
       form.reset();
       setLinks([]);
-      queryClient.invalidateQueries({ queryKey: [`/api/research/items/${researchItemId}/answers`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/comparenotes/items/${researchItemId}/answers`] });
     } catch (error: any) {
       toast({
         title: "Error",

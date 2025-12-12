@@ -18,7 +18,7 @@ export default function CompareNotesAdminReports() {
   const limit = 20;
 
   const { data, isLoading } = useQuery<{ reports: ResearchReport[]; total: number }>({
-    queryKey: [`/api/research/admin/reports?status=${statusFilter}&limit=${limit}&offset=${page * limit}`],
+    queryKey: [`/api/comparenotes/admin/reports?status=${statusFilter}&limit=${limit}&offset=${page * limit}`],
   });
 
   const reports = data?.reports || [];
@@ -26,10 +26,10 @@ export default function CompareNotesAdminReports() {
 
   const updateReportMutation = useMutation({
     mutationFn: async ({ id, status }: { id: string; status: string }) => {
-      return apiRequest("PUT", `/api/research/admin/reports/${id}`, { status });
+      return apiRequest("PUT", `/api/comparenotes/admin/reports/${id}`, { status });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/research/admin/reports"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/comparenotes/admin/reports"] });
       toast({ title: "Report updated successfully" });
     },
   });
@@ -47,7 +47,7 @@ export default function CompareNotesAdminReports() {
   return (
     <div className="p-6 md:p-8 space-y-8">
       <div className="flex items-center gap-4">
-        <Link href="/apps/research/admin">
+        <Link href="/apps/comparenotes/admin">
           <Button variant="ghost" size="icon" data-testid="button-back">
             <ArrowLeft className="w-5 h-5" />
           </Button>
@@ -107,7 +107,7 @@ export default function CompareNotesAdminReports() {
                       <p className="text-sm text-muted-foreground">{report.description}</p>
                     )}
                     {report.researchItemId && (
-                      <Link href={`/apps/research/item/${report.researchItemId}`}>
+                      <Link href={`/apps/comparenotes/item/${report.researchItemId}`}>
                         <Button variant="ghost" size="sm">
                           View Research Item
                         </Button>

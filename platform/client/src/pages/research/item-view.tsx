@@ -17,7 +17,7 @@ import ResearchAnswerComposer from "./answer-composer";
 import { useExternalLink } from "@/hooks/useExternalLink";
 
 export default function CompareNotesItemView() {
-  const [, params] = useRoute("/apps/research/item/:id");
+  const [, params] = useRoute("/apps/comparenotes/item/:id");
   const itemId = params?.id;
   const { user } = useAuth();
   const { toast } = useToast();
@@ -26,42 +26,42 @@ export default function CompareNotesItemView() {
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
 
   const { data: item, isLoading: itemLoading } = useQuery<ResearchItem>({
-    queryKey: [`/api/research/items/${itemId}`],
+    queryKey: [`/api/comparenotes/items/${itemId}`],
     enabled: !!itemId,
   });
 
   const { data: answers = [], isLoading: answersLoading } = useQuery<ResearchAnswer[]>({
-    queryKey: [`/api/research/items/${itemId}/answers?sortBy=${sortBy}`],
+    queryKey: [`/api/comparenotes/items/${itemId}/answers?sortBy=${sortBy}`],
     enabled: !!itemId,
   });
   
   const answerCount = answers.length;
 
   const { data: comments = [] } = useQuery<ResearchComment[]>({
-    queryKey: [`/api/research/comments?researchItemId=${itemId}`],
+    queryKey: [`/api/comparenotes/comments?researchItemId=${itemId}`],
     enabled: !!itemId,
   });
 
   const { data: userVote } = useQuery({
-    queryKey: [`/api/research/votes?researchItemId=${itemId}`],
+    queryKey: [`/api/comparenotes/votes?researchItemId=${itemId}`],
     enabled: !!itemId && !!user,
   });
 
   const voteMutation = useMutation({
     mutationFn: async ({ value, answerId }: { value: 1 | -1; answerId?: string }) => {
-      return apiRequest("POST", "/api/research/votes", {
+      return apiRequest("POST", "/api/comparenotes/votes", {
         researchItemId: answerId ? undefined : itemId,
         answerId: answerId,
         value,
       });
     },
     onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: [`/api/research/items/${itemId}`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/research/items/${itemId}/answers`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/comparenotes/items/${itemId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/comparenotes/items/${itemId}/answers`] });
       if (variables.answerId) {
-        queryClient.invalidateQueries({ queryKey: [`/api/research/votes?answerId=${variables.answerId}`] });
+        queryClient.invalidateQueries({ queryKey: [`/api/comparenotes/votes?answerId=${variables.answerId}`] });
       } else {
-        queryClient.invalidateQueries({ queryKey: [`/api/research/votes?researchItemId=${itemId}`] });
+        queryClient.invalidateQueries({ queryKey: [`/api/comparenotes/votes?researchItemId=${itemId}`] });
       }
     },
     onError: (error: any) => {
@@ -75,23 +75,23 @@ export default function CompareNotesItemView() {
 
   const bookmarkMutation = useMutation({
     mutationFn: async () => {
-      return apiRequest("POST", "/api/research/bookmarks", {
+      return apiRequest("POST", "/api/comparenotes/bookmarks", {
         researchItemId: itemId,
       });
     },
     onSuccess: () => {
       toast({ title: "Bookmarked", description: "Research item bookmarked" });
-      queryClient.invalidateQueries({ queryKey: ["/api/research/bookmarks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/comparenotes/bookmarks"] });
     },
   });
 
   const acceptAnswerMutation = useMutation({
     mutationFn: async (answerId: string) => {
-      return apiRequest("POST", `/api/research/items/${itemId}/accept-answer/${answerId}`);
+      return apiRequest("POST", `/api/comparenotes/items/${itemId}/accept-answer/${answerId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: [`/api/research/items/${itemId}`] });
-      queryClient.invalidateQueries({ queryKey: [`/api/research/items/${itemId}/answers`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/comparenotes/items/${itemId}`] });
+      queryClient.invalidateQueries({ queryKey: [`/api/comparenotes/items/${itemId}/answers`] });
       toast({ title: "Answer Accepted", description: "This answer is now marked as accepted" });
     },
   });
@@ -111,7 +111,7 @@ export default function CompareNotesItemView() {
       <div className="p-6 md:p-8">
         <div className="text-center py-12">
           <p className="text-muted-foreground">Research item not found</p>
-          <Link href="/apps/research">
+          <Link href="/apps/comparenotes">
             <Button variant="outline" className="mt-4">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Timeline
@@ -124,7 +124,7 @@ export default function CompareNotesItemView() {
 
   const tags = item.tags ? JSON.parse(item.tags) : [];
   const isOwner = user && item.userId === user.id;
-  const publicUrl = item.isPublic ? `${window.location.origin}/apps/research/public/${itemId}` : null;
+  const publicUrl = item.isPublic ? `${window.location.origin}/apps/comparenotes/public/${itemId}` : null;
 
   const copyUrl = async (url: string) => {
     try {
@@ -147,7 +147,7 @@ export default function CompareNotesItemView() {
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-6">
       <div className="flex items-center justify-between">
-        <Link href="/apps/research">
+        <Link href="/apps/comparenotes">
           <Button variant="ghost" size="icon" data-testid="button-back">
             <ArrowLeft className="w-5 h-5" />
           </Button>

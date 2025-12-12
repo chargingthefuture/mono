@@ -12,19 +12,19 @@ export default function CompareNotesDashboard() {
   const { user } = useAuth();
 
   const { data: myItemsData } = useQuery<{ items: ResearchItem[]; total: number }>({
-    queryKey: [`/api/research/items?userId=${user?.id}&limit=5`],
+    queryKey: [`/api/comparenotes/items?userId=${user?.id}&limit=5`],
     enabled: !!user,
   });
   const myItems = myItemsData?.items || [];
 
   const { data: bookmarksData } = useQuery<{ items: ResearchItem[]; total: number }>({
-    queryKey: ["/api/research/bookmarks"],
+    queryKey: ["/api/comparenotes/bookmarks"],
     enabled: !!user,
   });
   const bookmarks = bookmarksData?.items || [];
 
   const { data: timeline = [] } = useQuery<ResearchItem[]>({
-    queryKey: [`/api/research/timeline?limit=5`],
+    queryKey: [`/api/comparenotes/timeline?limit=5`],
     enabled: !!user,
   });
 
@@ -42,7 +42,7 @@ export default function CompareNotesDashboard() {
             Collaborative questions and answers
           </p>
         </div>
-        <Link href="/apps/research/new">
+        <Link href="/apps/comparenotes/new">
           <Button data-testid="button-new-research">
             <Plus className="w-4 h-4 mr-2" />
             New Question
@@ -51,8 +51,8 @@ export default function CompareNotesDashboard() {
       </div>
 
       <AnnouncementBanner
-        apiEndpoint="/api/research/announcements"
-        queryKey="/api/research/announcements"
+        apiEndpoint="/api/comparenotes/announcements"
+        queryKey="/api/comparenotes/announcements"
       />
 
       <div className="grid md:grid-cols-2 gap-6">
@@ -76,7 +76,7 @@ export default function CompareNotesDashboard() {
             ) : (
               <div className="space-y-2">
                 {timeline.slice(0, 3).map((item) => (
-                  <Link key={item.id} href={`/apps/research/item/${item.id}`}>
+                  <Link key={item.id} href={`/apps/comparenotes/item/${item.id}`}>
                     <div className="p-2 rounded hover:bg-accent cursor-pointer">
                       <p className="text-sm font-medium line-clamp-1">{item.title}</p>
                       <p className="text-xs text-muted-foreground line-clamp-1">
@@ -87,7 +87,7 @@ export default function CompareNotesDashboard() {
                 ))}
               </div>
             )}
-            <Link href="/apps/research/timeline">
+            <Link href="/apps/comparenotes/timeline">
               <Button variant="outline" className="w-full" data-testid="button-view-timeline">
                 View Full Timeline
               </Button>
@@ -113,7 +113,7 @@ export default function CompareNotesDashboard() {
             {myItems.length === 0 ? (
               <div className="space-y-2">
                 <p className="text-sm text-muted-foreground">You haven't created any questions yet</p>
-                <Link href="/apps/research/new">
+                <Link href="/apps/comparenotes/new">
                   <Button variant="outline" className="w-full" data-testid="button-create-first">
                     <Plus className="w-4 h-4 mr-2" />
                     Create Your First Question
@@ -123,7 +123,7 @@ export default function CompareNotesDashboard() {
             ) : (
               <div className="space-y-2">
                 {myItems.slice(0, 3).map((item) => (
-                  <Link key={item.id} href={`/apps/research/item/${item.id}`}>
+                  <Link key={item.id} href={`/apps/comparenotes/item/${item.id}`}>
                     <div className="p-2 rounded hover:bg-accent cursor-pointer">
                       <p className="text-sm font-medium line-clamp-1">{item.title}</p>
                       <p className="text-xs text-muted-foreground">
@@ -132,7 +132,7 @@ export default function CompareNotesDashboard() {
                     </div>
                   </Link>
                 ))}
-                <Link href="/apps/research/my-items">
+                <Link href="/apps/comparenotes/my-items">
                   <Button variant="outline" className="w-full" data-testid="button-view-my-items">
                     View All My Questions
                   </Button>
@@ -162,7 +162,7 @@ export default function CompareNotesDashboard() {
             ) : (
               <div className="space-y-2">
                 {bookmarks.slice(0, 3).map((item) => (
-                  <Link key={item.id} href={`/apps/research/item/${item.id}`}>
+                  <Link key={item.id} href={`/apps/comparenotes/item/${item.id}`}>
                     <div className="p-2 rounded hover:bg-accent cursor-pointer">
                       <p className="text-sm font-medium line-clamp-1">{item.title}</p>
                       <p className="text-xs text-muted-foreground line-clamp-1">
@@ -173,7 +173,7 @@ export default function CompareNotesDashboard() {
                 ))}
               </div>
             )}
-            <Link href="/apps/research/bookmarks">
+            <Link href="/apps/comparenotes/bookmarks">
               <Button variant="outline" className="w-full" data-testid="button-view-bookmarks">
                 View All Bookmarks
               </Button>
@@ -194,13 +194,13 @@ export default function CompareNotesDashboard() {
             </div>
           </CardHeader>
           <CardContent className="space-y-2">
-            <Link href="/apps/research/new">
+            <Link href="/apps/comparenotes/new">
               <Button variant="outline" className="w-full" data-testid="button-new-question">
                 <Plus className="w-4 h-4 mr-2" />
                 Ask a Question
               </Button>
             </Link>
-            <Link href="/apps/research/timeline">
+            <Link href="/apps/comparenotes/timeline">
               <Button variant="outline" className="w-full" data-testid="button-browse-timeline">
                 Browse Timeline
               </Button>

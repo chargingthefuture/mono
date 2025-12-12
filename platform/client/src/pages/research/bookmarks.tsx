@@ -17,7 +17,7 @@ export default function CompareNotesBookmarks() {
   const limit = 20;
 
   const { data: bookmarksData, isLoading } = useQuery<{ items: ResearchItem[]; total: number }>({
-    queryKey: ["/api/research/bookmarks"],
+    queryKey: ["/api/comparenotes/bookmarks"],
   });
   const bookmarks = bookmarksData?.items || [];
 
@@ -27,10 +27,10 @@ export default function CompareNotesBookmarks() {
 
   const deleteBookmarkMutation = useMutation({
     mutationFn: async (itemId: string) => {
-      return apiRequest("DELETE", `/api/research/bookmarks/${itemId}`);
+      return apiRequest("DELETE", `/api/comparenotes/bookmarks/${itemId}`);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/research/bookmarks"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/comparenotes/bookmarks"] });
       toast({ title: "Bookmark Removed", description: "Item removed from bookmarks" });
     },
     onError: (error: any) => {
@@ -65,7 +65,7 @@ export default function CompareNotesBookmarks() {
     <div className="p-4 sm:p-6 md:p-8 space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <Link href="/apps/research">
+          <Link href="/apps/comparenotes">
             <Button variant="ghost" size="icon" data-testid="button-back">
               <ArrowLeft className="w-5 h-5" />
             </Button>
@@ -102,7 +102,7 @@ export default function CompareNotesBookmarks() {
                 <CardHeader>
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
-                      <Link href={`/apps/research/item/${item.id}`}>
+                      <Link href={`/apps/comparenotes/item/${item.id}`}>
                         <CardTitle className="text-lg hover:underline cursor-pointer">
                           {item.title}
                         </CardTitle>
@@ -143,7 +143,7 @@ export default function CompareNotesBookmarks() {
                       <span>{format(new Date(item.createdAt), "MMM d, yyyy")}</span>
                     </div>
                     <div className="flex gap-2">
-                      <Link href={`/apps/research/item/${item.id}`}>
+                      <Link href={`/apps/comparenotes/item/${item.id}`}>
                         <Button variant="outline" size="sm" data-testid={`button-view-${item.id}`}>
                           View
                         </Button>

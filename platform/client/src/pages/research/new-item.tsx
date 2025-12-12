@@ -56,7 +56,7 @@ export default function NewCompareNotesItem() {
 
   const createMutation = useMutation({
     mutationFn: async (data: ItemFormData) => {
-      const response = await apiRequest("POST", "/api/research/items", {
+      const response = await apiRequest("POST", "/api/comparenotes/items", {
         ...data,
         tags: tags.length > 0 ? tags : null,
       });
@@ -64,26 +64,26 @@ export default function NewCompareNotesItem() {
     },
     onSuccess: async (item) => {
       // Set the item in cache immediately so it's available when we navigate
-      queryClient.setQueryData([`/api/research/items/${item.id}`], item);
+      queryClient.setQueryData([`/api/comparenotes/items/${item.id}`], item);
       
       // Invalidate timeline queries so they refetch when user navigates back
       queryClient.invalidateQueries({ 
-        queryKey: ["/api/research/items"],
+        queryKey: ["/api/comparenotes/items"],
         refetchType: "active", // Only refetch active queries
       });
       
       toast({
         title: "Question Posted",
-        description: "Your research question has been posted successfully",
+        description: "Your question has been posted successfully",
       });
       
       // Navigate immediately - the item is now in cache
-      setLocation(`/apps/research/item/${item.id}`);
+      setLocation(`/apps/comparenotes/item/${item.id}`);
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to create research item",
+        description: error.message || "Failed to create item",
         variant: "destructive",
       });
     },
@@ -96,15 +96,15 @@ export default function NewCompareNotesItem() {
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-6">
       <div className="flex items-center gap-4">
-        <Link href="/apps/research">
+        <Link href="/apps/comparenotes">
           <Button variant="ghost" size="icon" data-testid="button-back">
             <ArrowLeft className="w-5 h-5" />
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl sm:text-3xl font-semibold">New Research Question</h1>
+          <h1 className="text-2xl sm:text-3xl font-semibold">New Question</h1>
           <p className="text-muted-foreground">
-            Post a research question and get collaborative answers
+            Post a question and get collaborative answers
           </p>
         </div>
       </div>
@@ -139,7 +139,7 @@ export default function NewCompareNotesItem() {
                     <FormControl>
                       <Textarea
                         {...field}
-                        placeholder="Provide detailed context for your research question..."
+                        placeholder="Provide detailed context for your question..."
                         rows={12}
                         data-testid="textarea-description"
                       />
@@ -239,7 +239,7 @@ export default function NewCompareNotesItem() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setLocation("/apps/research")}
+                  onClick={() => setLocation("/apps/comparenotes")}
                   data-testid="button-cancel"
                 >
                   Cancel

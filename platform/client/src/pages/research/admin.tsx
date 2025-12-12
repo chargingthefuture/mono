@@ -9,7 +9,7 @@ export default function CompareNotesAdmin() {
       <div>
         <h1 className="text-2xl sm:text-3xl font-semibold mb-2">CompareNotes Administration</h1>
         <p className="text-muted-foreground">
-          Manage research items, reports, and announcements
+          Manage items, reports, and announcements
         </p>
       </div>
 
@@ -27,7 +27,7 @@ export default function CompareNotesAdmin() {
             <p className="text-sm text-muted-foreground">
               Review and manage reported content.
             </p>
-            <Link href="/apps/research/admin/reports">
+            <Link href="/apps/comparenotes/admin/reports">
               <Button className="w-full" data-testid="button-manage-reports">
                 <AlertTriangle className="w-4 h-4 mr-2" />
                 Manage Reports
@@ -49,7 +49,7 @@ export default function CompareNotesAdmin() {
             <p className="text-sm text-muted-foreground">
               Create and manage CompareNotes announcements.
             </p>
-            <Link href="/apps/research/admin/announcements">
+            <Link href="/apps/comparenotes/admin/announcements">
               <Button className="w-full" data-testid="button-manage-announcements">
                 Manage Announcements
               </Button>

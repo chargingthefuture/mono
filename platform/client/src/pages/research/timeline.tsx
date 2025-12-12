@@ -19,8 +19,8 @@ export default function CompareNotesTimeline() {
   // Use timeline endpoint for authenticated users, fallback to items for unauthenticated
   const { data, isLoading } = useQuery<ResearchItem[] | { items: ResearchItem[]; total: number }>({
     queryKey: user 
-      ? [`/api/research/timeline?limit=${limit}&offset=${page * limit}`]
-      : [`/api/research/items?limit=${limit}&offset=${page * limit}`],
+      ? [`/api/comparenotes/timeline?limit=${limit}&offset=${page * limit}`]
+      : [`/api/comparenotes/items?limit=${limit}&offset=${page * limit}`],
   });
 
   // Handle both timeline (array) and items (object with items/total) responses
@@ -54,12 +54,12 @@ export default function CompareNotesTimeline() {
     <div className="p-4 sm:p-6 md:p-8 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl sm:text-3xl font-semibold mb-2">Research</h1>
+          <h1 className="text-2xl sm:text-3xl font-semibold mb-2">CompareNotes</h1>
           <p className="text-muted-foreground">
-            Collaborative research questions and answers
+            Collaborative questions and answers
           </p>
         </div>
-        <Link href="/apps/research/new">
+        <Link href="/apps/comparenotes/new">
           <Button data-testid="button-new-research">
             <Plus className="w-4 h-4 mr-2" />
             New Question
@@ -68,15 +68,15 @@ export default function CompareNotesTimeline() {
       </div>
 
       <AnnouncementBanner
-        apiEndpoint="/api/research/announcements"
-        queryKey="/api/research/announcements"
+        apiEndpoint="/api/comparenotes/announcements"
+        queryKey="/api/comparenotes/announcements"
       />
 
       {items.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
-            <p className="text-muted-foreground mb-4">No research items yet</p>
-            <Link href="/apps/research/new">
+            <p className="text-muted-foreground mb-4">No items yet</p>
+            <Link href="/apps/comparenotes/new">
               <Button data-testid="button-create-first">
                 <Plus className="w-4 h-4 mr-2" />
                 Create First Question
@@ -97,7 +97,7 @@ export default function CompareNotesTimeline() {
                 <CardHeader>
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
-                      <Link href={`/apps/research/item/${item.id}`}>
+                      <Link href={`/apps/comparenotes/item/${item.id}`}>
                         <CardTitle className="text-lg hover:underline cursor-pointer">
                           {item.title}
                         </CardTitle>
@@ -138,7 +138,7 @@ export default function CompareNotesTimeline() {
                       <Clock className="w-4 h-4" />
                       <span>{format(new Date(item.createdAt), "MMM d, yyyy")}</span>
                     </div>
-                    <Link href={`/apps/research/item/${item.id}`}>
+                    <Link href={`/apps/comparenotes/item/${item.id}`}>
                       <Button variant="outline" size="sm" data-testid={`button-view-${item.id}`}>
                         View
                       </Button>

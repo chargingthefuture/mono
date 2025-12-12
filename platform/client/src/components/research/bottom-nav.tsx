@@ -6,11 +6,11 @@ export function CompareNotesBottomNav() {
   const [location] = useLocation();
 
   const navItems = [
-    { icon: Home, label: "Dashboard", path: "/apps/research", testId: "nav-dashboard" },
-    { icon: Clock, label: "Timeline", path: "/apps/research/timeline", testId: "nav-timeline" },
-    { icon: FileText, label: "My Items", path: "/apps/research/my-items", testId: "nav-my-items" },
-    { icon: Bookmark, label: "Bookmarks", path: "/apps/research/bookmarks", testId: "nav-bookmarks" },
-    { icon: Plus, label: "New Item", path: "/apps/research/new", testId: "nav-new-item" },
+    { icon: Home, label: "Dashboard", path: "/apps/comparenotes", testId: "nav-dashboard" },
+    { icon: Clock, label: "Timeline", path: "/apps/comparenotes/timeline", testId: "nav-timeline" },
+    { icon: FileText, label: "My Items", path: "/apps/comparenotes/my-items", testId: "nav-my-items" },
+    { icon: Bookmark, label: "Bookmarks", path: "/apps/comparenotes/bookmarks", testId: "nav-bookmarks" },
+    { icon: Plus, label: "New Item", path: "/apps/comparenotes/new", testId: "nav-new-item" },
   ];
 
   return (
