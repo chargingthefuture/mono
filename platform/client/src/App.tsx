@@ -90,6 +90,8 @@ import MechanicMatchAvailability from "@/pages/mechanicmatch/availability";
 import MechanicMatchAdmin from "@/pages/mechanicmatch/admin";
 import MechanicMatchAdminProfiles from "@/pages/mechanicmatch/admin-profiles";
 import MechanicMatchAdminAnnouncements from "@/pages/mechanicmatch/admin-announcements";
+import PublicMechanicMatchProfile from "@/pages/mechanicmatch/public";
+import PublicMechanicMatchList from "@/pages/mechanicmatch/public-list";
 import LostMailDashboard from "@/pages/lostmail/dashboard";
 import LostMailReport from "@/pages/lostmail/report";
 import LostMailIncidentDetail from "@/pages/lostmail/incident-detail";
@@ -285,6 +287,9 @@ function Router() {
       {/* Publicly viewable SocketRelay requests */}
       <Route path="/apps/socketrelay/public" component={PublicSocketRelayList} />
       <Route path="/apps/socketrelay/public/:id" component={PublicSocketRelayRequest} />
+      {/* Publicly viewable MechanicMatch profiles */}
+      <Route path="/apps/mechanicmatch/public" component={PublicMechanicMatchList} />
+      <Route path="/apps/mechanicmatch/public/:id" component={PublicMechanicMatchProfile} />
       
       {/* Public Terms page */}
       <Route path="/terms" component={Terms} />
