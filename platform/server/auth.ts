@@ -4,7 +4,7 @@ import type { Express, RequestHandler } from "express";
 import { storage } from "./storage";
 import { validateCsrfToken } from "./csrf";
 import { withDatabaseErrorHandling } from "./databaseErrorHandler";
-import { ExternalServiceError } from "./errors";
+import { ExternalServiceError, UnauthorizedError } from "./errors";
 
 // Clerk Configuration
 if (!process.env.CLERK_SECRET_KEY) {
@@ -484,6 +484,11 @@ export const isAdmin: RequestHandler = async (req: any, res, next) => {
 export const isAdminWithCsrf: RequestHandler[] = [isAdmin, validateCsrfToken];
 
 // Helper to get user ID from request
+// Throws UnauthorizedError if userId is not available (should not happen if isAuthenticated middleware is used)
 export function getUserId(req: any): string {
-  return req.auth?.userId || "";
+  const userId = req.auth?.userId;
+  if (!userId) {
+    throw new UnauthorizedError("User ID not found in request. Authentication may have failed.");
+  }
+  return userId;
 }
