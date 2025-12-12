@@ -52,7 +52,6 @@ export default function TrustTransportProfile() {
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      displayName: "",
       isDriver: false,
       isRider: false,
       city: "",
@@ -74,7 +73,6 @@ export default function TrustTransportProfile() {
     if (profile && !hasInitializedRef.current) {
       hasInitializedRef.current = true;
       form.reset({
-        displayName: profile.displayName || "",
         isDriver: profile.isDriver ?? false,
         isRider: profile.isRider ?? true,
         city: profile.city || "",
@@ -221,20 +219,6 @@ export default function TrustTransportProfile() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="displayName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Display Name *</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="How you'd like to be known" data-testid="input-displayName" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               <div className="space-y-4">
                 <FormLabel>I am a *</FormLabel>
                 <p className="text-sm text-muted-foreground mb-3">

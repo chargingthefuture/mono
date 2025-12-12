@@ -214,17 +214,9 @@ export default function DirectoryDashboard() {
               return (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {filteredProfiles.map((p: any) => {
-                    // Compute displayName if not present
-                    let computedName = p.displayName;
-                    if (!computedName) {
-                      if (p.displayNameType === 'nickname' && p.nickname) {
-                        computedName = p.nickname;
-                      }
-                      if (!computedName && p.nickname) computedName = p.nickname;
-                    }
                     return (
                       <div key={p.id} className="rounded-md border p-3 flex flex-col gap-2">
-                        <div className="font-medium truncate">{computedName || '—'}</div>
+                        <div className="font-medium truncate">{p.displayName || '—'}</div>
                         <div className="flex items-center gap-2">
                           <VerifiedBadge isVerified={(p as any).userIsVerified || false} testId={`badge-verified-${p.id}`} />
                         </div>

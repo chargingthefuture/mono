@@ -45,7 +45,6 @@ import type { User } from "@shared/schema";
 
 const adminProfileFormSchema = z
   .object({
-    displayName: z.string().min(1, "Display name is required"),
     isCarOwner: z.boolean().default(false),
     isMechanic: z.boolean().default(true),
     city: z.string().optional().nullable(),
@@ -105,7 +104,7 @@ export default function MechanicMatchAdminProfiles() {
   });
 
   const fuzzyProfiles = useFuzzySearch(data?.items ?? [], searchTerm, {
-    searchFields: ["displayName", "city", "state", "country", "mechanicBio", "ownerBio", "phoneNumber"],
+    searchFields: ["city", "state", "country", "mechanicBio", "ownerBio", "phoneNumber"],
     threshold: 0.3,
   });
 
@@ -120,7 +119,6 @@ export default function MechanicMatchAdminProfiles() {
   const createForm = useForm<AdminProfileFormValues>({
     resolver: zodResolver(adminProfileFormSchema),
     defaultValues: {
-      displayName: "",
       isCarOwner: false,
       isMechanic: true,
       city: "",
@@ -138,7 +136,6 @@ export default function MechanicMatchAdminProfiles() {
   useEffect(() => {
     if (editingProfile) {
       editForm.reset({
-        displayName: editingProfile.displayName || "",
         isCarOwner: editingProfile.isCarOwner,
         isMechanic: editingProfile.isMechanic,
         city: editingProfile.city || "",
@@ -246,20 +243,6 @@ export default function MechanicMatchAdminProfiles() {
         <CardContent>
           <Form {...createForm}>
             <form onSubmit={createForm.handleSubmit(onSubmitCreate)} className="space-y-6">
-              <FormField
-                control={createForm.control}
-                name="displayName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Display Name *</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="e.g., Oakland Mobile Mechanics" data-testid="input-display-name-create" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               <div className="grid gap-4 md:grid-cols-2">
                 <RoleCheckbox control={createForm.control} name="isCarOwner" label="Car Owner" description="Provide owner context" dataTestId="checkbox-car-owner-create" />
                 <RoleCheckbox control={createForm.control} name="isMechanic" label="Mechanic" description="Available for bookings" dataTestId="checkbox-mechanic-create" />
@@ -392,7 +375,7 @@ export default function MechanicMatchAdminProfiles() {
                 <div key={profile.id} className="p-4 border rounded-lg flex flex-col gap-4 md:flex-row md:items-center md:justify-between" data-testid={`profile-row-${profile.id}`}>
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <h3 className="font-semibold">{profile.displayName}</h3>
+                      <h3 className="font-semibold">{profile.userId ? "Claimed Profile" : "Unclaimed Profile"}</h3>
                       <Badge variant={profile.isClaimed ? "default" : "secondary"}>
                         {profile.isClaimed ? "Claimed" : "Unclaimed"}
                       </Badge>
@@ -472,20 +455,6 @@ export default function MechanicMatchAdminProfiles() {
           </DialogHeader>
           <Form {...editForm}>
             <form onSubmit={editForm.handleSubmit(onSubmitEdit)} className="space-y-6">
-              <FormField
-                control={editForm.control}
-                name="displayName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Display Name *</FormLabel>
-                    <FormControl>
-                      <Input {...field} data-testid="input-display-name-edit" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
               <div className="grid gap-4 md:grid-cols-2">
                 <RoleCheckbox control={editForm.control} name="isCarOwner" label="Car Owner" description="Has owner profile" dataTestId="checkbox-car-owner-edit" />
                 <RoleCheckbox control={editForm.control} name="isMechanic" label="Mechanic" description="Offers services" dataTestId="checkbox-mechanic-edit" />
@@ -669,7 +638,7 @@ export default function MechanicMatchAdminProfiles() {
           <AlertDialogHeader>
             <AlertDialogTitle>Delete Unclaimed Profile</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently remove the profile "{deletingProfile?.displayName}". This action cannot be undone.
+              This will permanently remove the unclaimed profile. This action cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -693,15 +662,8 @@ export default function MechanicMatchAdminProfiles() {
 }
 
 function transformProfilePayload(values: AdminProfileFormValues) {
-  // Ensure displayName is always a non-empty string
-  const displayName = values.displayName?.trim();
-  if (!displayName || displayName.length === 0) {
-    throw new Error("Display name is required");
-  }
-  
   // Explicitly set all fields to ensure defaults are applied and undefined values are handled
   return {
-    displayName,
     isCarOwner: values.isCarOwner ?? false,
     isMechanic: values.isMechanic ?? false,
     city: values.city?.trim() || null,

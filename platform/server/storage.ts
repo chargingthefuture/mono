@@ -3096,7 +3096,6 @@ export class DatabaseStorage implements IStorage {
             city: profile.city,
             state: profile.state,
             country: profile.country,
-            displayName: profile.displayName,
           } : null,
         };
       })
@@ -3170,7 +3169,6 @@ export class DatabaseStorage implements IStorage {
             city: profile.city,
             state: profile.state,
             country: profile.country,
-            displayName: profile.displayName,
           } : null,
           user: user || null,
         };
@@ -4546,7 +4544,6 @@ export class DatabaseStorage implements IStorage {
       const searchTerm = `%${filters.search}%`;
       conditions.push(
         or(
-          sql`${mechanicmatchProfiles.displayName} ILIKE ${searchTerm}`,
           sql`${mechanicmatchProfiles.city} ILIKE ${searchTerm}`,
           sql`${mechanicmatchProfiles.state} ILIKE ${searchTerm}`
         )
@@ -7610,10 +7607,10 @@ export class DatabaseStorage implements IStorage {
       }
 
       if (belongsToSkillLevel) {
-        // Get display name
+        // Get display name from firstName/lastName
         let displayName = "Unknown";
-        if (profile.displayNameType === "nickname" && profile.nickname) {
-          displayName = profile.nickname;
+        if (profile.firstName && profile.lastName) {
+          displayName = `${profile.firstName} ${profile.lastName}`;
         } else if (profile.firstName) {
           displayName = profile.firstName;
         }
@@ -7840,10 +7837,10 @@ export class DatabaseStorage implements IStorage {
       }
 
       if (relevantOccupations.length > 0) {
-        // Get display name
+        // Get display name from firstName/lastName
         let displayName = "Unknown";
-        if (profile.displayNameType === "nickname" && profile.nickname) {
-          displayName = profile.nickname;
+        if (profile.firstName && profile.lastName) {
+          displayName = `${profile.firstName} ${profile.lastName}`;
         } else if (profile.firstName) {
           displayName = profile.firstName;
         }

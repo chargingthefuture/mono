@@ -110,7 +110,7 @@ export default function PublicDirectoryProfile() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 flex-wrap">
               <CardTitle className="text-lg sm:text-xl">
-                {(profile as any).displayName || profile.nickname || profile.firstName || 'Directory Profile'}
+                {(profile as any).displayName || 'Directory Profile'}
               </CardTitle>
               <VerifiedBadge isVerified={userIsVerified} testId="badge-verified-public" />
             </div>

@@ -1,4 +1,4 @@
-import { sql } from 'drizzle-orm';
+4374import { sql } from 'drizzle-orm';
 import { relations } from 'drizzle-orm';
 import {
   index,
@@ -202,7 +202,6 @@ export type AdminActionLog = typeof adminActionLogs.$inferSelect;
 export const supportMatchProfiles = pgTable("support_match_profiles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().unique().references(() => users.id),
-  nickname: varchar("nickname", { length: 100 }),
   gender: varchar("gender", { length: 50 }), // male, female, prefer-not-to-say
   genderPreference: varchar("gender_preference", { length: 50 }), // same_gender, any
   city: varchar("city", { length: 100 }),
@@ -431,7 +430,6 @@ export const lighthouseProfiles = pgTable("lighthouse_profiles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id).unique(),
   profileType: varchar("profile_type", { length: 20 }).notNull(), // 'seeker' or 'host'
-  displayName: varchar("display_name", { length: 100 }).notNull(),
   bio: text("bio"),
   phoneNumber: varchar("phone_number", { length: 20 }),
   signalUrl: text("signal_url"),
@@ -713,7 +711,6 @@ export type SocketrelayMessage = typeof socketrelayMessages.$inferSelect;
 export const socketrelayProfiles = pgTable("socketrelay_profiles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().unique().references(() => users.id),
-  displayName: varchar("display_name", { length: 100 }).notNull(),
   city: varchar("city", { length: 100 }).notNull(),
   state: varchar("state", { length: 100 }).notNull(),
   country: varchar("country", { length: 100 }).notNull(),
@@ -735,7 +732,6 @@ export const insertSocketrelayProfileSchema = createInsertSchema(socketrelayProf
   createdAt: true,
   updatedAt: true,
 }).extend({
-  displayName: z.string().min(1, "Display name is required").max(100, "Display name must be 100 characters or less"),
   city: z.string().min(1, "City is required").max(100, "City must be 100 characters or less"),
   state: z.string().min(1, "State is required").max(100, "State must be 100 characters or less"),
   country: z.string().min(1, "Country is required").max(100, "Country must be 100 characters or less"),
@@ -792,11 +788,6 @@ export const directoryProfiles = pgTable("directory_profiles", {
   state: varchar("state", { length: 100 }),
   country: varchar("country", { length: 100 }),
 
-  // Display naming for listings
-  nickname: varchar("nickname", { length: 100 }),
-  firstName: varchar("first_name", { length: 100 }), // For unclaimed profiles when displayNameType is 'first'
-  displayNameType: varchar("display_name_type", { length: 20 }).notNull().default('first'), // 'first' | 'nickname'
-
   // Verification and visibility
   isVerified: boolean("is_verified").notNull().default(false),
   isPublic: boolean("is_public").notNull().default(false),
@@ -831,9 +822,6 @@ export const insertDirectoryProfileSchema = createInsertSchema(directoryProfiles
   quoraUrl: z.string().url().optional().nullable(),
   // Require country selection per shared standard
   country: z.string().min(1, "Country is required").max(100, "Country must be 100 characters or less"),
-  nickname: z.string().max(100).optional().nullable(),
-  firstName: z.string().max(100).optional().nullable(),
-  displayNameType: z.enum(['first','nickname']).optional(),
   // userId remains optional to allow unclaimed creation by admin
 });
 
@@ -1008,7 +996,6 @@ export const trusttransportProfiles = pgTable("trusttransport_profiles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().unique().references(() => users.id),
   
-  displayName: varchar("display_name", { length: 100 }).notNull(),
   isDriver: boolean("is_driver").notNull().default(false),
   isRider: boolean("is_rider").notNull().default(true),
   city: varchar("city", { length: 100 }).notNull(),
@@ -1049,7 +1036,6 @@ export const insertTrusttransportProfileSchema = createInsertSchema(trusttranspo
   createdAt: true,
   updatedAt: true,
 }).extend({
-  displayName: z.string().min(1, "Display name is required").max(100, "Display name must be 100 characters or less"),
   isDriver: z.boolean().default(false),
   isRider: z.boolean().default(true),
   city: z.string().min(1, "City is required").max(100, "City must be 100 characters or less"),
@@ -1241,7 +1227,6 @@ export const mechanicmatchProfiles = pgTable("mechanicmatch_profiles", {
   isMechanic: boolean("is_mechanic").notNull().default(false),
   
   // Common fields
-  displayName: varchar("display_name", { length: 100 }).notNull(),
   city: varchar("city", { length: 100 }),
   state: varchar("state", { length: 100 }),
   country: varchar("country", { length: 100 }),
@@ -1294,7 +1279,6 @@ export const insertMechanicmatchProfileSchema = createInsertSchema(mechanicmatch
   updatedAt: true,
   totalJobsCompleted: true,
 }).extend({
-  displayName: z.string().min(1, "Display name is required").max(100, "Display name must be 100 characters or less"),
   isCarOwner: z.boolean().default(false),
   isMechanic: z.boolean().default(false),
   city: z.string().max(100).optional().nullable(),
@@ -2237,9 +2221,7 @@ export type GentlepulseAnnouncement = typeof gentlepulseAnnouncements.$inferSele
 export const chymeProfiles = pgTable("chyme_profiles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().unique().references(() => users.id),
-  displayName: varchar("display_name", { length: 100 }),
   isVerified: boolean("is_verified").default(false).notNull(),
-  isAnonymous: boolean("is_anonymous").notNull().default(true),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -2255,8 +2237,6 @@ export const insertChymeProfileSchema = createInsertSchema(chymeProfiles).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
-}).extend({
-  displayName: z.string().max(100).optional().nullable(),
 });
 
 export type InsertChymeProfile = z.infer<typeof insertChymeProfileSchema>;
@@ -2414,7 +2394,6 @@ export type ChymeAnnouncement = typeof chymeAnnouncements.$inferSelect;
 export const workforceRecruiterProfiles = pgTable("workforce_recruiter_profiles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().unique().references(() => users.id),
-  displayName: varchar("display_name", { length: 100 }),
   isVerified: boolean("is_verified").default(false).notNull(),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
@@ -2436,7 +2415,6 @@ export const insertWorkforceRecruiterProfileSchema = createInsertSchema(workforc
 }).extend({
   // Keep userId optional for validation since the server injects it after auth
   userId: z.string().optional(),
-  displayName: z.string().max(100).optional().nullable(),
   notes: z.string().optional().nullable(),
 });
 

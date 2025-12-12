@@ -16,9 +16,7 @@ import { useLocation } from "wouter";
 import { MiniAppBackButton } from "@/components/mini-app-back-button";
 import { VerifiedBadge } from "@/components/verified-badge";
 
-const profileFormSchema = insertChymeProfileSchema.omit({ userId: true }).extend({
-  displayName: z.string().max(100).optional().nullable(),
-});
+const profileFormSchema = insertChymeProfileSchema.omit({ userId: true });
 
 type ProfileFormData = z.infer<typeof profileFormSchema>;
 
@@ -40,10 +38,7 @@ export default function ChymeProfile() {
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileFormSchema),
-    defaultValues: {
-      displayName: "",
-      isAnonymous: true,
-    },
+    defaultValues: {},
   });
 
   const updateMutation = useMutation({
@@ -107,50 +102,6 @@ export default function ChymeProfile() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="displayName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Display Name (Optional)</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        placeholder="Your display name"
-                        value={field.value || ""}
-                        data-testid="input-display-name"
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      This name will be shown to other participants. Leave empty to remain anonymous.
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <FormField
-                control={form.control}
-                name="isAnonymous"
-                render={({ field }) => (
-                  <FormItem className="flex flex-row items-start space-x-3 space-y-0">
-                    <FormControl>
-                      <Checkbox
-                        checked={field.value}
-                        onCheckedChange={field.onChange}
-                        data-testid="checkbox-anonymous"
-                      />
-                    </FormControl>
-                    <div className="space-y-1 leading-none">
-                      <FormLabel>Remain Anonymous</FormLabel>
-                      <FormDescription>
-                        When enabled, your messages and participation will be anonymous to other users.
-                      </FormDescription>
-                    </div>
-                  </FormItem>
-                )}
-              />
-
               <div className="flex gap-3">
                 <Button type="submit" disabled={createMutation.isPending || updateMutation.isPending} data-testid="button-submit">
                   {profile ? "Update Profile" : "Create Profile"}

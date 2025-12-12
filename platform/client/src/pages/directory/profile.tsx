@@ -28,7 +28,6 @@ type SkillsJobTitle = {
   id: string;
   name: string;
 };
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useExternalLink } from "@/hooks/useExternalLink";
 import { VerifiedBadge } from "@/components/verified-badge";
 import { DeleteProfileDialog } from "@/components/delete-profile-dialog";
@@ -88,9 +87,6 @@ export default function DirectoryProfilePage() {
   const [country, setCountry] = useState("");
   const [isPublic, setIsPublic] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-  const [nickname, setNickname] = useState("");
-  const [directoryFirstName, setDirectoryFirstName] = useState("");
-  const [displayNameType, setDisplayNameType] = useState<'first' | 'nickname'>("first");
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
 
   const { openExternal, ExternalLinkDialog } = useExternalLink();
@@ -107,23 +103,12 @@ export default function DirectoryProfilePage() {
       setStateVal(profile.state || "");
       setCountry(profile.country || "");
       setIsPublic(!!profile.isPublic);
-      setNickname(profile.nickname || "");
-      // Use profile firstName if set, otherwise fall back to account firstName
-      setDirectoryFirstName(profile.firstName || user?.firstName || "");
-      setDisplayNameType((profile.displayNameType as 'first' | 'nickname') || "first");
       setIsEditing(false);
-    } else if (user) {
-      // When creating a new profile, initialize with account firstName
-      setDirectoryFirstName(user.firstName || "");
     }
   }, [profile, user]);
 
   const createMutation = useMutation({
     mutationFn: async () => {
-      // Use account firstName if directoryFirstName is blank
-      const firstNameValue = displayNameType === 'first' 
-        ? (directoryFirstName.trim() || user?.firstName || null)
-        : null;
       const payload = {
         description: description.trim(),
         skills,
@@ -134,9 +119,6 @@ export default function DirectoryProfilePage() {
         city: city || null,
         state: stateVal || null,
         country: country,
-        firstName: firstNameValue,
-        nickname: nickname || null,
-        displayNameType,
         isPublic,
       };
       return apiRequest("POST", "/api/directory/profile", payload);
@@ -154,10 +136,6 @@ export default function DirectoryProfilePage() {
 
   const updateMutation = useMutation({
     mutationFn: async () => {
-      // Use account firstName if directoryFirstName is blank
-      const firstNameValue = displayNameType === 'first' 
-        ? (directoryFirstName.trim() || user?.firstName || null)
-        : null;
       const payload = {
         description: description.trim(),
         skills,
@@ -168,9 +146,6 @@ export default function DirectoryProfilePage() {
         city: city || null,
         state: stateVal || null,
         country: country,
-        firstName: firstNameValue,
-        nickname: nickname || null,
-        displayNameType,
         isPublic,
       };
       return apiRequest("PUT", "/api/directory/profile", payload);
@@ -342,11 +317,11 @@ export default function DirectoryProfilePage() {
                 <p className="mt-1">{description || "—"}</p>
               </div>
               <div>
-                <Label className="text-muted-foreground">Display Name</Label>
+                <Label className="text-muted-foreground">Name</Label>
                 <p className="mt-1">
-                  {displayNameType === 'nickname' 
-                    ? (nickname || '—') 
-                    : (directoryFirstName || user?.firstName || (profile as any)?.displayName || 'First name')}
+                  {user?.firstName && user?.lastName 
+                    ? `${user.firstName} ${user.lastName}`
+                    : user?.firstName || '—'}
                 </p>
               </div>
               <div>
@@ -418,39 +393,6 @@ export default function DirectoryProfilePage() {
           <div className="space-y-2">
             <Label htmlFor="description">Short description ({remaining} left)</Label>
             <Textarea id="description" value={description} onChange={(e) => setDescription(e.target.value.slice(0, 140))} placeholder="What can you offer or what are you looking for?" />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Display Name</Label>
-            <RadioGroup value={displayNameType} onValueChange={(v) => setDisplayNameType(v as any)} className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <label className="flex items-center gap-2 text-sm">
-                <RadioGroupItem value="first" />
-                <span>Use my first name</span>
-              </label>
-              <label className="flex items-center gap-2 text-sm">
-                <RadioGroupItem value="nickname" />
-                <span>Use a nickname</span>
-              </label>
-            </RadioGroup>
-            {displayNameType === 'first' && (
-              <div className="space-y-2">
-                <Label htmlFor="directory-first-name">First Name</Label>
-                <Input 
-                  id="directory-first-name" 
-                  value={directoryFirstName} 
-                  onChange={(e) => setDirectoryFirstName(e.target.value.slice(0, 100))} 
-                  placeholder="Override your first name (optional - leave blank to use your account first name)" 
-                  data-testid="input-directory-first-name"
-                />
-                <p className="text-xs text-muted-foreground">Leave blank to use your account first name, or enter a custom name to override it</p>
-              </div>
-            )}
-            {displayNameType === 'nickname' && (
-              <div className="space-y-2">
-                <Label htmlFor="nickname">Nickname</Label>
-                <Input id="nickname" value={nickname} onChange={(e) => setNickname(e.target.value.slice(0, 100))} placeholder="e.g. Sky" />
-              </div>
-            )}
           </div>
 
           <div className="space-y-2">

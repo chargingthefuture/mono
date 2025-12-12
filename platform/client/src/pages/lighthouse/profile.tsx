@@ -54,7 +54,6 @@ export default function LighthouseProfilePage() {
     ),
     defaultValues: {
       profileType: "seeker",
-      displayName: "",
       bio: "",
       phoneNumber: "",
       signalUrl: "",
@@ -73,7 +72,6 @@ export default function LighthouseProfilePage() {
     if (profile) {
       form.reset({
         profileType: profile.profileType,
-        displayName: profile.displayName,
         bio: profile.bio || "",
         phoneNumber: profile.phoneNumber || "",
         signalUrl: profile.signalUrl || "",

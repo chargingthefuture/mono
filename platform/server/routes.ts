@@ -757,42 +757,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     let displayName: string | null = null;
     let userIsVerified = false;
-    if (profile.displayNameType === 'nickname' && profile.nickname) {
-      displayName = profile.nickname;
-    } else if (profile.displayNameType === 'first') {
-      // Priority: Directory profile firstName (override) > user firstName
-      if (profile.firstName) {
-        displayName = profile.firstName;
-      } else if (profile.userId) {
-        const user = await withDatabaseErrorHandling(
-          () => storage.getUser(profile.userId),
-          'getUserForDirectoryProfile'
-        );
-        displayName = user?.firstName || null;
-      }
-      // Get verification status: use user's isVerified if userId exists, otherwise use profile's isVerified
-      if (profile.userId) {
-        const user = await withDatabaseErrorHandling(
-          () => storage.getUser(profile.userId),
-          'getUserVerificationForDirectoryProfile'
-        );
-        userIsVerified = user?.isVerified || false;
-      } else {
-        // For admin-created profiles without userId, use profile's own isVerified field
-        userIsVerified = profile.isVerified || false;
-      }
-    } else if (profile.userId) {
+    let userFirstName: string | null = null;
+    let userLastName: string | null = null;
+    
+    // Get user data if userId exists
+    if (profile.userId) {
       const user = await withDatabaseErrorHandling(
         () => storage.getUser(profile.userId),
-        'getUserVerificationForDirectoryProfileFallback'
+        'getUserForDirectoryProfile'
       );
-      userIsVerified = user?.isVerified || false;
+      if (user) {
+        userFirstName = user.firstName || null;
+        userLastName = user.lastName || null;
+        userIsVerified = user.isVerified || false;
+        // Build display name from firstName and lastName
+        if (userFirstName && userLastName) {
+          displayName = `${userFirstName} ${userLastName}`;
+        } else if (userFirstName) {
+          displayName = userFirstName;
+        }
+      }
     } else {
       // For admin-created profiles without userId, use profile's own isVerified field
       userIsVerified = profile.isVerified || false;
     }
-    if (!displayName && profile.nickname) displayName = profile.nickname;
-    res.json({ ...profile, displayName, userIsVerified });
+    
+    res.json({ ...profile, displayName, userIsVerified, firstName: userFirstName, lastName: userLastName });
   }));
 
   app.post('/api/directory/profile', isAuthenticated, asyncHandler(async (req: any, res) => {
@@ -929,42 +919,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     let displayName: string | null = null;
     let userIsVerified = false;
-    if (profile.displayNameType === 'nickname' && profile.nickname) {
-      displayName = profile.nickname;
-    } else if (profile.displayNameType === 'first') {
-      // Priority: Directory profile firstName (override) > user firstName
-      if (profile.firstName) {
-        displayName = profile.firstName;
-      } else if (profile.userId) {
-        const user = await withDatabaseErrorHandling(
-          () => storage.getUser(profile.userId),
-          'getUserForPublicDirectoryProfile'
-        );
-        displayName = user?.firstName || null;
-      }
-      // Get verification status: use user's isVerified if userId exists, otherwise use profile's isVerified
-      if (profile.userId) {
-        const user = await withDatabaseErrorHandling(
-          () => storage.getUser(profile.userId),
-          'getUserVerificationForPublicDirectoryProfile'
-        );
-        userIsVerified = user?.isVerified || false;
-      } else {
-        // For admin-created profiles without userId, use profile's own isVerified field
-        userIsVerified = profile.isVerified || false;
-      }
-    } else if (profile.userId) {
+    let userFirstName: string | null = null;
+    let userLastName: string | null = null;
+    
+    // Get user data if userId exists
+    if (profile.userId) {
       const user = await withDatabaseErrorHandling(
         () => storage.getUser(profile.userId),
-        'getUserVerificationForPublicDirectoryProfileFallback'
+        'getUserForPublicDirectoryProfile'
       );
-      userIsVerified = user?.isVerified || false;
+      if (user) {
+        userFirstName = user.firstName || null;
+        userLastName = user.lastName || null;
+        userIsVerified = user.isVerified || false;
+        // Build display name from firstName and lastName
+        if (userFirstName && userLastName) {
+          displayName = `${userFirstName} ${userLastName}`;
+        } else if (userFirstName) {
+          displayName = userFirstName;
+        }
+      }
     } else {
       // For admin-created profiles without userId, use profile's own isVerified field
       userIsVerified = profile.isVerified || false;
     }
-    if (!displayName && profile.nickname) displayName = profile.nickname;
-    res.json({ ...profile, displayName, userIsVerified });
+    res.json({ ...profile, displayName, userIsVerified, firstName: userFirstName, lastName: userLastName });
   }));
 
   app.get('/api/directory/public', publicListingLimiter, asyncHandler(async (req, res) => {
@@ -988,44 +967,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const withNames = await Promise.all(profiles.map(async (p) => {
       let name: string | null = null;
       let userIsVerified = false;
-      if (p.displayNameType === 'nickname' && p.nickname) {
-        name = p.nickname;
-      } else if (p.displayNameType === 'first') {
-        // Priority: Directory profile firstName (override) > user firstName
-        if (p.firstName) {
-          name = p.firstName;
-        } else if (p.userId) {
-          const u = await withDatabaseErrorHandling(
-            () => storage.getUser(p.userId),
-            'getUserForPublicDirectoryList'
-          );
-          name = u?.firstName || null;
-        }
-        // Get verification status: use user's isVerified if userId exists, otherwise use profile's isVerified
-        if (p.userId) {
-          const u = await withDatabaseErrorHandling(
-            () => storage.getUser(p.userId),
-            'getUserVerificationForPublicDirectoryList'
-          );
-          userIsVerified = u?.isVerified || false;
-        } else {
-          // For admin-created profiles without userId, use profile's own isVerified field
-          userIsVerified = p.isVerified || false;
-        }
-      } else if (p.userId) {
+      let userFirstName: string | null = null;
+      let userLastName: string | null = null;
+      
+      // Get user data if userId exists
+      if (p.userId) {
         const u = await withDatabaseErrorHandling(
           () => storage.getUser(p.userId),
-          'getUserVerificationForPublicDirectoryListFallback'
+          'getUserForPublicDirectoryList'
         );
-        userIsVerified = u?.isVerified || false;
+        if (u) {
+          userFirstName = u.firstName || null;
+          userLastName = u.lastName || null;
+          userIsVerified = u.isVerified || false;
+          // Build display name from firstName and lastName
+          if (userFirstName && userLastName) {
+            name = `${userFirstName} ${userLastName}`;
+          } else if (userFirstName) {
+            name = userFirstName;
+          }
+        }
       } else {
         // For admin-created profiles without userId, use profile's own isVerified field
         userIsVerified = p.isVerified || false;
       }
-      // Fallback to nickname if no name found
-      if (!name && p.nickname) name = p.nickname;
-      // Ensure we always return displayName (even if null)
-      return { ...p, displayName: name || null, userIsVerified };
+      
+      // Ensure we always return displayName, firstName, and lastName (even if null)
+      return { ...p, displayName: name || null, userIsVerified, firstName: userFirstName, lastName: userLastName };
     }));
     
     // Rotate display order to make scraping harder
@@ -1057,34 +1025,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userFirstName = user.firstName || null;
           userLastName = user.lastName || null;
           userIsVerified = user.isVerified || false;
+          // Build display name from firstName and lastName
+          if (userFirstName && userLastName) {
+            name = `${userFirstName} ${userLastName}`;
+          } else if (userFirstName) {
+            name = userFirstName;
+          }
         }
       } else {
         // For admin-created profiles without userId, use profile's own isVerified field
         userIsVerified = p.isVerified || false;
       }
       
-      if (p.displayNameType === 'nickname' && p.nickname) {
-        name = p.nickname;
-      } else if (p.displayNameType === 'first') {
-        // Priority: Directory profile firstName (override) > user firstName
-        if (p.firstName) {
-          name = p.firstName;
-        } else {
-          name = userFirstName;
-        }
-      }
-      
-      // Fallback to nickname if no name found
-      if (!name && p.nickname) name = p.nickname;
-      
       // Ensure we always return displayName, firstName, and lastName (even if null)
       return { 
         ...p, 
         displayName: name || null, 
         userIsVerified,
-        // Include firstName and lastName for search functionality
-        // Priority: Directory profile firstName > user firstName
-        firstName: p.firstName || userFirstName || null,
+        firstName: userFirstName || null,
         lastName: userLastName || null,
       };
     }));
@@ -2574,7 +2532,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           country: creatorProfile.country,
         } : null,
         creator: creator ? {
-          displayName: creatorProfile?.displayName || null,
           firstName: creator.firstName,
           lastName: creator.lastName,
           isVerified: creator.isVerified,
@@ -2607,6 +2564,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       'getUser'
     );
     
+    // Build display name from firstName and lastName
+    let displayName: string | null = null;
+    if (creator) {
+      if (creator.firstName && creator.lastName) {
+        displayName = `${creator.firstName} ${creator.lastName}`;
+      } else if (creator.firstName) {
+        displayName = creator.firstName;
+      }
+    }
+    
     res.json({
       ...request,
       creatorProfile: creatorProfile ? {
@@ -2615,7 +2582,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         country: creatorProfile.country,
       } : null,
       creator: creator ? {
-        displayName: creatorProfile?.displayName || null,
+        displayName,
         firstName: creator.firstName,
         lastName: creator.lastName,
         isVerified: creator.isVerified,
@@ -3980,7 +3947,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       profile.id,
       {
         wasUnclaimed: true,
-        displayName: profile.displayName,
       }
     );
 
@@ -5575,7 +5541,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ...req.body,
       roomId,
       userId,
-      isAnonymous: profile?.isAnonymous ?? true,
     }, 'Invalid message data');
     
     const message = await withDatabaseErrorHandling(

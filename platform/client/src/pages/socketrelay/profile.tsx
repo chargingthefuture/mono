@@ -54,7 +54,6 @@ export default function SocketRelayProfile() {
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      displayName: "",
       city: "",
       state: "",
       country: "",
@@ -66,7 +65,6 @@ export default function SocketRelayProfile() {
     if (profile) {
       // If SocketRelay profile exists, use its data
       form.reset({
-        displayName: profile.displayName || "",
         city: profile.city || "",
         state: profile.state || "",
         country: profile.country || "",
@@ -204,25 +202,6 @@ export default function SocketRelayProfile() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              <FormField
-                control={form.control}
-                name="displayName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Display Name *</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        value={field.value || ""}
-                        placeholder="How should we display your name?"
-                        data-testid="input-displayName"
-                        required
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <FormField

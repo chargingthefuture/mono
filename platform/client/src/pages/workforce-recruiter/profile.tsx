@@ -38,7 +38,6 @@ export default function WorkforceRecruiterProfile() {
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      displayName: "",
       notes: "",
     },
   });
@@ -47,7 +46,6 @@ export default function WorkforceRecruiterProfile() {
   useEffect(() => {
     if (profile) {
       form.reset({
-        displayName: profile.displayName || "",
         notes: profile.notes || "",
       });
     }
@@ -112,25 +110,6 @@ export default function WorkforceRecruiterProfile() {
         <CardContent>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <FormField
-                control={form.control}
-                name="displayName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Display Name</FormLabel>
-                    <FormControl>
-                      <Input
-                        {...field}
-                        value={field.value ?? ""}
-                        placeholder="Enter your display name"
-                        maxLength={100}
-                        data-testid="input-display-name"
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
               <FormField
                 control={form.control}

@@ -48,7 +48,6 @@ export default function MechanicMatchProfile() {
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
-      displayName: "",
       isCarOwner: false,
       isMechanic: false,
       city: "",
@@ -75,7 +74,6 @@ export default function MechanicMatchProfile() {
   useEffect(() => {
     if (profile) {
       form.reset({
-        displayName: profile.displayName || "",
         isCarOwner: profile.isCarOwner ?? false,
         isMechanic: profile.isMechanic ?? false,
         city: profile.city || "",
@@ -267,19 +265,6 @@ export default function MechanicMatchProfile() {
               </div>
 
               {/* Common Fields */}
-              <FormField
-                control={form.control}
-                name="displayName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Display Name *</FormLabel>
-                    <FormControl>
-                      <Input {...field} placeholder="Your display name" data-testid="input-display-name" />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
 
               <div className="grid md:grid-cols-2 gap-4">
                 <FormField
