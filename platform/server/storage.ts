@@ -1932,6 +1932,7 @@ export class DatabaseStorage implements IStorage {
       mau = activeUserIds.size;
 
       // Calculate Churn Rate - users who paid in previous month but not in current month
+      // Note: Yearly subscribers should only be considered churned if their subscription has expired
       const previousMonth = new Date(monthStart);
       previousMonth.setMonth(previousMonth.getMonth() - 1);
       const previousMonthStart = new Date(previousMonth.getFullYear(), previousMonth.getMonth(), 1);
@@ -1948,10 +1949,46 @@ export class DatabaseStorage implements IStorage {
           )
         );
       
-      const previousMonthUserIds = new Set(previousMonthPayments.map(p => p.userId));
-      const previousMonthActiveUsers = previousMonthUserIds.size;
-      const churnedUsers = Array.from(previousMonthUserIds).filter(id => !activeUserIds.has(id)).length;
-      churnRate = previousMonthActiveUsers === 0 ? 0 : (churnedUsers / previousMonthActiveUsers) * 100;
+      // Separate monthly and yearly payments from previous month
+      const previousMonthMonthlyPayments = previousMonthPayments.filter(p => p.billingPeriod === 'monthly');
+      const previousMonthYearlyPayments = previousMonthPayments.filter(p => p.billingPeriod === 'yearly');
+      
+      // Get current month string for comparison (YYYY-MM format)
+      const currentMonthStr = `${monthStart.getFullYear()}-${String(monthStart.getMonth() + 1).padStart(2, '0')}`;
+      
+      // For yearly payments, check if subscription is still active
+      // A yearly subscription is active if yearlyEndMonth >= currentMonthStr
+      const activeYearlySubscribers = new Set<string>();
+      previousMonthYearlyPayments.forEach(payment => {
+        if (payment.yearlyEndMonth && payment.yearlyEndMonth >= currentMonthStr) {
+          // Subscription is still active
+          activeYearlySubscribers.add(payment.userId);
+        }
+      });
+      
+      // Users who should be considered for churn:
+      // 1. Monthly payers from previous month (they need to pay each month)
+      // 2. Yearly payers whose subscription has expired (yearlyEndMonth < currentMonthStr)
+      const previousMonthMonthlyUserIds = new Set(previousMonthMonthlyPayments.map(p => p.userId));
+      const expiredYearlyUserIds = new Set(
+        previousMonthYearlyPayments
+          .filter(p => !p.yearlyEndMonth || p.yearlyEndMonth < currentMonthStr)
+          .map(p => p.userId)
+      );
+      
+      // Combine monthly payers and expired yearly payers
+      const previousMonthActiveUsers = new Set([
+        ...previousMonthMonthlyUserIds,
+        ...expiredYearlyUserIds
+      ]);
+      
+      // Churned users are those who:
+      // - Paid monthly in previous month but not in current month, OR
+      // - Had expired yearly subscription in previous month but didn't renew in current month
+      // Note: Users with active yearly subscriptions are NOT considered churned
+      const churnedUsers = Array.from(previousMonthActiveUsers).filter(id => !activeUserIds.has(id)).length;
+      const totalPreviousMonthActiveUsers = previousMonthActiveUsers.size;
+      churnRate = totalPreviousMonthActiveUsers === 0 ? 0 : (churnedUsers / totalPreviousMonthActiveUsers) * 100;
 
       // Calculate CLV (Customer Lifetime Value) - average revenue per user over their lifetime
       const allPayments = await db.select().from(payments);
@@ -1965,8 +2002,15 @@ export class DatabaseStorage implements IStorage {
       clv = totalUsersWithPayments === 0 ? 0 : totalLifetimeRevenue / totalUsersWithPayments;
 
       // Calculate Retention Rate - % of previous month users who are still active
-      const retainedUsers = Array.from(previousMonthUserIds).filter(id => activeUserIds.has(id)).length;
-      retentionRate = previousMonthActiveUsers === 0 ? 0 : (retainedUsers / previousMonthActiveUsers) * 100;
+      // A user is retained if:
+      // 1. They paid in current month (activeUserIds), OR
+      // 2. They have an active yearly subscription (activeYearlySubscribers)
+      // Note: For retention, we consider ALL users who paid in previous month (both monthly and yearly)
+      const allPreviousMonthUserIds = new Set(previousMonthPayments.map(p => p.userId));
+      const retainedUsers = Array.from(allPreviousMonthUserIds).filter(id => 
+        activeUserIds.has(id) || activeYearlySubscribers.has(id)
+      ).length;
+      retentionRate = allPreviousMonthUserIds.size === 0 ? 0 : (retainedUsers / allPreviousMonthUserIds.size) * 100;
 
       // Calculate previous month MRR for comparison
       const previousMonthMonthlyPayments = await db
