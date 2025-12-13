@@ -47,9 +47,9 @@ export default function SupportMatchAdminReports() {
     },
   });
 
-  const getUserNickname = (userId: string) => {
+  const getUserDisplayName = (userId: string) => {
     const profile = profiles?.find(p => p.userId === userId);
-    return profile?.nickname || "Anonymous";
+    return profile?.firstName || "Anonymous";
   };
 
   const handleResolve = (reportId: string, status: "resolved" | "dismissed") => {
@@ -115,12 +115,12 @@ export default function SupportMatchAdminReports() {
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
                         <CardTitle className="text-lg mb-2">
-                          Report from {getUserNickname(report.reporterId)}
+                          Report from {getUserDisplayName(report.reporterId)}
                         </CardTitle>
                         <div className="flex items-center gap-2 flex-wrap mb-4">
                           <Badge variant="destructive">Pending</Badge>
                           <span className="text-sm text-muted-foreground">
-                            Reported: {getUserNickname(report.reportedUserId)}
+                            Reported: {getUserDisplayName(report.reportedUserId)}
                           </span>
                           <span className="text-sm text-muted-foreground">
                             {format(new Date(report.createdAt), "MMM d, yyyy")}
@@ -208,14 +208,14 @@ export default function SupportMatchAdminReports() {
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
                         <CardTitle className="text-lg mb-2">
-                          Report from {getUserNickname(report.reporterId)}
+                          Report from {getUserDisplayName(report.reporterId)}
                         </CardTitle>
                         <div className="flex items-center gap-2 flex-wrap mb-4">
                           <Badge variant={report.status === "resolved" ? "default" : "secondary"}>
                             {report.status}
                           </Badge>
                           <span className="text-sm text-muted-foreground">
-                            Reported: {getUserNickname(report.reportedUserId)}
+                            Reported: {getUserDisplayName(report.reportedUserId)}
                           </span>
                           <span className="text-sm text-muted-foreground">
                             {format(new Date(report.createdAt), "MMM d, yyyy")}

@@ -64,7 +64,7 @@ export default function SupportMatchAdminUsers() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <CardTitle className="text-lg mb-2">
-                      {profile.nickname || "Anonymous"}
+                      {profile.firstName || "Anonymous"}
                     </CardTitle>
                     <div className="flex items-center gap-2 flex-wrap">
                       <Badge variant={profile.isActive ? "default" : "secondary"}>
