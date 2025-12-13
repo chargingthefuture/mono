@@ -20,7 +20,7 @@ export default function SupportMatchAdminReports() {
     queryKey: ["/api/supportmatch/admin/reports"],
   });
 
-  const { data: profiles } = useQuery<SupportMatchProfile[]>({
+  const { data: profiles } = useQuery<(SupportMatchProfile & { firstName?: string | null })[]>({
     queryKey: ["/api/supportmatch/admin/profiles"],
   });
 

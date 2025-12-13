@@ -7,7 +7,7 @@ import {
   BookOpen,
   Radio,
   MessageSquare,
-  Heart,
+  MessageCircle,
   Headphones,
   Mic,
   Mail,
@@ -39,7 +39,7 @@ const services = [
   { icon: MessageSquare, name: "CompareNotes", category: "Knowledge Base", description: "Collaborative Q&A platform" },
   { icon: Headphones, name: "GentlePulse", category: "Wellness", description: "Guided meditations and mood tracking" },
   { icon: Mic, name: "Chyme", category: "Social Audio", description: "Private voice conversation rooms" },
-  { icon: Heart, name: "Chat Groups", category: "Communication", description: "Signal-based secure group chats" },
+  { icon: MessageCircle, name: "Chat Groups", category: "Communication", description: "Signal-based secure group chats" },
   { icon: Mail, name: "LostMail", category: "Incident Tracking", description: "Report and track mail incidents" },
 ]
 

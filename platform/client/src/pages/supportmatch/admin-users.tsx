@@ -8,7 +8,7 @@ import type { SupportMatchProfile } from "@shared/schema";
 import { format } from "date-fns";
 
 export default function SupportMatchAdminUsers() {
-  const { data: profiles, isLoading } = useQuery<SupportMatchProfile[]>({
+  const { data: profiles, isLoading } = useQuery<(SupportMatchProfile & { firstName?: string | null })[]>({
     queryKey: ["/api/supportmatch/admin/profiles"],
   });
 

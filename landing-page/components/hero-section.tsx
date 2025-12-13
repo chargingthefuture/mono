@@ -79,7 +79,7 @@ export function HeroSection() {
               variant="outline"
               className="font-[var(--font-bangers)] text-base sm:text-lg md:text-xl lg:text-2xl px-4 py-3 sm:px-6 sm:py-4 md:px-8 md:py-6 bg-background text-foreground hover:bg-secondary border-[3px] border-foreground transition-all"
             >
-              JOIN TOWNHALL
+              JOIN TOWN HALL
             </Button></a>
           </div>
         </div>

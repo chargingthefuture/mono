@@ -1738,22 +1738,71 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/supportmatch/admin/profiles', isAuthenticated, isAdmin, async (req, res) => {
-    try {
-      const profiles = await storage.getAllSupportMatchProfiles();
-      res.json(profiles);
-    } catch (error) {
-      console.error("Error fetching profiles:", error);
-      res.status(500).json({ message: "Failed to fetch profiles" });
-    }
-  });
+  app.get('/api/supportmatch/admin/profiles', isAuthenticated, isAdmin, asyncHandler(async (_req, res) => {
+    const profiles = await withDatabaseErrorHandling(
+      () => storage.getAllSupportMatchProfiles(),
+      'getAllSupportMatchProfiles'
+    );
+    
+    // Enrich profiles with firstName from user table
+    const profilesWithNames = await Promise.all(profiles.map(async (profile) => {
+      let userFirstName: string | null = null;
+      if (profile.userId) {
+        const user = await withDatabaseErrorHandling(
+          () => storage.getUser(profile.userId),
+          'getUserForSupportMatchAdminProfiles'
+        );
+        if (user) {
+          userFirstName = user.firstName || null;
+        }
+      }
+      return { ...profile, firstName: userFirstName };
+    }));
+    
+    res.json(profilesWithNames);
+  }));
 
   app.get('/api/supportmatch/admin/partnerships', isAuthenticated, isAdmin, asyncHandler(async (_req, res) => {
     const partnerships = await withDatabaseErrorHandling(
       () => storage.getAllPartnerships(),
       'getAllPartnerships'
     );
-    res.json(partnerships);
+    
+    // Enrich partnerships with firstName for both users
+    const partnershipsWithNames = await Promise.all(partnerships.map(async (partnership) => {
+      let user1FirstName: string | null = null;
+      let user2FirstName: string | null = null;
+      
+      // Get firstName for user1
+      if (partnership.user1Id) {
+        const user1 = await withDatabaseErrorHandling(
+          () => storage.getUser(partnership.user1Id),
+          'getUser1ForSupportMatchAdminPartnerships'
+        );
+        if (user1) {
+          user1FirstName = user1.firstName || null;
+        }
+      }
+      
+      // Get firstName for user2
+      if (partnership.user2Id) {
+        const user2 = await withDatabaseErrorHandling(
+          () => storage.getUser(partnership.user2Id),
+          'getUser2ForSupportMatchAdminPartnerships'
+        );
+        if (user2) {
+          user2FirstName = user2.firstName || null;
+        }
+      }
+      
+      return {
+        ...partnership,
+        user1FirstName,
+        user2FirstName,
+      };
+    }));
+    
+    res.json(partnershipsWithNames);
   }));
 
   app.put('/api/supportmatch/admin/partnerships/:id/status', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {

@@ -12,11 +12,7 @@ import { Link } from "wouter";
 export default function SupportMatchAdminPartnerships() {
   const { toast } = useToast();
 
-  const { data: profiles } = useQuery<SupportMatchProfile[]>({
-    queryKey: ["/api/supportmatch/admin/profiles"],
-  });
-
-  const { data: partnerships, isLoading } = useQuery<Partnership[]>({
+  const { data: partnerships, isLoading } = useQuery<(Partnership & { user1FirstName?: string | null; user2FirstName?: string | null })[]>({
     queryKey: ["/api/supportmatch/admin/partnerships"],
   });
 
@@ -62,9 +58,14 @@ export default function SupportMatchAdminPartnerships() {
     },
   });
 
-  const getUserNickname = (userId: string) => {
-    const profile = profiles?.find(p => p.userId === userId);
-    return profile?.nickname || "Anonymous";
+  const getUserDisplayName = (partnership: Partnership & { user1FirstName?: string | null; user2FirstName?: string | null }, userId: string) => {
+    if (userId === partnership.user1Id) {
+      return partnership.user1FirstName || "Anonymous";
+    }
+    if (userId === partnership.user2Id) {
+      return partnership.user2FirstName || "Anonymous";
+    }
+    return "Anonymous";
   };
 
   const activePartnerships = partnerships?.filter(p => p.status === "active") || [];
@@ -143,7 +144,7 @@ export default function SupportMatchAdminPartnerships() {
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
                         <CardTitle className="text-lg mb-2">
-                          {getUserNickname(partnership.user1Id)} & {getUserNickname(partnership.user2Id)}
+                          {getUserDisplayName(partnership, partnership.user1Id)} & {getUserDisplayName(partnership, partnership.user2Id)}
                         </CardTitle>
                         <div className="flex items-center gap-2 flex-wrap">
                           <Badge variant="default">Active</Badge>
@@ -190,7 +191,7 @@ export default function SupportMatchAdminPartnerships() {
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1">
                         <CardTitle className="text-lg mb-2">
-                          {getUserNickname(partnership.user1Id)} & {getUserNickname(partnership.user2Id)}
+                          {getUserDisplayName(partnership, partnership.user1Id)} & {getUserDisplayName(partnership, partnership.user2Id)}
                         </CardTitle>
                         <div className="flex items-center gap-2 flex-wrap">
                           <Badge variant="secondary">Ended</Badge>
