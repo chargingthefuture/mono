@@ -37,7 +37,7 @@ export default function SupportMatchSafety() {
     queryKey: ["/api/supportmatch/exclusions"],
   });
 
-  const { data: allProfiles } = useQuery<SupportMatchProfile[]>({
+  const { data: allProfiles } = useQuery<(SupportMatchProfile & { nickname?: string | null })[]>({
     queryKey: ["/api/supportmatch/admin/profiles"],
   });
 
@@ -171,7 +171,7 @@ export default function SupportMatchSafety() {
                               value={profile.userId}
                               data-testid={`user-option-${profile.userId}`}
                             >
-                              {profile.nickname}
+                              {profile.nickname || "Unknown User"}
                             </SelectItem>
                           ))
                         ) : (

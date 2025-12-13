@@ -20,9 +20,7 @@ const requestFormSchema = insertMechanicmatchServiceRequestSchema.omit({
   status: true,
 });
 
-type RequestFormData = z.infer<typeof requestFormSchema> & {
-  requestType?: "advice_only" | "remote_diagnosis" | "in_person";
-};
+type RequestFormData = z.infer<typeof requestFormSchema>;
 
 export default function CreateServiceRequest() {
   const { toast } = useToast();
@@ -38,10 +36,10 @@ export default function CreateServiceRequest() {
       vehicleId: null,
       symptoms: "",
       photos: null,
-      videoUrl: "",
-      estimatedLocation: "",
+      videoUrl: null,
+      estimatedLocation: null,
       requestType: "advice_only",
-    },
+    } as RequestFormData,
   });
 
   const createMutation = useMutation({

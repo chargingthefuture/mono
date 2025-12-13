@@ -7,8 +7,13 @@ import { Home, Building2, UserCheck, MapPin, Plus, Edit, Bell } from "lucide-rea
 import type { LighthouseProfile, LighthouseProperty, LighthouseMatch } from "@shared/schema";
 import { AnnouncementBanner } from "@/components/announcement-banner";
 
+type LighthouseProfileWithUser = LighthouseProfile & {
+  firstName?: string | null;
+  userIsVerified?: boolean;
+};
+
 export default function LighthouseDashboard() {
-  const { data: profile, isLoading: profileLoading } = useQuery<LighthouseProfile | null>({
+  const { data: profile, isLoading: profileLoading } = useQuery<LighthouseProfileWithUser | null>({
     queryKey: ["/api/lighthouse/profile"],
   });
 

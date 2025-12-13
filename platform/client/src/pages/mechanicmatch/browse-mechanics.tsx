@@ -34,8 +34,12 @@ export default function BrowseMechanicsPage() {
     queryKey: [`/api/mechanicmatch/search/mechanics?${queryParams.toString()}`],
   });
 
-  // Apply fuzzy search to results
-  const filteredMechanics = useFuzzySearch(mechanics, searchQuery, {
+  // Apply fuzzy search to results (displayName may not exist, so we'll compute it)
+  const mechanicsWithDisplayName = mechanics.map(m => ({
+    ...m,
+    displayName: m.displayName || (m.city && m.state ? `${m.city}, ${m.state}` : 'Mechanic') || 'Mechanic'
+  }));
+  const filteredMechanics = useFuzzySearch(mechanicsWithDisplayName, searchQuery, {
     searchFields: ['displayName', 'city', 'state', 'mechanicBio', 'specialties'],
     threshold: 0.3,
   });

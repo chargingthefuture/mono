@@ -33,6 +33,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
+// Extended type for directory profiles with user data from API
+type DirectoryProfileWithUser = DirectoryProfile & {
+  firstName?: string | null;
+  lastName?: string | null;
+  displayName?: string | null;
+  userIsVerified?: boolean;
+};
+
 export default function AdminDirectoryPage() {
   const { toast } = useToast();
   const { openExternal, ExternalLinkDialog } = useExternalLink();
@@ -180,7 +188,7 @@ export default function AdminDirectoryPage() {
   });
 
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [profileToDelete, setProfileToDelete] = useState<DirectoryProfile | null>(null);
+  const [profileToDelete, setProfileToDelete] = useState<DirectoryProfileWithUser | null>(null);
 
   const deleteMutation = useMutation({
     mutationFn: async (id: string) => apiRequest("DELETE", `/api/directory/admin/profiles/${id}`),
@@ -235,7 +243,7 @@ export default function AdminDirectoryPage() {
     onError: (e: any) => toast({ title: "Error", description: e.message || "Failed to update profile", variant: "destructive" })
   });
 
-  const startEdit = (profile: DirectoryProfile) => {
+  const startEdit = (profile: DirectoryProfileWithUser) => {
     setEditingId(profile.id);
     setEditDescription(profile.description || "");
     setEditFirstName(profile.firstName || "");

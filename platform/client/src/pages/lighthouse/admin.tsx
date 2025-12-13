@@ -26,6 +26,7 @@ type SeekerWithUser = LighthouseProfile & {
     email: string | null;
     isVerified: boolean;
   } | null;
+  displayName?: string | null;
 };
 
 type HostWithUser = LighthouseProfile & {
@@ -36,6 +37,7 @@ type HostWithUser = LighthouseProfile & {
     email: string | null;
     isVerified: boolean;
   } | null;
+  displayName?: string | null;
 };
 
 export default function LighthouseAdminPage() {
@@ -252,6 +254,7 @@ export default function LighthouseAdminPage() {
                         const userName = seeker.user
                           ? [seeker.user.firstName, seeker.user.lastName].filter(Boolean).join(' ') || 'User'
                           : 'Unknown User';
+                        const displayName = seeker.displayName || userName;
                         const budgetRange = seeker.budgetMin && seeker.budgetMax
                           ? `$${seeker.budgetMin} - $${seeker.budgetMax}`
                           : seeker.budgetMin
@@ -277,7 +280,7 @@ export default function LighthouseAdminPage() {
                                 <ExternalLink className="w-3 h-3" />
                               </button>
                             </TableCell>
-                            <TableCell>{seeker.displayName}</TableCell>
+                            <TableCell>{displayName}</TableCell>
                             <TableCell>
                               {seeker.user?.email ? (
                                 <PrivacyField
@@ -376,7 +379,7 @@ export default function LighthouseAdminPage() {
                                 <ExternalLink className="w-3 h-3" />
                               </button>
                             </TableCell>
-                            <TableCell>{host.displayName}</TableCell>
+                            <TableCell>{displayName}</TableCell>
                             <TableCell>
                               {host.user?.email ? (
                                 <PrivacyField

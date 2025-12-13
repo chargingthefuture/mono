@@ -831,8 +831,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     // Get user data if userId exists
     if (profile.userId) {
+      const userId = profile.userId;
       const user = await withDatabaseErrorHandling(
-        () => storage.getUser(profile.userId),
+        () => storage.getUser(userId),
         'getUserForDirectoryProfile'
       );
       if (user) {
@@ -1041,8 +1042,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get user data if userId exists
       if (p.userId) {
+        const userId = p.userId;
         const u = await withDatabaseErrorHandling(
-          () => storage.getUser(p.userId),
+          () => storage.getUser(userId),
           'getUserForPublicDirectoryList'
         );
         if (u) {
@@ -1086,8 +1088,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Fetch user data once if userId exists
       let user: any = null;
       if (p.userId) {
+        const userId = p.userId;
         user = await withDatabaseErrorHandling(
-          () => storage.getUser(p.userId),
+          () => storage.getUser(userId),
           'getUserForDirectoryList'
         );
         if (user) {
@@ -1787,8 +1790,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const profilesWithNames = await Promise.all(profiles.map(async (profile) => {
       let userFirstName: string | null = null;
       if (profile.userId) {
+        const userId = profile.userId;
         const user = await withDatabaseErrorHandling(
-          () => storage.getUser(profile.userId),
+          () => storage.getUser(userId),
           'getUserForSupportMatchAdminProfiles'
         );
         if (user) {
@@ -2719,8 +2723,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       () => storage.getSocketrelayProfile(request.userId),
       'getSocketrelayProfile'
     );
+    const userId = request.userId;
     const creator = await withDatabaseErrorHandling(
-      () => storage.getUser(request.userId),
+      () => storage.getUser(userId),
       'getUser'
     );
     
@@ -3570,8 +3575,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const withVerification = await Promise.all(profiles.map(async (p) => {
       let userIsVerified = false;
       if (p.userId) {
+        const userId = p.userId;
         const u = await withDatabaseErrorHandling(
-          () => storage.getUser(p.userId),
+          () => storage.getUser(userId),
           'getUserVerificationForPublicMechanicmatchList'
         );
         userIsVerified = u?.isVerified || false;

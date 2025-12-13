@@ -17,6 +17,7 @@ type ProfileWithUser = LighthouseProfile & {
     email: string | null;
     isVerified: boolean;
   } | null;
+  displayName?: string | null;
 };
 
 export default function LighthouseAdminProfileView() {
@@ -137,7 +138,7 @@ export default function LighthouseAdminProfileView() {
         <CardContent className="space-y-4">
           <div>
             <label className="text-sm font-medium text-muted-foreground">Display Name</label>
-            <p className="text-base">{profile.displayName || <span className="text-muted-foreground">—</span>}</p>
+            <p className="text-base">{profile.displayName || (profile.user?.firstName && profile.user?.lastName ? `${profile.user.firstName} ${profile.user.lastName}` : profile.user?.firstName || profile.user?.email || <span className="text-muted-foreground">—</span>)}</p>
           </div>
 
           {profile.bio && (

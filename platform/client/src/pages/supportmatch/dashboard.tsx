@@ -8,8 +8,12 @@ import type { SupportMatchProfile, Partnership } from "@shared/schema";
 import { format } from "date-fns";
 import { AnnouncementBanner } from "@/components/announcement-banner";
 
+type SupportMatchProfileWithNickname = SupportMatchProfile & {
+  nickname?: string | null;
+};
+
 export default function SupportMatchDashboard() {
-  const { data: profile, isLoading: profileLoading } = useQuery<SupportMatchProfile | null>({
+  const { data: profile, isLoading: profileLoading } = useQuery<SupportMatchProfileWithNickname | null>({
     queryKey: ["/api/supportmatch/profile"],
   });
 

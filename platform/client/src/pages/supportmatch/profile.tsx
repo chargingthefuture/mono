@@ -41,7 +41,7 @@ export default function SupportMatchProfile() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [stateOpen, setStateOpen] = useState(false);
 
-  const { data: profileData, isLoading } = useQuery<SupportMatchProfile & { userIsVerified?: boolean } | null>({
+  const { data: profileData, isLoading } = useQuery<(SupportMatchProfile & { userIsVerified?: boolean; nickname?: string | null }) | null>({
     queryKey: ["/api/supportmatch/profile"],
   });
   

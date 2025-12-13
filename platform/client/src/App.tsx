@@ -108,8 +108,6 @@ import ResearchAdmin from "@/pages/research/admin";
 import ResearchAdminAnnouncements from "@/pages/research/admin-announcements";
 import ResearchAdminReports from "@/pages/research/admin-reports";
 import PublicCompareNotesQuestion from "@/pages/research/public";
-import PublicCompareNotesQuestion from "@/pages/research/public";
-import PublicResearchItem from "@/pages/research/public";
 import GentlePulseLibrary from "@/pages/gentlepulse/library";
 import GentlePulseSupport from "@/pages/gentlepulse/support";
 import GentlePulseSettings from "@/pages/gentlepulse/settings";

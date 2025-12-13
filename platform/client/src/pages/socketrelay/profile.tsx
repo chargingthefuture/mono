@@ -78,7 +78,7 @@ export default function SocketRelayProfile() {
       
       if (city || state || country) {
         form.reset({
-          displayName: supportMatchProfile?.nickname || "",
+          displayName: (supportMatchProfile as any)?.nickname || "",
           city,
           state: state || "",
           country,

@@ -18,7 +18,7 @@ export default function TrustTransportDashboard() {
   const { toast } = useToast();
   const [activeTab, setActiveTab] = useState<string>("driver");
 
-  const { data: profile, isLoading: profileLoading } = useQuery<TrusttransportProfile | null>({
+  const { data: profile, isLoading: profileLoading } = useQuery<(TrusttransportProfile & { firstName?: string | null }) | null>({
     queryKey: ["/api/trusttransport/profile"],
   });
 
