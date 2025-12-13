@@ -239,25 +239,6 @@ export default function WorkforceRecruiterReports() {
         </CardContent>
       </Card>
 
-      {/* Sector Breakdown - Full List */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Sector Distribution</CardTitle>
-          <CardDescription>Complete breakdown of target vs recruited by sector</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="space-y-4">
-            {summaryReport?.sectorBreakdown.length === 0 ? (
-              <p className="text-sm text-muted-foreground">No sector data available</p>
-            ) : (
-              summaryReport?.sectorBreakdown.map((sector) => (
-                <SectorItem key={sector.sector} sector={sector} />
-              ))
-            )}
-          </div>
-        </CardContent>
-      </Card>
-
       {/* Skill Level Breakdown */}
       <Card>
         <CardHeader>
@@ -286,6 +267,25 @@ export default function WorkforceRecruiterReports() {
                 </div>
               </Link>
             ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Sector Breakdown - Full List */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Sector Distribution</CardTitle>
+          <CardDescription>Complete breakdown of target vs recruited by sector</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            {summaryReport?.sectorBreakdown.length === 0 ? (
+              <p className="text-sm text-muted-foreground">No sector data available</p>
+            ) : (
+              summaryReport?.sectorBreakdown.map((sector) => (
+                <SectorItem key={sector.sector} sector={sector} />
+              ))
+            )}
           </div>
         </CardContent>
       </Card>
