@@ -216,7 +216,11 @@ export default function DirectoryDashboard() {
                   {filteredProfiles.map((p: any) => {
                     return (
                       <div key={p.id} className="rounded-md border p-3 flex flex-col gap-2">
-                        <div className="font-medium truncate">{p.firstName || p.displayName || '—'}</div>
+                        <div className="font-medium truncate">
+                          {p.firstName && p.lastName
+                            ? `${p.firstName} ${p.lastName}`
+                            : p.firstName || p.displayName || '—'}
+                        </div>
                         <div className="flex items-center gap-2">
                           <VerifiedBadge isVerified={(p as any).userIsVerified || false} testId={`badge-verified-${p.id}`} />
                         </div>

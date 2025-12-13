@@ -1126,7 +1126,46 @@ export async function registerRoutes(app: Express): Promise<Server> {
       () => storage.listAllDirectoryProfiles(),
       'listAllDirectoryProfiles'
     );
-    res.json(profiles);
+    // Enrich profiles with user data (firstName, lastName) like /api/directory/list does
+    const withNames = await Promise.all(profiles.map(async (p) => {
+      let name: string | null = null;
+      let userIsVerified = false;
+      let userFirstName: string | null = null;
+      let userLastName: string | null = null;
+      
+      // Fetch user data once if userId exists
+      let user: any = null;
+      if (p.userId) {
+        user = await withDatabaseErrorHandling(
+          () => storage.getUser(p.userId),
+          'getUserForDirectoryAdmin'
+        );
+        if (user) {
+          userFirstName = user.firstName || null;
+          userLastName = user.lastName || null;
+          userIsVerified = user.isVerified || false;
+          // Build display name from firstName and lastName
+          if (userFirstName && userLastName) {
+            name = `${userFirstName} ${userLastName}`;
+          } else if (userFirstName) {
+            name = userFirstName;
+          }
+        }
+      } else {
+        // For admin-created profiles without userId, use profile's own isVerified field
+        userIsVerified = p.isVerified || false;
+      }
+      
+      // Ensure we always return displayName, firstName, and lastName (even if null)
+      return { 
+        ...p, 
+        displayName: name || null, 
+        userIsVerified,
+        firstName: userFirstName || null,
+        lastName: userLastName || null,
+      };
+    }));
+    res.json(withNames);
   }));
 
   // Admin creates an unclaimed profile

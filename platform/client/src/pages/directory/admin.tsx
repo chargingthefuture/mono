@@ -681,7 +681,14 @@ export default function AdminDirectoryPage() {
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg sm:text-xl">Profiles</CardTitle>
+          <CardTitle className="text-lg sm:text-xl">
+            Profiles
+            {!isLoading && profiles.length > 0 && (
+              <span className="ml-2 text-muted-foreground font-normal">
+                ({profiles.length})
+              </span>
+            )}
+          </CardTitle>
         </CardHeader>
         <CardContent className="space-y-3">
           {/* Search box */}
@@ -714,9 +721,8 @@ export default function AdminDirectoryPage() {
             <>
               <div className="space-y-3">
                 {paginatedProfiles.map((p) => {
-                const profileUser = p.userId ? users.find(u => u.id === p.userId) : null;
-                // Use user's isVerified if userId exists, otherwise use profile's isVerified field
-                const isVerified = profileUser?.isVerified ?? (p.isVerified || false);
+                // Use userIsVerified from enriched API response, fallback to profile's isVerified field
+                const isVerified = (p as any).userIsVerified ?? (p.isVerified || false);
                 
                 return editingId === p.id ? (
                   <Card key={p.id}>
@@ -1028,11 +1034,11 @@ export default function AdminDirectoryPage() {
                         )}
                       </div>
                       {/* Display first name and last name if available */}
-                      {(profileUser?.firstName || profileUser?.lastName || p.firstName) && (
+                      {(p.firstName || p.lastName || p.displayName) && (
                         <div className="text-sm font-medium mt-1">
-                          {profileUser 
-                            ? [profileUser.firstName, profileUser.lastName].filter(Boolean).join(' ')
-                            : p.firstName || null}
+                          {p.firstName && p.lastName
+                            ? `${p.firstName} ${p.lastName}`
+                            : p.firstName || p.displayName || null}
                         </div>
                       )}
                       <div className="text-sm mt-1 truncate">{p.description}</div>
