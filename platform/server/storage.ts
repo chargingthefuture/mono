@@ -2013,16 +2013,7 @@ export class DatabaseStorage implements IStorage {
       retentionRate = allPreviousMonthUserIds.size === 0 ? 0 : (retainedUsers / allPreviousMonthUserIds.size) * 100;
 
       // Calculate previous month MRR for comparison
-      const previousMonthMonthlyPayments = await db
-        .select()
-        .from(payments)
-        .where(
-          and(
-            gte(payments.paymentDate, previousMonthStart),
-            lte(payments.paymentDate, previousMonthEnd),
-            eq(payments.billingPeriod, 'monthly')
-          )
-        );
+      // Reuse previousMonthMonthlyPayments that was already calculated above
       const previousMRR = previousMonthMonthlyPayments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
       mrrGrowth = previousMRR === 0 ? (mrr > 0 ? 100 : 0) : ((mrr - previousMRR) / previousMRR) * 100;
     } catch (error) {
