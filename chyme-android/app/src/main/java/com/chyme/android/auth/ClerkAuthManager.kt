@@ -5,6 +5,8 @@ import com.chyme.android.BuildConfig
 import com.chyme.android.data.model.User
 import com.clerk.Clerk
 import com.clerk.api.ClerkResult
+import com.clerk.api.TokenResource
+import com.clerk.api.ClerkErrorResponse
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -41,9 +43,12 @@ class ClerkAuthManager(private val context: Context) {
             // Use the Clerk Android SDK's fetchToken() method
             // fetchToken() returns a ClerkResult that we handle with a when expression
             when (val result = session.fetchToken()) {
-                is ClerkResult.Success -> result.data.jwt
+                is ClerkResult.Success -> {
+                    result.data.jwt
+                }
                 is ClerkResult.Failure -> {
-                    android.util.Log.e("ClerkAuthManager", "Error fetching token: ${result.error.errorMessage}", result.error.throwable)
+                    val errorMessage = result.error.errorMessage ?: result.error.message ?: "Unknown error"
+                    android.util.Log.e("ClerkAuthManager", "Error fetching token: $errorMessage", result.error.throwable)
                     null
                 }
             }
