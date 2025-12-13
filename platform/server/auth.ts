@@ -307,13 +307,21 @@ async function upsertUser(clerkUser: any) {
   if (existingUser) {
     // For existing users, only update profile information, preserve pricing tier
     // Preserve approval status and admin status
+    // IMPORTANT: Only update firstName/lastName if Clerk has actual values (not empty strings)
+    // This prevents Clerk sync from overwriting manually set names when Clerk doesn't have them
+    const firstNameToUse = mappedUser.first_name && mappedUser.first_name.trim() !== "" 
+      ? mappedUser.first_name 
+      : existingUser.firstName;
+    const lastNameToUse = mappedUser.last_name && mappedUser.last_name.trim() !== "" 
+      ? mappedUser.last_name 
+      : existingUser.lastName;
     
     const updatedUser = await withDatabaseErrorHandling(
       () => storage.upsertUser({
         id: mappedUser.sub,
         email: mappedUser.email,
-        firstName: mappedUser.first_name,
-        lastName: mappedUser.last_name,
+        firstName: firstNameToUse,
+        lastName: lastNameToUse,
         profileImageUrl: mappedUser.profile_image_url,
         quoraProfileUrl: existingUser.quoraProfileUrl, // Preserve Quora profile URL
         pricingTier: existingUser.pricingTier, // Preserve existing pricing tier (grandfathered)

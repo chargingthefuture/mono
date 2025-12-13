@@ -674,6 +674,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.put('/api/user/name', isAuthenticated, asyncHandler(async (req: any, res) => {
+    const userId = getUserId(req);
+    const { firstName, lastName } = req.body;
+    
+    // Validate input - firstName and lastName are optional but if provided should be strings
+    if (firstName !== undefined && firstName !== null && typeof firstName !== 'string') {
+      return res.status(400).json({ message: "firstName must be a string or null" });
+    }
+    if (lastName !== undefined && lastName !== null && typeof lastName !== 'string') {
+      return res.status(400).json({ message: "lastName must be a string or null" });
+    }
+    
+    // Trim whitespace and convert empty strings to null
+    const trimmedFirstName = typeof firstName === 'string' ? firstName.trim() || null : firstName;
+    const trimmedLastName = typeof lastName === 'string' ? lastName.trim() || null : lastName;
+    
+    const user = await withDatabaseErrorHandling(
+      () => storage.updateUserName(userId, trimmedFirstName, trimmedLastName),
+      'updateUserName'
+    );
+    
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    res.json(user);
+  }));
+
   // Admin routes - Payments
   app.get('/api/admin/payments', isAuthenticated, isAdmin, asyncHandler(async (_req, res) => {
     const payments = await withDatabaseErrorHandling(
