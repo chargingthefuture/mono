@@ -1,5 +1,6 @@
 import { ClerkProvider } from "@clerk/clerk-react";
 import { ReactNode, useEffect, useState } from "react";
+import { useLocation } from "wouter";
 import { ClerkErrorBoundary } from "./clerk-error-boundary";
 
 const clerkPublishableKey = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -98,19 +99,6 @@ export function ConditionalClerkProvider({ children }: { children: ReactNode }) 
     (window.location.hostname === 'localhost' || 
      window.location.hostname === '127.0.0.1');
   
-  // Detect if using production Clerk keys (pk_live_*) vs dev/test keys (pk_test_*)
-  const isProductionKey = clerkPublishableKey?.startsWith('pk_live_');
-  
-  // Set domain prop based on environment
-  // For production: use custom domain
-  // For staging with live keys: use the staging domain (the-comic.com)
-  // For local dev: don't set domain
-  const clerkDomain = typeof window !== 'undefined' 
-    ? (isProduction || (isStaging && isProductionKey))
-      ? window.location.hostname 
-      : undefined
-    : undefined;
-  
   // Determine Clerk URLs based on environment
   // When using live keys with a separate Clerk project, Clerk automatically routes to the correct instance
   // based on the publishable key, so we can use relative URLs or let Clerk handle it
@@ -151,7 +139,6 @@ export function ConditionalClerkProvider({ children }: { children: ReactNode }) 
     <ClerkErrorBoundary>
       <ClerkProvider 
         publishableKey={clerkPublishableKey}
-        {...(clerkDomain ? { domain: clerkDomain } : {})}
         // Use Clerk's hosted Account Portal (dev or prod based on environment)
         signInUrl={signInUrl}
         signUpUrl={signUpUrl}

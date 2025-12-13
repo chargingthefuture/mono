@@ -4386,7 +4386,6 @@ export class DatabaseStorage implements IStorage {
           .insert(supportMatchProfiles)
           .values({
             userId: anonymizedUserId,
-            nickname: "Deleted User",
             isActive: false,
           });
       } catch (error: any) {
@@ -6213,9 +6212,16 @@ export class DatabaseStorage implements IStorage {
 
   // GentlePulse Mood Checks
   async createGentlepulseMoodCheck(moodCheckData: InsertGentlepulseMoodCheck): Promise<GentlepulseMoodCheck> {
+    // Convert Date to ISO date string for database
+    const dataToInsert = {
+      ...moodCheckData,
+      date: moodCheckData.date instanceof Date 
+        ? moodCheckData.date.toISOString().split('T')[0] 
+        : moodCheckData.date,
+    };
     const [moodCheck] = await db
       .insert(gentlepulseMoodChecks)
-      .values(moodCheckData)
+      .values(dataToInsert as any)
       .returning();
     return moodCheck;
   }
@@ -6587,9 +6593,16 @@ export class DatabaseStorage implements IStorage {
 
   // Chyme Survey operations
   async createChymeSurveyResponse(responseData: InsertChymeSurveyResponse): Promise<ChymeSurveyResponse> {
+    // Convert Date to ISO date string for database
+    const dataToInsert = {
+      ...responseData,
+      date: responseData.date instanceof Date 
+        ? responseData.date.toISOString().split('T')[0] 
+        : responseData.date,
+    };
     const [response] = await db
       .insert(chymeSurveyResponses)
-      .values(responseData)
+      .values(dataToInsert as any)
       .returning();
     return response;
   }
@@ -6692,9 +6705,12 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createWorkforceRecruiterProfile(profileData: InsertWorkforceRecruiterProfile): Promise<WorkforceRecruiterProfile> {
+    if (!profileData.userId) {
+      throw new Error('userId is required for WorkforceRecruiterProfile');
+    }
     const [profile] = await db
       .insert(workforceRecruiterProfiles)
-      .values(profileData)
+      .values(profileData as any)
       .returning();
     return profile;
   }

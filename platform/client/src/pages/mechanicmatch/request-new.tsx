@@ -178,6 +178,7 @@ export default function CreateServiceRequest() {
                     <FormControl>
                       <Input
                         {...field}
+                        value={field.value ?? ""}
                         placeholder="City, State or approximate location"
                         data-testid="input-location"
                       />
@@ -199,6 +200,7 @@ export default function CreateServiceRequest() {
                     <FormControl>
                       <Input
                         {...field}
+                        value={field.value ?? ""}
                         placeholder="URL to short video showing the issue"
                         data-testid="input-video-url"
                       />

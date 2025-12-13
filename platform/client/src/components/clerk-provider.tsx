@@ -77,18 +77,9 @@ export function AppClerkProvider({ children }: { children: ReactNode }) {
     unauthorizedSignInUrl = "https://sure-oarfish-90.accounts.dev/unauthorized-sign-in";
   }
 
-  // Set domain prop - required for live keys to work with custom domains
-  // For staging with live keys, we need to set the domain so Clerk knows which project to use
-  const clerkDomain = typeof window !== 'undefined' 
-    ? (isProduction || isStaging) 
-      ? window.location.hostname 
-      : undefined
-    : undefined;
-
   return (
     <ClerkProvider 
       publishableKey={clerkPublishableKey}
-      {...(clerkDomain ? { domain: clerkDomain } : {})}
       // Use Clerk's hosted Account Portal (dev or prod based on environment)
       signInUrl={signInUrl}
       signUpUrl={signUpUrl}

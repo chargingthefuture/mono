@@ -1,5 +1,6 @@
 import express, { type Express } from "express";
 import { createServer, type Server } from "http";
+import { randomBytes } from "crypto";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin, isAdminWithCsrf, isUserAdmin, getUserId, syncClerkUserToDatabase } from "./auth";
 import { validateCsrfToken, generateCsrfTokenForAdmin } from "./csrf";
@@ -79,6 +80,7 @@ import {
   insertDefaultAliveOrDeadFinancialEntrySchema,
   insertDefaultAliveOrDeadEbitdaSnapshotSchema,
 } from "@shared/schema";
+import { z } from "zod";
 import { asyncHandler } from "./errorHandler";
 import { validateWithZod } from "./validationErrorFormatter";
 import { withDatabaseErrorHandling } from "./databaseErrorHandler";
@@ -995,7 +997,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Get user data if userId exists
     if (profile.userId) {
       const user = await withDatabaseErrorHandling(
-        () => storage.getUser(profile.userId),
+        () => storage.getUser(profile.userId!),
         'getUserForPublicDirectoryProfile'
       );
       if (user) {
@@ -1205,7 +1207,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Admin update Directory profile (for editing unclaimed profiles)
   app.put('/api/directory/admin/profiles/:id', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
     const adminId = getUserId(req);
-    const validated = validateWithZod(insertDirectoryProfileSchema.partial() as any, req.body, 'Invalid profile update');
+    const validated = validateWithZod(insertDirectoryProfileSchema.partial() as any, req.body, 'Invalid profile update') as Partial<z.infer<typeof insertDirectoryProfileSchema>>;
     const updated = await withDatabaseErrorHandling(
       () => storage.updateDirectoryProfile(req.params.id, validated),
       'updateDirectoryProfile'
@@ -1566,7 +1568,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/chatgroups/admin/announcements/:id', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
-    const validatedData = validateWithZod(insertChatgroupsAnnouncementSchema.partial() as any, req.body, 'Invalid announcement data');
+    const validatedData = validateWithZod(insertChatgroupsAnnouncementSchema.partial() as any, req.body, 'Invalid announcement data') as Partial<z.infer<typeof insertChatgroupsAnnouncementSchema>>;
     const announcement = await withDatabaseErrorHandling(
       () => storage.updateChatgroupsAnnouncement(req.params.id, validatedData),
       'updateChatgroupsAnnouncement'
@@ -1945,7 +1947,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/supportmatch/admin/announcements/:id', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
-    const validatedData = validateWithZod(insertSupportmatchAnnouncementSchema.partial() as any, req.body, 'Invalid announcement data');
+    const validatedData = validateWithZod(insertSupportmatchAnnouncementSchema.partial() as any, req.body, 'Invalid announcement data') as Partial<z.infer<typeof insertSupportmatchAnnouncementSchema>>;
     const announcement = await withDatabaseErrorHandling(
       () => storage.updateSupportmatchAnnouncement(req.params.id, validatedData),
       'updateSupportmatchAnnouncement'
@@ -2150,7 +2152,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     // Validate partial update (exclude hostId from being updated)
     const { hostId: _, ...updateData } = req.body;
-    const validatedData = validateWithZod(insertLighthousePropertySchema.partial() as any, updateData, 'Invalid property update');
+    const validatedData = validateWithZod(insertLighthousePropertySchema.partial() as any, updateData, 'Invalid property update') as Partial<z.infer<typeof insertLighthousePropertySchema>>;
     const updated = await withDatabaseErrorHandling(
       () => storage.updateLighthouseProperty(req.params.id, validatedData),
       'updateLighthouseProperty'
@@ -2418,7 +2420,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     // Validate partial update
-    const validatedData = validateWithZod(insertLighthousePropertySchema.partial() as any, req.body, 'Invalid property update');
+    const validatedData = validateWithZod(insertLighthousePropertySchema.partial() as any, req.body, 'Invalid property update') as Partial<z.infer<typeof insertLighthousePropertySchema>>;
     const updated = await withDatabaseErrorHandling(
       () => storage.updateLighthouseProperty(req.params.id, validatedData),
       'updateLighthouseProperty'
@@ -2455,7 +2457,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     // Validate partial update
-    const validatedData = validateWithZod(insertLighthouseMatchSchema.partial() as any, req.body, 'Invalid match update');
+    const validatedData = validateWithZod(insertLighthouseMatchSchema.partial() as any, req.body, 'Invalid match update') as Partial<z.infer<typeof insertLighthouseMatchSchema>>;
     const updated = await withDatabaseErrorHandling(
       () => storage.updateLighthouseMatch(req.params.id, validatedData),
       'updateLighthouseMatch'
@@ -3024,7 +3026,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/socketrelay/admin/announcements/:id', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
-    const validatedData = validateWithZod(insertSocketrelayAnnouncementSchema.partial() as any, req.body, 'Invalid announcement data');
+    const validatedData = validateWithZod(insertSocketrelayAnnouncementSchema.partial() as any, req.body, 'Invalid announcement data') as Partial<z.infer<typeof insertSocketrelayAnnouncementSchema>>;
     const announcement = await withDatabaseErrorHandling(
       () => storage.updateSocketrelayAnnouncement(req.params.id, validatedData),
       'updateSocketrelayAnnouncement'
@@ -3364,7 +3366,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/trusttransport/admin/announcements/:id', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
-    const validatedData = validateWithZod(insertTrusttransportAnnouncementSchema.partial() as any, req.body, 'Invalid announcement data');
+    const validatedData = validateWithZod(insertTrusttransportAnnouncementSchema.partial() as any, req.body, 'Invalid announcement data') as Partial<z.infer<typeof insertTrusttransportAnnouncementSchema>>;
     const announcement = await withDatabaseErrorHandling(
       () => storage.updateTrusttransportAnnouncement(req.params.id, validatedData),
       'updateTrusttransportAnnouncement'
@@ -3546,7 +3548,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     let userIsVerified = false;
     if (profile.userId) {
       const user = await withDatabaseErrorHandling(
-        () => storage.getUser(profile.userId),
+        () => storage.getUser(profile.userId!),
         'getUserVerificationForPublicMechanicmatchProfile'
       );
       userIsVerified = user?.isVerified || false;
@@ -4152,7 +4154,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/mechanicmatch/admin/announcements/:id', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
-    const validatedData = validateWithZod(insertMechanicmatchAnnouncementSchema.partial() as any, req.body, 'Invalid announcement data');
+    const validatedData = validateWithZod(insertMechanicmatchAnnouncementSchema.partial() as any, req.body, 'Invalid announcement data') as Partial<z.infer<typeof insertMechanicmatchAnnouncementSchema>>;
     const announcement = await withDatabaseErrorHandling(
       () => storage.updateMechanicmatchAnnouncement(req.params.id, validatedData),
       'updateMechanicmatchAnnouncement'
@@ -5109,7 +5111,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/gentlepulse/admin/announcements/:id', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
-    const validatedData = validateWithZod(insertGentlepulseAnnouncementSchema.partial() as any, req.body, 'Invalid announcement data');
+    const validatedData = validateWithZod(insertGentlepulseAnnouncementSchema.partial() as any, req.body, 'Invalid announcement data') as Partial<z.infer<typeof insertGentlepulseAnnouncementSchema>>;
     const announcement = await withDatabaseErrorHandling(
       () => storage.updateGentlepulseAnnouncement(req.params.id, validatedData),
       'updateGentlepulseAnnouncement'

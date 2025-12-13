@@ -80,7 +80,8 @@ export function blockSecurityProbes(req: Request, res: Response, next: NextFunct
       // Return 404 without any information to avoid revealing system details
       // Don't call next() to avoid error logging in Sentry
       // This is a silent 404 - we don't want to log security probes
-      return res.status(404).send('Not Found');
+      res.status(404).send('Not Found');
+      return;
     }
   }
   

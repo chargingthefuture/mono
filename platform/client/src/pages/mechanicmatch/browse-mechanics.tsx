@@ -37,7 +37,7 @@ export default function BrowseMechanicsPage() {
   // Apply fuzzy search to results (displayName may not exist, so we'll compute it)
   const mechanicsWithDisplayName = mechanics.map(m => ({
     ...m,
-    displayName: m.displayName || (m.city && m.state ? `${m.city}, ${m.state}` : 'Mechanic') || 'Mechanic'
+    displayName: (m.city && m.state ? `${m.city}, ${m.state}` : 'Mechanic')
   }));
   const filteredMechanics = useFuzzySearch(mechanicsWithDisplayName, searchQuery, {
     searchFields: ['displayName', 'city', 'state', 'mechanicBio', 'specialties'],
