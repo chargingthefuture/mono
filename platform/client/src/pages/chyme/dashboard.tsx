@@ -41,10 +41,9 @@ function OTPGenerationCard() {
 
   const generateOTPMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("/api/chyme/generate-otp", {
-        method: "POST",
-      });
-      return response;
+      const response = await apiRequest("POST", "/api/chyme/generate-otp");
+      const data = await response.json() as { otp: string; expiresAt: string };
+      return data;
     },
     onSuccess: (data: { otp: string; expiresAt: string }) => {
       setOtp(data.otp);

@@ -63,9 +63,6 @@ export function initSentry() {
     // - Sentry.metrics.gauge('metric_name', value)
     // - Sentry.metrics.distribution('metric_name', value)
 
-    // Capture unhandled exceptions and rejections
-    captureUncaughtException: true,
-
     // Send default PII (Personally Identifiable Information)
     sendDefaultPii: false, // Set to true if you need user email/username in Sentry
 

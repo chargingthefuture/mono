@@ -13,6 +13,7 @@ const getBaseUrl = () => {
 };
 
 export function ConditionalClerkProvider({ children }: { children: ReactNode }) {
+  const [, setLocation] = useLocation();
   const [scriptLoadError, setScriptLoadError] = useState<string | null>(null);
 
   // Monitor Clerk script loading
@@ -160,6 +161,8 @@ export function ConditionalClerkProvider({ children }: { children: ReactNode }) 
         afterSignInUrl={`${baseUrl}/`}
         // Redirect to sign-in page after sign-out
         afterSignOutUrl={signInUrl}
+        routerPush={(to) => setLocation(to)}
+        routerReplace={(to) => setLocation(to, { replace: true })}
         appearance={{
           elements: {
             rootBox: "mx-auto",

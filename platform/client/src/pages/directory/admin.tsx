@@ -48,7 +48,7 @@ export default function AdminDirectoryPage() {
   const [searchTerm, setSearchTerm] = useState("");
   const limit = 50; // Admin lists use 50 items per page
   
-  const { data: profiles = [], isLoading } = useQuery<DirectoryProfile[]>({
+  const { data: profiles = [], isLoading } = useQuery<DirectoryProfileWithUser[]>({
     queryKey: ["/api/directory/admin/profiles"],
   });
   

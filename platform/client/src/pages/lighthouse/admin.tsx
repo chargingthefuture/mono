@@ -365,6 +365,7 @@ export default function LighthouseAdminPage() {
                         const userName = host.user
                           ? [host.user.firstName, host.user.lastName].filter(Boolean).join(' ') || 'User'
                           : 'Unknown User';
+                        const displayName = host.displayName || userName;
                         const hostProfileUrl = `${window.location.origin}/apps/lighthouse/admin/profile/${host.id}`;
 
                         return (

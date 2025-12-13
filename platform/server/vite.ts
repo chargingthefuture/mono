@@ -154,16 +154,18 @@ export function serveStatic(app: Express) {
       if (err) {
         // Check if error is due to client disconnection (ECONNABORTED, EPIPE, etc.)
         // These are not server errors and should not be sent to Sentry
+        // Type guard to check if error has a code property (NodeJS errors)
+        const nodeError = err as NodeJS.ErrnoException;
         const isClientDisconnection = 
-          err.code === 'ECONNABORTED' || 
-          err.code === 'EPIPE' || 
-          err.code === 'ECONNRESET' ||
+          nodeError.code === 'ECONNABORTED' || 
+          nodeError.code === 'EPIPE' || 
+          nodeError.code === 'ECONNRESET' ||
           err.message?.includes('Request aborted');
         
         if (isClientDisconnection) {
           // Client disconnected - this is normal behavior, just log and don't call next()
           // Don't treat this as an error that needs to go to Sentry
-          console.log("Client disconnected while sending index.html:", err.code);
+          console.log("Client disconnected while sending index.html:", nodeError.code);
           return;
         }
         

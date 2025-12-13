@@ -15,10 +15,8 @@ import { useLocation } from "wouter";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "wouter";
 
-const requestFormSchema = insertMechanicmatchServiceRequestSchema.omit({
-  ownerId: true,
-  status: true,
-});
+// insertMechanicmatchServiceRequestSchema already omits ownerId and status
+const requestFormSchema = insertMechanicmatchServiceRequestSchema;
 
 type RequestFormData = z.infer<typeof requestFormSchema>;
 

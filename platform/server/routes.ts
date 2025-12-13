@@ -889,7 +889,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
     // Do not allow changing userId/isClaimed directly
     const { userId: _u, isClaimed: _c, ...update } = req.body;
-    const validated = validateWithZod(insertDirectoryProfileSchema.partial() as any, update, 'Invalid profile update');
+    const validated = validateWithZod(insertDirectoryProfileSchema.partial() as any, update, 'Invalid profile update') as any;
     const updated = await withDatabaseErrorHandling(
       () => storage.updateDirectoryProfile(profile.id, validated),
       'updateDirectoryProfile'
@@ -1140,7 +1140,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let user: any = null;
       if (p.userId) {
         user = await withDatabaseErrorHandling(
-          () => storage.getUser(p.userId),
+          () => storage.getUser(p.userId!),
           'getUserForDirectoryAdmin'
         );
         if (user) {

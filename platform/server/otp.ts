@@ -10,7 +10,9 @@ export function generateTOTP(secret: string, timeStep: number = 30): string {
   timeBuffer.writeUInt32BE(Math.floor(time / 0x100000000), 0);
   timeBuffer.writeUInt32BE(time & 0xffffffff, 4);
 
-  const hmac = crypto.createHmac('sha1', Buffer.from(secret, 'base32' || 'ascii'));
+  // Secret should be provided as a string (will be converted to buffer)
+  // For base32-encoded secrets, decode them first using a base32 library if needed
+  const hmac = crypto.createHmac('sha1', Buffer.from(secret, 'utf8'));
   hmac.update(timeBuffer);
   const hash = hmac.digest();
 
@@ -50,7 +52,9 @@ export function validateTOTP(otp: string, secret: string, timeStep: number = 30,
     timeBuffer.writeUInt32BE(Math.floor(time / 0x100000000), 0);
     timeBuffer.writeUInt32BE(time & 0xffffffff, 4);
 
-    const hmac = crypto.createHmac('sha1', Buffer.from(secret, 'base32' || 'ascii'));
+    // Secret should be provided as a string (will be converted to buffer)
+    // For base32-encoded secrets, decode them first using a base32 library if needed
+    const hmac = crypto.createHmac('sha1', Buffer.from(secret, 'utf8'));
     hmac.update(timeBuffer);
     const hash = hmac.digest();
 

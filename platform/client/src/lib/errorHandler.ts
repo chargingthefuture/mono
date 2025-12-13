@@ -29,7 +29,8 @@ export interface FrontendError {
  */
 export function parseApiError(error: any): FrontendError {
   // Handle network errors (no response)
-  if (!error || error.message?.includes('fetch') || error.message?.includes('network')) {
+  const errorMessage = typeof error?.message === 'string' ? error.message : String(error?.message || '');
+  if (!error || (errorMessage.includes('fetch') || errorMessage.includes('network'))) {
     return {
       code: FrontendErrorCode.NETWORK_ERROR,
       message: 'Network request failed. Please check your internet connection and try again.',
@@ -38,7 +39,7 @@ export function parseApiError(error: any): FrontendError {
   }
 
   // Handle timeout errors
-  if (error.name === 'TimeoutError' || error.message?.includes('timeout')) {
+  if (error.name === 'TimeoutError' || errorMessage.includes('timeout')) {
     return {
       code: FrontendErrorCode.TIMEOUT,
       message: 'Request timed out. Please try again.',
@@ -47,19 +48,19 @@ export function parseApiError(error: any): FrontendError {
   }
 
   // Handle error response from API
-  if (error.message) {
-    const message = error.message;
+  if (errorMessage) {
+    const message = errorMessage;
     
     // Extract status code from error message (format: "400: Error message")
-    const statusMatch = message.match(/^(\d+):\s*(.+)$/);
+    const statusMatch = typeof message === 'string' ? message.match(/^(\d+):\s*(.+)$/) : null;
     if (statusMatch) {
       const statusCode = parseInt(statusMatch[1], 10);
-      const errorMessage = statusMatch[2];
+      const errorMessageText = statusMatch[2];
 
       // Parse JSON error if possible
       let parsedError: any = null;
       try {
-        parsedError = JSON.parse(errorMessage);
+        parsedError = JSON.parse(errorMessageText);
       } catch {
         // Not JSON, use as-is
       }
@@ -70,7 +71,7 @@ export function parseApiError(error: any): FrontendError {
 
       return {
         code,
-        message: apiError?.message || errorMessage || getDefaultMessage(code),
+        message: apiError?.message || errorMessageText || getDefaultMessage(code),
         statusCode,
         details,
         originalError: error,
@@ -78,26 +79,28 @@ export function parseApiError(error: any): FrontendError {
     }
 
     // Try to parse as JSON error object
-    try {
-      const parsed = JSON.parse(message);
-      if (parsed.error) {
-        return {
-          code: parsed.error.code || FrontendErrorCode.UNKNOWN_ERROR,
-          message: parsed.error.message || 'An error occurred',
-          statusCode: parsed.error.statusCode,
-          details: parsed.error.details,
-          originalError: error,
-        };
+    if (typeof message === 'string') {
+      try {
+        const parsed = JSON.parse(message);
+        if (parsed.error) {
+          return {
+            code: parsed.error.code || FrontendErrorCode.UNKNOWN_ERROR,
+            message: parsed.error.message || 'An error occurred',
+            statusCode: parsed.error.statusCode,
+            details: parsed.error.details,
+            originalError: error,
+          };
+        }
+      } catch {
+        // Not JSON, continue
       }
-    } catch {
-      // Not JSON, continue
     }
   }
 
   // Default error
   return {
     code: FrontendErrorCode.UNKNOWN_ERROR,
-    message: error?.message || 'An unexpected error occurred. Please try again.',
+    message: errorMessage || 'An unexpected error occurred. Please try again.',
     originalError: error,
   };
 }

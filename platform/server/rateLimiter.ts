@@ -22,8 +22,8 @@ const getIpAddress = (req: Request): string => {
   if (typeof forwarded === 'string') {
     return forwarded.split(',')[0].trim();
   }
-  // Use express-rate-limit's ipKeyGenerator for proper IPv6 support
-  return ipKeyGenerator(req) || req.socket.remoteAddress || 'unknown';
+  // Fallback to socket remote address
+  return req.socket.remoteAddress || req.ip || 'unknown';
 };
 
 // Stricter rate limit for listing endpoints (prevents bulk scraping)

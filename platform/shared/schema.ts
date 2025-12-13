@@ -2006,7 +2006,7 @@ export const insertResearchVoteSchema = createInsertSchema(researchVotes).omit({
 }).extend({
   researchItemId: z.string().optional().nullable(),
   answerId: z.string().optional().nullable(),
-  value: z.enum([-1, 1]),
+  value: z.enum(["-1", "1"]),
 });
 
 export type InsertResearchVote = z.infer<typeof insertResearchVoteSchema>;
