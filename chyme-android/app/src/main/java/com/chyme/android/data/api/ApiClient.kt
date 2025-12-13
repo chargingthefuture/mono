@@ -1,8 +1,7 @@
 package com.chyme.android.data.api
 
 import com.chyme.android.BuildConfig
-import com.chyme.android.auth.ClerkAuthManager
-import kotlinx.coroutines.runBlocking
+import com.chyme.android.auth.OTPAuthManager
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit
@@ -13,15 +12,15 @@ object ApiClient {
     // Base URL from BuildConfig (set in local.properties)
     private val BASE_URL = BuildConfig.PLATFORM_API_BASE_URL
     
-    // ClerkAuthManager instance - must be set before making API calls
-    private var clerkAuthManager: ClerkAuthManager? = null
+    // OTPAuthManager instance - must be set before making API calls
+    private var authManager: OTPAuthManager? = null
     
     /**
-     * Initialize ApiClient with ClerkAuthManager
+     * Initialize ApiClient with OTPAuthManager
      * Call this in your Application class or MainActivity
      */
-    fun initialize(authManager: ClerkAuthManager) {
-        clerkAuthManager = authManager
+    fun initialize(authManager: OTPAuthManager) {
+        ApiClient.authManager = authManager
     }
     
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
@@ -33,12 +32,8 @@ object ApiClient {
         .addInterceptor { chain ->
             val requestBuilder = chain.request().newBuilder()
             
-            // Add Clerk session token if available
-            // Note: Using runBlocking here because OkHttp interceptors are synchronous
-            // In production, consider caching the token to avoid blocking
-            val token = runBlocking {
-                getClerkToken()
-            }
+            // Add OTP auth token if available
+            val token = authManager?.getAuthToken()
             if (token != null) {
                 requestBuilder.addHeader("Authorization", "Bearer $token")
             }
@@ -57,18 +52,5 @@ object ApiClient {
         .build()
     
     val apiService: ApiService = retrofit.create(ApiService::class.java)
-    
-    /**
-     * Get Clerk session token for API authentication
-     * This is called from OkHttp interceptor, so we use runBlocking
-     */
-    private suspend fun getClerkToken(): String? {
-        return try {
-            clerkAuthManager?.getSessionToken()
-        } catch (e: Exception) {
-            android.util.Log.e("ApiClient", "Error getting Clerk token", e)
-            null
-        }
-    }
 }
 

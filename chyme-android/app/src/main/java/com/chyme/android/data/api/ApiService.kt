@@ -6,6 +6,9 @@ import retrofit2.http.*
 
 interface ApiService {
     // Auth endpoints
+    @POST("/api/chyme/validate-otp")
+    suspend fun validateOTP(@Body request: ValidateOTPRequest): Response<ValidateOTPResponse>
+    
     @GET("/api/auth/user")
     suspend fun getCurrentUser(): Response<User>
     

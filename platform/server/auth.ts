@@ -410,14 +410,55 @@ export async function setupAuth(app: Express) {
   });
 }
 
-// Middleware to require authentication
-// Use this for routes that need authentication
-export const isAuthenticated: RequestHandler = requireAuth({
-  // This middleware automatically:
-  // 1. Verifies the Clerk session/JWT
-  // 2. Attaches user data to req.auth
-  // 3. Returns 401 if not authenticated
-});
+// Middleware to validate OTP token from Android app
+export const validateOTPToken: RequestHandler = async (req: any, res, next) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    const token = authHeader.substring(7);
+    
+    // Check if token exists in our OTP token store
+    if ((global as any).authTokens) {
+      const tokenData = (global as any).authTokens.get(token);
+      if (tokenData) {
+        const now = Date.now();
+        if (tokenData.expiresAt > now) {
+          // Token is valid, attach user info to request
+          req.auth = {
+            userId: tokenData.userId
+          };
+          req.otpAuth = true; // Flag to indicate this is OTP auth, not Clerk
+          return next();
+        } else {
+          // Token expired, remove it
+          (global as any).authTokens.delete(token);
+        }
+      }
+    }
+  }
+  // If no valid OTP token, continue to Clerk auth
+  next();
+};
+
+// Middleware to require authentication (supports both Clerk and OTP)
+export const isAuthenticated: RequestHandler = async (req: any, res, next) => {
+  // First try OTP token validation
+  await new Promise<void>((resolve) => {
+    validateOTPToken(req, res, () => resolve());
+  });
+  
+  // If OTP auth succeeded, continue
+  if (req.otpAuth && req.auth?.userId) {
+    return next();
+  }
+  
+  // Otherwise, use Clerk authentication
+  return requireAuth({
+    // This middleware automatically:
+    // 1. Verifies the Clerk session/JWT
+    // 2. Attaches user data to req.auth
+    // 3. Returns 401 if not authenticated
+  })(req, res, next);
+};
 
 // Note: For routes that need optional auth, use clerkMiddleware() directly
 // which attaches req.auth without blocking unauthenticated requests

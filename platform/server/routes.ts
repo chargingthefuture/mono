@@ -5841,6 +5841,139 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(announcement);
   }));
 
+  // Chyme OTP routes for Android app authentication
+  // Generate OTP - only for approved users
+  app.post('/api/chyme/generate-otp', isAuthenticated, asyncHandler(async (req: any, res) => {
+    const userId = getUserId(req);
+    
+    // Check if user is approved
+    const user = await withDatabaseErrorHandling(
+      () => storage.getUser(userId),
+      'getUserForOTP'
+    );
+    
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    if (!user.isApproved && !user.isAdmin) {
+      return res.status(403).json({ message: "Only approved users can generate OTP codes" });
+    }
+    
+    // Generate OTP using simple method (6-digit code, expires in 5 minutes)
+    const { generateSimpleOTP } = await import('./otp');
+    const { code, expiresAt } = generateSimpleOTP();
+    
+    // Store OTP in database (we'll need to add this to storage)
+    // For now, we'll use a simple in-memory store (in production, use Redis or database)
+    // Store: userId -> { code, expiresAt }
+    if (!(global as any).otpStore) {
+      (global as any).otpStore = new Map();
+    }
+    (global as any).otpStore.set(userId, { code, expiresAt: expiresAt.getTime() });
+    
+    // Clean up expired OTPs
+    const now = Date.now();
+    for (const [key, value] of (global as any).otpStore.entries()) {
+      if (value.expiresAt < now) {
+        (global as any).otpStore.delete(key);
+      }
+    }
+    
+    res.json({ 
+      otp: code,
+      expiresAt: expiresAt.toISOString(),
+      message: "OTP generated successfully. Use this code to sign in to the Android app."
+    });
+  }));
+
+  // Validate OTP and return auth token
+  app.post('/api/chyme/validate-otp', asyncHandler(async (req: any, res) => {
+    const { otp } = req.body;
+    
+    if (!otp || typeof otp !== 'string' || otp.length !== 6) {
+      return res.status(400).json({ message: "Invalid OTP format" });
+    }
+    
+    // Find user by OTP code
+    if (!(global as any).otpStore) {
+      return res.status(400).json({ message: "Invalid or expired OTP" });
+    }
+    
+    let userId: string | null = null;
+    const now = Date.now();
+    
+    for (const [key, value] of (global as any).otpStore.entries()) {
+      if (value.code === otp) {
+        if (value.expiresAt < now) {
+          (global as any).otpStore.delete(key);
+          return res.status(400).json({ message: "OTP has expired" });
+        }
+        userId = key;
+        break;
+      }
+    }
+    
+    if (!userId) {
+      return res.status(400).json({ message: "Invalid OTP code" });
+    }
+    
+    // Verify user is still approved
+    const user = await withDatabaseErrorHandling(
+      () => storage.getUser(userId!),
+      'getUserForOTPValidation'
+    );
+    
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    if (!user.isApproved && !user.isAdmin) {
+      (global as any).otpStore.delete(userId);
+      return res.status(403).json({ message: "User is not approved" });
+    }
+    
+    // Generate auth token (simple JWT-like token, in production use proper JWT)
+    // For now, we'll create a session token
+    const token = randomBytes(32).toString('hex');
+    const tokenExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+    
+    // Store token (in production, use database or Redis)
+    if (!(global as any).authTokens) {
+      (global as any).authTokens = new Map();
+    }
+    (global as any).authTokens.set(token, { 
+      userId, 
+      expiresAt: tokenExpiresAt.getTime() 
+    });
+    
+    // Clean up expired tokens
+    for (const [key, value] of (global as any).authTokens.entries()) {
+      if (value.expiresAt < now) {
+        (global as any).authTokens.delete(key);
+      }
+    }
+    
+    // Remove used OTP
+    (global as any).otpStore.delete(userId);
+    
+    // Return token and user info
+    res.json({
+      token,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        profileImageUrl: user.profileImageUrl,
+        quoraProfileUrl: user.quoraProfileUrl,
+        isAdmin: user.isAdmin,
+        isVerified: user.isVerified,
+        isApproved: user.isApproved
+      }
+    });
+  }));
+
   app.delete('/api/chyme/admin/announcements/:id', isAuthenticated, ...isAdminWithCsrf, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const announcement = await withDatabaseErrorHandling(

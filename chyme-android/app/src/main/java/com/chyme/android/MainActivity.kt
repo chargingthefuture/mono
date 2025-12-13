@@ -13,7 +13,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.chyme.android.auth.ClerkAuthManager
+import com.chyme.android.auth.OTPAuthManager
 import com.chyme.android.data.api.ApiClient
 import com.chyme.android.ui.screen.*
 import com.chyme.android.ui.theme.ChymeTheme
@@ -25,8 +25,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // Initialize ClerkAuthManager and ApiClient
-        val authManager = ClerkAuthManager(this)
+        // Initialize OTPAuthManager and ApiClient
+        val authManager = OTPAuthManager(this)
         ApiClient.initialize(authManager)
         
         setContent {
@@ -67,12 +67,8 @@ fun ChymeApp(context: Context, authManager: ClerkAuthManager) {
     ) {
         composable("signin") {
             SignInScreen(
-                onSignInClick = {
-                    authViewModel.signIn()
-                },
-                onSignUpClick = {
-                    // Navigate to sign up or handle sign up
-                    authViewModel.signIn() // For now, same as sign in
+                onSignInClick = { otp ->
+                    authViewModel.signInWithOTP(otp)
                 }
             )
         }

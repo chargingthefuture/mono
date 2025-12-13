@@ -32,14 +32,10 @@ android {
         
         // BuildConfig fields from local.properties or environment variables (for CI)
         // Priority: Environment variable > local.properties > default
-        val clerkPublishableKey = System.getenv("CLERK_PUBLISHABLE_KEY") 
-            ?: localProperties.getProperty("CLERK_PUBLISHABLE_KEY") 
-            ?: ""
         val platformApiUrl = System.getenv("PLATFORM_API_BASE_URL")
             ?: localProperties.getProperty("PLATFORM_API_BASE_URL")
             ?: "https://your-platform-domain.com"
         
-        buildConfigField("String", "CLERK_PUBLISHABLE_KEY", "\"$clerkPublishableKey\"")
         buildConfigField("String", "PLATFORM_API_BASE_URL", "\"$platformApiUrl\"")
     }
 
@@ -95,10 +91,7 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.12.0")
     implementation("com.squareup.okhttp3:logging-interceptor:4.12.0")
     
-    // Clerk Authentication
-    implementation("com.clerk:clerk-android:0.1.4")
-    
-    // Gson for JSON parsing (needed for Clerk and API)
+    // Gson for JSON parsing
     implementation("com.google.code.gson:gson:2.10.1")
     
     // Coroutines

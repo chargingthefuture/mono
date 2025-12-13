@@ -2,7 +2,7 @@ package com.chyme.android.ui.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.chyme.android.auth.ClerkAuthManager
+import com.chyme.android.auth.OTPAuthManager
 import com.chyme.android.data.api.ApiClient
 import com.chyme.android.data.model.User
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -10,7 +10,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 
-class AuthViewModel(private val authManager: ClerkAuthManager) : ViewModel() {
+class AuthViewModel(private val authManager: OTPAuthManager) : ViewModel() {
     private val _user = MutableStateFlow<User?>(null)
     val user: StateFlow<User?> = _user.asStateFlow()
     
@@ -75,9 +75,27 @@ class AuthViewModel(private val authManager: ClerkAuthManager) : ViewModel() {
         }
     }
     
-    fun signIn() {
+    fun signInWithOTP(otp: String) {
         viewModelScope.launch {
-            authManager.signIn()
+            _isLoading.value = true
+            _error.value = null
+            try {
+                val response = ApiClient.apiService.validateOTP(
+                    com.chyme.android.data.model.ValidateOTPRequest(otp = otp)
+                )
+                if (response.isSuccessful && response.body() != null) {
+                    val body = response.body()!!
+                    authManager.saveAuthToken(body.token, body.user.id)
+                    authManager.updateUser(body.user)
+                    _user.value = body.user
+                } else {
+                    _error.value = "Invalid OTP code. Please try again."
+                }
+            } catch (e: Exception) {
+                _error.value = e.message ?: "Failed to validate OTP"
+            } finally {
+                _isLoading.value = false
+            }
         }
     }
     
