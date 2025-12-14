@@ -5,7 +5,7 @@ import android.app.Application
 class ChymeApplication : Application() {
     override fun onCreate() {
         super.onCreate()
-        // Application initialization - no Clerk needed
+        // Application initialization
     }
 }
 
