@@ -18,6 +18,16 @@ import { US_STATES } from "@/lib/usStates";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 
+const propertyFormSchema = insertLighthousePropertySchema
+  .omit({ hostId: true })
+  .extend({
+    monthlyRent: z.string().optional().nullable(),
+    bedrooms: z.string().optional().nullable(),
+    bathrooms: z.string().optional().nullable(),
+  });
+
+type PropertyFormData = z.infer<typeof propertyFormSchema>;
+
 export default function PropertyFormPage() {
   const { id } = useParams<{ id: string }>();
   const [, setLocation] = useLocation();
@@ -37,30 +47,22 @@ export default function PropertyFormPage() {
     enabled: !!isEditing,
   });
 
-  const form = useForm({
-    resolver: zodResolver(
-      insertLighthousePropertySchema
-        .omit({ hostId: true })
-        .extend({
-          monthlyRent: z.string().optional().nullable(),
-          bedrooms: z.string().optional().nullable(),
-          bathrooms: z.string().optional().nullable(),
-        })
-    ),
+  const form = useForm<PropertyFormData>({
+    resolver: zodResolver(propertyFormSchema),
     defaultValues: {
       title: "",
       description: "",
       propertyType: "room",
       address: "",
       city: "",
-      state: null,
+      state: undefined,
       zipCode: "",
-      bedrooms: null,
-      bathrooms: null,
-      monthlyRent: null,
-      availableFrom: null,
+      bedrooms: undefined,
+      bathrooms: undefined,
+      monthlyRent: undefined,
+      availableFrom: undefined,
       houseRules: "",
-      airbnbProfileUrl: null,
+      airbnbProfileUrl: undefined,
       isActive: true,
     },
   });
@@ -73,14 +75,14 @@ export default function PropertyFormPage() {
         propertyType: property.propertyType,
         address: property.address,
         city: property.city,
-        state: property.state != null ? property.state : null,
-        zipCode: property.zipCode != null ? property.zipCode : null,
-        bedrooms: property.bedrooms != null ? property.bedrooms.toString() : null,
-        bathrooms: property.bathrooms != null ? property.bathrooms.toString() : null,
-        monthlyRent: property.monthlyRent != null ? property.monthlyRent.toString() : null,
-        availableFrom: property.availableFrom ? new Date(property.availableFrom) : null,
+        state: property.state ?? undefined,
+        zipCode: property.zipCode ?? "",
+        bedrooms: property.bedrooms != null ? property.bedrooms.toString() : undefined,
+        bathrooms: property.bathrooms != null ? property.bathrooms.toString() : undefined,
+        monthlyRent: property.monthlyRent != null ? property.monthlyRent.toString() : undefined,
+        availableFrom: property.availableFrom ? new Date(property.availableFrom) : undefined,
         houseRules: property.houseRules || "",
-        airbnbProfileUrl: property.airbnbProfileUrl != null ? property.airbnbProfileUrl : null,
+        airbnbProfileUrl: property.airbnbProfileUrl ?? undefined,
         isActive: property.isActive,
       });
       if (property.photos) setPhotos(property.photos);
