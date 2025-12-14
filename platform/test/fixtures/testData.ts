@@ -120,13 +120,6 @@ export const createTestMechanicmatchProfile = (
   ...overrides,
 });
 
-export const createTestChymeProfile = (
-  userId: string,
-  overrides: Partial<InsertChymeProfile> = {}
-): InsertChymeProfile => ({
-  userId,
-  ...overrides,
-});
 
 /**
  * Generate a unique test user ID

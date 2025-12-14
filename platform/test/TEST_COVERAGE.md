@@ -38,7 +38,7 @@ This document lists all tests created for the application.
 - ✅ `test/api/gentlepulse.test.ts` - Meditations, favorites, progress, announcements, admin
 
 ### Chyme
-- ✅ `test/api/chyme.test.ts` - Profile CRUD, rooms, messages, survey, announcements, admin
+- ✅ `test/api/chyme.test.ts` - Announcements, admin
 
 ### Admin
 - ✅ `test/api/admin.test.ts` - Stats, users, payments, anti-scraping monitoring, activity logs
@@ -101,7 +101,7 @@ This document lists all tests created for the application.
 - ✅ `test/e2e/research.spec.ts` - Research items, answers, comments, and interactions
 - ✅ `test/e2e/gentlepulse.spec.ts` - GentlePulse library, favorites, and progress tracking
 - ✅ `test/e2e/workforce-recruiter.spec.ts` - Workforce Recruiter profile, occupations, and meetup events
-- ✅ `test/e2e/chyme.spec.ts` - Chyme profile, rooms, messaging, and admin
+- ✅ `test/e2e/chyme.spec.ts` - Chyme dashboard and admin announcements
 
 ## Smoke Tests
 

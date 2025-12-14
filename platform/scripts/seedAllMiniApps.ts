@@ -78,7 +78,7 @@ const seedScripts = [
   {
     name: "Chyme",
     script: "seedChyme.ts",
-    description: "Chyme - Social audio platform",
+    description: "Chyme - Android app authenticator",
   },
   {
     name: "Payment Tracking",

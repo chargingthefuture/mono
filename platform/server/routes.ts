@@ -522,9 +522,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
         averageMood: 0,
         moodChange: 0,
         moodResponses: 0,
-        chymeValuablePercentage: 0,
-        chymeValuableChange: 0,
-        chymeSurveyResponses: 0,
       };
       
       const response = {

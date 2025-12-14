@@ -182,14 +182,7 @@ import {
   type InsertGentlepulseFavorite,
   type GentlepulseAnnouncement,
   type InsertGentlepulseAnnouncement,
-  chymeProfiles,
-  chymeRooms,
-  chymeRoomParticipants,
-  chymeMessages,
-  chymeSurveyResponses,
   chymeAnnouncements,
-  type ChymeProfile,
-  type InsertChymeProfile,
   workforceRecruiterProfiles,
   workforceRecruiterConfig,
   workforceRecruiterOccupations,
@@ -1654,9 +1647,6 @@ export class DatabaseStorage implements IStorage {
         averageMood: number;
         moodChange: number;
         moodResponses: number;
-        chymeValuablePercentage: number;
-        chymeValuableChange: number;
-        chymeSurveyResponses: number;
       };
   }> {
     // Calculate current week boundaries (Saturday to Friday)
@@ -2114,51 +2104,6 @@ export class DatabaseStorage implements IStorage {
       }
     } catch (error) {
       console.error("Error calculating mood statistics:", error);
-    }
-
-    // Calculate Chyme Survey statistics (valuable percentage)
-    let chymeValuablePercentage = 0;
-    let chymeValuableChange = 0;
-    let chymeSurveyResponsesCount = 0;
-    
-    try {
-      // Get survey responses for current week (using date field, not createdAt)
-      const currentWeekChymeSurveys = await db
-        .select()
-        .from(chymeSurveyResponses)
-        .where(
-          and(
-            gte(chymeSurveyResponses.date, currentWeekStart.toISOString().split('T')[0]),
-            lte(chymeSurveyResponses.date, currentWeekEnd.toISOString().split('T')[0])
-          )
-        );
-      
-      // Get survey responses for previous week
-      const previousWeekChymeSurveys = await db
-        .select()
-        .from(chymeSurveyResponses)
-        .where(
-          and(
-            gte(chymeSurveyResponses.date, previousWeekStart.toISOString().split('T')[0]),
-            lte(chymeSurveyResponses.date, previousWeekEnd.toISOString().split('T')[0])
-          )
-        );
-      
-      if (currentWeekChymeSurveys.length > 0) {
-        const valuableCount = currentWeekChymeSurveys.filter(s => s.foundValuable === true).length;
-        chymeValuablePercentage = parseFloat(((valuableCount / currentWeekChymeSurveys.length) * 100).toFixed(2));
-        chymeSurveyResponsesCount = currentWeekChymeSurveys.length;
-      }
-      
-      if (previousWeekChymeSurveys.length > 0 && currentWeekChymeSurveys.length > 0) {
-        const prevValuableCount = previousWeekChymeSurveys.filter(s => s.foundValuable === true).length;
-        const prevValuablePercentage = parseFloat(((prevValuableCount / previousWeekChymeSurveys.length) * 100).toFixed(2));
-        chymeValuableChange = parseFloat((chymeValuablePercentage - prevValuablePercentage).toFixed(2));
-      } else if (previousWeekChymeSurveys.length === 0 && currentWeekChymeSurveys.length > 0) {
-        chymeValuableChange = chymeValuablePercentage;
-      }
-    } catch (error) {
-      console.error("Error calculating Chyme survey statistics:", error);
     }
 
     // Calculate User Statistics (Total, Verified, Approved)

@@ -69,7 +69,7 @@ const services = [
   },
   {
     title: "Chyme",
-    description: "Join private or public audio rooms for voice conversations. Secure, encrypted, and designed with privacy and trauma-informed care in mind.",
+    description: "Android app authenticator. Generate one-time passcodes to sign in to the Chyme Android app.",
     icon: Radio,
     href: "/apps/chyme",
     testId: "card-service-chyme",

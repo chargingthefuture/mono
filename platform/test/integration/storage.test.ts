@@ -3,7 +3,7 @@ import { storage } from '../../server/storage';
 import { db } from '../../server/db';
 import { users, supportMatchProfiles, lighthouseProfiles, socketrelayProfiles, directoryProfiles, workforceRecruiterProfiles, trusttransportProfiles, mechanicmatchProfiles, chymeProfiles } from '@shared/schema';
 import { eq } from 'drizzle-orm';
-import { generateTestUserId, createTestSupportMatchProfile, createTestLighthouseProfile, createTestSocketrelayProfile, createTestDirectoryProfile, createTestWorkforceRecruiterProfile, createTestTrusttransportProfile, createTestMechanicmatchProfile, createTestChymeProfile } from '../fixtures/testData';
+import { generateTestUserId, createTestSupportMatchProfile, createTestLighthouseProfile, createTestSocketrelayProfile, createTestDirectoryProfile, createTestWorkforceRecruiterProfile, createTestTrusttransportProfile, createTestMechanicmatchProfile } from '../fixtures/testData';
 
 /**
  * Integration tests for storage layer
@@ -499,61 +499,4 @@ describe.skipIf(!hasDatabaseUrl)('Storage Layer - MechanicMatch Profile Operatio
   });
 });
 
-describe.skipIf(!hasDatabaseUrl)('Storage Layer - Chyme Profile Operations', () => {
-  let testUserId: string;
-
-  beforeEach(async () => {
-    testUserId = generateTestUserId();
-    await storage.upsertUser({
-      id: testUserId,
-      email: `test-${Date.now()}@example.com`,
-      firstName: 'Test',
-      lastName: 'User',
-    });
-  });
-
-  afterAll(async () => {
-    try {
-      await db.delete(chymeProfiles).where(eq(chymeProfiles.userId, testUserId));
-      await db.delete(users).where(eq(users.id, testUserId));
-    } catch (error) {
-      // Ignore cleanup errors
-    }
-  });
-
-  it.skipIf(!canConnectToDatabase)('should create a Chyme profile', async () => {
-    const profileData = createTestChymeProfile(testUserId);
-    const created = await storage.createChymeProfile(profileData);
-
-    expect(created).toBeDefined();
-    expect(created.userId).toBe(testUserId);
-  });
-
-  it.skipIf(!canConnectToDatabase)('should retrieve a Chyme profile by userId', async () => {
-    const profileData = createTestChymeProfile(testUserId);
-    await storage.createChymeProfile(profileData);
-
-    const retrieved = await storage.getChymeProfile(testUserId);
-    expect(retrieved).toBeDefined();
-    expect(retrieved?.userId).toBe(testUserId);
-  });
-
-  it.skipIf(!canConnectToDatabase)('should update a Chyme profile', async () => {
-    const profileData = createTestChymeProfile(testUserId);
-    await storage.createChymeProfile(profileData);
-
-    const updated = await storage.updateChymeProfile(testUserId, {});
-    expect(updated).toBeDefined();
-  });
-
-  it.skipIf(!canConnectToDatabase)('should delete Chyme profile and log deletion', async () => {
-    const profileData = createTestChymeProfile(testUserId);
-    await storage.createChymeProfile(profileData);
-
-    await storage.deleteChymeProfile(testUserId, 'Test deletion');
-
-    const retrieved = await storage.getChymeProfile(testUserId);
-    expect(retrieved).toBeUndefined();
-  });
-});
 
