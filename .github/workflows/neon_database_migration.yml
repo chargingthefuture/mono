@@ -41,10 +41,47 @@ jobs:
         working-directory: platform
         run: npm ci
 
+      - name: Determine environment and set DATABASE_URL
+        id: set_db_url
+        run: |
+          if [ "${{ github.ref }}" == "refs/heads/staging" ]; then
+            ENV="staging"
+            DB_URL="${{ secrets.DATABASE_URL_STAGING }}"
+            SECRET_NAME="DATABASE_URL_STAGING"
+          elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
+            ENV="production"
+            DB_URL="${{ secrets.DATABASE_URL }}"
+            SECRET_NAME="DATABASE_URL"
+          else
+            # For workflow_dispatch or other branches, default to production
+            ENV="production"
+            DB_URL="${{ secrets.DATABASE_URL }}"
+            SECRET_NAME="DATABASE_URL"
+          fi
+          
+          echo "environment=$ENV" >> $GITHUB_OUTPUT
+          echo "secret_name=$SECRET_NAME" >> $GITHUB_OUTPUT
+          echo "DATABASE_URL=$DB_URL" >> $GITHUB_ENV
+          
+          if [ -z "$DB_URL" ]; then
+            echo "ERROR: $SECRET_NAME secret is not configured!"
+            echo ""
+            echo "Please set the $SECRET_NAME secret in your repository settings:"
+            echo "Settings > Secrets and variables > Actions > New repository secret"
+            echo ""
+            echo "Environment: $ENV"
+            echo "Branch: ${{ github.ref_name }}"
+            echo "The secret should contain your Neon database connection string for $ENV."
+            exit 1
+          fi
+          
+          echo "✓ $SECRET_NAME is configured for $ENV environment"
+          echo "Branch: ${{ github.ref_name }}"
+
       - name: Push database schema
         working-directory: platform
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ env.DATABASE_URL }}
         run: |
           if [ "${{ github.event.inputs.force }}" == "true" ]; then
             npm run db:push -- --force
@@ -55,5 +92,6 @@ jobs:
       - name: Verify migration
         working-directory: platform
         env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ env.DATABASE_URL }}
         run: |
+          echo "Migration completed successfully for ${{ steps.set_db_url.outputs.environment }} environment"

@@ -29,6 +29,9 @@ export function Footer() {
               <a href="https://signal.group/#CjQKILHj7074l2Kl-oYy0qGSFdydXbtu0Pf66Z_88K9IlSCtEhDDdqV_BFAW2qm2EiTGEaNs"
                               target="_blank"
                 rel="noopener noreferrer"><li>Chat: Signal group</li></a>
+              <a href="https://chargingthefuture.github.io/mono/"
+                              target="_blank"
+                rel="noopener noreferrer"><li>Status: Platform status</li></a>
             </ul>
           </div>
 
