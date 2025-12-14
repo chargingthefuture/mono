@@ -24,6 +24,33 @@ type PublicDirectoryProfile = {
   createdAt: string;
 };
 
+function getDisplayName(profile: PublicDirectoryProfile): string {
+  // Use displayName if available (check for truthy non-empty string)
+  if (profile.displayName && profile.displayName.trim()) {
+    return profile.displayName;
+  }
+  
+  // Build from firstName and lastName (handle null/undefined/empty strings)
+  const firstName = profile.firstName?.trim() || null;
+  const lastName = profile.lastName?.trim() || null;
+  
+  if (firstName && lastName) {
+    return `${firstName} ${lastName}`;
+  }
+  
+  // Use firstName or lastName if available
+  if (firstName) {
+    return firstName;
+  }
+  
+  if (lastName) {
+    return lastName;
+  }
+  
+  // Fallback
+  return 'Directory Profile';
+}
+
 export default function PublicDirectoryList() {
   const [, setLocation] = useLocation();
   const { openExternal, ExternalLinkDialog } = useExternalLink();
@@ -134,11 +161,7 @@ export default function PublicDirectoryList() {
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2 flex-1 min-w-0">
                           <CardTitle className="text-base sm:text-lg line-clamp-1 flex-1">
-                            {profile.displayName || 
-                             (profile.firstName && profile.lastName ? `${profile.firstName} ${profile.lastName}` : null) ||
-                             profile.firstName ||
-                             profile.lastName ||
-                             'Directory Profile'}
+                            {getDisplayName(profile)}
                           </CardTitle>
                           <VerifiedBadge isVerified={profile.userIsVerified || false} testId={`badge-verified-${profile.id}`} />
                         </div>

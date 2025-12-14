@@ -832,8 +832,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'getUserForDirectoryProfile'
       );
       if (user) {
-        userFirstName = user.firstName || null;
-        userLastName = user.lastName || null;
+        // Handle empty strings as null
+        userFirstName = (user.firstName && user.firstName.trim()) || null;
+        userLastName = (user.lastName && user.lastName.trim()) || null;
         userIsVerified = user.isVerified || false;
         // Build display name from firstName and lastName
         if (userFirstName && userLastName) {
@@ -996,8 +997,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'getUserForPublicDirectoryProfile'
       );
       if (user) {
-        userFirstName = user.firstName || null;
-        userLastName = user.lastName || null;
+        // Handle empty strings as null
+        userFirstName = (user.firstName && user.firstName.trim()) || null;
+        userLastName = (user.lastName && user.lastName.trim()) || null;
         userIsVerified = user.isVerified || false;
         // Build display name from firstName and lastName
         if (userFirstName && userLastName) {
@@ -1047,8 +1049,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
           'getUserForPublicDirectoryList'
         );
         if (u) {
-          userFirstName = u.firstName || null;
-          userLastName = u.lastName || null;
+          // Handle empty strings as null
+          userFirstName = (u.firstName && u.firstName.trim()) || null;
+          userLastName = (u.lastName && u.lastName.trim()) || null;
           userIsVerified = u.isVerified || false;
           // Build display name from firstName and lastName
           if (userFirstName && userLastName) {

@@ -10,6 +10,33 @@ import { VerifiedBadge } from "@/components/verified-badge";
 import { useToast } from "@/hooks/use-toast";
 import { useExternalLink } from "@/hooks/useExternalLink";
 
+function getDisplayName(profile: any): string {
+  // Use displayName if available (check for truthy non-empty string)
+  if (profile.displayName && profile.displayName.trim()) {
+    return profile.displayName;
+  }
+  
+  // Build from firstName and lastName (handle null/undefined/empty strings)
+  const firstName = profile.firstName?.trim() || null;
+  const lastName = profile.lastName?.trim() || null;
+  
+  if (firstName && lastName) {
+    return `${firstName} ${lastName}`;
+  }
+  
+  // Use firstName or lastName if available
+  if (firstName) {
+    return firstName;
+  }
+  
+  if (lastName) {
+    return lastName;
+  }
+  
+  // Fallback
+  return 'Directory Profile';
+}
+
 export default function PublicDirectoryProfile() {
   const { toast } = useToast();
   const { openExternal, ExternalLinkDialog } = useExternalLink();
@@ -110,11 +137,7 @@ export default function PublicDirectoryProfile() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 flex-wrap">
               <CardTitle className="text-lg sm:text-xl">
-                {(profile as any).displayName || 
-                 ((profile as any).firstName && (profile as any).lastName ? `${(profile as any).firstName} ${(profile as any).lastName}` : null) ||
-                 (profile as any).firstName ||
-                 (profile as any).lastName ||
-                 'Directory Profile'}
+                {getDisplayName(profile)}
               </CardTitle>
               <VerifiedBadge isVerified={userIsVerified} testId="badge-verified-public" />
             </div>
