@@ -6540,7 +6540,7 @@ export class DatabaseStorage implements IStorage {
       // Use case-insensitive matching for sector
       conditions.push(sql`LOWER(${workforceRecruiterOccupations.sector}) = LOWER(${filters.sector})`);
     }
-    if (filters?.skillLevel && filters.skillLevel !== "all") {
+    if (filters?.skillLevel) {
       conditions.push(eq(workforceRecruiterOccupations.skillLevel, filters.skillLevel));
     }
 
@@ -7935,12 +7935,15 @@ export class DatabaseStorage implements IStorage {
     const normalizedWeekStart = this.getWeekStart(entryData.weekStartDate);
     const weekStartDateString = normalizedWeekStart.toISOString().split('T')[0];
     
-    const { weekStartDate, ...restEntryData } = entryData;
+    const { weekStartDate, operatingExpenses, depreciation, amortization, ...restEntryData } = entryData;
     const [entry] = await db
       .insert(defaultAliveOrDeadFinancialEntries)
       .values({
         ...restEntryData,
         weekStartDate: weekStartDateString,
+        operatingExpenses: operatingExpenses.toString(),
+        depreciation: (depreciation ?? 0).toString(),
+        amortization: (amortization ?? 0).toString(),
         createdBy: userId,
       })
       .returning();
