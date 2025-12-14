@@ -3062,6 +3062,40 @@ export class DatabaseStorage implements IStorage {
     return announcement;
   }
 
+  // LightHouse Block operations
+  async createLighthouseBlock(block: InsertLighthouseBlock): Promise<LighthouseBlock> {
+    const [created] = await db
+      .insert(lighthouseBlocks)
+      .values(block)
+      .returning();
+    return created;
+  }
+
+  async getLighthouseBlocksByUser(userId: string): Promise<LighthouseBlock[]> {
+    return await db
+      .select()
+      .from(lighthouseBlocks)
+      .where(eq(lighthouseBlocks.userId, userId));
+  }
+
+  async checkLighthouseBlock(userId: string, blockedUserId: string): Promise<boolean> {
+    const [block] = await db
+      .select()
+      .from(lighthouseBlocks)
+      .where(
+        and(
+          eq(lighthouseBlocks.userId, userId),
+          eq(lighthouseBlocks.blockedUserId, blockedUserId)
+        )
+      )
+      .limit(1);
+    return !!block;
+  }
+
+  async deleteLighthouseBlock(id: string): Promise<void> {
+    await db.delete(lighthouseBlocks).where(eq(lighthouseBlocks.id, id));
+  }
+
   // SocketRelay Request operations
   async createSocketrelayRequest(userId: string, description: string, isPublic: boolean = false): Promise<SocketrelayRequest> {
     const expiresAt = new Date();
@@ -6506,7 +6540,7 @@ export class DatabaseStorage implements IStorage {
       // Use case-insensitive matching for sector
       conditions.push(sql`LOWER(${workforceRecruiterOccupations.sector}) = LOWER(${filters.sector})`);
     }
-    if (filters?.skillLevel && filters.skillLevel !== "all" && (filters.skillLevel === 'Foundational' || filters.skillLevel === 'Intermediate' || filters.skillLevel === 'Advanced')) {
+    if (filters?.skillLevel && filters.skillLevel !== "all") {
       conditions.push(eq(workforceRecruiterOccupations.skillLevel, filters.skillLevel));
     }
 
@@ -6570,7 +6604,7 @@ export class DatabaseStorage implements IStorage {
     await db.delete(workforceRecruiterOccupations).where(eq(workforceRecruiterOccupations.id, id));
   }
 
-  async createWorkforceRecruiterMeetupEvent(eventData: InsertWorkforceRecruiterMeetupEvent): Promise<WorkforceRecruiterMeetupEvent> {
+  async createWorkforceRecruiterMeetupEvent(eventData: InsertWorkforceRecruiterMeetupEvent & { createdBy: string }): Promise<WorkforceRecruiterMeetupEvent> {
     const [event] = await db
       .insert(workforceRecruiterMeetupEvents)
       .values(eventData)
@@ -7635,6 +7669,19 @@ export class DatabaseStorage implements IStorage {
       }
     }
 
+    // Fetch user data for profiles that have userId
+    const userIds = allDirectoryProfiles.map(p => p.userId).filter((id): id is string => id !== null);
+    const userDataMap = new Map<string, { firstName: string | null; lastName: string | null }>();
+    if (userIds.length > 0) {
+      const userData = await db
+        .select({ id: users.id, firstName: users.firstName, lastName: users.lastName })
+        .from(users)
+        .where(inArray(users.id, userIds));
+      for (const user of userData) {
+        userDataMap.set(user.id, { firstName: user.firstName, lastName: user.lastName });
+      }
+    }
+
     // Get all profiles in this sector
     const profilesInSector: Array<{
       profileId: string;
@@ -7672,7 +7719,7 @@ export class DatabaseStorage implements IStorage {
         // Get display name from firstName/lastName via user lookup
         let displayName = "Unknown";
         if (profile.userId) {
-          const userData = userDataMap2.get(profile.userId);
+          const userData = userDataMap.get(profile.userId);
           if (userData?.firstName && userData?.lastName) {
             displayName = `${userData.firstName} ${userData.lastName}`;
           } else if (userData?.firstName) {
@@ -7933,9 +7980,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateDefaultAliveOrDeadFinancialEntry(id: string, entryData: Partial<InsertDefaultAliveOrDeadFinancialEntry>): Promise<DefaultAliveOrDeadFinancialEntry> {
+    const updateData: any = { ...entryData, updatedAt: new Date() };
+    if (entryData.weekStartDate) {
+      const normalizedWeekStart = this.getWeekStart(entryData.weekStartDate);
+      updateData.weekStartDate = normalizedWeekStart.toISOString().split('T')[0];
+    }
     const [updated] = await db
       .update(defaultAliveOrDeadFinancialEntries)
-      .set({ ...entryData, updatedAt: new Date() })
+      .set(updateData)
       .where(eq(defaultAliveOrDeadFinancialEntries.id, id))
       .returning();
     return updated;
@@ -8183,11 +8235,11 @@ export class DatabaseStorage implements IStorage {
     if (latest.projectedProfitabilityDate) {
       if (typeof latest.projectedProfitabilityDate === 'string') {
         projectedProfitabilityDate = new Date(latest.projectedProfitabilityDate);
-      } else if (latest.projectedProfitabilityDate instanceof Date) {
-        projectedProfitabilityDate = latest.projectedProfitabilityDate;
+      } else if (latest.projectedProfitabilityDate && typeof latest.projectedProfitabilityDate === 'object' && 'getTime' in latest.projectedProfitabilityDate) {
+        projectedProfitabilityDate = latest.projectedProfitabilityDate as Date;
       }
       // Validate the date
-      if (isNaN(projectedProfitabilityDate.getTime())) {
+      if (projectedProfitabilityDate && isNaN(projectedProfitabilityDate.getTime())) {
         projectedProfitabilityDate = null;
       }
     }
@@ -8226,13 +8278,13 @@ export class DatabaseStorage implements IStorage {
   async getDefaultAliveOrDeadWeekComparison(weekStart: Date): Promise<{
     currentWeek: {
       snapshot: DefaultAliveOrDeadEbitdaSnapshot | null;
-      weekStart: Date;
-      weekEnd: Date;
+      weekStart: string;
+      weekEnd: string;
     };
     previousWeek: {
       snapshot: DefaultAliveOrDeadEbitdaSnapshot | null;
-      weekStart: Date;
-      weekEnd: Date;
+      weekStart: string;
+      weekEnd: string;
     };
     comparison: {
       revenueChange: number; // Percentage change
