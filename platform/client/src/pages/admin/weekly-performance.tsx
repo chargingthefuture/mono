@@ -61,9 +61,6 @@ interface WeeklyPerformanceData {
     averageMood: number;
     moodChange: number;
     moodResponses: number;
-    chymeValuablePercentage: number;
-    chymeValuableChange: number;
-    chymeSurveyResponses: number;
   };
 }
 
@@ -722,80 +719,6 @@ export default function WeeklyPerformanceReview() {
                     <strong>Privacy Note:</strong> All mood ratings are collected anonymously using client IDs. 
                     Individual responses cannot be traced back to users, maintaining complete anonymity while 
                     providing valuable aggregated insights into user wellbeing.
-                  </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Chyme Survey Metrics */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <MessageSquare className="w-5 h-5" />
-                  Chyme Audio Room Feedback
-                </CardTitle>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Percentage of users who found audio rooms valuable (anonymous survey data)
-                </p>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div>
-                    <div className="text-sm font-medium text-muted-foreground mb-1">Current Week</div>
-                    <div className="text-3xl font-bold tabular-nums">
-                      {data.metrics?.chymeValuablePercentage ?? 0}%
-                    </div>
-                    <div className="flex items-center gap-2 mt-2">
-                      <Badge
-                        variant={
-                          (data.metrics?.chymeValuablePercentage ?? 0) >= 70
-                            ? "default"
-                            : (data.metrics?.chymeValuablePercentage ?? 0) >= 50
-                            ? "secondary"
-                            : "destructive"
-                        }
-                        className="text-xs"
-                      >
-                        {(data.metrics?.chymeValuablePercentage ?? 0) >= 70
-                          ? "High Value"
-                          : (data.metrics?.chymeValuablePercentage ?? 0) >= 50
-                          ? "Moderate"
-                          : "Needs Improvement"}
-                      </Badge>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Found audio rooms valuable
-                    </p>
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-muted-foreground mb-1">Week-over-Week Change</div>
-                    <div className={`text-2xl font-bold tabular-nums ${
-                      (data.metrics?.chymeValuableChange ?? 0) > 0
-                        ? "text-green-600"
-                        : (data.metrics?.chymeValuableChange ?? 0) < 0
-                        ? "text-red-600"
-                        : ""
-                    }`}>
-                      {(data.metrics?.chymeValuableChange ?? 0) > 0 ? "+" : ""}
-                      {data.metrics?.chymeValuableChange ?? 0}%
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Change from previous week
-                    </p>
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-muted-foreground mb-1">Total Responses</div>
-                    <div className="text-2xl font-bold tabular-nums">{data.metrics?.chymeSurveyResponses ?? 0}</div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Survey responses this week
-                    </p>
-                  </div>
-                </div>
-                <div className="mt-4 pt-4 border-t">
-                  <p className="text-xs text-muted-foreground">
-                    <strong>Privacy Note:</strong> All survey responses are collected anonymously using client IDs. 
-                    Individual responses cannot be traced back to users, maintaining complete anonymity while 
-                    providing valuable aggregated insights into the value of audio rooms.
                   </p>
                 </div>
               </CardContent>

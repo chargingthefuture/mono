@@ -214,14 +214,6 @@ import {
   type InsertDefaultAliveOrDeadFinancialEntry,
   type DefaultAliveOrDeadEbitdaSnapshot,
   type InsertDefaultAliveOrDeadEbitdaSnapshot,
-  type ChymeRoom,
-  type InsertChymeRoom,
-  type ChymeRoomParticipant,
-  type InsertChymeRoomParticipant,
-  type ChymeMessage,
-  type InsertChymeMessage,
-  type ChymeSurveyResponse,
-  type InsertChymeSurveyResponse,
   type ChymeAnnouncement,
   type InsertChymeAnnouncement,
 } from "@shared/schema";
@@ -282,6 +274,10 @@ export interface IStorage {
       dailyActiveUsers: Array<{ date: string; count: number }>;
       revenue: number;
       dailyRevenue: Array<{ date: string; amount: number }>;
+      totalUsers: number;
+      verifiedUsers: number;
+      approvedUsers: number;
+      isDefaultAlive: boolean | null;
     };
     previousWeek: {
       startDate: string;
@@ -290,10 +286,17 @@ export interface IStorage {
       dailyActiveUsers: Array<{ date: string; count: number }>;
       revenue: number;
       dailyRevenue: Array<{ date: string; amount: number }>;
+      totalUsers: number;
+      verifiedUsers: number;
+      approvedUsers: number;
+      isDefaultAlive: boolean | null;
     };
     comparison: {
       newUsersChange: number;
       revenueChange: number;
+      totalUsersChange: number;
+      verifiedUsersChange: number;
+      approvedUsersChange: number;
     };
     metrics: {
       weeklyGrowthRate: number;
@@ -309,6 +312,9 @@ export interface IStorage {
       npsResponses: number;
       verifiedUsersPercentage: number;
       verifiedUsersPercentageChange: number;
+      averageMood: number;
+      moodChange: number;
+      moodResponses: number;
     };
   }>;
   
@@ -767,41 +773,6 @@ export interface IStorage {
   // CHYME OPERATIONS
   // ========================================
 
-  // Chyme Profile operations
-  getChymeProfile(userId: string): Promise<ChymeProfile | undefined>;
-  createChymeProfile(profile: InsertChymeProfile): Promise<ChymeProfile>;
-  updateChymeProfile(userId: string, profile: Partial<InsertChymeProfile>): Promise<ChymeProfile>;
-  deleteChymeProfile(userId: string, reason?: string): Promise<void>;
-
-  // Chyme Room operations
-  createChymeRoom(room: InsertChymeRoom): Promise<ChymeRoom>;
-  getChymeRoomById(id: string): Promise<ChymeRoom | undefined>;
-  getAllChymeRooms(filters?: {
-    roomType?: 'private' | 'public';
-    isActive?: boolean;
-    limit?: number;
-    offset?: number;
-  }): Promise<{ rooms: ChymeRoom[]; total: number }>;
-  updateChymeRoom(id: string, room: Partial<InsertChymeRoom>): Promise<ChymeRoom>;
-  deleteChymeRoom(id: string): Promise<void>;
-  incrementChymeRoomParticipants(roomId: string): Promise<void>;
-  decrementChymeRoomParticipants(roomId: string): Promise<void>;
-
-  // Chyme Room Participant operations
-  addChymeRoomParticipant(participant: InsertChymeRoomParticipant): Promise<ChymeRoomParticipant>;
-  removeChymeRoomParticipant(roomId: string, userId: string): Promise<void>;
-  getChymeRoomParticipants(roomId: string): Promise<ChymeRoomParticipant[]>;
-  getChymeUserRooms(userId: string): Promise<ChymeRoom[]>;
-
-  // Chyme Message operations
-  createChymeMessage(message: InsertChymeMessage): Promise<ChymeMessage>;
-  getChymeMessagesByRoom(roomId: string, limit?: number, offset?: number): Promise<{ messages: ChymeMessage[]; total: number }>;
-
-  // Chyme Survey operations
-  createChymeSurveyResponse(response: InsertChymeSurveyResponse): Promise<ChymeSurveyResponse>;
-  getChymeSurveyResponsesByDateRange(startDate: Date, endDate: Date): Promise<ChymeSurveyResponse[]>;
-  getChymeSurveyResponsesByClientId(clientId: string, days?: number): Promise<ChymeSurveyResponse[]>;
-
   // Chyme Announcement operations
   createChymeAnnouncement(announcement: InsertChymeAnnouncement): Promise<ChymeAnnouncement>;
   getActiveChymeAnnouncements(): Promise<ChymeAnnouncement[]>;
@@ -1124,11 +1095,6 @@ export class DatabaseStorage implements IStorage {
       .set({ isVerified: !!isVerified, updatedAt: new Date() })
       .where(eq(mechanicmatchProfiles.userId, userId));
 
-    // Chyme profiles
-    await db
-      .update(chymeProfiles)
-      .set({ isVerified: !!isVerified, updatedAt: new Date() })
-      .where(eq(chymeProfiles.userId, userId));
 
     // Workforce Recruiter profiles
     await db
@@ -2322,9 +2288,6 @@ export class DatabaseStorage implements IStorage {
         averageMood: averageMood,
         moodChange: moodChange,
         moodResponses: moodResponsesCount,
-        chymeValuablePercentage: chymeValuablePercentage,
-        chymeValuableChange: chymeValuableChange,
-        chymeSurveyResponses: chymeSurveyResponsesCount,
       },
     };
     
@@ -2430,7 +2393,7 @@ export class DatabaseStorage implements IStorage {
     
     return {
       ...partnership,
-      partnerNickname: partnerProfile?.nickname || 'Unknown Partner',
+      partnerNickname: 'Unknown Partner', // SupportMatchProfile doesn't have nickname field
       partnerGender: partnerProfile?.gender,
       partnerTimezone: partnerProfile?.timezone,
     };
@@ -4672,26 +4635,50 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createMechanicmatchProfile(profileData: InsertMechanicmatchProfile): Promise<MechanicmatchProfile> {
+    // Convert number fields to strings for decimal columns
+    const dataToInsert: any = { ...profileData };
+    if (dataToInsert.hourlyRate !== undefined && dataToInsert.hourlyRate !== null) {
+      dataToInsert.hourlyRate = dataToInsert.hourlyRate.toString();
+    }
+    if (dataToInsert.averageRating !== undefined && dataToInsert.averageRating !== null) {
+      dataToInsert.averageRating = dataToInsert.averageRating.toString();
+    }
     const [profile] = await db
       .insert(mechanicmatchProfiles)
-      .values(profileData)
+      .values(dataToInsert)
       .returning();
     return profile;
   }
 
   async updateMechanicmatchProfile(userId: string, profileData: Partial<InsertMechanicmatchProfile>): Promise<MechanicmatchProfile> {
+    // Convert number fields to strings for decimal columns
+    const dataToUpdate: any = { ...profileData, updatedAt: new Date() };
+    if (dataToUpdate.hourlyRate !== undefined && dataToUpdate.hourlyRate !== null) {
+      dataToUpdate.hourlyRate = dataToUpdate.hourlyRate.toString();
+    }
+    if (dataToUpdate.averageRating !== undefined && dataToUpdate.averageRating !== null) {
+      dataToUpdate.averageRating = dataToUpdate.averageRating.toString();
+    }
     const [profile] = await db
       .update(mechanicmatchProfiles)
-      .set({ ...profileData, updatedAt: new Date() })
+      .set(dataToUpdate)
       .where(eq(mechanicmatchProfiles.userId, userId))
       .returning();
     return profile;
   }
 
   async updateMechanicmatchProfileById(profileId: string, profileData: Partial<InsertMechanicmatchProfile>): Promise<MechanicmatchProfile> {
+    // Convert number fields to strings for decimal columns
+    const dataToUpdate: any = { ...profileData, updatedAt: new Date() };
+    if (dataToUpdate.hourlyRate !== undefined && dataToUpdate.hourlyRate !== null) {
+      dataToUpdate.hourlyRate = dataToUpdate.hourlyRate.toString();
+    }
+    if (dataToUpdate.averageRating !== undefined && dataToUpdate.averageRating !== null) {
+      dataToUpdate.averageRating = dataToUpdate.averageRating.toString();
+    }
     const [profile] = await db
       .update(mechanicmatchProfiles)
-      .set({ ...profileData, updatedAt: new Date() })
+      .set(dataToUpdate)
       .where(eq(mechanicmatchProfiles.id, profileId))
       .returning();
     return profile;
@@ -4839,9 +4826,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateMechanicmatchServiceRequest(id: string, requestData: Partial<InsertMechanicmatchServiceRequest>): Promise<MechanicmatchServiceRequest> {
+    // Convert number fields to strings for decimal columns
+    const dataToUpdate: any = { ...requestData, updatedAt: new Date() };
+    if (dataToUpdate.ratePerMinute !== undefined && dataToUpdate.ratePerMinute !== null) {
+      dataToUpdate.ratePerMinute = dataToUpdate.ratePerMinute.toString();
+    }
     const [request] = await db
       .update(mechanicmatchServiceRequests)
-      .set({ ...requestData, updatedAt: new Date() })
+      .set(dataToUpdate)
       .where(eq(mechanicmatchServiceRequests.id, id))
       .returning();
     return request;
@@ -4852,13 +4844,18 @@ export class DatabaseStorage implements IStorage {
     if (!jobData.ownerId) {
       throw new Error("ownerId is required to create a job");
     }
+    // Convert number fields to strings for decimal columns
+    const dataToInsert: any = {
+      ...jobData,
+      ownerId: jobData.ownerId,
+      status: 'requested',
+    };
+    if (dataToInsert.ratePerMinute !== undefined && dataToInsert.ratePerMinute !== null) {
+      dataToInsert.ratePerMinute = dataToInsert.ratePerMinute.toString();
+    }
     const [job] = await db
       .insert(mechanicmatchJobs)
-      .values({
-        ...jobData,
-        ownerId: jobData.ownerId,
-        status: 'requested',
-      })
+      .values(dataToInsert)
       .returning();
     return job;
   }
@@ -4888,9 +4885,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateMechanicmatchJob(id: string, jobData: Partial<InsertMechanicmatchJob>): Promise<MechanicmatchJob> {
+    // Convert number fields to strings for decimal columns
+    const dataToUpdate: any = { ...jobData, updatedAt: new Date() };
+    if (dataToUpdate.ratePerMinute !== undefined && dataToUpdate.ratePerMinute !== null) {
+      dataToUpdate.ratePerMinute = dataToUpdate.ratePerMinute.toString();
+    }
     const [job] = await db
       .update(mechanicmatchJobs)
-      .set({ ...jobData, updatedAt: new Date() })
+      .set(dataToUpdate)
       .where(eq(mechanicmatchJobs.id, id))
       .returning();
     return job;
@@ -5678,11 +5680,14 @@ export class DatabaseStorage implements IStorage {
     // Check if vote exists
     const existing = await this.getResearchVote(voteData.userId, voteData.researchItemId || undefined, voteData.answerId || undefined);
 
+    // Convert string value to number for database
+    const voteValue = typeof voteData.value === 'string' ? parseInt(voteData.value, 10) : voteData.value;
+
     if (existing) {
       // Update existing vote
       const [vote] = await db
         .update(researchVotes)
-        .set({ value: voteData.value })
+        .set({ value: voteValue })
         .where(eq(researchVotes.id, existing.id))
         .returning();
 
@@ -5696,7 +5701,7 @@ export class DatabaseStorage implements IStorage {
       // Create new vote
       const [vote] = await db
         .insert(researchVotes)
-        .values(voteData)
+        .values({ ...voteData, value: voteValue })
         .returning();
 
       // Update answer score if voting on answer
@@ -5743,9 +5748,17 @@ export class DatabaseStorage implements IStorage {
 
   // Research Link Provenances
   async createResearchLinkProvenance(provenanceData: InsertResearchLinkProvenance): Promise<ResearchLinkProvenance> {
+    // Convert number fields to strings for decimal columns
+    const dataToInsert: any = { ...provenanceData };
+    if (dataToInsert.domainScore !== undefined && dataToInsert.domainScore !== null) {
+      dataToInsert.domainScore = dataToInsert.domainScore.toString();
+    }
+    if (dataToInsert.similarityScore !== undefined && dataToInsert.similarityScore !== null) {
+      dataToInsert.similarityScore = dataToInsert.similarityScore.toString();
+    }
     const [provenance] = await db
       .insert(researchLinkProvenances)
-      .values(provenanceData)
+      .values(dataToInsert)
       .returning();
 
     // Recalculate verification score for answer
@@ -6356,285 +6369,6 @@ export class DatabaseStorage implements IStorage {
   // CHYME IMPLEMENTATIONS
   // ========================================
 
-  // Chyme Profile operations
-  async getChymeProfile(userId: string): Promise<ChymeProfile | undefined> {
-    const [profile] = await db
-      .select()
-      .from(chymeProfiles)
-      .where(eq(chymeProfiles.userId, userId));
-    return profile;
-  }
-
-  async createChymeProfile(profileData: InsertChymeProfile): Promise<ChymeProfile> {
-    const [profile] = await db
-      .insert(chymeProfiles)
-      .values(profileData)
-      .returning();
-    return profile;
-  }
-
-  async updateChymeProfile(userId: string, profileData: Partial<InsertChymeProfile>): Promise<ChymeProfile> {
-    const [updated] = await db
-      .update(chymeProfiles)
-      .set({ ...profileData, updatedAt: new Date() })
-      .where(eq(chymeProfiles.userId, userId))
-      .returning();
-    return updated;
-  }
-
-  async deleteChymeProfile(userId: string, reason?: string): Promise<void> {
-    const profile = await this.getChymeProfile(userId);
-    if (!profile) {
-      throw new Error("Chyme profile not found");
-    }
-
-    const anonymizedUserId = this.generateAnonymizedUserId();
-
-    // Anonymize related data
-    try {
-      // Anonymize messages
-      await db
-        .update(chymeMessages)
-        .set({ userId: anonymizedUserId })
-        .where(eq(chymeMessages.userId, userId));
-      
-      // Anonymize room participants
-      await db
-        .update(chymeRoomParticipants)
-        .set({ userId: anonymizedUserId })
-        .where(eq(chymeRoomParticipants.userId, userId));
-      
-      // Anonymize rooms created by user
-      await db
-        .update(chymeRooms)
-        .set({ createdBy: anonymizedUserId })
-        .where(eq(chymeRooms.createdBy, userId));
-    } catch (error: any) {
-      console.warn(`Failed to anonymize Chyme related data: ${error.message}`);
-    }
-
-    // Delete the profile
-    await db.delete(chymeProfiles).where(eq(chymeProfiles.userId, userId));
-
-    // Log the deletion
-    await this.logProfileDeletion(userId, "chyme", reason);
-  }
-
-  // Chyme Room operations
-  async createChymeRoom(roomData: InsertChymeRoom): Promise<ChymeRoom> {
-    const [room] = await db
-      .insert(chymeRooms)
-      .values(roomData)
-      .returning();
-    return room;
-  }
-
-  async getChymeRoomById(id: string): Promise<ChymeRoom | undefined> {
-    const [room] = await db
-      .select()
-      .from(chymeRooms)
-      .where(eq(chymeRooms.id, id));
-    return room;
-  }
-
-  async getAllChymeRooms(filters?: {
-    roomType?: 'private' | 'public';
-    isActive?: boolean;
-    limit?: number;
-    offset?: number;
-  }): Promise<{ rooms: ChymeRoom[]; total: number }> {
-    const conditions = [];
-    if (filters?.roomType) {
-      conditions.push(eq(chymeRooms.roomType, filters.roomType));
-    }
-    if (filters?.isActive !== undefined) {
-      conditions.push(eq(chymeRooms.isActive, filters.isActive));
-    }
-
-    const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
-
-    const rooms = await db
-      .select()
-      .from(chymeRooms)
-      .where(whereClause)
-      .orderBy(desc(chymeRooms.createdAt))
-      .limit(filters?.limit || 100)
-      .offset(filters?.offset || 0);
-
-    const totalResult = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(chymeRooms)
-      .where(whereClause);
-    
-    const total = Number(totalResult[0]?.count || 0);
-
-    return { rooms, total };
-  }
-
-  async updateChymeRoom(id: string, roomData: Partial<InsertChymeRoom>): Promise<ChymeRoom> {
-    const [updated] = await db
-      .update(chymeRooms)
-      .set({ ...roomData, updatedAt: new Date() })
-      .where(eq(chymeRooms.id, id))
-      .returning();
-    return updated;
-  }
-
-  async deleteChymeRoom(id: string): Promise<void> {
-    // Cascade delete will handle participants and messages
-    await db.delete(chymeRooms).where(eq(chymeRooms.id, id));
-  }
-
-  async incrementChymeRoomParticipants(roomId: string): Promise<void> {
-    await db
-      .update(chymeRooms)
-      .set({ 
-        currentParticipants: sql`${chymeRooms.currentParticipants} + 1`,
-        updatedAt: new Date()
-      })
-      .where(eq(chymeRooms.id, roomId));
-  }
-
-  async decrementChymeRoomParticipants(roomId: string): Promise<void> {
-    await db
-      .update(chymeRooms)
-      .set({ 
-        currentParticipants: sql`GREATEST(${chymeRooms.currentParticipants} - 1, 0)`,
-        updatedAt: new Date()
-      })
-      .where(eq(chymeRooms.id, roomId));
-  }
-
-  // Chyme Room Participant operations
-  async addChymeRoomParticipant(participantData: InsertChymeRoomParticipant): Promise<ChymeRoomParticipant> {
-    const [participant] = await db
-      .insert(chymeRoomParticipants)
-      .values(participantData)
-      .returning();
-    await this.incrementChymeRoomParticipants(participantData.roomId);
-    return participant;
-  }
-
-  async removeChymeRoomParticipant(roomId: string, userId: string): Promise<void> {
-    await db
-      .update(chymeRoomParticipants)
-      .set({ leftAt: new Date() })
-      .where(
-        and(
-          eq(chymeRoomParticipants.roomId, roomId),
-          eq(chymeRoomParticipants.userId, userId),
-          sql`${chymeRoomParticipants.leftAt} IS NULL`
-        )
-      );
-    await this.decrementChymeRoomParticipants(roomId);
-  }
-
-  async getChymeRoomParticipants(roomId: string): Promise<ChymeRoomParticipant[]> {
-    return await db
-      .select()
-      .from(chymeRoomParticipants)
-      .where(
-        and(
-          eq(chymeRoomParticipants.roomId, roomId),
-          sql`${chymeRoomParticipants.leftAt} IS NULL`
-        )
-      );
-  }
-
-  async getChymeUserRooms(userId: string): Promise<ChymeRoom[]> {
-    const participants = await db
-      .select()
-      .from(chymeRoomParticipants)
-      .where(
-        and(
-          eq(chymeRoomParticipants.userId, userId),
-          sql`${chymeRoomParticipants.leftAt} IS NULL`
-        )
-      );
-    
-    if (participants.length === 0) {
-      return [];
-    }
-
-    const roomIds = participants.map(p => p.roomId);
-    return await db
-      .select()
-      .from(chymeRooms)
-      .where(inArray(chymeRooms.id, roomIds));
-  }
-
-  // Chyme Message operations
-  async createChymeMessage(messageData: InsertChymeMessage): Promise<ChymeMessage> {
-    const [message] = await db
-      .insert(chymeMessages)
-      .values(messageData)
-      .returning();
-    return message;
-  }
-
-  async getChymeMessagesByRoom(roomId: string, limit = 50, offset = 0): Promise<{ messages: ChymeMessage[]; total: number }> {
-    const messages = await db
-      .select()
-      .from(chymeMessages)
-      .where(eq(chymeMessages.roomId, roomId))
-      .orderBy(desc(chymeMessages.createdAt))
-      .limit(limit)
-      .offset(offset);
-
-    const totalResult = await db
-      .select({ count: sql<number>`count(*)` })
-      .from(chymeMessages)
-      .where(eq(chymeMessages.roomId, roomId));
-    
-    const total = Number(totalResult[0]?.count || 0);
-
-    return { messages, total };
-  }
-
-  // Chyme Survey operations
-  async createChymeSurveyResponse(responseData: InsertChymeSurveyResponse): Promise<ChymeSurveyResponse> {
-    // Convert Date to ISO date string for database
-    const dataToInsert = {
-      ...responseData,
-      date: responseData.date instanceof Date 
-        ? responseData.date.toISOString().split('T')[0] 
-        : responseData.date,
-    };
-    const [response] = await db
-      .insert(chymeSurveyResponses)
-      .values(dataToInsert as any)
-      .returning();
-    return response;
-  }
-
-  async getChymeSurveyResponsesByDateRange(startDate: Date, endDate: Date): Promise<ChymeSurveyResponse[]> {
-    return await db
-      .select()
-      .from(chymeSurveyResponses)
-      .where(
-        and(
-          gte(chymeSurveyResponses.date, startDate.toISOString().split('T')[0]),
-          lte(chymeSurveyResponses.date, endDate.toISOString().split('T')[0])
-        )
-      );
-  }
-
-  async getChymeSurveyResponsesByClientId(clientId: string, days = 7): Promise<ChymeSurveyResponse[]> {
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - days);
-    
-    return await db
-      .select()
-      .from(chymeSurveyResponses)
-      .where(
-        and(
-          eq(chymeSurveyResponses.clientId, clientId),
-          gte(chymeSurveyResponses.date, cutoffDate.toISOString().split('T')[0])
-        )
-      )
-      .orderBy(desc(chymeSurveyResponses.createdAt));
-  }
-
   // Chyme Announcement operations
   async createChymeAnnouncement(announcementData: InsertChymeAnnouncement): Promise<ChymeAnnouncement> {
     const [announcement] = await db
@@ -6759,9 +6493,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createWorkforceRecruiterConfig(configData: InsertWorkforceRecruiterConfig): Promise<WorkforceRecruiterConfig> {
+    // Convert number to string for decimal column
+    const dataToInsert: any = { ...configData };
+    if (dataToInsert.workforceParticipationRate !== undefined) {
+      dataToInsert.workforceParticipationRate = dataToInsert.workforceParticipationRate.toString();
+    }
     const [config] = await db
       .insert(workforceRecruiterConfig)
-      .values(configData)
+      .values(dataToInsert)
       .returning();
     return config;
   }
@@ -8691,7 +8430,6 @@ export class DatabaseStorage implements IStorage {
         { name: "Directory", deleteFn: () => this.deleteDirectoryProfileWithCascade(userId, reason).catch(err => console.warn(`Failed to delete Directory profile: ${err.message}`)) },
         { name: "TrustTransport", deleteFn: () => this.deleteTrusttransportProfile(userId, reason).catch(err => console.warn(`Failed to delete TrustTransport profile: ${err.message}`)) },
         { name: "MechanicMatch", deleteFn: () => this.deleteMechanicmatchProfile(userId, reason).catch(err => console.warn(`Failed to delete MechanicMatch profile: ${err.message}`)) },
-        { name: "Chyme", deleteFn: () => this.deleteChymeProfile(userId, reason).catch(err => console.warn(`Failed to delete Chyme profile: ${err.message}`)) },
         { name: "WorkforceRecruiter", deleteFn: () => this.deleteWorkforceRecruiterProfile(userId, reason).catch(err => console.warn(`Failed to delete WorkforceRecruiter profile: ${err.message}`)) },
       ];
 

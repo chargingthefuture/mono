@@ -114,11 +114,8 @@ import GentlePulseSettings from "@/pages/gentlepulse/settings";
 import GentlePulseAdmin from "@/pages/gentlepulse/admin";
 import GentlePulseAdminAnnouncements from "@/pages/gentlepulse/admin-announcements";
 import ChymeDashboard from "@/pages/chyme/dashboard";
-import ChymeProfile from "@/pages/chyme/profile";
-import ChymeRoom from "@/pages/chyme/room";
 import ChymeAdmin from "@/pages/chyme/admin";
 import ChymeAdminAnnouncements from "@/pages/chyme/admin-announcements";
-import ChymeAdminRoomForm from "@/pages/chyme/admin-room-form";
 import WorkforceRecruiterDashboard from "@/pages/workforce-recruiter/dashboard";
 import WorkforceRecruiterProfile from "@/pages/workforce-recruiter/profile";
 import WorkforceRecruiterOccupations from "@/pages/workforce-recruiter/occupations";
@@ -763,16 +760,6 @@ function Router() {
           <ChymeDashboard />
         </ProtectedRoute>
       </Route>
-      <Route path="/apps/chyme/profile">
-        <ProtectedRoute>
-          <ChymeProfile />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/apps/chyme/room/:id">
-        <ProtectedRoute>
-          <ChymeRoom />
-        </ProtectedRoute>
-      </Route>
       <Route path="/apps/chyme/admin">
         <ProtectedRoute>
           <ChymeAdmin />
@@ -781,16 +768,6 @@ function Router() {
       <Route path="/apps/chyme/admin/announcements">
         <ProtectedRoute>
           <ChymeAdminAnnouncements />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/apps/chyme/admin/rooms/new">
-        <ProtectedRoute>
-          <ChymeAdminRoomForm />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/apps/chyme/admin/rooms/:id/edit">
-        <ProtectedRoute>
-          <ChymeAdminRoomForm />
         </ProtectedRoute>
       </Route>
 

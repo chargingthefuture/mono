@@ -63,8 +63,6 @@ export async function apiRequest(
     url.match(/\/api\/[^/]+\/admin/) ||
     // Workforce recruiter meetup events (admin-only)
     url.match(/\/api\/workforce-recruiter\/meetup-events/) ||
-    // Chyme admin rooms
-    url.match(/\/api\/chyme\/admin\/rooms/) ||
     // Skills admin endpoints
     url.match(/\/api\/skills\/(sectors|job-titles|skills)/);
   

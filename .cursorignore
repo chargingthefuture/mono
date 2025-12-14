@@ -1,0 +1,64 @@
+# Dependencies
+**/node_modules/
+**/package-lock.json
+**/pnpm-lock.yaml
+**/yarn.lock
+
+# Build outputs
+**/dist/
+**/build/
+**/.next/
+**/out/
+
+# Test outputs
+**/test-results/
+**/playwright-report/
+**/coverage/
+**/.nyc_output/
+**/.vitest/
+
+# Logs
+**/*.log
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+
+# Database files
+**/*.db
+**/*.sqlite
+
+# TypeScript build info
+**/*.tsbuildinfo
+
+# IDE files
+**/.vscode/
+**/.idea/
+
+# OS files
+**/.DS_Store
+**/Thumbs.db
+
+# Environment files
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Large binary files
+**/*.png
+**/*.jpg
+**/*.jpeg
+**/*.gif
+**/*.ico
+**/*.svg
+**/*.pdf
+
+# Git
+**/.git/
+
+# CI/CD
+**/.circleci/
+**/.github/
+
+# Documentation (if not needed for indexing)
+**/README.md
+**/docs/

@@ -66,10 +66,6 @@ import {
   insertGentlepulseMoodCheckSchema,
   insertGentlepulseFavoriteSchema,
   insertGentlepulseAnnouncementSchema,
-  insertChymeProfileSchema,
-  insertChymeRoomSchema,
-  insertChymeMessageSchema,
-  insertChymeSurveyResponseSchema,
   insertChymeAnnouncementSchema,
   insertWorkforceRecruiterProfileSchema,
   insertWorkforceRecruiterConfigSchema,
@@ -1510,9 +1506,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/chatgroups/admin/:id', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const adminId = getUserId(req);
-    const validated = validateWithZod(insertChatGroupSchema.partial() as any, req.body, 'Invalid chat group update');
+    const validated = validateWithZod(insertChatGroupSchema.partial() as any, req.body, 'Invalid chat group update') as Partial<z.infer<typeof insertChatGroupSchema>>;
     const group = await withDatabaseErrorHandling(
-      () => storage.updateChatGroup(req.params.id, validated),
+      () => storage.updateChatGroup(req.params.id, validated as any),
       'updateChatGroup'
     );
     await logAdminAction(adminId, 'update_chat_group', 'chat_group', group.id);
@@ -2043,7 +2039,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     // Validate partial update (exclude userId from being updated)
     const { userId: _, ...updateData } = req.body;
-    const validatedData = validateWithZod(insertLighthouseProfileSchema.partial() as any, updateData, 'Invalid profile update');
+    const validatedData = validateWithZod(insertLighthouseProfileSchema.partial(), updateData, 'Invalid profile update');
     const updated = await withDatabaseErrorHandling(
       () => storage.updateLighthouseProfile(profile.id, validatedData),
       'updateLighthouseProfile'
@@ -2290,9 +2286,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (status) updateData.status = status;
     if (hostResponse && isHost) updateData.hostResponse = hostResponse;
     
-    const validatedData = validateWithZod(insertLighthouseMatchSchema.partial() as any, updateData, 'Invalid match update');
+    const validatedData = validateWithZod(insertLighthouseMatchSchema.partial() as any, updateData, 'Invalid match update') as Partial<z.infer<typeof insertLighthouseMatchSchema>>;
     const updated = await withDatabaseErrorHandling(
-      () => storage.updateLighthouseMatch(req.params.id, validatedData),
+      () => storage.updateLighthouseMatch(req.params.id, validatedData as any),
       'updateLighthouseMatch'
     );
     
@@ -2514,9 +2510,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/lighthouse/admin/announcements/:id', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
-    const validatedData = validateWithZod(insertLighthouseAnnouncementSchema.partial() as any, req.body, 'Invalid announcement data');
+    const validatedData = validateWithZod(insertLighthouseAnnouncementSchema.partial(), req.body, 'Invalid announcement data') as Partial<z.infer<typeof insertLighthouseAnnouncementSchema>>;
     const announcement = await withDatabaseErrorHandling(
-      () => storage.updateLighthouseAnnouncement(req.params.id, validatedData),
+      () => storage.updateLighthouseAnnouncement(req.params.id, validatedData as any),
       'updateLighthouseAnnouncement'
     );
     
@@ -3100,7 +3096,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/directory/admin/announcements/:id', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
-    const validatedData = validateWithZod(insertDirectoryAnnouncementSchema.partial() as any, req.body, 'Invalid announcement data');
+    const validatedData = validateWithZod(insertDirectoryAnnouncementSchema.partial() as any, req.body, 'Invalid announcement data') as Partial<z.infer<typeof insertDirectoryAnnouncementSchema>>;
     const announcement = await withDatabaseErrorHandling(
       () => storage.updateDirectoryAnnouncement(req.params.id, validatedData),
       'updateDirectoryAnnouncement'
@@ -4073,10 +4069,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/mechanicmatch/admin/profiles/:id', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const adminId = getUserId(req);
-    const validated = validateWithZod(insertMechanicmatchProfileSchema.partial() as any, req.body, 'Invalid profile update');
+    const validated = validateWithZod(insertMechanicmatchProfileSchema.partial(), req.body, 'Invalid profile update') as Partial<z.infer<typeof insertMechanicmatchProfileSchema>>;
 
     const updated = await withDatabaseErrorHandling(
-      () => storage.updateMechanicmatchProfileById(req.params.id, validated),
+      () => storage.updateMechanicmatchProfileById(req.params.id, validated as any),
       'updateMechanicmatchProfileById'
     );
 
@@ -5401,9 +5397,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/lostmail/admin/announcements/:id', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
-    const validatedData = validateWithZod(insertLostmailAnnouncementSchema.partial() as any, req.body, 'Invalid announcement data');
+    const validatedData = validateWithZod(insertLostmailAnnouncementSchema.partial(), req.body, 'Invalid announcement data') as Partial<z.infer<typeof insertLostmailAnnouncementSchema>>;
     const announcement = await withDatabaseErrorHandling(
-      () => storage.updateLostmailAnnouncement(req.params.id, validatedData),
+      () => storage.updateLostmailAnnouncement(req.params.id, validatedData as any),
       'updateLostmailAnnouncement'
     );
     
@@ -5447,359 +5443,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       'getActiveChymeAnnouncements'
     );
     res.json(announcements);
-  }));
-
-  // Chyme Profile routes
-  app.get('/api/chyme/profile', isAuthenticated, asyncHandler(async (req: any, res) => {
-    const userId = getUserId(req);
-    const profile = await withDatabaseErrorHandling(
-      () => storage.getChymeProfile(userId),
-      'getChymeProfile'
-    );
-    if (!profile) {
-      return res.json(null);
-    }
-    // Get user data to build displayName
-    let displayName: string | null = null;
-    let userIsVerified = false;
-    let userFirstName: string | null = null;
-    let userLastName: string | null = null;
-    
-    const user = await withDatabaseErrorHandling(
-      () => storage.getUser(userId),
-      'getUserVerificationForChymeProfile'
-    );
-    if (user) {
-      userFirstName = user.firstName || null;
-      userLastName = user.lastName || null;
-      userIsVerified = user.isVerified || false;
-      // Build display name from firstName and lastName
-      if (userFirstName && userLastName) {
-        displayName = `${userFirstName} ${userLastName}`;
-      } else if (userFirstName) {
-        displayName = userFirstName;
-      }
-    }
-    res.json({ ...profile, displayName, userIsVerified, firstName: userFirstName, lastName: userLastName });
-  }));
-
-  app.post('/api/chyme/profile', isAuthenticated, asyncHandler(async (req: any, res) => {
-    const userId = getUserId(req);
-    const validatedData = validateWithZod(insertChymeProfileSchema, {
-      ...req.body,
-      userId,
-    }, 'Invalid profile data');
-    
-    const profile = await withDatabaseErrorHandling(
-      () => storage.createChymeProfile(validatedData),
-      'createChymeProfile'
-    );
-    res.json(profile);
-  }));
-
-  app.put('/api/chyme/profile', isAuthenticated, asyncHandler(async (req: any, res) => {
-    const userId = getUserId(req);
-    const profile = await withDatabaseErrorHandling(
-      () => storage.updateChymeProfile(userId, req.body),
-      'updateChymeProfile'
-    );
-    res.json(profile);
-  }));
-
-  app.delete('/api/chyme/profile', isAuthenticated, asyncHandler(async (req: any, res) => {
-    const userId = getUserId(req);
-    const { reason } = req.body;
-    await withDatabaseErrorHandling(
-      () => storage.deleteChymeProfile(userId, reason),
-      'deleteChymeProfile'
-    );
-    res.json({ message: "Chyme profile deleted successfully" });
-  }));
-
-  // Chyme Room routes (public listing, admin creation)
-  app.get('/api/chyme/rooms', isAuthenticated, asyncHandler(async (req: any, res) => {
-    const roomType = req.query.roomType as string | undefined;
-    const showAll = req.query.showAll === 'true';
-    // Default to showing only active rooms for user-facing endpoint
-    // If showAll=true, don't filter by isActive (show all rooms)
-    const isActive = showAll ? undefined : (req.query.isActive !== undefined ? req.query.isActive === 'true' : true);
-    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 50;
-    const offset = req.query.offset ? parseInt(req.query.offset as string, 10) : 0;
-
-    const filters: any = {};
-    if (roomType) filters.roomType = roomType;
-    if (isActive !== undefined) filters.isActive = isActive;
-
-    const result = await withDatabaseErrorHandling(
-      () => storage.getAllChymeRooms(filters, limit, offset),
-      'getAllChymeRooms'
-    );
-    res.json(result);
-  }));
-
-  // GET room details: Public rooms allow unauthenticated access (for listening)
-  // Private rooms require authentication
-  app.get('/api/chyme/rooms/:id', publicItemLimiter, asyncHandler(async (req: any, res) => {
-    const room = await withDatabaseErrorHandling(
-      () => storage.getChymeRoomById(req.params.id),
-      'getChymeRoomById'
-    );
-    if (!room || !room.isActive) {
-      throw new NotFoundError("Room not found or inactive");
-    }
-
-    // Private rooms require authentication
-    if (room.roomType === 'private') {
-      if (!req.auth?.userId) {
-        return res.status(401).json({ message: "Authentication required for private rooms" });
-      }
-    }
-
-    res.json(room);
-  }));
-
-  // Admin room creation
-  app.post('/api/chyme/admin/rooms', isAuthenticated, ...isAdminWithCsrf, asyncHandler(async (req: any, res) => {
-    const userId = getUserId(req);
-    const validatedData = validateWithZod(insertChymeRoomSchema, {
-      ...req.body,
-      createdBy: userId,
-    }, 'Invalid room data');
-    
-    const room = await withDatabaseErrorHandling(
-      () => storage.createChymeRoom(validatedData),
-      'createChymeRoom'
-    );
-    
-    await logAdminAction(
-      userId,
-      "create_chyme_room",
-      "room",
-      room.id,
-      { name: room.name, roomType: room.roomType }
-    );
-
-    res.json(room);
-  }));
-
-  app.put('/api/chyme/admin/rooms/:id', isAuthenticated, ...isAdminWithCsrf, asyncHandler(async (req: any, res) => {
-    const userId = getUserId(req);
-    const room = await withDatabaseErrorHandling(
-      () => storage.updateChymeRoom(req.params.id, req.body),
-      'updateChymeRoom'
-    );
-    
-    await logAdminAction(
-      userId,
-      "update_chyme_room",
-      "room",
-      room.id,
-      { name: room.name }
-    );
-
-    res.json(room);
-  }));
-
-  app.delete('/api/chyme/admin/rooms/:id', isAuthenticated, ...isAdminWithCsrf, asyncHandler(async (req: any, res) => {
-    const userId = getUserId(req);
-    await withDatabaseErrorHandling(
-      () => storage.deleteChymeRoom(req.params.id),
-      'deleteChymeRoom'
-    );
-    
-    await logAdminAction(
-      userId,
-      "delete_chyme_room",
-      "room",
-      req.params.id,
-      {}
-    );
-
-    res.json({ message: "Room deleted successfully" });
-  }));
-
-  // Chyme Room Participant routes
-  app.post('/api/chyme/rooms/:roomId/join', isAuthenticated, asyncHandler(async (req: any, res) => {
-    const userId = getUserId(req);
-    const roomId = req.params.roomId;
-    
-    // Check if room exists and user can join
-    const room = await withDatabaseErrorHandling(
-      () => storage.getChymeRoomById(roomId),
-      'getChymeRoomById'
-    );
-    if (!room || !room.isActive) {
-      throw new NotFoundError("Room not found or inactive");
-    }
-
-    // Check if room is full
-    if (room.maxParticipants && room.currentParticipants >= room.maxParticipants) {
-      throw new ValidationError("Room is full");
-    }
-
-    // Check if already a participant
-    const existingParticipants = await withDatabaseErrorHandling(
-      () => storage.getChymeRoomParticipants(roomId),
-      'getChymeRoomParticipants'
-    );
-    const alreadyParticipant = existingParticipants.some(p => p.userId === userId && !p.leftAt);
-    
-    if (!alreadyParticipant) {
-      await withDatabaseErrorHandling(
-        () => storage.addChymeRoomParticipant({
-          roomId,
-          userId,
-          isMuted: false,
-          isSpeaking: false,
-        }),
-        'addChymeRoomParticipant'
-      );
-    }
-
-    res.json({ message: "Joined room successfully" });
-  }));
-
-  app.post('/api/chyme/rooms/:roomId/leave', isAuthenticated, asyncHandler(async (req: any, res) => {
-    const userId = getUserId(req);
-    const roomId = req.params.roomId;
-    
-    await withDatabaseErrorHandling(
-      () => storage.removeChymeRoomParticipant(roomId, userId),
-      'removeChymeRoomParticipant'
-    );
-
-    res.json({ message: "Left room successfully" });
-  }));
-
-  app.get('/api/chyme/rooms/:roomId/participants', isAuthenticated, asyncHandler(async (req: any, res) => {
-    const roomId = req.params.roomId;
-    const participants = await withDatabaseErrorHandling(
-      () => storage.getChymeRoomParticipants(roomId),
-      'getChymeRoomParticipants'
-    );
-    res.json(participants);
-  }));
-
-  // Chyme Message routes
-  // GET messages: Public rooms allow unauthenticated access (listening mode)
-  // Private rooms require authentication
-  app.get('/api/chyme/rooms/:roomId/messages', publicItemLimiter, asyncHandler(async (req: any, res) => {
-    const roomId = req.params.roomId;
-    const limit = req.query.limit ? parseInt(req.query.limit as string, 10) : 50;
-    const offset = req.query.offset ? parseInt(req.query.offset as string, 10) : 0;
-
-    // Check room type - public rooms allow unauthenticated access
-    const room = await withDatabaseErrorHandling(
-      () => storage.getChymeRoomById(roomId),
-      'getChymeRoomById'
-    );
-    
-    if (!room || !room.isActive) {
-      throw new NotFoundError("Room not found or inactive");
-    }
-
-    // Private rooms require authentication
-    if (room.roomType === 'private') {
-      // Check if user is authenticated via Clerk
-      if (!req.auth?.userId) {
-        return res.status(401).json({ message: "Authentication required for private rooms" });
-      }
-    }
-
-    const result = await withDatabaseErrorHandling(
-      () => storage.getChymeMessagesByRoom(roomId, limit, offset),
-      'getChymeMessagesByRoom'
-    );
-    res.json(result);
-  }));
-
-  app.post('/api/chyme/rooms/:roomId/messages', isAuthenticated, asyncHandler(async (req: any, res) => {
-    const userId = getUserId(req);
-    const roomId = req.params.roomId;
-    
-    // Check if user is participant (for private rooms) or authenticated (for public rooms)
-    const room = await withDatabaseErrorHandling(
-      () => storage.getChymeRoomById(roomId),
-      'getChymeRoomById'
-    );
-    if (!room || !room.isActive) {
-      throw new NotFoundError("Room not found or inactive");
-    }
-
-    // For private rooms, check if user is a participant
-    if (room.roomType === 'private') {
-      const participants = await withDatabaseErrorHandling(
-        () => storage.getChymeRoomParticipants(roomId),
-        'getChymeRoomParticipants'
-      );
-      const isParticipant = participants.some(p => p.userId === userId && !p.leftAt);
-      if (!isParticipant) {
-        throw new ForbiddenError("You must be a participant to send messages in private rooms");
-      }
-    }
-
-    // Get user profile to check if anonymous
-    const profile = await withDatabaseErrorHandling(
-      () => storage.getChymeProfile(userId),
-      'getChymeProfile'
-    );
-
-    const validatedData = validateWithZod(insertChymeMessageSchema, {
-      ...req.body,
-      roomId,
-      userId,
-    }, 'Invalid message data');
-    
-    const message = await withDatabaseErrorHandling(
-      () => storage.createChymeMessage(validatedData),
-      'createChymeMessage'
-    );
-    res.json(message);
-  }));
-
-  // Chyme Survey routes (anonymous)
-  app.post('/api/chyme/survey', publicItemLimiter, asyncHandler(async (req, res) => {
-    stripIPAndMetadata(req);
-    
-    const validatedData = validateWithZod(insertChymeSurveyResponseSchema, {
-      ...req.body,
-      date: new Date().toISOString().split('T')[0], // Today's date
-    }, 'Invalid survey data');
-    
-    const response = await withDatabaseErrorHandling(
-      () => storage.createChymeSurveyResponse(validatedData),
-      'createChymeSurveyResponse'
-    );
-    
-    console.log(`Chyme survey response submitted: client ${validatedData.clientId}, foundValuable ${validatedData.foundValuable}`);
-    
-    res.json(response);
-  }));
-
-  // Check if survey should be shown (once per room per client)
-  app.get('/api/chyme/survey/check-eligible', asyncHandler(async (req, res) => {
-    const clientId = req.query.clientId as string;
-    const roomId = req.query.roomId as string | undefined;
-    
-    if (!clientId) {
-      return res.json({ eligible: false });
-    }
-
-    const recentResponses = await withDatabaseErrorHandling(
-      () => storage.getChymeSurveyResponsesByClientId(clientId, 7),
-      'getChymeSurveyResponsesByClientId'
-    );
-    
-    // If roomId provided, check if already responded for this room
-    if (roomId) {
-      const roomResponse = recentResponses.find(r => r.roomId === roomId);
-      if (roomResponse) {
-        return res.json({ eligible: false });
-      }
-    }
-    
-    // Otherwise, allow if no response in last 7 days
-    res.json({ eligible: recentResponses.length === 0 });
   }));
 
   // Chyme Admin Announcement routes
