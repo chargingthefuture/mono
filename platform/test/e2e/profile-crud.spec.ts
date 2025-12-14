@@ -25,7 +25,6 @@ test.describe('Profile CRUD Patterns', () => {
       '/apps/directory/profile',
       '/apps/trusttransport/profile',
       '/apps/mechanicmatch/profile',
-      '/apps/chyme/profile',
       '/apps/workforce-recruiter/profile',
     ];
 

@@ -6,7 +6,6 @@ import type { InsertDirectoryProfile } from '@shared/schema';
 import type { InsertWorkforceRecruiterProfile } from '@shared/schema';
 import type { InsertTrusttransportProfile } from '@shared/schema';
 import type { InsertMechanicmatchProfile } from '@shared/schema';
-import type { InsertChymeProfile } from '@shared/schema';
 
 /**
  * Test data fixtures for creating consistent test data

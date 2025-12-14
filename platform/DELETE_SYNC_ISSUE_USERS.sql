@@ -135,16 +135,6 @@ DELETE FROM research_items WHERE user_id = '49006997';
 -- GentlePulse
 -- Note: GentlePulse tables use client_id (anonymous), not user_id, so no user-specific data to delete
 
--- Chyme - Delete related data first
--- Messages: user_id references users.id directly (ON DELETE CASCADE, but explicit for clarity)
-DELETE FROM chyme_messages WHERE user_id = '49006997';
--- Room participants: user_id references users.id directly (ON DELETE CASCADE, but explicit for clarity)
-DELETE FROM chyme_room_participants WHERE user_id = '49006997';
--- Rooms: created_by references users.id directly
-DELETE FROM chyme_rooms WHERE created_by = '49006997';
--- Finally delete the profile
-DELETE FROM chyme_profiles WHERE user_id = '49006997';
-
 -- Workforce Recruiter - Delete related data first
 -- Meetup event signups: user_id references users.id directly (ON DELETE CASCADE, but explicit for clarity)
 DELETE FROM workforce_recruiter_meetup_event_signups WHERE user_id = '49006997';
@@ -274,16 +264,6 @@ DELETE FROM research_items WHERE user_id = '48981890';
 -- GentlePulse
 -- Note: GentlePulse tables use client_id (anonymous), not user_id, so no user-specific data to delete
 
--- Chyme - Delete related data first
--- Messages: user_id references users.id directly (ON DELETE CASCADE, but explicit for clarity)
-DELETE FROM chyme_messages WHERE user_id = '48981890';
--- Room participants: user_id references users.id directly (ON DELETE CASCADE, but explicit for clarity)
-DELETE FROM chyme_room_participants WHERE user_id = '48981890';
--- Rooms: created_by references users.id directly
-DELETE FROM chyme_rooms WHERE created_by = '48981890';
--- Finally delete the profile
-DELETE FROM chyme_profiles WHERE user_id = '48981890';
-
 -- Workforce Recruiter - Delete related data first
 -- Meetup event signups: user_id references users.id directly (ON DELETE CASCADE, but explicit for clarity)
 DELETE FROM workforce_recruiter_meetup_event_signups WHERE user_id = '48981890';
@@ -331,14 +311,6 @@ COMMIT;
 -- SELECT 'trusttransport_profiles', COUNT(*) FROM trusttransport_profiles WHERE user_id IN ('49006997', '48981890')
 -- UNION ALL
 -- SELECT 'mechanicmatch_profiles', COUNT(*) FROM mechanicmatch_profiles WHERE user_id IN ('49006997', '48981890')
--- UNION ALL
--- SELECT 'chyme_profiles', COUNT(*) FROM chyme_profiles WHERE user_id IN ('49006997', '48981890')
--- UNION ALL
--- SELECT 'chyme_rooms', COUNT(*) FROM chyme_rooms WHERE created_by IN ('49006997', '48981890')
--- UNION ALL
--- SELECT 'chyme_room_participants', COUNT(*) FROM chyme_room_participants WHERE user_id IN ('49006997', '48981890')
--- UNION ALL
--- SELECT 'chyme_messages', COUNT(*) FROM chyme_messages WHERE user_id IN ('49006997', '48981890')
 -- UNION ALL
 -- SELECT 'nps_responses', COUNT(*) FROM nps_responses WHERE user_id IN ('49006997', '48981890');
 

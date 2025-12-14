@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { storage } from '../../server/storage';
 import { db } from '../../server/db';
-import { users, supportMatchProfiles, lighthouseProfiles, socketrelayProfiles, directoryProfiles, workforceRecruiterProfiles, trusttransportProfiles, mechanicmatchProfiles, chymeProfiles } from '@shared/schema';
+import { users, supportMatchProfiles, lighthouseProfiles, socketrelayProfiles, directoryProfiles, workforceRecruiterProfiles, trusttransportProfiles, mechanicmatchProfiles } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import { generateTestUserId, createTestSupportMatchProfile, createTestLighthouseProfile, createTestSocketrelayProfile, createTestDirectoryProfile, createTestWorkforceRecruiterProfile, createTestTrusttransportProfile, createTestMechanicmatchProfile } from '../fixtures/testData';
 
