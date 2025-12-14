@@ -1053,6 +1053,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userFirstName = (u.firstName && u.firstName.trim()) || null;
           userLastName = (u.lastName && u.lastName.trim()) || null;
           userIsVerified = u.isVerified || false;
+          // Debug: Log if we have firstName but it's not being used
+          if (userFirstName && !name) {
+            console.log(`[DEBUG] Profile ${p.id}: Found firstName=${userFirstName}, lastName=${userLastName} but name is still null`);
+          }
           // Build display name from firstName and lastName
           if (userFirstName && userLastName) {
             name = `${userFirstName} ${userLastName}`;
@@ -1061,14 +1065,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } else if (userLastName) {
             name = userLastName;
           }
+        } else {
+          console.log(`[DEBUG] Profile ${p.id}: userId=${userId} but getUser returned undefined`);
         }
       } else {
         // For admin-created profiles without userId, use profile's own isVerified field
         userIsVerified = p.isVerified || false;
+        console.log(`[DEBUG] Profile ${p.id}: No userId set`);
       }
       
       // Ensure we always return displayName, firstName, and lastName (even if null)
-      return { ...p, displayName: name || null, userIsVerified, firstName: userFirstName, lastName: userLastName };
+      const result = { ...p, displayName: name || null, userIsVerified, firstName: userFirstName, lastName: userLastName };
+      // Debug: Log if firstName exists but displayName doesn't
+      if (userFirstName && !name) {
+        console.log(`[DEBUG] Profile ${p.id}: firstName=${userFirstName}, lastName=${userLastName}, displayName=${name}, userId=${p.userId}`);
+      }
+      return result;
     }));
     
     // Rotate display order to make scraping harder

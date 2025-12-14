@@ -137,7 +137,6 @@ export default function AdminDirectoryPage() {
     mutationFn: async () => {
       const payload = {
         description: newDescription.trim(),
-        firstName: newFirstName.trim() || null,
         signalUrl: newSignalUrl.trim() || null,
         quoraUrl: newQuoraUrl.trim() || null,
         city: newCity.trim() || null,
@@ -147,7 +146,6 @@ export default function AdminDirectoryPage() {
         jobTitles: newJobTitles.length > 0 ? newJobTitles.slice(0, 3) : undefined,
         country: newCountry,
         isPublic: newPublic,
-        displayNameType: 'first', // Default to 'first' for unclaimed profiles
       };
       const res = await apiRequest("POST", "/api/directory/admin/profiles", payload);
       return await res.json();
@@ -160,7 +158,7 @@ export default function AdminDirectoryPage() {
       });
       const profileId = data?.id;
       const wasPublic = newPublic;
-      setNewDescription(""); setNewFirstName(""); setNewSignalUrl(""); setNewQuoraUrl(""); setNewCity(""); setNewState(""); setNewSkills([]); setNewSectors([]); setNewJobTitles([]); setNewPublic(false); setNewCountry("");
+      setNewDescription(""); setNewSignalUrl(""); setNewQuoraUrl(""); setNewCity(""); setNewState(""); setNewSkills([]); setNewSectors([]); setNewJobTitles([]); setNewPublic(false); setNewCountry("");
       if (profileId && wasPublic) {
         toast({ 
           title: "Created", 
@@ -246,7 +244,6 @@ export default function AdminDirectoryPage() {
   const startEdit = (profile: DirectoryProfileWithUser) => {
     setEditingId(profile.id);
     setEditDescription(profile.description || "");
-    setEditFirstName(profile.firstName || "");
     setEditSignalUrl(profile.signalUrl || "");
     setEditQuoraUrl(profile.quoraUrl || "");
     setEditCity(profile.city || "");
@@ -265,7 +262,6 @@ export default function AdminDirectoryPage() {
   const handleUpdate = (id: string) => {
     const payload = {
       description: editDescription.trim() || null,
-      firstName: editFirstName.trim() || null,
       signalUrl: editSignalUrl.trim() || null,
       quoraUrl: editQuoraUrl.trim() || null,
       city: editCity.trim() || null,
@@ -353,16 +349,6 @@ export default function AdminDirectoryPage() {
           <div className="space-y-2">
             <Label>Description</Label>
             <Input value={newDescription} onChange={(e) => setNewDescription(e.target.value.slice(0,140))} placeholder="140 chars max" />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="new-first-name">First Name</Label>
-            <Input 
-              id="new-first-name"
-              value={newFirstName} 
-              onChange={(e) => setNewFirstName(e.target.value.slice(0, 100))} 
-              placeholder="First name for display" 
-              data-testid="input-new-first-name"
-            />
           </div>
           <div className="space-y-2">
             <Label htmlFor="new-signal-url">Signal URL</Label>
@@ -738,10 +724,6 @@ export default function AdminDirectoryPage() {
                       <div className="space-y-2">
                         <Label>Description</Label>
                         <Textarea value={editDescription} onChange={(e) => setEditDescription(e.target.value.slice(0,140))} placeholder="140 chars max" rows={3} />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor={`edit-first-name-${p.id}`}>First Name</Label>
-                        <Input id={`edit-first-name-${p.id}`} value={editFirstName} onChange={(e) => setEditFirstName(e.target.value.slice(0, 100))} placeholder="First name for display" />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor={`edit-signal-url-${p.id}`}>Signal URL</Label>

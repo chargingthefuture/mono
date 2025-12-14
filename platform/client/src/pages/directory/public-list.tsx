@@ -25,6 +25,18 @@ type PublicDirectoryProfile = {
 };
 
 function getDisplayName(profile: PublicDirectoryProfile): string {
+  // Debug: Log what we're receiving
+  if (!profile.displayName && (profile.firstName || profile.lastName)) {
+    console.log("[DEBUG] getDisplayName called with:", {
+      id: profile.id,
+      displayName: profile.displayName,
+      firstName: profile.firstName,
+      lastName: profile.lastName,
+      hasFirstName: !!profile.firstName,
+      hasLastName: !!profile.lastName,
+    });
+  }
+  
   // Use displayName if available (check for truthy non-empty string)
   if (profile.displayName && profile.displayName.trim()) {
     return profile.displayName;
@@ -60,7 +72,18 @@ export default function PublicDirectoryList() {
     queryFn: async () => {
       const res = await fetch("/api/directory/public");
       if (!res.ok) throw new Error(await res.text());
-      return await res.json();
+      const data = await res.json();
+      // Debug: Log first profile to see what we're getting
+      if (data && data.length > 0) {
+        console.log("[DEBUG] First profile from API:", {
+          id: data[0].id,
+          displayName: data[0].displayName,
+          firstName: data[0].firstName,
+          lastName: data[0].lastName,
+          userId: data[0].userId,
+        });
+      }
+      return data;
     }
   });
 
