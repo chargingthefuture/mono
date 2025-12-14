@@ -77,10 +77,10 @@ jobs:
           const allSuites = [...vitestSuites, ...playwrightSuites];
           
           if (allSuites.length > 0) {
-            const mergedXml = `<?xml version="1.0" encoding="UTF-8"?>
-<testsuites>
-${allSuites.join('\n')}
-</testsuites>`;
+            const mergedXml = '<?xml version="1.0" encoding="UTF-8"?>\n' +
+              '<testsuites>\n' +
+              allSuites.join('\n') + '\n' +
+              '</testsuites>';
             fs.writeFileSync(outputFile, mergedXml);
           } else if (fs.existsSync(playwrightFile)) {
             fs.copyFileSync(playwrightFile, outputFile);
