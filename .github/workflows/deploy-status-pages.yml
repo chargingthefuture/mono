@@ -5,13 +5,16 @@ on:
     branches:
       - main
     paths:
-      - 'status/public/**'
-      - 'status/.github/workflows/deploy-status-pages.yml'
+      - 'status/**'
+      - '.github/workflows/deploy-status-pages.yml'
   workflow_dispatch: # Allow manual triggering
+  schedule:
+    # Run health checks every 5 minutes
+    - cron: '*/5 * * * *'
 
 # Sets permissions of the GITHUB_TOKEN to allow deployment to GitHub Pages
 permissions:
-  contents: read
+  contents: write
   pages: write
   id-token: write
 
@@ -30,6 +33,32 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run health checks
+        working-directory: status
+        env:
+          BASE_URL: ${{ secrets.STATUS_BASE_URL || 'https://app.chargingthefuture.com' }}
+        run: |
+          node check-health.js
+
+      - name: Commit updated status.json
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add status/public/status.json status/history/*.json 2>/dev/null || true
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update status.json with latest health check data [skip ci]" || echo "Nothing to commit"
+            git push || echo "Push failed or no changes"
+          fi
 
       - name: Setup Pages
         uses: actions/configure-pages@v4
@@ -43,4 +72,3 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
-
