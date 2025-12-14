@@ -11,13 +11,13 @@ describe('Smoke Tests - Critical Functionality', () => {
     expect(true).toBe(true);
   });
 
-  it('should be able to import storage layer', async () => {
+  it.skipIf(!process.env.DATABASE_URL)('should be able to import storage layer', async () => {
     const { storage } = await import('../server/storage');
     expect(storage).toBeDefined();
     expect(typeof storage.getUser).toBe('function');
   });
 
-  it('should be able to import database connection', async () => {
+  it.skipIf(!process.env.DATABASE_URL)('should be able to import database connection', async () => {
     const { db } = await import('../server/db');
     expect(db).toBeDefined();
   });

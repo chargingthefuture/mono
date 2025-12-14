@@ -5,6 +5,7 @@ import { useExternalLink } from '@/hooks/useExternalLink';
 
 describe('useExternalLink', () => {
   const originalLocation = window.location;
+  const originalClipboard = navigator.clipboard;
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -27,6 +28,14 @@ describe('useExternalLink', () => {
       value: originalLocation,
       writable: true,
     });
+    // Restore original clipboard
+    if (originalClipboard) {
+      Object.defineProperty(navigator, 'clipboard', {
+        value: originalClipboard,
+        writable: true,
+        configurable: true,
+      });
+    }
   });
 
   it('should initialize with closed dialog', () => {
@@ -152,9 +161,13 @@ describe('useExternalLink', () => {
     const { result } = renderHook(() => useExternalLink());
     const testUrl = '/apps/directory/public';
     
-    // Mock clipboard API
+    // Mock clipboard API - use defineProperty since clipboard is read-only
     const writeTextMock = vi.fn().mockResolvedValue(undefined);
-    Object.assign(navigator, { clipboard: { writeText: writeTextMock } });
+    Object.defineProperty(navigator, 'clipboard', {
+      value: { writeText: writeTextMock },
+      writable: true,
+      configurable: true,
+    });
 
     act(() => {
       result.current.openExternal(testUrl);

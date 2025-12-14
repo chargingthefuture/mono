@@ -1,7 +1,5 @@
 import { describe, it, expect, beforeEach, beforeAll, afterAll } from 'vitest';
 import { createMockRequest, createMockResponse, generateTestUserId } from '../fixtures/testData';
-import { storage } from '../../server/storage';
-import { db } from '../../server/db';
 import { defaultAliveOrDeadEbitdaSnapshots, defaultAliveOrDeadFinancialEntries } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 
@@ -12,7 +10,10 @@ import { eq } from 'drizzle-orm';
 // Check if DATABASE_URL is available
 const hasDatabaseUrl = !!process.env.DATABASE_URL;
 let canConnectToDatabase = false;
+let storage: any;
+let db: any;
 
+// Lazy load storage and db only if DATABASE_URL is set
 beforeAll(async () => {
   if (!process.env.DATABASE_URL) {
     console.warn('DATABASE_URL not set, skipping integration tests');
@@ -20,6 +21,12 @@ beforeAll(async () => {
   }
 
   try {
+    // Dynamic imports to avoid errors when DATABASE_URL is not set
+    const storageModule = await import('../../server/storage');
+    const dbModule = await import('../../server/db');
+    storage = storageModule.storage;
+    db = dbModule.db;
+    
     await db.execute({ sql: 'SELECT 1', args: [] });
     canConnectToDatabase = true;
   } catch (error: any) {

@@ -1,6 +1,4 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
-import { storage } from '../../server/storage';
-import { db } from '../../server/db';
 import { users, supportMatchProfiles, lighthouseProfiles, socketrelayProfiles, directoryProfiles, workforceRecruiterProfiles, trusttransportProfiles, mechanicmatchProfiles } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import { generateTestUserId, createTestSupportMatchProfile, createTestLighthouseProfile, createTestSocketrelayProfile, createTestDirectoryProfile, createTestWorkforceRecruiterProfile, createTestTrusttransportProfile, createTestMechanicmatchProfile } from '../fixtures/testData';
@@ -18,6 +16,8 @@ import { generateTestUserId, createTestSupportMatchProfile, createTestLighthouse
 const hasDatabaseUrl = !!process.env.DATABASE_URL;
 
 let canConnectToDatabase = false;
+let storage: any;
+let db: any;
 
 beforeAll(async () => {
   // Check if DATABASE_URL is set
@@ -28,6 +28,12 @@ beforeAll(async () => {
 
   // Try to connect to database
   try {
+    // Dynamic imports to avoid errors when DATABASE_URL is not set
+    const storageModule = await import('../../server/storage');
+    const dbModule = await import('../../server/db');
+    storage = storageModule.storage;
+    db = dbModule.db;
+    
     // Simple query to test connection
     await db.execute({ sql: 'SELECT 1', args: [] });
     canConnectToDatabase = true;
