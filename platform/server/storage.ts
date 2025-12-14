@@ -7933,12 +7933,14 @@ export class DatabaseStorage implements IStorage {
     // Normalize weekStartDate to Saturday (weeks start on Saturday and end on Friday)
     // This ensures consistency when querying by week
     const normalizedWeekStart = this.getWeekStart(entryData.weekStartDate);
+    const weekStartDateString = normalizedWeekStart.toISOString().split('T')[0];
     
+    const { weekStartDate, ...restEntryData } = entryData;
     const [entry] = await db
       .insert(defaultAliveOrDeadFinancialEntries)
       .values({
-        ...entryData,
-        weekStartDate: normalizedWeekStart,
+        ...restEntryData,
+        weekStartDate: weekStartDateString,
         createdBy: userId,
       })
       .returning();
@@ -8135,7 +8137,7 @@ export class DatabaseStorage implements IStorage {
     }
 
     const weekStartDateString = this.getWeekStart(weekStart).toISOString().split('T')[0];
-    const snapshotData: InsertDefaultAliveOrDeadEbitdaSnapshot = {
+    const snapshotData = {
       weekStartDate: weekStartDateString,
       revenue: revenue.toString(),
       operatingExpenses: operatingExpenses.toString(),
@@ -8153,7 +8155,7 @@ export class DatabaseStorage implements IStorage {
         paymentCount: weekPayments.length,
         hasFinancialEntry: !!financialEntry,
       },
-    } as any;
+    };
 
     // Upsert to keep the operation idempotent and avoid unique constraint races
     const [snapshot] = await db
@@ -8162,7 +8164,18 @@ export class DatabaseStorage implements IStorage {
       .onConflictDoUpdate({
         target: defaultAliveOrDeadEbitdaSnapshots.weekStartDate,
         set: {
-          ...snapshotData,
+          weekStartDate: snapshotData.weekStartDate,
+          revenue: snapshotData.revenue,
+          operatingExpenses: snapshotData.operatingExpenses,
+          depreciation: snapshotData.depreciation,
+          amortization: snapshotData.amortization,
+          ebitda: snapshotData.ebitda,
+          isDefaultAlive: snapshotData.isDefaultAlive,
+          projectedProfitabilityDate: snapshotData.projectedProfitabilityDate,
+          projectedCapitalNeeded: snapshotData.projectedCapitalNeeded,
+          currentFunding: snapshotData.currentFunding,
+          growthRate: snapshotData.growthRate,
+          calculationMetadata: snapshotData.calculationMetadata,
           updatedAt: new Date(),
         },
       })
@@ -8278,13 +8291,13 @@ export class DatabaseStorage implements IStorage {
   async getDefaultAliveOrDeadWeekComparison(weekStart: Date): Promise<{
     currentWeek: {
       snapshot: DefaultAliveOrDeadEbitdaSnapshot | null;
-      weekStart: string;
-      weekEnd: string;
+      weekStart: Date;
+      weekEnd: Date;
     };
     previousWeek: {
       snapshot: DefaultAliveOrDeadEbitdaSnapshot | null;
-      weekStart: string;
-      weekEnd: string;
+      weekStart: Date;
+      weekEnd: Date;
     };
     comparison: {
       revenueChange: number; // Percentage change
@@ -8336,13 +8349,13 @@ export class DatabaseStorage implements IStorage {
     return {
       currentWeek: {
         snapshot: currentSnapshot || null,
-        weekStart: this.formatDate(currentWeekStart),
-        weekEnd: this.formatDate(currentWeekEnd),
+        weekStart: currentWeekStart,
+        weekEnd: currentWeekEnd,
       },
       previousWeek: {
         snapshot: previousSnapshot || null,
-        weekStart: this.formatDate(previousWeekStart),
-        weekEnd: this.formatDate(previousWeekEnd),
+        weekStart: previousWeekStart,
+        weekEnd: previousWeekEnd,
       },
       comparison: {
         revenueChange,
