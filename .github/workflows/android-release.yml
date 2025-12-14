@@ -29,51 +29,62 @@ jobs:
       working-directory: chyme-android
       env:
         PLATFORM_API_BASE_URL: ${{ secrets.PLATFORM_API_BASE_URL }}
+        KEYSTORE_PATH: ${{ secrets.KEYSTORE_PATH }}
+        KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+        KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
       run: |
         if [ -f "./gradlew" ]; then
           ./gradlew assembleRelease --no-daemon
         else
           gradle assembleRelease --no-daemon
         fi
-    - name: Verify APK exists
+    - name: Find and verify APK
+      id: apk
       working-directory: chyme-android
       run: |
-        APK_PATH="app/build/outputs/apk/release/app-release.apk"
-        if [ -f "$APK_PATH" ]; then
-          echo "APK found at $APK_PATH"
-          ls -lh "$APK_PATH"
+        # Check for signed APK first, then unsigned
+        if [ -f "app/build/outputs/apk/release/app-release.apk" ]; then
+          APK_PATH="app/build/outputs/apk/release/app-release.apk"
+          echo "APK found at $APK_PATH (signed)"
+          echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
+        elif [ -f "app/build/outputs/apk/release/app-release-unsigned.apk" ]; then
+          APK_PATH="app/build/outputs/apk/release/app-release-unsigned.apk"
+          echo "APK found at $APK_PATH (unsigned)"
+          echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
         else
-          echo "APK not found at $APK_PATH"
+          echo "APK not found at expected locations"
           echo "Searching for APK files..."
           find app/build/outputs -name "*.apk" -type f 2>/dev/null || echo "No APK files found"
           echo "Build outputs directory structure:"
           find app/build/outputs -type d 2>/dev/null | head -20 || echo "No outputs directory found"
           exit 1
         fi
+        ls -lh "$APK_PATH"
     - name: Get version name
       id: version
       working-directory: chyme-android
       run: |
-        VERSION=$(grep -oP 'versionName\s+"\K[^"]+' app/build.gradle.kts || echo "unknown")                                                                     
+        VERSION=$(grep -oP 'versionName\s+"\K[^"]+' app/build.gradle.kts || echo "unknown")
         echo "version=$VERSION" >> $GITHUB_OUTPUT
     - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
         name: app-release
-        path: chyme-android/app/build/outputs/apk/release/app-release.apk
+        path: chyme-android/${{ steps.apk.outputs.apk_path }}
         retention-days: 30
         if-no-files-found: error
     - name: Upload APK to Release
       if: github.event_name == 'release'
       uses: softprops/action-gh-release@v1
       with:
-        files: chyme-android/app/build/outputs/apk/release/app-release.apk
+        files: chyme-android/${{ steps.apk.outputs.apk_path }}
         body: |
           ## Chyme Android App
           **Version:** ${{ steps.version.outputs.version }}
           ### Installation Instructions
           1. Download the APK file above
-          2. On your Android device, enable "Install from Unknown Sources" in Settings                                                                          
+          2. On your Android device, enable "Install from Unknown Sources" in Settings
           3. Open the downloaded APK file
           4. Follow the installation prompts
           ### Requirements

@@ -39,6 +39,38 @@ android {
         buildConfigField("String", "PLATFORM_API_BASE_URL", "\"$platformApiUrl\"")
     }
 
+    signingConfigs {
+        create("release") {
+            // Try to load from environment variables (for CI) or local.properties (for local dev)
+            // Path is relative to the root project directory (chyme-android/)
+            val keystorePath = System.getenv("KEYSTORE_PATH")
+                ?: localProperties.getProperty("KEYSTORE_PATH")
+                ?: "chyme-release-key.jks"
+            
+            val keystorePassword = System.getenv("KEYSTORE_PASSWORD")
+                ?: localProperties.getProperty("KEYSTORE_PASSWORD")
+            
+            val keyAlias = System.getenv("KEY_ALIAS")
+                ?: localProperties.getProperty("KEY_ALIAS")
+                ?: "chyme-release"
+            
+            val keyPassword = System.getenv("KEY_PASSWORD")
+                ?: localProperties.getProperty("KEY_PASSWORD")
+                ?: keystorePassword
+            
+            // Only configure signing if we have the required credentials
+            if (keystorePassword != null) {
+                val keystoreFile = rootProject.file(keystorePath)
+                if (keystoreFile.exists()) {
+                    storeFile = keystoreFile
+                    storePassword = keystorePassword
+                    this.keyAlias = keyAlias
+                    this.keyPassword = keyPassword
+                }
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -46,6 +78,10 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // Use signing config if available, otherwise build will be unsigned
+            signingConfig = signingConfigs.findByName("release")?.takeIf {
+                it.storePassword != null && it.storeFile != null && it.storeFile!!.exists()
+            }
         }
     }
     compileOptions {

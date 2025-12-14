@@ -6,9 +6,9 @@ on:
       - main
       - staging
     paths:
-      - 'shared/schema.ts'
-      - 'drizzle.config.ts'
-      - 'package.json'
+      - 'platform/shared/schema.ts'
+      - 'platform/drizzle.config.ts'
+      - 'platform/package.json'
       - '.github/workflows/neon_workflow.yml'
   workflow_dispatch:
     inputs:
@@ -35,11 +35,14 @@ jobs:
         with:
           node-version: '20'
           cache: 'npm'
+          cache-dependency-path: platform/package-lock.json
 
       - name: Install dependencies
+        working-directory: platform
         run: npm ci
 
       - name: Push database schema
+        working-directory: platform
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
@@ -50,7 +53,7 @@ jobs:
           fi
 
       - name: Verify migration
+        working-directory: platform
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
-          echo "✅ Database schema push completed successfully"

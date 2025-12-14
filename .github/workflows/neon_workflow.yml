@@ -7,6 +7,8 @@ on:
       - reopened
       - synchronize
       - closed
+    paths:
+      - 'platform/**'
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -56,6 +58,7 @@ jobs:
 # password for your database.
 # For example, you can uncomment the lines below to run a database migration command:
 #      - name: Run Migrations
+#        working-directory: platform
 #        run: npm run db:migrate
 #        env:
 #          # to use pooled connection
@@ -94,4 +97,3 @@ jobs:
         with:
           project_id: ${{ vars.NEON_PROJECT_ID }}
           branch: preview/pr-${{ github.event.number }}-${{ needs.setup.outputs.branch }}
-          api_key: ${{ secrets.NEON_API_KEY }}
