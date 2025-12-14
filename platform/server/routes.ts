@@ -4728,7 +4728,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/comparenotes/admin/announcements/:id', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
-    const validatedData = validateWithZod(insertResearchAnnouncementSchema.partial() as any, req.body, 'Invalid announcement data');
+    const validatedData = validateWithZod(insertResearchAnnouncementSchema.partial() as any, req.body, 'Invalid announcement data') as Partial<z.infer<typeof insertResearchAnnouncementSchema>>;
     const announcement = await withDatabaseErrorHandling(
       () => storage.updateResearchAnnouncement(req.params.id, validatedData),
       'updateResearchAnnouncement'

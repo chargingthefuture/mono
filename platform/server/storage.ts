@@ -801,7 +801,7 @@ export interface IStorage {
   deleteWorkforceRecruiterOccupation(id: string): Promise<void>;
 
   // Workforce Recruiter Meetup Event operations
-  createWorkforceRecruiterMeetupEvent(event: InsertWorkforceRecruiterMeetupEvent): Promise<WorkforceRecruiterMeetupEvent>;
+  createWorkforceRecruiterMeetupEvent(event: InsertWorkforceRecruiterMeetupEvent & { createdBy: string }): Promise<WorkforceRecruiterMeetupEvent>;
   getWorkforceRecruiterMeetupEvents(filters?: {
     occupationId?: string;
     isActive?: boolean;
@@ -813,7 +813,7 @@ export interface IStorage {
   deleteWorkforceRecruiterMeetupEvent(id: string): Promise<void>;
   
   // Workforce Recruiter Meetup Event Signup operations
-  createWorkforceRecruiterMeetupEventSignup(signup: InsertWorkforceRecruiterMeetupEventSignup): Promise<WorkforceRecruiterMeetupEventSignup>;
+  createWorkforceRecruiterMeetupEventSignup(signup: InsertWorkforceRecruiterMeetupEventSignup & { userId: string }): Promise<WorkforceRecruiterMeetupEventSignup>;
   getWorkforceRecruiterMeetupEventSignups(filters?: {
     eventId?: string;
     userId?: string;
@@ -1642,6 +1642,9 @@ export class DatabaseStorage implements IStorage {
         churnRate: number;
         clv: number;
         retentionRate: number;
+        nps: number;
+        npsChange: number;
+        npsResponses: number;
         verifiedUsersPercentage: number;
         verifiedUsersPercentageChange: number;
         averageMood: number;
@@ -5723,9 +5726,17 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateResearchLinkProvenance(id: string, provenanceData: Partial<InsertResearchLinkProvenance>): Promise<ResearchLinkProvenance> {
+    // Convert numeric fields to strings for drizzle
+    const updateData: any = { ...provenanceData };
+    if (updateData.domainScore !== undefined && updateData.domainScore !== null && typeof updateData.domainScore === 'number') {
+      updateData.domainScore = updateData.domainScore.toString();
+    }
+    if (updateData.similarityScore !== undefined && updateData.similarityScore !== null && typeof updateData.similarityScore === 'number') {
+      updateData.similarityScore = updateData.similarityScore.toString();
+    }
     const [provenance] = await db
       .update(researchLinkProvenances)
-      .set(provenanceData)
+      .set(updateData)
       .where(eq(researchLinkProvenances.id, id))
       .returning();
 
@@ -6456,14 +6467,19 @@ export class DatabaseStorage implements IStorage {
       // Create if doesn't exist
       return await this.createWorkforceRecruiterConfig({
         population: configData.population ?? 5000000,
-        workforceParticipationRate: configData.workforceParticipationRate ?? '0.5',
+        workforceParticipationRate: configData.workforceParticipationRate ?? 0.5,
         minRecruitable: configData.minRecruitable ?? 2000000,
         maxRecruitable: configData.maxRecruitable ?? 5000000,
       });
     }
+    // Convert numeric fields to strings for drizzle
+    const updateData: any = { ...configData };
+    if (updateData.workforceParticipationRate !== undefined && updateData.workforceParticipationRate !== null && typeof updateData.workforceParticipationRate === 'number') {
+      updateData.workforceParticipationRate = updateData.workforceParticipationRate.toString();
+    }
     const [updated] = await db
       .update(workforceRecruiterConfig)
-      .set({ ...configData, updatedAt: new Date() })
+      .set({ ...updateData, updatedAt: new Date() })
       .where(eq(workforceRecruiterConfig.id, existing.id))
       .returning();
     return updated;
@@ -6490,7 +6506,7 @@ export class DatabaseStorage implements IStorage {
       // Use case-insensitive matching for sector
       conditions.push(sql`LOWER(${workforceRecruiterOccupations.sector}) = LOWER(${filters.sector})`);
     }
-    if (filters?.skillLevel && filters.skillLevel !== "all") {
+    if (filters?.skillLevel && filters.skillLevel !== "all" && (filters.skillLevel === 'Foundational' || filters.skillLevel === 'Intermediate' || filters.skillLevel === 'Advanced')) {
       conditions.push(eq(workforceRecruiterOccupations.skillLevel, filters.skillLevel));
     }
 
@@ -6620,10 +6636,10 @@ export class DatabaseStorage implements IStorage {
     await db.delete(workforceRecruiterMeetupEvents).where(eq(workforceRecruiterMeetupEvents.id, id));
   }
 
-  async createWorkforceRecruiterMeetupEventSignup(signupData: InsertWorkforceRecruiterMeetupEventSignup): Promise<WorkforceRecruiterMeetupEventSignup> {
+  async createWorkforceRecruiterMeetupEventSignup(signupData: InsertWorkforceRecruiterMeetupEventSignup & { userId: string }): Promise<WorkforceRecruiterMeetupEventSignup> {
     const [signup] = await db
       .insert(workforceRecruiterMeetupEventSignups)
-      .values(signupData)
+      .values(signupData as any)
       .returning();
     return signup;
   }
@@ -6720,10 +6736,15 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateWorkforceRecruiterMeetupEventSignup(id: string, signupData: Partial<InsertWorkforceRecruiterMeetupEventSignup>): Promise<WorkforceRecruiterMeetupEventSignup> {
+    // Convert Date to string for date fields
+    const updateData: any = { ...signupData };
+    if (updateData.preferredMeetupDate !== undefined && updateData.preferredMeetupDate !== null && updateData.preferredMeetupDate instanceof Date) {
+      updateData.preferredMeetupDate = updateData.preferredMeetupDate.toISOString().split('T')[0];
+    }
     const [signup] = await db
       .update(workforceRecruiterMeetupEventSignups)
       .set({
-        ...signupData,
+        ...updateData,
         updatedAt: new Date(),
       })
       .where(eq(workforceRecruiterMeetupEventSignups.id, id))
@@ -7228,6 +7249,19 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(directoryProfiles)
       .where(sql`array_length(${directoryProfiles.skills}, 1) > 0`);
+    
+    // Fetch user data for profiles that have userId
+    const userIds = allDirectoryProfiles.map(p => p.userId).filter((id): id is string => id !== null);
+    const userDataMap = new Map<string, { firstName: string | null; lastName: string | null }>();
+    if (userIds.length > 0) {
+      const userData = await db
+        .select({ id: users.id, firstName: users.firstName, lastName: users.lastName })
+        .from(users)
+        .where(inArray(users.id, userIds));
+      for (const user of userData) {
+        userDataMap.set(user.id, { firstName: user.firstName, lastName: user.lastName });
+      }
+    }
 
     // Build lookup maps (same as summary report)
     const allSectors = await db.select().from(skillsSectors);
@@ -7402,12 +7436,15 @@ export class DatabaseStorage implements IStorage {
       }
 
       if (belongsToSkillLevel) {
-        // Get display name from firstName/lastName
+        // Get display name from firstName/lastName via user lookup
         let displayName = "Unknown";
-        if (profile.firstName && profile.lastName) {
-          displayName = `${profile.firstName} ${profile.lastName}`;
-        } else if (profile.firstName) {
-          displayName = profile.firstName;
+        if (profile.userId) {
+          const userData = userDataMap.get(profile.userId);
+          if (userData?.firstName && userData?.lastName) {
+            displayName = `${userData.firstName} ${userData.lastName}`;
+          } else if (userData?.firstName) {
+            displayName = userData.firstName;
+          }
         }
 
         profilesInSkillLevel.push({
@@ -7632,12 +7669,15 @@ export class DatabaseStorage implements IStorage {
       }
 
       if (relevantOccupations.length > 0) {
-        // Get display name from firstName/lastName
+        // Get display name from firstName/lastName via user lookup
         let displayName = "Unknown";
-        if (profile.firstName && profile.lastName) {
-          displayName = `${profile.firstName} ${profile.lastName}`;
-        } else if (profile.firstName) {
-          displayName = profile.firstName;
+        if (profile.userId) {
+          const userData = userDataMap2.get(profile.userId);
+          if (userData?.firstName && userData?.lastName) {
+            displayName = `${userData.firstName} ${userData.lastName}`;
+          } else if (userData?.firstName) {
+            displayName = userData.firstName;
+          }
         }
 
         profilesInSector.push({
@@ -7874,7 +7914,8 @@ export class DatabaseStorage implements IStorage {
     let query = db.select().from(defaultAliveOrDeadFinancialEntries);
 
     if (filters?.weekStartDate) {
-      query = query.where(eq(defaultAliveOrDeadFinancialEntries.weekStartDate, filters.weekStartDate)) as any;
+      const weekStartDateString = filters.weekStartDate.toISOString().split('T')[0];
+      query = query.where(eq(defaultAliveOrDeadFinancialEntries.weekStartDate, weekStartDateString)) as any;
     }
 
     const allEntries = await query;
@@ -7908,11 +7949,12 @@ export class DatabaseStorage implements IStorage {
     // Normalize to Saturday (weeks start on Saturday and end on Friday)
     // Use the helper method to ensure consistent week boundary calculation
     const normalizedWeekStart = this.getWeekStart(weekStartDate);
+    const weekStartDateString = normalizedWeekStart.toISOString().split('T')[0];
     
     const [entry] = await db
       .select()
       .from(defaultAliveOrDeadFinancialEntries)
-      .where(eq(defaultAliveOrDeadFinancialEntries.weekStartDate, normalizedWeekStart));
+      .where(eq(defaultAliveOrDeadFinancialEntries.weekStartDate, weekStartDateString));
     return entry;
   }
 
@@ -8040,15 +8082,16 @@ export class DatabaseStorage implements IStorage {
       }
     }
 
+    const weekStartDateString = this.getWeekStart(weekStart).toISOString().split('T')[0];
     const snapshotData: InsertDefaultAliveOrDeadEbitdaSnapshot = {
-      weekStartDate: weekStart,
+      weekStartDate: weekStartDateString,
       revenue: revenue.toString(),
       operatingExpenses: operatingExpenses.toString(),
       depreciation: depreciation.toString(),
       amortization: amortization.toString(),
       ebitda: ebitda.toString(),
       isDefaultAlive,
-      projectedProfitabilityDate,
+      projectedProfitabilityDate: projectedProfitabilityDate ? projectedProfitabilityDate.toISOString().split('T')[0] : null,
       projectedCapitalNeeded: projectedCapitalNeeded?.toString() || null,
       currentFunding: currentFunding?.toString() || null,
       growthRate: growthRate?.toString() || null,
@@ -8058,7 +8101,7 @@ export class DatabaseStorage implements IStorage {
         paymentCount: weekPayments.length,
         hasFinancialEntry: !!financialEntry,
       },
-    };
+    } as any;
 
     // Upsert to keep the operation idempotent and avoid unique constraint races
     const [snapshot] = await db
@@ -8080,11 +8123,12 @@ export class DatabaseStorage implements IStorage {
     // Normalize to Saturday (weeks start on Saturday and end on Friday)
     // Use the helper method to ensure consistent week boundary calculation
     const weekStart = this.getWeekStart(weekStartDate);
+    const weekStartDateString = weekStart.toISOString().split('T')[0];
 
     const [snapshot] = await db
       .select()
       .from(defaultAliveOrDeadEbitdaSnapshots)
-      .where(eq(defaultAliveOrDeadEbitdaSnapshots.weekStartDate, weekStart));
+      .where(eq(defaultAliveOrDeadEbitdaSnapshots.weekStartDate, weekStartDateString));
     return snapshot;
   }
 
