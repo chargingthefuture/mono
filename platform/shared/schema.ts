@@ -430,6 +430,7 @@ export const lighthouseProfiles = pgTable("lighthouse_profiles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id).unique(),
   profileType: varchar("profile_type", { length: 20 }).notNull(), // 'seeker' or 'host'
+  displayName: varchar("display_name", { length: 100 }), // Auto-populated from user's firstName
   bio: text("bio"),
   phoneNumber: varchar("phone_number", { length: 20 }),
   signalUrl: text("signal_url"),
@@ -465,6 +466,7 @@ export const insertLighthouseProfileSchema = createInsertSchema(lighthouseProfil
   createdAt: true,
   updatedAt: true,
 }).extend({
+  displayName: z.string().max(100).optional().nullable(), // Auto-populated from user's firstName
   moveInDate: z.coerce.date().optional().nullable(),
   signalUrl: z.string().optional().nullable().refine(
     (val) => !val || val === "" || z.string().url().safeParse(val).success,

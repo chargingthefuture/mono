@@ -2031,10 +2031,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(400).json({ message: "Profile already exists" });
     }
     
-    // Validate and create profile
+    // Get user's firstName to auto-populate displayName
+    const user = await withDatabaseErrorHandling(
+      () => storage.getUser(userId),
+      'getUserForLighthouseProfile'
+    );
+    const userFirstName = (user?.firstName && user.firstName.trim()) || "";
+    
+    // Validate and create profile - auto-populate displayName from firstName
+    // Database requires display_name to be NOT NULL, so use firstName or fallback
     const validatedData = validateWithZod(insertLighthouseProfileSchema, {
       ...req.body,
       userId,
+      displayName: userFirstName || "User", // Auto-populate from user's firstName, fallback to "User"
     }, 'Invalid profile data');
     const profile = await withDatabaseErrorHandling(
       () => storage.createLighthouseProfile(validatedData),
@@ -2055,9 +2064,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(404).json({ message: "Profile not found" });
     }
     
+    // Get user's firstName to auto-populate displayName
+    const user = await withDatabaseErrorHandling(
+      () => storage.getUser(userId),
+      'getUserForLighthouseProfileUpdate'
+    );
+    const userFirstName = (user?.firstName && user.firstName.trim()) || "";
+    
     // Validate partial update (exclude userId from being updated)
-    const { userId: _, ...updateData } = req.body;
-    const validatedData = validateWithZod(insertLighthouseProfileSchema.partial(), updateData, 'Invalid profile update');
+    // Auto-populate displayName from firstName (always sync with user's firstName)
+    const { userId: _, displayName: __, ...updateData } = req.body;
+    const validatedData = validateWithZod(insertLighthouseProfileSchema.partial(), {
+      ...updateData,
+      displayName: userFirstName || "User", // Always sync with user's firstName, fallback to "User"
+    }, 'Invalid profile update');
     const updated = await withDatabaseErrorHandling(
       () => storage.updateLighthouseProfile(profile.id, validatedData),
       'updateLighthouseProfile'
