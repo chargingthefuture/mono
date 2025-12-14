@@ -8,3 +8,11 @@ PLATFORM_API_BASE_URL=https://your-platform-domain.com
 # Optional: For local development with Android emulator
 # PLATFORM_API_BASE_URL=http://10.0.2.2:3000
 
+# Android Release Signing Configuration (REQUIRED for release builds)
+# These credentials are needed to sign release APKs
+# You can also set these as environment variables: KEYSTORE_PATH, KEYSTORE_PASSWORD, KEY_ALIAS, KEY_PASSWORD
+KEYSTORE_PATH=chyme-release-key.jks
+KEYSTORE_PASSWORD=your-keystore-password-here
+KEY_ALIAS=chyme-release
+KEY_PASSWORD=your-key-password-here
+

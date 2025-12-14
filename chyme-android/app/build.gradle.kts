@@ -1,5 +1,6 @@
 import java.util.Properties
 import java.io.FileInputStream
+import org.gradle.api.GradleException
 
 plugins {
     id("com.android.application")
@@ -82,7 +83,18 @@ android {
                     storePassword = keystorePassword
                     this.keyAlias = keyAlias
                     this.keyPassword = keyPassword
+                } else {
+                    throw GradleException(
+                        "Keystore file not found at: ${keystoreFile.absolutePath}\n" +
+                        "Please ensure KEYSTORE_PATH in local.properties or KEYSTORE_PATH environment variable points to a valid keystore file."
+                    )
                 }
+            } else {
+                throw GradleException(
+                    "Missing keystore password for release signing!\n" +
+                    "Please set KEYSTORE_PASSWORD in local.properties or as KEYSTORE_PASSWORD environment variable.\n" +
+                    "You may also need KEY_PASSWORD and KEY_ALIAS (defaults to 'chyme-release')."
+                )
             }
         }
     }
@@ -94,10 +106,8 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            // Use signing config if available, otherwise build will be unsigned
-            signingConfig = signingConfigs.findByName("release")?.takeIf {
-                it.storePassword != null && it.storeFile != null && it.storeFile!!.exists()
-            }
+            // Always use the release signing config (it will fail during config if credentials are missing)
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {

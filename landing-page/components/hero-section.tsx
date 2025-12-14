@@ -70,7 +70,7 @@ export function HeroSection() {
               START NOW
             </Button></a>
             <a
-                href="https://github.com/chargingthefuture/mono/releases/latest/download/app-release.apk"
+                href="https://github.com/chargingthefuture/mono/releases/"
                 target="_blank"
                 rel="noopener noreferrer"
               >
