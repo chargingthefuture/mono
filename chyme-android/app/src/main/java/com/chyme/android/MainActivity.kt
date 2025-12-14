@@ -43,7 +43,7 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun ChymeApp(context: Context, authManager: ClerkAuthManager) {
+fun ChymeApp(context: Context, authManager: OTPAuthManager) {
     val navController = rememberNavController()
     val authViewModel: AuthViewModel = viewModel { AuthViewModel(authManager) }
     
