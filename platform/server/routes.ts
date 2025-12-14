@@ -840,6 +840,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           displayName = `${userFirstName} ${userLastName}`;
         } else if (userFirstName) {
           displayName = userFirstName;
+        } else if (userLastName) {
+          displayName = userLastName;
         }
       }
     } else {
@@ -1002,6 +1004,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           displayName = `${userFirstName} ${userLastName}`;
         } else if (userFirstName) {
           displayName = userFirstName;
+        } else if (userLastName) {
+          displayName = userLastName;
         }
       }
     } else {
@@ -1051,6 +1055,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
             name = `${userFirstName} ${userLastName}`;
           } else if (userFirstName) {
             name = userFirstName;
+          } else if (userLastName) {
+            name = userLastName;
           }
         }
       } else {

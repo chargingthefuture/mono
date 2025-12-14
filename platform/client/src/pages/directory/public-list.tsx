@@ -18,6 +18,8 @@ type PublicDirectoryProfile = {
   country: string | null;
   quoraUrl: string | null;
   displayName: string | null;
+  firstName: string | null;
+  lastName: string | null;
   userIsVerified: boolean;
   createdAt: string;
 };
@@ -132,7 +134,11 @@ export default function PublicDirectoryList() {
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2 flex-1 min-w-0">
                           <CardTitle className="text-base sm:text-lg line-clamp-1 flex-1">
-                            {profile.displayName || 'Directory Profile'}
+                            {profile.displayName || 
+                             (profile.firstName && profile.lastName ? `${profile.firstName} ${profile.lastName}` : null) ||
+                             profile.firstName ||
+                             profile.lastName ||
+                             'Directory Profile'}
                           </CardTitle>
                           <VerifiedBadge isVerified={profile.userIsVerified || false} testId={`badge-verified-${profile.id}`} />
                         </div>

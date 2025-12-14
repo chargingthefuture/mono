@@ -1,4 +1,4 @@
-name: Build and Release Platform Webapp
+name: Build and Release Web App
 
 on:
   release:

@@ -1,4 +1,4 @@
-name: Platform CI
+name: Web App CI
 
 on:
   push:
