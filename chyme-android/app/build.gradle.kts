@@ -128,6 +128,49 @@ android {
     }
 }
 
+// Post-build task to verify APK is signed (mandatory for release)
+tasks.register("verifyReleaseApkSigned") {
+    description = "Verifies that the release APK is properly signed"
+    group = "verification"
+    
+    doLast {
+        val apkFile = file("build/outputs/apk/release/app-release.apk")
+        
+        if (!apkFile.exists()) {
+            throw GradleException(
+                "Release APK not found at: ${apkFile.absolutePath}\n" +
+                "Build may have failed or APK was not generated."
+            )
+        }
+        
+        // Check if APK contains signature files
+        val process = ProcessBuilder(
+            "unzip", "-l", apkFile.absolutePath
+        ).redirectErrorStream(true).start()
+        
+        val output = process.inputStream.bufferedReader().readText()
+        process.waitFor()
+        
+        val hasSignature = output.contains(Regex("META-INF/.*\\.(RSA|DSA|EC|SF)"))
+        
+        if (!hasSignature) {
+            throw GradleException(
+                "ERROR: Release APK is NOT signed! Signing is mandatory.\n" +
+                "APK location: ${apkFile.absolutePath}\n" +
+                "The APK cannot be released without a valid signature.\n" +
+                "Please ensure signing credentials are properly configured."
+            )
+        }
+        
+        println("✓ Release APK is properly signed")
+    }
+}
+
+// Make verifyReleaseApkSigned run after assembleRelease
+tasks.named("assembleRelease") {
+    finalizedBy("verifyReleaseApkSigned")
+}
+
 dependencies {
     // Core Android
     implementation("androidx.core:core-ktx:1.12.0")

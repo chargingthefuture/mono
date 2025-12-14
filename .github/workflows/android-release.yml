@@ -26,6 +26,18 @@ jobs:
         if [ -f "./gradlew" ]; then
           chmod +x gradlew
         fi
+    - name: Verify signing credentials are set
+      working-directory: chyme-android
+      run: |
+        if [ -z "${{ secrets.KEYSTORE_PASSWORD }}" ]; then
+          echo "ERROR: KEYSTORE_PASSWORD secret is not set!"
+          exit 1
+        fi
+        if [ -z "${{ secrets.KEYSTORE_PATH }}" ]; then
+          echo "ERROR: KEYSTORE_PATH secret is not set!"
+          exit 1
+        fi
+        echo "✓ Signing credentials are configured"
     - name: Build release APK
       working-directory: chyme-android
       env:
@@ -44,24 +56,57 @@ jobs:
       id: apk
       working-directory: chyme-android
       run: |
-        # Check for signed APK first, then unsigned
+        # Only look for signed APK - unsigned APKs should not exist
         if [ -f "app/build/outputs/apk/release/app-release.apk" ]; then
           APK_PATH="app/build/outputs/apk/release/app-release.apk"
-          echo "APK found at $APK_PATH (signed)"
-          echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
-        elif [ -f "app/build/outputs/apk/release/app-release-unsigned.apk" ]; then
-          APK_PATH="app/build/outputs/apk/release/app-release-unsigned.apk"
-          echo "APK found at $APK_PATH (unsigned)"
+          echo "APK found at $APK_PATH"
           echo "apk_path=$APK_PATH" >> $GITHUB_OUTPUT
         else
-          echo "APK not found at expected locations"
+          echo "ERROR: Signed APK not found at app/build/outputs/apk/release/app-release.apk"
           echo "Searching for APK files..."
           find app/build/outputs -name "*.apk" -type f 2>/dev/null || echo "No APK files found"
+          if [ -f "app/build/outputs/apk/release/app-release-unsigned.apk" ]; then
+            echo "ERROR: Found unsigned APK! This should not happen - signing is mandatory."
+            exit 1
+          fi
           echo "Build outputs directory structure:"
           find app/build/outputs -type d 2>/dev/null | head -20 || echo "No outputs directory found"
           exit 1
         fi
         ls -lh "$APK_PATH"
+    - name: Verify APK is signed (MANDATORY)
+      working-directory: chyme-android
+      run: |
+        APK_PATH="${{ steps.apk.outputs.apk_path }}"
+        if [ -z "$APK_PATH" ]; then
+          echo "ERROR: APK path is not set"
+          exit 1
+        fi
+        
+        echo "Verifying APK signature..."
+        # Check if APK contains signature files in META-INF/
+        # Signed APKs must contain at least one of: .RSA, .DSA, or .EC files
+        SIGNATURE_FILES=$(unzip -l "$APK_PATH" 2>/dev/null | grep -E "META-INF/.*\.(RSA|DSA|EC|SF)" | wc -l)
+        
+        if [ "$SIGNATURE_FILES" -eq 0 ]; then
+          echo "ERROR: APK is NOT signed! No signature files found in META-INF/"
+          echo "This APK cannot be released. Signing is mandatory."
+          echo ""
+          echo "Checking APK contents:"
+          unzip -l "$APK_PATH" | grep "META-INF/" | head -10
+          exit 1
+        else
+          echo "✓ APK is signed (found $SIGNATURE_FILES signature file(s) in META-INF/)"
+          echo ""
+          echo "Signature files found:"
+          unzip -l "$APK_PATH" 2>/dev/null | grep -E "META-INF/.*\.(RSA|DSA|EC|SF)"
+        fi
+        
+        # Additional check: Verify the APK is not the unsigned variant
+        if echo "$APK_PATH" | grep -q "unsigned"; then
+          echo "ERROR: APK path contains 'unsigned' - this APK should not be released!"
+          exit 1
+        fi
     - name: Get version name
       id: version
       working-directory: chyme-android
