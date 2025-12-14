@@ -43,23 +43,39 @@ android {
         create("release") {
             // Try to load from environment variables (for CI) or local.properties (for local dev)
             // Path is relative to the root project directory (chyme-android/)
-            val keystorePath = System.getenv("KEYSTORE_PATH")
-                ?: localProperties.getProperty("KEYSTORE_PATH")
-                ?: "chyme-release-key.jks"
+            val keystorePathEnv = System.getenv("KEYSTORE_PATH")
+            val keystorePath = if (keystorePathEnv.isNullOrBlank()) {
+                localProperties.getProperty("KEYSTORE_PATH")?.takeIf { it.isNotBlank() }
+                    ?: "chyme-release-key.jks"
+            } else {
+                keystorePathEnv
+            }
             
-            val keystorePassword = System.getenv("KEYSTORE_PASSWORD")
-                ?: localProperties.getProperty("KEYSTORE_PASSWORD")
+            val keystorePasswordEnv = System.getenv("KEYSTORE_PASSWORD")
+            val keystorePassword = if (keystorePasswordEnv.isNullOrBlank()) {
+                localProperties.getProperty("KEYSTORE_PASSWORD")?.takeIf { it.isNotBlank() }
+            } else {
+                keystorePasswordEnv
+            }
             
-            val keyAlias = System.getenv("KEY_ALIAS")
-                ?: localProperties.getProperty("KEY_ALIAS")
-                ?: "chyme-release"
+            val keyAliasEnv = System.getenv("KEY_ALIAS")
+            val keyAlias = if (keyAliasEnv.isNullOrBlank()) {
+                localProperties.getProperty("KEY_ALIAS")?.takeIf { it.isNotBlank() }
+                    ?: "chyme-release"
+            } else {
+                keyAliasEnv
+            }
             
-            val keyPassword = System.getenv("KEY_PASSWORD")
-                ?: localProperties.getProperty("KEY_PASSWORD")
-                ?: keystorePassword
+            val keyPasswordEnv = System.getenv("KEY_PASSWORD")
+            val keyPassword = if (keyPasswordEnv.isNullOrBlank()) {
+                localProperties.getProperty("KEY_PASSWORD")?.takeIf { it.isNotBlank() }
+                    ?: keystorePassword
+            } else {
+                keyPasswordEnv
+            }
             
             // Only configure signing if we have the required credentials
-            if (keystorePassword != null) {
+            if (keystorePassword != null && keystorePath.isNotBlank()) {
                 val keystoreFile = rootProject.file(keystorePath)
                 if (keystoreFile.exists()) {
                     storeFile = keystoreFile
