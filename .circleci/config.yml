@@ -11,6 +11,7 @@ jobs:
   platform-test:
     docker:
       - image: cimg/node:20.19.0
+    resource_class: medium
     working_directory: ~/mono/platform
     steps:
       - checkout
@@ -23,10 +24,24 @@ jobs:
       - run:
           name: Run tests
           command: npm run test:run
+          no_output_timeout: 15m
+          environment:
+            CI: true
+      - run:
+          name: Verify test results exist
+          command: |
+            mkdir -p test-results
+            echo "Checking for test result files..."
+            ls -la test-results/ || echo "test-results directory is empty"
+            find test-results -name "*.xml" -type f || echo "No XML files found"
+          when: always
       - store_test_results:
           path: platform/test-results
       - store_artifacts:
           path: platform/coverage
+          destination: coverage
+      - store_artifacts:
+          path: platform/test-results
 
   platform-build:
     docker:
@@ -46,6 +61,7 @@ jobs:
   platform-e2e:
     docker:
       - image: cimg/node:20.19.0
+    resource_class: large
     working_directory: ~/mono/platform
     steps:
       - checkout
@@ -55,13 +71,29 @@ jobs:
       - run:
           name: Install Playwright browsers
           command: npx playwright install --with-deps chromium
+          no_output_timeout: 10m
       - run:
           name: Run E2E tests
           command: npm run test:e2e
+          no_output_timeout: 45m
+          environment:
+            CI: true
+            PLAYWRIGHT_WORKERS: 3
+      - run:
+          name: Verify test results exist
+          command: |
+            mkdir -p test-results
+            echo "Checking for test result files..."
+            ls -la test-results/ || echo "test-results directory is empty"
+            find test-results -name "*.xml" -type f || echo "No XML files found"
+          when: always
       - store_test_results:
           path: platform/test-results
       - store_artifacts:
           path: platform/playwright-report
+          destination: playwright-report
+      - store_artifacts:
+          path: platform/test-results
 
   # Jobs for Landing Page app
   landing-page-test:
