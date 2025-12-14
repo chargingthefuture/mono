@@ -2,4 +2,45 @@
 alwaysApply: true
 ---
 
-- Place instructional/information guides in the /docs folder
+# Agent Context Rules - Chyme Android Project
+
+## File Organization and Placement
+
+### Documentation Files
+- **ALWAYS** place documentation files (`.md`, `.txt`, guides, troubleshooting docs) in the `docs/` folder
+- **NEVER** place documentation files in the project root or alongside source code files
+- Documentation files that should go in `docs/` include:
+  - Troubleshooting guides
+  - Installation guides
+  - Configuration guides
+  - Helper scripts (`.sh`, `.bat`, etc.) that are for documentation/development purposes
+  - Any markdown files that are not part of the deployment/build process
+
+### Files That Should Be Committed
+- Only files needed for deployment should be committed to git
+- This includes:
+  - Source code files
+  - Build configuration files (`build.gradle.kts`, `package.json`, etc.)
+  - Configuration templates (`local.properties.example`, etc.)
+  - Essential project structure files
+
+### Files That Should NOT Be Committed
+- Documentation files (go in `docs/` which is typically gitignored)
+- Local configuration files (`local.properties`, `.env.local`, etc.)
+- Build outputs
+- Temporary files
+
+## Project Structure
+
+- Documentation → `docs/`
+- Helper scripts → `docs/`
+- Build configs → `app/build.gradle.kts` (app level) or `build.gradle.kts` (project level)
+- Example configs → `local.properties.example` (root level as template)
+
+### General Rule
+When creating any file that is:
+- A guide, tutorial, or troubleshooting document
+- A helper script for development/documentation purposes
+- Not required for the build or deployment process
+
+**Place it in the `docs/` folder.**
