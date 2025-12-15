@@ -158,15 +158,9 @@ const baseAdminMenuItems = [
     icon: Activity,
     testId: "link-default-alive-or-dead",
   },
-  {
-    title: "Video to GIF",
-    url: "/admin/video-to-gif",
-    icon: Video,
-    testId: "link-video-to-gif",
-  },
 ];
 
-const pinnedAdminTitles = ["User Management", "Workforce Admin", "Weekly Performance", "Payments", "Pricing", "Default Alive or Dead", "Video to GIF"];
+const pinnedAdminTitles = ["User Management", "Workforce Admin", "Weekly Performance", "Payments", "Pricing", "Default Alive or Dead", "Conversion Calculator"];
 
 const pinnedAdminMenuItems = pinnedAdminTitles
   .map((title) => baseAdminMenuItems.find((item) => item.title === title))
