@@ -27,22 +27,6 @@ export const sessions = pgTable(
   (table) => [index("IDX_session_expire").on(table.expire)],
 );
 
-// Login events table - tracks successful webapp logins for DAU/MAU analytics
-export const loginEvents = pgTable(
-  "login_events",
-  {
-    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-    userId: varchar("user_id")
-      .notNull()
-      .references(() => users.id),
-    source: varchar("source", { length: 50 }).notNull().default("webapp"),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-  },
-  (table) => [
-    index("IDX_login_events_user_created_at").on(table.userId, table.createdAt),
-  ],
-);
-
 // User storage table - Required for authentication (OIDC/OAuth2) with additional fields
 export const users = pgTable("users", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
@@ -60,6 +44,22 @@ export const users = pgTable("users", {
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
+
+// Login events table - tracks successful webapp logins for DAU/MAU analytics
+export const loginEvents = pgTable(
+  "login_events",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: varchar("user_id")
+      .notNull()
+      .references(() => users.id),
+    source: varchar("source", { length: 50 }).notNull().default("webapp"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("IDX_login_events_user_created_at").on(table.userId, table.createdAt),
+  ],
+);
 
 export const usersRelations = relations(users, ({ many }) => ({
   paymentsReceived: many(payments),
