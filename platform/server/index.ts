@@ -125,7 +125,7 @@ app.use((req, res, next) => {
   // In Express, app.use() middleware executes BEFORE route matching, so we can't use it here
   // Instead, we register a catch-all route that only executes if no other route matched
   // This is the correct way to handle 404s in Express
-  app.all("*", (req, res, next) => {
+  app.all("*", async (req, res, next) => {
     // Only handle API routes that weren't matched by any route handler
     // Express will only reach this route if no other route matched
     if (req.path.startsWith("/api/")) {

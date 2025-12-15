@@ -39,6 +39,8 @@ yarn-error.log*
 *.db
 *.sqlite
 
-/docs
 # Sentry Config File
 .env.sentry-build-plugin
+
+/migrations
+/docs
