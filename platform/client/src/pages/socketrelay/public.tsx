@@ -82,9 +82,20 @@ export default function PublicSocketRelayRequest() {
     );
   }
 
-  const creatorName = request.creator
-    ? request.creator.displayName || [request.creator.firstName, request.creator.lastName].filter(Boolean).join(' ') || 'Anonymous'
-    : 'Anonymous';
+  // Privacy: public SocketRelay views should only surface first names
+  const creatorFirstName = (() => {
+    if (!request.creator) return "Anonymous";
+    const first = request.creator.firstName?.trim();
+    if (first) return first;
+
+    const displayName = request.creator.displayName?.trim();
+    if (displayName) {
+      const [firstToken] = displayName.split(" ");
+      if (firstToken) return firstToken;
+    }
+
+    return "Anonymous";
+  })();
 
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8">
@@ -146,7 +157,7 @@ export default function PublicSocketRelayRequest() {
           {request.creator && (
             <div>
               <p className="text-sm text-muted-foreground">Requested by</p>
-              <p className="text-base">{creatorName}</p>
+              <p className="text-base">{creatorFirstName}</p>
             </div>
           )}
 

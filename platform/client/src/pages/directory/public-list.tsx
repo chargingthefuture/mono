@@ -24,43 +24,21 @@ type PublicDirectoryProfile = {
   createdAt: string;
 };
 
-function getDisplayName(profile: PublicDirectoryProfile): string {
-  // Debug: Log what we're receiving
-  if (!profile.displayName && (profile.firstName || profile.lastName)) {
-    console.log("[DEBUG] getDisplayName called with:", {
-      id: profile.id,
-      displayName: profile.displayName,
-      firstName: profile.firstName,
-      lastName: profile.lastName,
-      hasFirstName: !!profile.firstName,
-      hasLastName: !!profile.lastName,
-    });
+/**
+ * Privacy: public Directory list should show **first name only**.
+ * This helper derives a safe first name from profile data.
+ */
+function getPublicFirstName(profile: PublicDirectoryProfile): string {
+  const firstName = profile.firstName?.trim();
+  if (firstName) return firstName;
+
+  const displayName = profile.displayName?.trim();
+  if (displayName) {
+    const [firstToken] = displayName.split(" ");
+    if (firstToken) return firstToken;
   }
-  
-  // Use displayName if available (check for truthy non-empty string)
-  if (profile.displayName && profile.displayName.trim()) {
-    return profile.displayName;
-  }
-  
-  // Build from firstName and lastName (handle null/undefined/empty strings)
-  const firstName = profile.firstName?.trim() || null;
-  const lastName = profile.lastName?.trim() || null;
-  
-  if (firstName && lastName) {
-    return `${firstName} ${lastName}`;
-  }
-  
-  // Use firstName or lastName if available
-  if (firstName) {
-    return firstName;
-  }
-  
-  if (lastName) {
-    return lastName;
-  }
-  
-  // Fallback
-  return 'Directory Profile';
+
+  return "Directory Profile";
 }
 
 export default function PublicDirectoryList() {
@@ -184,7 +162,7 @@ export default function PublicDirectoryList() {
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2 flex-1 min-w-0">
                           <CardTitle className="text-base sm:text-lg line-clamp-1 flex-1">
-                            {getDisplayName(profile)}
+                            {getPublicFirstName(profile)}
                           </CardTitle>
                           <VerifiedBadge isVerified={profile.userIsVerified || false} testId={`badge-verified-${profile.id}`} />
                         </div>

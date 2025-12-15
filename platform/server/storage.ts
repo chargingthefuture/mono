@@ -1721,6 +1721,28 @@ export class DatabaseStorage implements IStorage {
         )
       );
 
+    // Get payments for current week (used for revenue metrics)
+    const currentWeekPayments = await db
+      .select()
+      .from(payments)
+      .where(
+        and(
+          gte(payments.paymentDate, currentWeekStart),
+          lte(payments.paymentDate, currentWeekEnd)
+        )
+      );
+
+    // Get payments for previous week (used for revenue metrics)
+    const previousWeekPayments = await db
+      .select()
+      .from(payments)
+      .where(
+        and(
+          gte(payments.paymentDate, previousWeekStart),
+          lte(payments.paymentDate, previousWeekEnd)
+        )
+      );
+
     // Get login events for current week (webapp logins only)
     const currentWeekLoginEvents = await db
       .select()

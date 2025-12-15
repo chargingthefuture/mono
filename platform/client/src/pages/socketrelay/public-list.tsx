@@ -187,9 +187,20 @@ export default function PublicSocketRelayList() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
               {requests.map((request) => {
                 const shareUrl = `${window.location.origin}/apps/socketrelay/public/${request.id}`;
-                const creatorName = request.creator
-                  ? request.creator.displayName || [request.creator.firstName, request.creator.lastName].filter(Boolean).join(' ') || 'Anonymous'
-                  : 'Anonymous';
+                // Privacy: public SocketRelay list should show first name only
+                const creatorFirstName = (() => {
+                  if (!request.creator) return "Anonymous";
+                  const first = request.creator.firstName?.trim();
+                  if (first) return first;
+
+                  const displayName = request.creator.displayName?.trim();
+                  if (displayName) {
+                    const [firstToken] = displayName.split(" ");
+                    if (firstToken) return firstToken;
+                  }
+
+                  return "Anonymous";
+                })();
 
                 return (
                   <Card key={request.id} className="flex flex-col hover:shadow-lg transition-shadow" data-testid={`card-request-${request.id}`}>
@@ -209,7 +220,7 @@ export default function PublicSocketRelayList() {
                         {request.creator && (
                           <div className="flex items-center gap-2">
                             <span className="text-sm text-muted-foreground">Requested by</span>
-                            <span className="text-sm font-medium">{creatorName}</span>
+                            <span className="text-sm font-medium">{creatorFirstName}</span>
                             {request.creator.isVerified && (
                               <VerifiedBadge isVerified={true} testId={`badge-verified-${request.id}`} />
                             )}

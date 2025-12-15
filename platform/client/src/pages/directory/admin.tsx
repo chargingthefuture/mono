@@ -717,6 +717,9 @@ export default function AdminDirectoryPage() {
                 {paginatedProfiles.map((p) => {
                 // Use userIsVerified from enriched API response, fallback to profile's isVerified field
                 const isVerified = (p as any).userIsVerified ?? (p.isVerified || false);
+                const firstName = (p as any).firstName?.trim?.() || "";
+                const lastName = (p as any).lastName?.trim?.() || "";
+                const fullName = [firstName, lastName].filter(Boolean).join(" ") || (p as any).displayName || "";
                 
                 return editingId === p.id ? (
                   <Card key={p.id}>
@@ -1023,12 +1026,15 @@ export default function AdminDirectoryPage() {
                           </Badge>
                         )}
                       </div>
-                      {/* Display first name and last name if available */}
-                      {(p.firstName || p.lastName || p.displayName) && (
-                        <div className="text-sm font-medium mt-1">
-                          {p.firstName && p.lastName
-                            ? `${p.firstName} ${p.lastName}`
-                            : p.firstName || p.displayName || null}
+                      {/* Admins should clearly see full name, first name, and last name */}
+                      {(fullName || firstName || lastName) && (
+                        <div className="mt-1 space-y-0.5 text-sm">
+                          <div className="font-medium">
+                            {fullName || "—"}
+                          </div>
+                          <div className="text-xs text-muted-foreground">
+                            Full name: {fullName || "—"} • First name: {firstName || "—"} • Last name: {lastName || "—"}
+                          </div>
                         </div>
                       )}
                       <div className="text-sm mt-1 truncate">{p.description}</div>
@@ -1111,9 +1117,19 @@ export default function AdminDirectoryPage() {
                 <div className="bg-muted p-3 rounded-md">
                   <p className="text-sm font-medium">Profile Details:</p>
                   <p className="text-sm text-muted-foreground">{profileToDelete.description}</p>
-                  {profileToDelete.firstName && (
-                    <p className="text-sm text-muted-foreground">Name: {profileToDelete.firstName}</p>
-                  )}
+                  {(profileToDelete as any).firstName || (profileToDelete as any).lastName || (profileToDelete as any).displayName ? (
+                    <>
+                      <p className="text-sm text-muted-foreground">
+                        Full name: {([ (profileToDelete as any).firstName, (profileToDelete as any).lastName ].filter(Boolean).join(" ") || (profileToDelete as any).displayName || "—")}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        First name: {(profileToDelete as any).firstName || "—"}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        Last name: {(profileToDelete as any).lastName || "—"}
+                      </p>
+                    </>
+                  ) : null}
                   {profileToDelete.skills && profileToDelete.skills.length > 0 && (
                     <p className="text-sm text-muted-foreground">
                       Skills: {profileToDelete.skills.join(", ")}

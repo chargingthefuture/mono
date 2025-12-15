@@ -10,31 +10,23 @@ import { VerifiedBadge } from "@/components/verified-badge";
 import { useToast } from "@/hooks/use-toast";
 import { useExternalLink } from "@/hooks/useExternalLink";
 
-function getDisplayName(profile: any): string {
-  // Use displayName if available (check for truthy non-empty string)
-  if (profile.displayName && profile.displayName.trim()) {
-    return profile.displayName;
+/**
+ * Privacy: public Directory views should show **first name only**.
+ * This helper derives a safe first name from profile data.
+ */
+function getPublicFirstName(profile: any): string {
+  const firstName = profile.firstName?.trim();
+  if (firstName) return firstName;
+
+  const displayName = profile.displayName?.trim();
+  if (displayName) {
+    // Use only the first token of displayName to avoid leaking last names
+    const [firstToken] = displayName.split(" ");
+    if (firstToken) return firstToken;
   }
-  
-  // Build from firstName and lastName (handle null/undefined/empty strings)
-  const firstName = profile.firstName?.trim() || null;
-  const lastName = profile.lastName?.trim() || null;
-  
-  if (firstName && lastName) {
-    return `${firstName} ${lastName}`;
-  }
-  
-  // Use firstName or lastName if available
-  if (firstName) {
-    return firstName;
-  }
-  
-  if (lastName) {
-    return lastName;
-  }
-  
-  // Fallback
-  return 'Directory Profile';
+
+  // As a last resort, do not infer last names; use a generic label
+  return "Directory Profile";
 }
 
 export default function PublicDirectoryProfile() {
@@ -137,7 +129,7 @@ export default function PublicDirectoryProfile() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 flex-wrap">
               <CardTitle className="text-lg sm:text-xl">
-                {getDisplayName(profile)}
+                {getPublicFirstName(profile)}
               </CardTitle>
               <VerifiedBadge isVerified={userIsVerified} testId="badge-verified-public" />
             </div>

@@ -214,12 +214,16 @@ export default function DirectoryDashboard() {
               return (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {filteredProfiles.map((p: any) => {
+                    const firstName = p.firstName?.trim?.() || "";
+                    const lastName = p.lastName?.trim?.() || "";
+                    const fullName = [firstName, lastName].filter(Boolean).join(" ") || p.displayName || "";
                     return (
                       <div key={p.id} className="rounded-md border p-3 flex flex-col gap-2">
                         <div className="font-medium truncate">
-                          {p.firstName && p.lastName
-                            ? `${p.firstName} ${p.lastName}`
-                            : p.firstName || p.displayName || '—'}
+                          {fullName || "—"}
+                        </div>
+                        <div className="text-xs text-muted-foreground">
+                          Full name: {fullName || "—"} • First name: {firstName || "—"} • Last name: {lastName || "—"}
                         </div>
                         <div className="flex items-center gap-2">
                           <VerifiedBadge isVerified={(p as any).userIsVerified || false} testId={`badge-verified-${p.id}`} />
