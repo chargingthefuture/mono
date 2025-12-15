@@ -963,6 +963,7 @@ export const skillsData: {
           "Local knowledge and interpretation",
           "Group management and safety",
           "Multilingual communication (where applicable)",
+          "Linguist",
         ],
       },
       {

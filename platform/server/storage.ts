@@ -1,5 +1,6 @@
-import {
+import { 
   users,
+  loginEvents,
   pricingTiers,
   payments,
   adminActionLogs,
@@ -1720,36 +1721,29 @@ export class DatabaseStorage implements IStorage {
         )
       );
 
-    // Get payments for current week
-    const currentWeekPayments = await db
+    // Get login events for current week (webapp logins only)
+    const currentWeekLoginEvents = await db
       .select()
-      .from(payments)
+      .from(loginEvents)
       .where(
         and(
-          gte(payments.paymentDate, currentWeekStart),
-          lte(payments.paymentDate, currentWeekEnd)
-        )
-      );
-    
-    console.log(`Found ${currentWeekPayments.length} payments for current week (range: ${currentWeekStart.toISOString()} to ${currentWeekEnd.toISOString()})`);
-    
-    // Debug: Show sample payment dates if any exist
-    if (currentWeekPayments.length > 0) {
-      console.log("Sample payment dates:", currentWeekPayments.slice(0, 3).map(p => ({ date: p.paymentDate, amount: p.amount })));
-    }
-
-    // Get payments for previous week
-    const previousWeekPayments = await db
-      .select()
-      .from(payments)
-      .where(
-        and(
-          gte(payments.paymentDate, previousWeekStart),
-          lte(payments.paymentDate, previousWeekEnd)
+          gte(loginEvents.createdAt, currentWeekStart),
+          lte(loginEvents.createdAt, currentWeekEnd),
         )
       );
 
-    // Calculate daily active users (users who made payments or were created on that day)
+    // Get login events for previous week (webapp logins only)
+    const previousWeekLoginEvents = await db
+      .select()
+      .from(loginEvents)
+      .where(
+        and(
+          gte(loginEvents.createdAt, previousWeekStart),
+          lte(loginEvents.createdAt, previousWeekEnd),
+        )
+      );
+
+    // Calculate daily active users (users who logged in on that day)
     const currentWeekDays = this.getDaysInWeek(currentWeekStart);
     const currentWeekDAU = currentWeekDays.map(day => {
       const dayStart = new Date(day.date);
@@ -1757,23 +1751,15 @@ export class DatabaseStorage implements IStorage {
       const dayEnd = new Date(day.date);
       dayEnd.setHours(23, 59, 59, 999);
 
-      // Count users created or who made payments on this day
-      const usersCreated = currentWeekNewUsers.filter(u => {
-        const created = new Date(u.createdAt);
-        return created >= dayStart && created <= dayEnd;
-      });
-      const usersWithPayments = currentWeekPayments
-        .filter(p => {
-          const paymentDate = new Date(p.paymentDate);
-          return paymentDate >= dayStart && paymentDate <= dayEnd;
+      // Unique users who logged in during this day
+      const usersWithLogins = currentWeekLoginEvents
+        .filter(e => {
+          const loginDate = new Date(e.createdAt);
+          return loginDate >= dayStart && loginDate <= dayEnd;
         })
-        .map(p => p.userId);
-      
-      // Unique user IDs for this day
-      const uniqueUsers = new Set([
-        ...usersCreated.map(u => u.id),
-        ...usersWithPayments
-      ]);
+        .map(e => e.userId);
+
+      const uniqueUsers = new Set(usersWithLogins);
 
       return {
         date: day.dateString,
@@ -1788,23 +1774,15 @@ export class DatabaseStorage implements IStorage {
       const dayEnd = new Date(day.date);
       dayEnd.setHours(23, 59, 59, 999);
 
-      const usersCreated = previousWeekNewUsers.filter(u => {
-        const created = new Date(u.createdAt);
-        created.setHours(0, 0, 0, 0);
-        return created.getTime() === dayStart.getTime();
-      });
-      const usersWithPayments = previousWeekPayments
-        .filter(p => {
-          const paymentDate = new Date(p.paymentDate);
-          paymentDate.setHours(0, 0, 0, 0);
-          return paymentDate.getTime() === dayStart.getTime();
+      const usersWithLogins = previousWeekLoginEvents
+        .filter(e => {
+          const loginDate = new Date(e.createdAt);
+          loginDate.setHours(0, 0, 0, 0);
+          return loginDate.getTime() === dayStart.getTime();
         })
-        .map(p => p.userId);
-      
-      const uniqueUsers = new Set([
-        ...usersCreated.map(u => u.id),
-        ...usersWithPayments
-      ]);
+        .map(e => e.userId);
+
+      const uniqueUsers = new Set(usersWithLogins);
 
       return {
         date: day.dateString,
@@ -1928,11 +1906,18 @@ export class DatabaseStorage implements IStorage {
       const yearlyRevenue = yearlyPayments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
       arr = (mrr * 12) + yearlyRevenue;
 
-      // Calculate MAU (Monthly Active Users) - users with payments in current month
-      const activeUserIds = new Set([
-        ...monthlyPayments.map(p => p.userId),
-        ...yearlyPayments.map(p => p.userId)
-      ]);
+      // Calculate MAU (Monthly Active Users) - unique users who logged into the webapp during the current month
+      const monthlyLoginEvents = await db
+        .select()
+        .from(loginEvents)
+        .where(
+          and(
+            gte(loginEvents.createdAt, monthStart),
+            lte(loginEvents.createdAt, monthEnd),
+          )
+        );
+
+      const activeUserIds = new Set(monthlyLoginEvents.map(e => e.userId));
       mau = activeUserIds.size;
 
       // Calculate Churn Rate - users who paid in previous month but not in current month

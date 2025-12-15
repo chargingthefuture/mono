@@ -5,6 +5,8 @@ import { storage } from "./storage";
 import { validateCsrfToken } from "./csrf";
 import { withDatabaseErrorHandling } from "./databaseErrorHandler";
 import { ExternalServiceError, UnauthorizedError } from "./errors";
+import { loginEvents } from "@shared/schema";
+import { db } from "./db";
 
 // Clerk Configuration
 if (!process.env.CLERK_SECRET_KEY) {
@@ -378,6 +380,22 @@ export async function setupAuth(app: Express) {
       try {
         const sessionClaims = (req.auth as any)?.sessionClaims;
         await syncClerkUserToDatabase(req.auth.userId, sessionClaims);
+
+        // Record a login event for DAU/MAU analytics.
+        // We only record for standard Clerk-authenticated web sessions (not OTP Android flows).
+        if (!req.otpAuth) {
+          try {
+            await db.insert(loginEvents).values({
+              userId: req.auth.userId,
+              source: "webapp",
+            });
+          } catch (logError: any) {
+            console.error("Error recording login event:", {
+              userId: req.auth.userId,
+              error: logError?.message,
+            });
+          }
+        }
       } catch (error: any) {
         // Log sync failures with detailed context for debugging
         console.error("Error syncing Clerk user to database in middleware:", {

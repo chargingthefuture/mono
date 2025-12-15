@@ -135,25 +135,27 @@ tasks.register("verifyReleaseApkSigned") {
     
     doLast {
         val apkFile = file("build/outputs/apk/release/app-release.apk")
-        
+
         if (!apkFile.exists()) {
             throw GradleException(
                 "Release APK not found at: ${apkFile.absolutePath}\n" +
                 "Build may have failed or APK was not generated."
             )
         }
-        
-        // Check if APK contains signature files
+
+        // Some modern signing schemes (v3/v4) may use a companion .idsig file,
+        // so we check both the APK contents and the optional .idsig sidecar.
         val process = ProcessBuilder(
             "unzip", "-l", apkFile.absolutePath
         ).redirectErrorStream(true).start()
-        
+
         val output = process.inputStream.bufferedReader().readText()
         process.waitFor()
-        
-        val hasSignature = output.contains(Regex("META-INF/.*\\.(RSA|DSA|EC|SF)"))
-        
-        if (!hasSignature) {
+
+        val hasMetaInfSignature = output.contains(Regex("META-INF/.*\\.(RSA|DSA|EC|SF)"))
+        val hasIdSigSidecar = file("${apkFile.absolutePath}.idsig").exists()
+
+        if (!hasMetaInfSignature && !hasIdSigSidecar) {
             throw GradleException(
                 "ERROR: Release APK is NOT signed! Signing is mandatory.\n" +
                 "APK location: ${apkFile.absolutePath}\n" +

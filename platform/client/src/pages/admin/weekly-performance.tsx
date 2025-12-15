@@ -390,18 +390,18 @@ export default function WeeklyPerformanceReview() {
               </CardContent>
             </Card>
 
-            {/* Customer Metrics */}
+            {/* User Metrics */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Users className="w-5 h-5" />
-                  Customer Metrics
+                  User Metrics
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
-                    <div className="text-sm font-medium text-muted-foreground mb-1">New Customers (This Week)</div>
+                    <div className="text-sm font-medium text-muted-foreground mb-1">New Users (This Week)</div>
                     <div className="text-2xl font-bold tabular-nums">{data.currentWeek.newUsers}</div>
                     <div className="flex items-center gap-2 mt-2">
                       <Badge
@@ -439,7 +439,7 @@ export default function WeeklyPerformanceReview() {
                     </p>
                   </div>
                   <div>
-                    <div className="text-sm font-medium text-muted-foreground mb-1">Customer Lifetime Value (CLV)</div>
+                    <div className="text-sm font-medium text-muted-foreground mb-1">User Lifetime Value (CLV)</div>
                     <div className="text-2xl font-bold tabular-nums">
                       <PrivacyField
                         value={formatCurrency(data.metrics?.clv ?? 0)}
@@ -448,7 +448,7 @@ export default function WeeklyPerformanceReview() {
                         className="text-2xl"
                       />
                     </div>
-                    <p className="text-xs text-muted-foreground mt-2">Average revenue per customer</p>
+                    <p className="text-xs text-muted-foreground mt-2">Average revenue per user</p>
                   </div>
                 </div>
               </CardContent>
@@ -543,7 +543,7 @@ export default function WeeklyPerformanceReview() {
                     <div className="text-sm font-medium text-muted-foreground mb-1">Monthly Active Users (MAU)</div>
                     <div className="text-2xl font-bold tabular-nums">{data.metrics?.mau ?? 0}</div>
                     <p className="text-xs text-muted-foreground mt-2">
-                      Users with payments in current month
+                      Unique users who logged into the webapp at least once in the current month
                     </p>
                   </div>
                   <div>
@@ -732,7 +732,7 @@ export default function WeeklyPerformanceReview() {
                   Daily Active Users (DAU)
                 </CardTitle>
                 <p className="text-sm text-muted-foreground mt-2">
-                  Total daily active users across the week (users are counted once per day they are active)
+                  Total daily active users across the week, based on unique logins to the webapp (users are counted once per day they log in)
                 </p>
               </CardHeader>
               <CardContent>

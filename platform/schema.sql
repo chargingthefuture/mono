@@ -11,6 +11,16 @@ CREATE TABLE IF NOT EXISTS sessions (
 
 CREATE INDEX IF NOT EXISTS IDX_session_expire ON sessions(expire);
 
+-- Login events table - tracks successful webapp logins for DAU/MAU analytics
+CREATE TABLE IF NOT EXISTS login_events (
+  id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id VARCHAR NOT NULL REFERENCES users(id),
+  source VARCHAR(50) NOT NULL DEFAULT 'webapp',
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS IDX_login_events_user_created_at ON login_events(user_id, created_at);
+
 -- User storage table - Required for authentication (OIDC/OAuth2) with additional fields
 CREATE TABLE IF NOT EXISTS users (
   id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
