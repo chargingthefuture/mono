@@ -312,11 +312,11 @@ export default function UserPayments() {
         </Card>
       )}
 
-      {/* Payment Options */}
+      {/* Alternative Payment Options */}
       {acknowledged && (
         <Card>
           <CardHeader>
-            <CardTitle>Payment Options</CardTitle>
+            <CardTitle>Alternative Payment Options</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4" data-testid="payment-options-list">
