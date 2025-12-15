@@ -73,7 +73,6 @@ CREATE TABLE IF NOT EXISTS admin_action_logs (
 CREATE TABLE IF NOT EXISTS support_match_profiles (
   id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id VARCHAR NOT NULL UNIQUE REFERENCES users(id),
-  nickname VARCHAR(100),
   gender VARCHAR(50),
   gender_preference VARCHAR(50),
   city VARCHAR(100),
@@ -317,9 +316,6 @@ CREATE TABLE IF NOT EXISTS directory_profiles (
   city VARCHAR(100),
   state VARCHAR(100),
   country VARCHAR(100),
-  nickname VARCHAR(100),
-  first_name VARCHAR(100),
-  display_name_type VARCHAR(20) NOT NULL DEFAULT 'first',
   is_verified BOOLEAN NOT NULL DEFAULT false,
   is_public BOOLEAN NOT NULL DEFAULT false,
   is_claimed BOOLEAN NOT NULL DEFAULT false,

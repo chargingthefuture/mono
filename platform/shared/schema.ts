@@ -800,12 +800,17 @@ export type SocketrelayAnnouncement = typeof socketrelayAnnouncements.$inferSele
 // ========================================
 
 // Directory profiles - public skill-sharing directory
+// NOTE: This schema MUST stay in sync with `schema.sql`'s `directory_profiles` table
+// so the full SQL schema can be run directly in the Neon console.
+// Personally identifying name/email data comes from the core `users` table only.
 export const directoryProfiles = pgTable("directory_profiles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+
   // Optional while unclaimed; admin can create unclaimed entries
   userId: varchar("user_id").references(() => users.id).unique(),
 
   description: varchar("description", { length: 140 }).notNull(),
+
   // Up to three skills; stored as text array
   skills: text("skills").array().notNull().default(sql`ARRAY[]::text[]`),
   // Up to three sectors; stored as text array
