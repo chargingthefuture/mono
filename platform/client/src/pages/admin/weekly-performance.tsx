@@ -344,6 +344,26 @@ export default function WeeklyPerformanceReview() {
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                   <div>
+                    <div className="text-sm font-medium text-muted-foreground mb-1">Current Week Revenue</div>
+                    <div className="text-2xl font-bold tabular-nums">
+                      <PrivacyField
+                        value={formatCurrency(data?.currentWeek.revenue ?? 0)}
+                        type="text"
+                        testId="privacy-revenue-current"
+                        className="text-2xl"
+                      />
+                    </div>
+                    <div className="flex items-center gap-2 mt-2">
+                      <Badge
+                        variant={(data?.comparison.revenueChange ?? 0) >= 0 ? "default" : "destructive"}
+                        className="text-xs"
+                      >
+                        {formatPercentage(data?.comparison.revenueChange ?? 0)}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">vs last week</span>
+                    </div>
+                  </div>
+                  <div>
                     <div className="text-sm font-medium text-muted-foreground mb-1">Monthly Recurring Revenue (MRR)</div>
                     <div className="text-2xl font-bold tabular-nums">
                       <PrivacyField
@@ -374,20 +394,6 @@ export default function WeeklyPerformanceReview() {
                       />
                     </div>
                     <p className="text-xs text-muted-foreground mt-2">MRR × 12 + yearly payments</p>
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-muted-foreground mb-1">Current Week Revenue</div>
-                    <div className="text-2xl font-bold tabular-nums">
-                      <PrivacyField
-                        value={formatCurrency(data?.currentWeek.revenue ?? 0)}
-                        type="text"
-                        testId="privacy-revenue-current"
-                        className="text-2xl"
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Total revenue this week
-                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -777,65 +783,6 @@ export default function WeeklyPerformanceReview() {
               </CardContent>
             </Card>
 
-            {/* Revenue */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <DollarSign className="w-5 h-5" />
-                  Weekly Revenue
-                </CardTitle>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Total revenue collected during the week
-                </p>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div>
-                    <div className="text-sm font-medium text-muted-foreground mb-1">Current Week</div>
-                    <div className="text-3xl font-bold tabular-nums">
-                      <PrivacyField
-                        value={formatCurrency(data?.currentWeek.revenue ?? 0)}
-                        type="text"
-                        testId="privacy-revenue-current"
-                        className="text-3xl"
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Total revenue this week
-                    </p>
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-muted-foreground mb-1">Previous Week</div>
-                    <div className="text-2xl font-bold tabular-nums text-muted-foreground">
-                      <PrivacyField
-                        value={formatCurrency(data?.previousWeek.revenue ?? 0)}
-                        type="text"
-                        testId="privacy-revenue-previous"
-                        className="text-2xl"
-                      />
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Total revenue last week
-                    </p>
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-muted-foreground mb-1">Week-over-Week Change</div>
-                    <div className={`text-2xl font-bold tabular-nums ${
-                      (data?.comparison.revenueChange ?? 0) > 0
-                        ? "text-green-600"
-                        : (data?.comparison.revenueChange ?? 0) < 0
-                        ? "text-red-600"
-                        : ""
-                    }`}>
-                      {formatPercentage(data?.comparison.revenueChange ?? 0)}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Change from previous week
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
 
           {/* Detailed Comparison Table */}
