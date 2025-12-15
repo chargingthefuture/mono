@@ -333,6 +333,66 @@ export default function WeeklyPerformanceReview() {
               </CardContent>
             </Card>
 
+            {/* Weekly Revenue */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="w-5 h-5" />
+                  Weekly Revenue
+                </CardTitle>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Total revenue collected during the week
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <div className="text-sm font-medium text-muted-foreground mb-1">Current Week</div>
+                    <div className="text-3xl font-bold tabular-nums">
+                      <PrivacyField
+                        value={formatCurrency(data?.currentWeek.revenue ?? 0)}
+                        type="text"
+                        testId="privacy-revenue-current"
+                        className="text-3xl"
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Total revenue this week
+                    </p>
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-muted-foreground mb-1">Previous Week</div>
+                    <div className="text-2xl font-bold tabular-nums text-muted-foreground">
+                      <PrivacyField
+                        value={formatCurrency(data?.previousWeek.revenue ?? 0)}
+                        type="text"
+                        testId="privacy-revenue-previous"
+                        className="text-2xl"
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Total revenue last week
+                    </p>
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-muted-foreground mb-1">Week-over-Week Change</div>
+                    <div className={`text-2xl font-bold tabular-nums ${
+                      (data?.comparison.revenueChange ?? 0) > 0
+                        ? "text-green-600"
+                        : (data?.comparison.revenueChange ?? 0) < 0
+                        ? "text-red-600"
+                        : ""
+                    }`}>
+                      {formatPercentage(data?.comparison.revenueChange ?? 0)}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Change from previous week
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
             {/* Revenue Metrics */}
             <Card>
               <CardHeader>
@@ -529,12 +589,62 @@ export default function WeeklyPerformanceReview() {
               </CardContent>
             </Card>
 
-            {/* Engagement and Retention */}
+            {/* Daily Active Users (DAU) */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Activity className="w-5 h-5" />
-                  Engagement and Retention
+                  Daily Active Users (DAU)
+                </CardTitle>
+                <p className="text-sm text-muted-foreground mt-2">
+                  Total daily active users across the week, based on unique logins to the webapp (users are counted once per day they log in)
+                </p>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <div className="text-sm font-medium text-muted-foreground mb-1">Current Week</div>
+                    <div className="text-3xl font-bold tabular-nums">
+                      {currentWeekTotalDAU}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Total active users this week
+                    </p>
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-muted-foreground mb-1">Previous Week</div>
+                    <div className="text-2xl font-bold tabular-nums text-muted-foreground">
+                      {previousWeekTotalDAU}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Total active users last week
+                    </p>
+                  </div>
+                  <div>
+                    <div className="text-sm font-medium text-muted-foreground mb-1">Week-over-Week Change</div>
+                    <div className={`text-2xl font-bold tabular-nums ${
+                      dauChange > 0
+                        ? "text-green-600"
+                        : dauChange < 0
+                        ? "text-red-600"
+                        : ""
+                    }`}>
+                      {formatPercentage(dauChange)}
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Change from previous week
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Monthly Active Users */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Activity className="w-5 h-5" />
+                  Monthly Active Users (MAU)
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -720,56 +830,6 @@ export default function WeeklyPerformanceReview() {
                     Individual responses cannot be traced back to users, maintaining complete anonymity while 
                     providing valuable aggregated insights into user wellbeing.
                   </p>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Daily Active Users (DAU) */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Activity className="w-5 h-5" />
-                  Daily Active Users (DAU)
-                </CardTitle>
-                <p className="text-sm text-muted-foreground mt-2">
-                  Total daily active users across the week, based on unique logins to the webapp (users are counted once per day they log in)
-                </p>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div>
-                    <div className="text-sm font-medium text-muted-foreground mb-1">Current Week</div>
-                    <div className="text-3xl font-bold tabular-nums">
-                      {currentWeekTotalDAU}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Total active users this week
-                    </p>
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-muted-foreground mb-1">Previous Week</div>
-                    <div className="text-2xl font-bold tabular-nums text-muted-foreground">
-                      {previousWeekTotalDAU}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Total active users last week
-                    </p>
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium text-muted-foreground mb-1">Week-over-Week Change</div>
-                    <div className={`text-2xl font-bold tabular-nums ${
-                      dauChange > 0
-                        ? "text-green-600"
-                        : dauChange < 0
-                        ? "text-red-600"
-                        : ""
-                    }`}>
-                      {formatPercentage(dauChange)}
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      Change from previous week
-                    </p>
-                  </div>
                 </div>
               </CardContent>
             </Card>
