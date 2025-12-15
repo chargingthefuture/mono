@@ -131,9 +131,52 @@ app.use((req, res, next) => {
     if (req.path.startsWith("/api/")) {
       return notFoundHandler(req, res, next);
     }
-    // For non-API routes, static file serving should have already handled them
-    // If we reach here, it means the catch-all route in serveStatic didn't match
-    // This shouldn't normally happen, but if it does, return 404
+
+    // For non-API routes, we want to behave like an SPA:
+    // fall back to serving index.html so client-side routing (Wouter) can handle
+    // paths like /admin/weekly-performance on hard refresh.
+    //
+    // Normally, serveStatic's catch-all handler should already have handled this,
+    // but in case something slipped through (proxy config, method differences, etc.),
+    // we add a defensive fallback here.
+    if (req.method === "GET") {
+      try {
+        const { resolve } = await import("path");
+        const fs = await import("fs");
+
+        // Mirror the dist path logic from serveStatic in vite.ts
+        let cwd: string = "/app";
+        try {
+          const cwdResult = process.cwd();
+          if (cwdResult && typeof cwdResult === "string" && cwdResult.length > 0) {
+            cwd = cwdResult;
+          }
+        } catch {
+          // ignore and use default /app
+        }
+
+        const distPath = resolve(cwd, "dist", "public");
+        const indexPath = resolve(distPath, "index.html");
+
+        if ((fs as any).existsSync && (fs as any).existsSync(indexPath)) {
+          res.setHeader("Content-Type", "text/html; charset=utf-8");
+          res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+          res.setHeader("Pragma", "no-cache");
+          res.setHeader("Expires", "0");
+          return res.sendFile(indexPath, (err) => {
+            if (err) {
+              // If sending the file fails, fall back to a JSON 404
+              return res.status(404).json({ message: "Not found" });
+            }
+          });
+        }
+      } catch {
+        // If anything goes wrong while trying to send index.html,
+        // fall through to the JSON 404 below.
+      }
+    }
+
+    // Final fallback: JSON 404 for non-API routes where we couldn't serve the SPA shell
     return res.status(404).json({ message: "Not found" });
   });
 
