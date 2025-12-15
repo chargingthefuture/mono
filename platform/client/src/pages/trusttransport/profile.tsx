@@ -38,16 +38,17 @@ export default function TrustTransportProfile() {
   const { openExternal, ExternalLinkDialog } = useExternalLink();
   const hasInitializedRef = useRef(false);
 
-  const { data: profileData, isLoading } = useQuery<TrusttransportProfile & { userIsVerified?: boolean } | null>({
+  const { data: profileData, isLoading } = useQuery<TrusttransportProfile & { userIsVerified?: boolean; firstName?: string | null } | null>({
     queryKey: ["/api/trusttransport/profile"],
   });
   
   const profile = profileData ? (() => {
-    const { userIsVerified, ...rest } = profileData;
+    const { userIsVerified, firstName: _firstName, ...rest } = profileData;
     return rest;
   })() : null;
   
   const userIsVerified = (profileData as any)?.userIsVerified || false;
+  const firstName = (profileData as any)?.firstName || null;
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileFormSchema),
@@ -205,6 +206,11 @@ export default function TrustTransportProfile() {
             <p className="text-muted-foreground">
               {profile ? "Update your TrustTransport driver profile" : "Set up your TrustTransport driver profile"}
             </p>
+            {firstName && (
+              <p className="text-sm text-muted-foreground mt-1">
+                Name: <span className="font-medium">{firstName}</span>
+              </p>
+            )}
           </div>
         </div>
       </div>

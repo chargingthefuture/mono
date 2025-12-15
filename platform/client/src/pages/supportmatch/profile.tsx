@@ -41,16 +41,17 @@ export default function SupportMatchProfile() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [stateOpen, setStateOpen] = useState(false);
 
-  const { data: profileData, isLoading } = useQuery<(SupportMatchProfile & { userIsVerified?: boolean; nickname?: string | null }) | null>({
+  const { data: profileData, isLoading } = useQuery<(SupportMatchProfile & { userIsVerified?: boolean; nickname?: string | null; firstName?: string | null }) | null>({
     queryKey: ["/api/supportmatch/profile"],
   });
   
   const profile = profileData ? (() => {
-    const { userIsVerified, ...rest } = profileData;
+    const { userIsVerified, firstName: _firstName, ...rest } = profileData;
     return rest;
   })() : null;
   
   const userIsVerified = (profileData as any)?.userIsVerified || false;
+  const firstName = (profileData as any)?.firstName || null;
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileFormSchema),
@@ -195,6 +196,11 @@ export default function SupportMatchProfile() {
             ? "Update your SupportMatch profile and preferences" 
             : "Set up your profile to start matching with accountability partners"}
         </p>
+        {firstName && (
+          <p className="text-sm text-muted-foreground mt-1">
+            Name: <span className="font-medium">{firstName}</span>
+          </p>
+        )}
       </div>
 
       <Card>

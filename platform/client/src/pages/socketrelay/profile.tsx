@@ -31,16 +31,17 @@ export default function SocketRelayProfile() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [stateOpen, setStateOpen] = useState(false);
 
-  const { data: profileData, isLoading } = useQuery<SocketrelayProfile & { userIsVerified?: boolean } | null>({
+  const { data: profileData, isLoading } = useQuery<SocketrelayProfile & { userIsVerified?: boolean; firstName?: string | null } | null>({
     queryKey: ["/api/socketrelay/profile"],
   });
   
   const profile = profileData ? (() => {
-    const { userIsVerified, ...rest } = profileData;
+    const { userIsVerified, firstName: _firstName, ...rest } = profileData;
     return rest;
   })() : null;
   
   const userIsVerified = (profileData as any)?.userIsVerified || false;
+  const firstName = (profileData as any)?.firstName || null;
 
   // Fetch other app profiles to pre-fill location data
   const { data: supportMatchProfile } = useQuery<SupportMatchProfile | null>({
@@ -188,6 +189,11 @@ export default function SocketRelayProfile() {
           <p className="text-muted-foreground">
             {profile ? "Update your SocketRelay information" : "Set up your SocketRelay profile"}
           </p>
+          {firstName && (
+            <p className="text-sm text-muted-foreground mt-1">
+              Name: <span className="font-medium">{firstName}</span>
+            </p>
+          )}
         </div>
       </div>
 

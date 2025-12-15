@@ -40,7 +40,7 @@ export default function DirectoryProfilePage() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
-  const { data: profile, isLoading } = useQuery<DirectoryProfile | null>({
+  const { data: profile, isLoading } = useQuery<(DirectoryProfile & { firstName?: string | null }) | null>({
     queryKey: ["/api/directory/profile"],
   });
   const { data: availableSkillsData, isLoading: skillsLoading } = useQuery<DirectorySkill[]>({
@@ -237,6 +237,7 @@ export default function DirectoryProfilePage() {
   }
 
   const userIsVerified = (profile as any)?.userIsVerified || false;
+  const profileFirstName = (profile as any)?.firstName || null;
 
   const shareUrl = profile?.isPublic ? `${window.location.origin}/apps/directory/public/${profile.id}` : null;
 
@@ -319,9 +320,7 @@ export default function DirectoryProfilePage() {
               <div>
                 <Label className="text-muted-foreground">Name</Label>
                 <p className="mt-1">
-                  {user?.firstName && user?.lastName 
-                    ? `${user.firstName} ${user.lastName}`
-                    : user?.firstName || '—'}
+                  {profileFirstName || user?.firstName || "—"}
                 </p>
               </div>
               <div>

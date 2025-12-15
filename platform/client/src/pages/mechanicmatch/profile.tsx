@@ -37,16 +37,17 @@ export default function MechanicMatchProfile() {
   const [stateOpen, setStateOpen] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
 
-  const { data: profileData, isLoading } = useQuery<MechanicmatchProfile & { userIsVerified?: boolean } | null>({
+  const { data: profileData, isLoading } = useQuery<MechanicmatchProfile & { userIsVerified?: boolean; firstName?: string | null } | null>({
     queryKey: ["/api/mechanicmatch/profile"],
   });
   
   const profile = profileData ? (() => {
-    const { userIsVerified, ...rest } = profileData;
+    const { userIsVerified, firstName: _firstName, ...rest } = profileData;
     return rest;
   })() : null;
   
   const userIsVerified = (profileData as any)?.userIsVerified || false;
+  const firstName = (profileData as any)?.firstName || null;
 
   const form = useForm<ProfileFormData>({
     resolver: zodResolver(profileFormSchema),
@@ -228,6 +229,11 @@ export default function MechanicMatchProfile() {
           {profile ? "Edit Profile" : "Create Profile"}
         </h1>
         {profile && <VerifiedBadge isVerified={userIsVerified} testId="badge-verified-profile" />}
+        {firstName && (
+          <span className="ml-2 text-sm text-muted-foreground">
+            ({firstName})
+          </span>
+        )}
       </div>
 
       <Card>

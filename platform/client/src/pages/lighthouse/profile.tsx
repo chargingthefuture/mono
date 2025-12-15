@@ -30,16 +30,17 @@ export default function LighthouseProfilePage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [desiredCountryOpen, setDesiredCountryOpen] = useState(false);
   const { openExternal, ExternalLinkDialog } = useExternalLink();
-  const { data: profileData, isLoading } = useQuery<LighthouseProfile & { userIsVerified?: boolean } | null>({
+  const { data: profileData, isLoading } = useQuery<LighthouseProfile & { userIsVerified?: boolean; firstName?: string | null } | null>({
     queryKey: ["/api/lighthouse/profile"],
   });
   
   const profile = profileData ? (() => {
-    const { userIsVerified, ...rest } = profileData;
+    const { userIsVerified, firstName: _firstName, ...rest } = profileData;
     return rest;
   })() : null;
   
   const userIsVerified = (profileData as any)?.userIsVerified || false;
+  const firstName = (profileData as any)?.firstName || null;
 
   const form = useForm({
     resolver: zodResolver(
@@ -194,6 +195,11 @@ export default function LighthouseProfilePage() {
             <p className="text-muted-foreground">
               {profile ? "Update your LightHouse profile information" : "Set up your LightHouse profile to get started"}
             </p>
+            {firstName && (
+              <p className="text-sm text-muted-foreground mt-1">
+                Name: <span className="font-medium">{firstName}</span>
+              </p>
+            )}
           </div>
         </div>
       </div>
