@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
+import { PricingTable } from "@clerk/clerk-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -250,11 +251,33 @@ export default function UserPayments() {
         </Card>
       </div>
 
+      {/* Card payments via Clerk (placeholder for Billing components) */}
+      <Card data-testid="card-clerk-card-payments">
+        <CardHeader>
+          <CardTitle>Pay by Card</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-sm text-muted-foreground">
+            You can pay securely by card using our billing provider, powered by Clerk and Stripe.
+          </p>
+          <div className="rounded-lg border border-dashed bg-muted/40 p-4 text-sm text-muted-foreground">
+            <PricingTable
+              for="user"
+              fallback={
+                <div className="text-sm text-muted-foreground">
+                  Loading subscription options...
+                </div>
+              }
+            />
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Payment Acknowledgment */}
       {!acknowledged && (
         <Card>
           <CardHeader>
-            <CardTitle>Payment Information</CardTitle>
+            <CardTitle>Alternative Payment Options</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <Alert>
