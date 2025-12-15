@@ -732,7 +732,7 @@ export default function WeeklyPerformanceReview() {
                   Daily Active Users (DAU)
                 </CardTitle>
                 <p className="text-sm text-muted-foreground mt-2">
-                  Total unique users who were active during the week
+                  Total daily active users across the week (users are counted once per day they are active)
                 </p>
               </CardHeader>
               <CardContent>

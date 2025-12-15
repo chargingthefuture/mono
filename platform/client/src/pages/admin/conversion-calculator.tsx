@@ -5,13 +5,12 @@ import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
-type Industry = "ecommerce" | "b2b" | "social" | "custom";
+type Industry = "ecommerce" | "b2b" | "social";
 
 const INDUSTRY_BENCHMARKS: Record<Industry, { label: string; min: number; max: number }> = {
   ecommerce: { label: "E-commerce", min: 1, max: 5 },
   b2b: { label: "B2B", min: 2, max: 10 },
   social: { label: "Social media marketing", min: 1, max: 3 },
-  custom: { label: "Custom / niche", min: 0, max: 0 },
 };
 
 export default function ConversionCalculator() {
@@ -47,10 +46,6 @@ export default function ConversionCalculator() {
 
   const getPerformanceMessage = () => {
     if (conversionRate == null || !benchmark) return "";
-
-    if (industry === "custom") {
-      return "For custom or niche audiences, compare against your own past performance over time.";
-    }
 
     if (conversionRate < benchmark.min) {
       return `Your conversion rate is below the typical ${benchmark.label.toLowerCase()} range of ${benchmark.min}%–${benchmark.max}%. Focus on tightening your offer, messaging, and audience fit.`;
@@ -120,7 +115,6 @@ export default function ConversionCalculator() {
                 <SelectItem value="ecommerce">E-commerce (typical 1%–5%)</SelectItem>
                 <SelectItem value="b2b">B2B (typical 2%–10%)</SelectItem>
                 <SelectItem value="social">Social media marketing (typical 1%–3%)</SelectItem>
-                <SelectItem value="custom">Custom / niche (no fixed benchmark)</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -136,11 +130,9 @@ export default function ConversionCalculator() {
                 {conversionRate.toFixed(2)}
                 <span className="text-base font-normal text-muted-foreground ml-1">%</span>
               </div>
-              {industry !== "custom" && (
-                <div className="text-sm text-muted-foreground">
-                  Typical {benchmark.label.toLowerCase()} range: {benchmark.min}%–{benchmark.max}%.
-                </div>
-              )}
+              <div className="text-sm text-muted-foreground">
+                Typical {benchmark.label.toLowerCase()} range: {benchmark.min}%–{benchmark.max}%.
+              </div>
               <p className="text-sm text-muted-foreground">{getPerformanceMessage()}</p>
             </div>
           )}
