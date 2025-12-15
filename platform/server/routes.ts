@@ -1020,6 +1020,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } else {
       // For admin-created profiles without userId, use profile's own isVerified field
       userIsVerified = profile.isVerified || false;
+      // For unclaimed profiles, fall back to the profile's own firstName field if set
+      userFirstName = (profile as any).firstName || null;
     }
     res.json({ ...profile, displayName, userIsVerified, firstName: userFirstName, lastName: userLastName });
   }));
@@ -1079,6 +1081,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // For admin-created profiles without userId, use profile's own isVerified field
         userIsVerified = p.isVerified || false;
         console.log(`[DEBUG] Profile ${p.id}: No userId set`);
+        // For unclaimed profiles, fall back to the profile's own firstName field if set
+        userFirstName = (p as any).firstName || null;
       }
       
       // Ensure we always return displayName, firstName, and lastName (even if null)

@@ -137,6 +137,7 @@ export default function AdminDirectoryPage() {
     mutationFn: async () => {
       const payload = {
         description: newDescription.trim(),
+        firstName: newFirstName.trim() || null,
         signalUrl: newSignalUrl.trim() || null,
         quoraUrl: newQuoraUrl.trim() || null,
         city: newCity.trim() || null,
@@ -158,7 +159,7 @@ export default function AdminDirectoryPage() {
       });
       const profileId = data?.id;
       const wasPublic = newPublic;
-      setNewDescription(""); setNewSignalUrl(""); setNewQuoraUrl(""); setNewCity(""); setNewState(""); setNewSkills([]); setNewSectors([]); setNewJobTitles([]); setNewPublic(false); setNewCountry("");
+      setNewDescription(""); setNewFirstName(""); setNewSignalUrl(""); setNewQuoraUrl(""); setNewCity(""); setNewState(""); setNewSkills([]); setNewSectors([]); setNewJobTitles([]); setNewPublic(false); setNewCountry("");
       if (profileId && wasPublic) {
         toast({ 
           title: "Created", 
@@ -228,7 +229,8 @@ export default function AdminDirectoryPage() {
   const [editCountry, setEditCountry] = useState<string>("");
 
   const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: any }) => apiRequest("PUT", `/api/directory/admin/profiles/${id}`, data),
+    mutationFn: async ({ id, data }: { id: string; data: any }) =>
+      apiRequest("PUT", `/api/directory/admin/profiles/${id}`, data),
     onSuccess: async () => {
       await queryClient.invalidateQueries({
         predicate: (query) =>
@@ -244,6 +246,7 @@ export default function AdminDirectoryPage() {
   const startEdit = (profile: DirectoryProfileWithUser) => {
     setEditingId(profile.id);
     setEditDescription(profile.description || "");
+    setEditFirstName((profile as any).firstName || "");
     setEditSignalUrl(profile.signalUrl || "");
     setEditQuoraUrl(profile.quoraUrl || "");
     setEditCity(profile.city || "");
@@ -262,6 +265,7 @@ export default function AdminDirectoryPage() {
   const handleUpdate = (id: string) => {
     const payload = {
       description: editDescription.trim() || null,
+      firstName: editFirstName.trim() || null,
       signalUrl: editSignalUrl.trim() || null,
       quoraUrl: editQuoraUrl.trim() || null,
       city: editCity.trim() || null,

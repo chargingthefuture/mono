@@ -323,6 +323,8 @@ CREATE TABLE IF NOT EXISTS directory_profiles (
   job_titles TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[],
   signal_url TEXT,
   quora_url TEXT,
+  -- Optional first name for unclaimed profiles (admin-entered display label)
+  first_name VARCHAR(100),
   city VARCHAR(100),
   state VARCHAR(100),
   country VARCHAR(100),

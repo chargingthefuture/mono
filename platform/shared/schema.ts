@@ -818,7 +818,11 @@ export type SocketrelayAnnouncement = typeof socketrelayAnnouncements.$inferSele
 // Directory profiles - public skill-sharing directory
 // NOTE: This schema MUST stay in sync with `schema.sql`'s `directory_profiles` table
 // so the full SQL schema can be run directly in the Neon console.
-// Personally identifying name/email data comes from the core `users` table only.
+// Personally identifying name/email data comes from the core `users` table only,
+// with a narrow exception: for *unclaimed* profiles, admins may optionally store
+// a first name directly on the profile record so that the public card shows a
+// meaningful label before the profile is claimed. Once claimed, the canonical
+// name always comes from the core `users` table.
 export const directoryProfiles = pgTable("directory_profiles", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
 
@@ -836,6 +840,9 @@ export const directoryProfiles = pgTable("directory_profiles", {
 
   signalUrl: text("signal_url"),
   quoraUrl: text("quora_url"),
+
+  // Optional first name for unclaimed profiles (admin-entered display label)
+  firstName: varchar("first_name", { length: 100 }),
 
   city: varchar("city", { length: 100 }),
   state: varchar("state", { length: 100 }),
@@ -875,6 +882,9 @@ export const insertDirectoryProfileSchema = createInsertSchema(directoryProfiles
   quoraUrl: z.string().url().optional().nullable(),
   // Require country selection per shared standard
   country: z.string().min(1, "Country is required").max(100, "Country must be 100 characters or less"),
+  // firstName is allowed only for unclaimed/admin-created profiles; once claimed,
+  // the name comes from the core users table.
+  firstName: z.string().max(100).optional().nullable(),
   // userId remains optional to allow unclaimed creation by admin
 });
 
