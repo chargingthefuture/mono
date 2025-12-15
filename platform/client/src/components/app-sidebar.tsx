@@ -158,6 +158,12 @@ const baseAdminMenuItems = [
     icon: Activity,
     testId: "link-default-alive-or-dead",
   },
+  {
+    title: "Conversion Calculator",
+    url: "/admin/conversion-calculator",
+    icon: BarChart3,
+    testId: "link-conversion-calculator",
+  },
 ];
 
 const pinnedAdminTitles = ["User Management", "Workforce Admin", "Weekly Performance", "Payments", "Pricing", "Default Alive or Dead", "Conversion Calculator"];
