@@ -166,8 +166,8 @@ tasks.register("verifyReleaseApkSigned") {
     }
 }
 
-// Make verifyReleaseApkSigned run after assembleRelease
-tasks.named("assembleRelease") {
+// Make verifyReleaseApkSigned run after assembleRelease (if it exists)
+tasks.matching { it.name == "assembleRelease" }.configureEach {
     finalizedBy("verifyReleaseApkSigned")
 }
 
