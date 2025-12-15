@@ -393,7 +393,9 @@ export default function WeeklyPerformanceReview() {
                         className="text-2xl"
                       />
                     </div>
-                    <p className="text-xs text-muted-foreground mt-2">MRR × 12 + yearly payments</p>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      Total value of active yearly subscriptions this month
+                    </p>
                   </div>
                 </div>
               </CardContent>

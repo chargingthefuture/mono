@@ -1913,7 +1913,10 @@ export class DatabaseStorage implements IStorage {
         monthlyPaymentsSample: monthlyPayments.slice(0, 3).map(p => ({ userId: p.userId, amount: p.amount, paymentDate: p.paymentDate?.toISOString() }))
       });
       
-      // Calculate ARR (Annual Recurring Revenue) - MRR * 12 + yearly payments annualized
+      // Calculate ARR (Annual Recurring Revenue)
+      // For this dashboard, ARR is defined as the total value of active yearly subscriptions
+      // during the current month, without multiplying by 12. This keeps a $12 yearly
+      // subscription represented as $12 ARR (not $144).
       const yearlyPayments = await db
         .select()
         .from(payments)
@@ -1926,7 +1929,9 @@ export class DatabaseStorage implements IStorage {
         );
       
       const yearlyRevenue = yearlyPayments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
-      arr = (mrr * 12) + yearlyRevenue;
+      // Only include yearly subscription value in ARR to avoid inflating the number
+      // and to match how admins expect to reason about yearly contracts.
+      arr = yearlyRevenue;
 
       // Calculate MAU (Monthly Active Users) - unique users who logged into the webapp during the current month
       const monthlyLoginEvents = await db
