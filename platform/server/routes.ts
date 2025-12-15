@@ -134,7 +134,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Clerk webhook endpoint for user events
   // Note: This endpoint should be configured in Clerk Dashboard with webhook secret
   // Configure the webhook URL in Clerk Dashboard: https://app.chargingthefuture.com/api/webhooks/clerk
-  // For now, it's a placeholder that can be enhanced with proper webhook verification using @clerk/backend
   app.post('/api/webhooks/clerk', async (req: any, res) => {
     try {
       // TODO: Add webhook signature verification using CLERK_WEBHOOK_SECRET
@@ -144,15 +143,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // const payload = webhook.verify(req.body, req.headers);
       
       const event = req.body;
-      
-      // Handle user.created event
-      if (event.type === 'user.created') {
-        const clerkUserId = event.data.id;
-        const email = event.data.email_addresses?.[0]?.email_address;
-        
-        // Note: User will be synced to DB via the auth middleware on first request
-        // This webhook is mainly for logging
-        // Users need to be manually approved by an admin to access the app
+
+      // For user.created and user.updated events, sync the Clerk user into our database
+      if (event?.type === 'user.created' || event?.type === 'user.updated') {
+        const clerkUserId = event.data?.id;
+        if (clerkUserId) {
+          try {
+            await syncClerkUserToDatabase(clerkUserId);
+          } catch (syncError: any) {
+            console.error("Error syncing Clerk user from webhook:", {
+              eventType: event.type,
+              clerkUserId,
+              error: syncError.message,
+              stack: syncError.stack,
+            });
+            // Do not fail the webhook delivery because of a transient sync error
+          }
+        }
       }
       
       res.json({ received: true });
@@ -2723,6 +2730,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         () => storage.getUser(request.userId),
         'getUser'
       );
+
+      // Build a display name from the creator's first and last name, if available
+      let displayName: string | null = null;
+      if (creator) {
+        const firstName = creator.firstName?.trim();
+        const lastName = creator.lastName?.trim();
+        if (firstName && lastName) {
+          displayName = `${firstName} ${lastName}`;
+        } else if (firstName) {
+          displayName = firstName;
+        }
+      }
       
       return {
         ...request,
@@ -2732,6 +2751,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           country: creatorProfile.country,
         } : null,
         creator: creator ? {
+          displayName,
           firstName: creator.firstName,
           lastName: creator.lastName,
           isVerified: creator.isVerified,
