@@ -94,6 +94,16 @@ function OTPGenerationCard() {
         <CardDescription>
           Generate a one-time passcode to sign in to the Chyme Android app
         </CardDescription>
+        <div className="mt-2">
+          <a
+            href="https://github.com/chargingthefuture/mono/releases"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-primary hover:underline"
+          >
+            Download the latest app release
+          </a>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {!otp ? (
