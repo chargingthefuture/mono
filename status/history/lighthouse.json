@@ -124,5 +124,12 @@
     "statusCode": 200,
     "responseTime": 276,
     "error": null
+  },
+  {
+    "timestamp": "2025-12-16T14:37:27.191Z",
+    "status": "up",
+    "statusCode": 200,
+    "responseTime": 286,
+    "error": null
   }
 ]
