@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Wrench, MapPin, Star, DollarSign, Search, ArrowLeft } from "lucide-react";
+import { Wrench, MapPin, Star, DollarSign, Search, ArrowLeft, User } from "lucide-react";
 import { Link } from "wouter";
 import type { MechanicmatchProfile } from "@shared/schema";
 import { useFuzzySearch } from "@/hooks/useFuzzySearch";
@@ -266,16 +266,29 @@ export default function BrowseMechanicsPage() {
                       )}
                     </div>
 
-                    <Button
-                      variant="outline"
-                      className="w-full"
-                      asChild
-                      data-testid={`button-request-service-${mechanic.id}`}
-                    >
-                      <Link href="/apps/mechanicmatch/request-new">
-                        Request Service
-                      </Link>
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button
+                        variant="default"
+                        className="flex-1"
+                        asChild
+                        data-testid={`button-view-profile-${mechanic.id}`}
+                      >
+                        <Link href={`/apps/mechanicmatch/public/${mechanic.id}`}>
+                          <User className="w-4 h-4 mr-2" />
+                          View Profile
+                        </Link>
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="flex-1"
+                        asChild
+                        data-testid={`button-request-service-${mechanic.id}`}
+                      >
+                        <Link href="/apps/mechanicmatch/request-new">
+                          Request Service
+                        </Link>
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               );

@@ -4,12 +4,36 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Smartphone, Copy, Check } from "lucide-react";
+import { Smartphone, Copy, Check, ExternalLink } from "lucide-react";
 import { AnnouncementBanner } from "@/components/announcement-banner";
+import { useExternalLink } from "@/hooks/useExternalLink";
 import { useState } from "react";
 
 export default function ChymeDashboard() {
   const { user } = useAuth();
+  const { openExternal, ExternalLinkDialog } = useExternalLink();
+  const { toast } = useToast();
+  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+
+  const releasesUrl = "https://github.com/chargingthefuture/mono/releases";
+
+  const copyUrl = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedUrl(url);
+      toast({
+        title: "Copied!",
+        description: "Link copied to clipboard",
+      });
+      setTimeout(() => setCopiedUrl(null), 2000);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to copy link",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-6">
@@ -18,6 +42,38 @@ export default function ChymeDashboard() {
         <p className="text-muted-foreground">
           Android app authenticator
         </p>
+        <div className="mt-4 space-y-2">
+          <label className="text-sm font-medium">Android App Release</label>
+          <p className="text-sm text-muted-foreground">
+            Download the latest app release from GitHub.
+          </p>
+          <div className="flex items-center gap-2">
+            <code className="flex-1 font-mono text-xs sm:text-sm bg-muted px-2 py-1.5 rounded break-all">
+              {releasesUrl}
+            </code>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => copyUrl(releasesUrl)}
+              className="flex-shrink-0"
+              aria-label="Copy releases link"
+            >
+              {copiedUrl === releasesUrl ? (
+                <Check className="w-4 h-4 text-primary" />
+              ) : (
+                <Copy className="w-4 h-4" />
+              )}
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => openExternal(releasesUrl)}
+              className="flex-shrink-0"
+            >
+              <ExternalLink className="w-4 h-4 mr-2" /> Open
+            </Button>
+          </div>
+        </div>
       </div>
 
       <AnnouncementBanner 
@@ -29,6 +85,8 @@ export default function ChymeDashboard() {
       {user && (user.isApproved || user.isAdmin) && (
         <OTPGenerationCard />
       )}
+
+      <ExternalLinkDialog />
     </div>
   );
 }
@@ -94,16 +152,6 @@ function OTPGenerationCard() {
         <CardDescription>
           Generate a one-time passcode to sign in to the Chyme Android app
         </CardDescription>
-        <div className="mt-2">
-          <a
-            href="https://github.com/chargingthefuture/mono/releases"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="text-sm text-primary hover:underline"
-          >
-            Download the latest app release
-          </a>
-        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         {!otp ? (
