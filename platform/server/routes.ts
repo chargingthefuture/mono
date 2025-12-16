@@ -4142,16 +4142,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const userIdValue = req.body.userId && typeof req.body.userId === 'string' && req.body.userId.trim() !== "" 
       ? req.body.userId.trim() 
       : undefined;
+    // Exclude userId from the spread to avoid including null/empty values, then add it conditionally
+    const { userId: _userId, ...bodyWithoutUserId } = req.body;
     const payload: any = {
-      ...req.body,
+      ...bodyWithoutUserId,
       isClaimed: !!userIdValue,
       // Explicitly set defaults for fields that have NOT NULL constraints
       isCarOwner: req.body.isCarOwner ?? false,
       isMechanic: req.body.isMechanic ?? false,
       isMobileMechanic: req.body.isMobileMechanic ?? false,
     };
-    // Only include userId if it has a value (omit it for unclaimed profiles)
-    if (userIdValue !== undefined) {
+    // Only include userId if it has a valid value (omit it for unclaimed profiles)
+    if (userIdValue) {
       payload.userId = userIdValue;
     }
     const validated = validateWithZod(insertMechanicmatchProfileSchema, payload, 'Invalid profile data');
