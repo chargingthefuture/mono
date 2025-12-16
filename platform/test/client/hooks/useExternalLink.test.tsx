@@ -204,7 +204,9 @@ describe('useExternalLink', () => {
     await user.click(copyButton);
 
     expect(writeTextMock).toHaveBeenCalledWith(testUrl);
-    expect(screen.getByText(/copied/i)).toBeInTheDocument();
+    // The "Copied" label is shown after the clipboard write and React state update,
+    // so wait for it to appear instead of using a synchronous query.
+    expect(await screen.findByText(/copied/i)).toBeInTheDocument();
   });
 });
 

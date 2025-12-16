@@ -8,6 +8,11 @@ vi.mock('@/hooks/useAuth', () => ({
   useAuth: vi.fn(),
 }));
 
+// Mock Clerk PricingTable so tests don't require a real ClerkProvider
+vi.mock('@clerk/clerk-react', () => ({
+  PricingTable: () => null,
+}));
+
 describe('UserPayments', () => {
   beforeEach(() => {
     vi.clearAllMocks();
