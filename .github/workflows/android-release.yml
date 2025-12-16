@@ -3,6 +3,8 @@ name: Build and Release Android APK
 on:
   push:
     branches: [ main ]
+    tags:
+      - 'v*'
     paths:
       - 'chyme-android/**'
       - '.github/workflows/android-release.yml'
@@ -86,3 +88,59 @@ jobs:
           name: android-apk
           path: chyme-android/app/build/outputs/apk/release/*.apk
           retention-days: 30
+
+      - name: Upload APK for release
+        uses: actions/upload-artifact@v4
+        id: apk-upload
+        if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+        with:
+          name: release-apk
+          path: chyme-android/app/build/outputs/apk/release/*.apk
+          retention-days: 1
+
+  release:
+    needs: build
+    runs-on: ubuntu-24.04
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/tags/v'))
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Download APK artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: release-apk
+          path: ./apk
+
+      - name: Get version from tag or commit
+        id: version
+        run: |
+          if [[ "${{ github.ref }}" == refs/tags/* ]]; then
+            VERSION="${{ github.ref_name }}"
+          else
+            VERSION="$(date +'%Y.%m.%d')-$(echo ${{ github.sha }} | cut -c1-7)"
+          fi
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Release version: $VERSION"
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: ${{ steps.version.outputs.version }}
+          name: Android Release ${{ steps.version.outputs.version }}
+          body: |
+            Android APK Release
+            
+            **Version:** ${{ steps.version.outputs.version }}
+            **Commit:** ${{ github.sha }}
+            **Build Date:** $(date -u +'%Y-%m-%d %H:%M:%S UTC')
+            
+            Download the APK below to install on your Android device.
+          files: ./apk/*.apk
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
