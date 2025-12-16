@@ -65,6 +65,18 @@ jobs:
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
 
+      - name: Run unit tests
+        working-directory: chyme-android
+        run: |
+          if [ -f "./gradlew" ]; then
+            chmod +x gradlew
+            ./gradlew test --no-daemon
+          else
+            gradle test --no-daemon
+          fi
+        env:
+          PLATFORM_API_BASE_URL: ${{ secrets.PLATFORM_API_BASE_URL }}
+
       - name: Assemble Android release
         working-directory: chyme-android
         run: |
