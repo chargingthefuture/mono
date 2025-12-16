@@ -6,15 +6,40 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "wouter";
-import { Wrench, Car, Plus, Settings, Search, Calendar, MessageSquare } from "lucide-react";
+import { Wrench, Car, Plus, Settings, Search, Calendar, MessageSquare, ExternalLink, Copy, Check } from "lucide-react";
 import type { MechanicmatchProfile, MechanicmatchJob, MechanicmatchServiceRequest } from "@shared/schema";
 import { AnnouncementBanner } from "@/components/announcement-banner";
 import { useAuth } from "@/hooks/useAuth";
+import { useExternalLink } from "@/hooks/useExternalLink";
+import { useToast } from "@/hooks/use-toast";
 
 export default function MechanicMatchDashboard() {
   const [, setLocation] = useLocation();
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState<string>("overview");
+  const { openExternal, ExternalLinkDialog } = useExternalLink();
+  const { toast } = useToast();
+  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+
+  const publicMechanicMatchUrl = `${window.location.origin}/apps/mechanicmatch/public`;
+
+  const copyUrl = async (url: string) => {
+    try {
+      await navigator.clipboard.writeText(url);
+      setCopiedUrl(url);
+      toast({
+        title: "Copied!",
+        description: "Public MechanicMatch directory link copied to clipboard",
+      });
+      setTimeout(() => setCopiedUrl(null), 2000);
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to copy link",
+        variant: "destructive",
+      });
+    }
+  };
 
   const { data: profile, isLoading: profileLoading } = useQuery<MechanicmatchProfile | null>({
     queryKey: ["/api/mechanicmatch/profile"],
@@ -63,6 +88,40 @@ export default function MechanicMatchDashboard() {
             <p className="text-muted-foreground">
               Connect with trusted mechanics for your vehicle needs
             </p>
+            <div className="mt-4 space-y-2">
+              <label className="text-sm font-medium">Public MechanicMatch Directory</label>
+              <p className="text-sm text-muted-foreground">
+                Share or open this link to browse all public MechanicMatch profiles in a new tab.
+              </p>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 font-mono text-xs sm:text-sm bg-muted px-2 py-1.5 rounded break-all">
+                  {publicMechanicMatchUrl}
+                </code>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => copyUrl(publicMechanicMatchUrl)}
+                  className="flex-shrink-0"
+                  data-testid="button-copy-public-mechanicmatch"
+                  aria-label="Copy public MechanicMatch directory link"
+                >
+                  {copiedUrl === publicMechanicMatchUrl ? (
+                    <Check className="w-4 h-4 text-primary" />
+                  ) : (
+                    <Copy className="w-4 h-4" />
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => openExternal(publicMechanicMatchUrl)}
+                  className="flex-shrink-0"
+                  data-testid="button-open-public-mechanicmatch"
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" /> Open
+                </Button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -103,6 +162,7 @@ export default function MechanicMatchDashboard() {
             </Button>
           </CardContent>
         </Card>
+        <ExternalLinkDialog />
       </div>
     );
   }
@@ -120,6 +180,40 @@ export default function MechanicMatchDashboard() {
             {isCarOwner && !isMechanic && "Connect with trusted mechanics for your vehicle needs"}
             {!isCarOwner && isMechanic && "Help car owners with their vehicle issues"}
           </p>
+          <div className="mt-4 space-y-2">
+            <label className="text-sm font-medium">Public MechanicMatch Directory</label>
+            <p className="text-sm text-muted-foreground">
+              Share or open this link to browse all public MechanicMatch profiles in a new tab.
+            </p>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 font-mono text-xs sm:text-sm bg-muted px-2 py-1.5 rounded break-all">
+                {publicMechanicMatchUrl}
+              </code>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => copyUrl(publicMechanicMatchUrl)}
+                className="flex-shrink-0"
+                data-testid="button-copy-public-mechanicmatch"
+                aria-label="Copy public MechanicMatch directory link"
+              >
+                {copiedUrl === publicMechanicMatchUrl ? (
+                  <Check className="w-4 h-4 text-primary" />
+                ) : (
+                  <Copy className="w-4 h-4" />
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => openExternal(publicMechanicMatchUrl)}
+                className="flex-shrink-0"
+                data-testid="button-open-public-mechanicmatch"
+              >
+                <ExternalLink className="w-4 h-4 mr-2" /> Open
+              </Button>
+            </div>
+          </div>
         </div>
         <Link href="/apps/mechanicmatch/profile">
           <Button variant="outline" size="sm" data-testid="button-edit-profile">
@@ -371,6 +465,8 @@ export default function MechanicMatchDashboard() {
             </Card>
           </TabsContent>
         )}
+
+        <ExternalLinkDialog />
       </Tabs>
     </div>
   );
