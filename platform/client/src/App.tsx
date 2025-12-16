@@ -197,6 +197,62 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+// Admin route wrapper that requires admin privileges
+function AdminRoute({ children }: { children: React.ReactNode }) {
+  const { _clerk, user, isLoading, isAdmin } = useAuth();
+
+  // First check authentication (ProtectedRoute logic)
+  if (!_clerk.clerkLoaded) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!_clerk.isSignedIn) {
+    return <Redirect to="/" />;
+  }
+
+  // Wait for user data to load before checking admin status
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Check admin status - redirect non-admin users
+  if (!isAdmin || !user?.isAdmin) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle>Access Denied</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground mb-4">
+              You do not have permission to access this page. Admin privileges are required.
+            </p>
+            <Button onClick={() => window.location.href = "/"}>
+              Go to Home
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+}
+
 // Landing/root route handler
 function RootRoute() {
   const { _clerk, user, isLoading } = useAuth();
@@ -316,39 +372,39 @@ function Router() {
         </ProtectedRoute>
       </Route>
       <Route path="/admin/users">
-        <ProtectedRoute>
+        <AdminRoute>
           <AdminUsers />
-        </ProtectedRoute>
+        </AdminRoute>
       </Route>
       <Route path="/admin/skills">
-        <ProtectedRoute>
+        <AdminRoute>
           <AdminSkills />
-        </ProtectedRoute>
+        </AdminRoute>
       </Route>
       <Route path="/admin/payments">
-        <ProtectedRoute>
+        <AdminRoute>
           <AdminPayments />
-        </ProtectedRoute>
+        </AdminRoute>
       </Route>
       <Route path="/admin/pricing">
-        <ProtectedRoute>
+        <AdminRoute>
           <AdminPricingTiers />
-        </ProtectedRoute>
+        </AdminRoute>
       </Route>
       <Route path="/admin/activity">
-        <ProtectedRoute>
+        <AdminRoute>
           <AdminActivity />
-        </ProtectedRoute>
+        </AdminRoute>
       </Route>
       <Route path="/admin/weekly-performance">
-        <ProtectedRoute>
+        <AdminRoute>
           <AdminWeeklyPerformance />
-        </ProtectedRoute>
+        </AdminRoute>
       </Route>
       <Route path="/admin/conversion-calculator">
-        <ProtectedRoute>
+        <AdminRoute>
           <ConversionCalculator />
-        </ProtectedRoute>
+        </AdminRoute>
       </Route>
       {/* Mini-app routes - all protected */}
       <Route path="/apps/supportmatch">

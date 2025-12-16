@@ -4138,19 +4138,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/mechanicmatch/admin/profiles', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const adminId = getUserId(req);
     // Ensure all required fields with defaults are explicitly set
-    // Handle userId: if not provided or empty, set to null for unclaimed profiles
+    // Handle userId: if not provided or empty, omit it entirely for unclaimed profiles
     const userIdValue = req.body.userId && typeof req.body.userId === 'string' && req.body.userId.trim() !== "" 
       ? req.body.userId.trim() 
-      : null;
-    const payload = {
+      : undefined;
+    const payload: any = {
       ...req.body,
-      userId: userIdValue,
       isClaimed: !!userIdValue,
       // Explicitly set defaults for fields that have NOT NULL constraints
       isCarOwner: req.body.isCarOwner ?? false,
       isMechanic: req.body.isMechanic ?? false,
       isMobileMechanic: req.body.isMobileMechanic ?? false,
     };
+    // Only include userId if it has a value (omit it for unclaimed profiles)
+    if (userIdValue !== undefined) {
+      payload.userId = userIdValue;
+    }
     const validated = validateWithZod(insertMechanicmatchProfileSchema, payload, 'Invalid profile data');
 
     if (!validated.isCarOwner && !validated.isMechanic) {
