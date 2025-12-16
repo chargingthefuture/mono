@@ -11,7 +11,7 @@ import { PrivacyField } from "@/components/ui/privacy-field";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { insertLighthouseProfileSchema, type LighthouseProfile } from "@shared/schema";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { Home, ExternalLink, Check as CheckIcon } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { DeleteProfileDialog } from "@/components/delete-profile-dialog";
@@ -30,6 +30,7 @@ export default function LighthouseProfilePage() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [desiredCountryOpen, setDesiredCountryOpen] = useState(false);
   const { openExternal, ExternalLinkDialog } = useExternalLink();
+  const hasInitializedRef = useRef(false);
   const { data: profileData, isLoading } = useQuery<LighthouseProfile & { userIsVerified?: boolean; firstName?: string | null } | null>({
     queryKey: ["/api/lighthouse/profile"],
   });
@@ -70,7 +71,8 @@ export default function LighthouseProfilePage() {
 
   // Load existing profile data
   useEffect(() => {
-    if (profile) {
+    if (profile && !hasInitializedRef.current) {
+      hasInitializedRef.current = true;
       form.reset({
         profileType: profile.profileType,
         bio: profile.bio || "",
@@ -84,8 +86,11 @@ export default function LighthouseProfilePage() {
         hasProperty: profile.hasProperty || false,
         isActive: profile.isActive,
       } as any);
+    } else if (!profile) {
+      // Reset flag when profile is deleted/doesn't exist
+      hasInitializedRef.current = false;
     }
-  }, [profile, form]);
+  }, [profile]); // Only initialize once when profile first loads
 
   const createMutation = useMutation({
     mutationFn: async (data: any) => apiRequest("POST", "/api/lighthouse/profile", data),
