@@ -256,8 +256,8 @@ export default function MechanicMatchProfile() {
                     <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                       <FormControl>
                         <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
+                          checked={!!field.value}
+                          onCheckedChange={(checked) => field.onChange(checked === true)}
                           data-testid="checkbox-car-owner"
                         />
                       </FormControl>
@@ -277,8 +277,8 @@ export default function MechanicMatchProfile() {
                     <FormItem className="flex flex-row items-start space-x-3 space-y-0">
                       <FormControl>
                         <Checkbox
-                          checked={field.value}
-                          onCheckedChange={field.onChange}
+                          checked={!!field.value}
+                          onCheckedChange={(checked) => field.onChange(checked === true)}
                           data-testid="checkbox-mechanic"
                         />
                       </FormControl>
@@ -657,9 +657,14 @@ export default function MechanicMatchProfile() {
                         {publicProfileUrl}
                       </code>
                       <Button
+                        type="button"
                         variant="ghost"
                         size="icon"
-                        onClick={() => copyUrl(publicProfileUrl)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          copyUrl(publicProfileUrl);
+                        }}
                         className="flex-shrink-0"
                         data-testid="button-copy-public-profile-url"
                         aria-label="Copy public profile URL"
@@ -671,9 +676,14 @@ export default function MechanicMatchProfile() {
                         )}
                       </Button>
                       <Button
+                        type="button"
                         variant="outline"
                         size="sm"
-                        onClick={() => openExternal(publicProfileUrl)}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          openExternal(publicProfileUrl);
+                        }}
                         className="flex-shrink-0"
                         data-testid="button-open-public-profile-url"
                       >
