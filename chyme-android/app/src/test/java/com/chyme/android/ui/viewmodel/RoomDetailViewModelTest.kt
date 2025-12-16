@@ -122,6 +122,7 @@ class RoomDetailViewModelTest {
         coEvery { apiService.getMessages(roomId) } returns successResponse
         every { errorResponse.isSuccessful } returns false
         every { errorResponse.code() } returns 404
+        every { errorResponse.errorBody() } returns null
         every { successResponse.isSuccessful } returns true
         every { successResponse.body() } returns emptyList()
         
@@ -221,6 +222,7 @@ class RoomDetailViewModelTest {
         every { messagesResponse.body() } returns emptyList()
         every { errorResponse.isSuccessful } returns false
         every { errorResponse.code() } returns 400
+        every { errorResponse.errorBody() } returns null
         
         viewModel = RoomDetailViewModel(roomId)
         advanceUntilIdle()
@@ -285,6 +287,7 @@ class RoomDetailViewModelTest {
         every { messagesResponse.body() } returns emptyList()
         every { errorResponse.isSuccessful } returns false
         every { errorResponse.code() } returns 403
+        every { errorResponse.errorBody() } returns null
         
         viewModel = RoomDetailViewModel(roomId)
         advanceUntilIdle()
@@ -342,6 +345,7 @@ class RoomDetailViewModelTest {
         every { messagesResponse.body() } returns emptyList()
         every { errorResponse.isSuccessful } returns false
         every { errorResponse.code() } returns 500
+        every { errorResponse.errorBody() } returns null
         
         viewModel = RoomDetailViewModel(roomId)
         advanceUntilIdle()

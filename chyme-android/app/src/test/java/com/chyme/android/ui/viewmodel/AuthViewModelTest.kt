@@ -99,6 +99,7 @@ class AuthViewModelTest {
         coEvery { apiService.getCurrentUser() } returns errorResponse
         every { errorResponse.isSuccessful } returns false
         every { errorResponse.code() } returns 404
+        every { errorResponse.errorBody() } returns null
         
         viewModel = AuthViewModel(authManager)
         advanceUntilIdle()
@@ -164,6 +165,7 @@ class AuthViewModelTest {
         coEvery { apiService.validateOTP(any()) } returns errorResponse
         every { errorResponse.isSuccessful } returns false
         every { errorResponse.code() } returns 401
+        every { errorResponse.errorBody() } returns null
         
         viewModel = AuthViewModel(authManager)
         viewModel.signInWithOTP(otp)
@@ -221,6 +223,7 @@ class AuthViewModelTest {
         coEvery { apiService.updateQuoraProfileUrl(any()) } returns errorResponse
         every { errorResponse.isSuccessful } returns false
         every { errorResponse.code() } returns 400
+        every { errorResponse.errorBody() } returns null
         
         viewModel = AuthViewModel(authManager)
         viewModel.updateQuoraProfileUrl(url)
@@ -245,19 +248,20 @@ class AuthViewModelTest {
     @Test
     fun `isLoading should be true during API call`() = runTest(testDispatcher) {
         var isLoadingDuringCall = false
+        val successResponse = mockk<retrofit2.Response<User>>(relaxed = true)
         coEvery { apiService.getCurrentUser() } coAnswers {
-            // Check that loading is true during the call
+            // At this point, the coroutine should have set isLoading = true
             isLoadingDuringCall = viewModel.isLoading.value
-            Response.success(mockk())
+            successResponse
         }
+        every { successResponse.isSuccessful } returns true
         
         viewModel = AuthViewModel(authManager)
         advanceUntilIdle()
         
         viewModel.loadUser()
-        // Advance just enough to start the coroutine and set loading to true
-        testDispatcher.scheduler.advanceTimeBy(1)
-        advanceUntilIdle()
+        // Advance the dispatcher to start the coroutine and execute until the API call
+        testDispatcher.scheduler.advanceUntilIdle()
         
         assertTrue("isLoading should be true during API call", isLoadingDuringCall)
         assertFalse(viewModel.isLoading.value)

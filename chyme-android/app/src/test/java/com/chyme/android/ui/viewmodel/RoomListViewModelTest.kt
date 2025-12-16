@@ -136,6 +136,7 @@ class RoomListViewModelTest {
         coEvery { apiService.getRooms(null) } returns errorResponse
         every { errorResponse.isSuccessful } returns false
         every { errorResponse.code() } returns 500
+        every { errorResponse.errorBody() } returns null
         
         viewModel = RoomListViewModel()
         viewModel.loadRooms()
@@ -240,6 +241,7 @@ class RoomListViewModelTest {
         var isLoadingDuringCall = false
         val successResponse = mockk<retrofit2.Response<List<Room>>>(relaxed = true)
         coEvery { apiService.getRooms(null) } coAnswers {
+            // At this point, the coroutine should have set isLoading = true
             isLoadingDuringCall = viewModel.isLoading.value
             successResponse
         }
@@ -248,9 +250,8 @@ class RoomListViewModelTest {
         
         viewModel = RoomListViewModel()
         viewModel.loadRooms()
-        // Advance just enough to start the coroutine and set loading to true
-        testDispatcher.scheduler.advanceTimeBy(1)
-        advanceUntilIdle()
+        // Advance the dispatcher to start the coroutine and execute until the API call
+        testDispatcher.scheduler.advanceUntilIdle()
         
         assertTrue("isLoading should be true during API call", isLoadingDuringCall)
         assertFalse(viewModel.isLoading.value)
