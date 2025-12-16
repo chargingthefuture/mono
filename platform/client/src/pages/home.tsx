@@ -213,10 +213,10 @@ export default function Home() {
                   data-testid="button-manage-clerk-identity"
                 >
                   <ExternalLink className="w-4 h-4 mr-2" />
-                  Manage your Clerk identity
+                  Manage your name and login
                 </Button>
                 <p className="mt-1 text-xs text-muted-foreground">
-                  Opens the Clerk User Dashboard in a new tab so you can manage your identity settings.
+                  Opens the sigin User Dashboard in a new tab to update your name and login information.
                 </p>
               </div>
             </div>
