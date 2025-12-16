@@ -646,5 +646,1301 @@
       "up": 14,
       "down": 0
     }
+  },
+  {
+    "timestamp": "2025-12-16T08:26:07.925Z",
+    "services": [
+      {
+        "name": "Main Platform",
+        "key": "main",
+        "status": "up",
+        "responseTime": 255,
+        "statusCode": 200
+      },
+      {
+        "name": "ChatGroups",
+        "key": "chatgroups",
+        "status": "up",
+        "responseTime": 204,
+        "statusCode": 200
+      },
+      {
+        "name": "Directory",
+        "key": "directory",
+        "status": "up",
+        "responseTime": 221,
+        "statusCode": 200
+      },
+      {
+        "name": "GentlePulse",
+        "key": "gentlepulse",
+        "status": "up",
+        "responseTime": 213,
+        "statusCode": 200
+      },
+      {
+        "name": "Chyme",
+        "key": "chyme",
+        "status": "up",
+        "responseTime": 234,
+        "statusCode": 200
+      },
+      {
+        "name": "Default Alive or Dead",
+        "key": "default-alive-or-dead",
+        "status": "up",
+        "responseTime": 235,
+        "statusCode": 200
+      },
+      {
+        "name": "Workforce Recruiter",
+        "key": "workforce-recruiter",
+        "status": "up",
+        "responseTime": 233,
+        "statusCode": 200
+      },
+      {
+        "name": "LightHouse",
+        "key": "lighthouse",
+        "status": "up",
+        "responseTime": 274,
+        "statusCode": 200
+      },
+      {
+        "name": "LostMail",
+        "key": "lostmail",
+        "status": "up",
+        "responseTime": 258,
+        "statusCode": 200
+      },
+      {
+        "name": "MechanicMatch",
+        "key": "mechanicmatch",
+        "status": "up",
+        "responseTime": 251,
+        "statusCode": 200
+      },
+      {
+        "name": "CompareNotes",
+        "key": "research",
+        "status": "up",
+        "responseTime": 354,
+        "statusCode": 200
+      },
+      {
+        "name": "SocketRelay",
+        "key": "socketrelay",
+        "status": "up",
+        "responseTime": 343,
+        "statusCode": 200
+      },
+      {
+        "name": "SupportMatch",
+        "key": "supportmatch",
+        "status": "up",
+        "responseTime": 358,
+        "statusCode": 200
+      },
+      {
+        "name": "TrustTransport",
+        "key": "trusttransport",
+        "status": "up",
+        "responseTime": 365,
+        "statusCode": 200
+      }
+    ],
+    "overall": {
+      "total": 14,
+      "up": 14,
+      "down": 0
+    }
+  },
+  {
+    "timestamp": "2025-12-16T08:56:28.319Z",
+    "services": [
+      {
+        "name": "Main Platform",
+        "key": "main",
+        "status": "up",
+        "responseTime": 486,
+        "statusCode": 200
+      },
+      {
+        "name": "ChatGroups",
+        "key": "chatgroups",
+        "status": "up",
+        "responseTime": 476,
+        "statusCode": 200
+      },
+      {
+        "name": "Directory",
+        "key": "directory",
+        "status": "up",
+        "responseTime": 488,
+        "statusCode": 200
+      },
+      {
+        "name": "GentlePulse",
+        "key": "gentlepulse",
+        "status": "up",
+        "responseTime": 502,
+        "statusCode": 200
+      },
+      {
+        "name": "Chyme",
+        "key": "chyme",
+        "status": "up",
+        "responseTime": 787,
+        "statusCode": 200
+      },
+      {
+        "name": "Default Alive or Dead",
+        "key": "default-alive-or-dead",
+        "status": "up",
+        "responseTime": 546,
+        "statusCode": 200
+      },
+      {
+        "name": "Workforce Recruiter",
+        "key": "workforce-recruiter",
+        "status": "up",
+        "responseTime": 795,
+        "statusCode": 200
+      },
+      {
+        "name": "LightHouse",
+        "key": "lighthouse",
+        "status": "up",
+        "responseTime": 760,
+        "statusCode": 200
+      },
+      {
+        "name": "LostMail",
+        "key": "lostmail",
+        "status": "up",
+        "responseTime": 721,
+        "statusCode": 200
+      },
+      {
+        "name": "MechanicMatch",
+        "key": "mechanicmatch",
+        "status": "up",
+        "responseTime": 711,
+        "statusCode": 200
+      },
+      {
+        "name": "CompareNotes",
+        "key": "research",
+        "status": "up",
+        "responseTime": 580,
+        "statusCode": 200
+      },
+      {
+        "name": "SocketRelay",
+        "key": "socketrelay",
+        "status": "up",
+        "responseTime": 573,
+        "statusCode": 200
+      },
+      {
+        "name": "SupportMatch",
+        "key": "supportmatch",
+        "status": "up",
+        "responseTime": 619,
+        "statusCode": 200
+      },
+      {
+        "name": "TrustTransport",
+        "key": "trusttransport",
+        "status": "up",
+        "responseTime": 790,
+        "statusCode": 200
+      }
+    ],
+    "overall": {
+      "total": 14,
+      "up": 14,
+      "down": 0
+    }
+  },
+  {
+    "timestamp": "2025-12-16T09:34:41.725Z",
+    "services": [
+      {
+        "name": "Main Platform",
+        "key": "main",
+        "status": "up",
+        "responseTime": 103,
+        "statusCode": 200
+      },
+      {
+        "name": "ChatGroups",
+        "key": "chatgroups",
+        "status": "up",
+        "responseTime": 104,
+        "statusCode": 200
+      },
+      {
+        "name": "Directory",
+        "key": "directory",
+        "status": "up",
+        "responseTime": 92,
+        "statusCode": 200
+      },
+      {
+        "name": "GentlePulse",
+        "key": "gentlepulse",
+        "status": "up",
+        "responseTime": 69,
+        "statusCode": 200
+      },
+      {
+        "name": "Chyme",
+        "key": "chyme",
+        "status": "up",
+        "responseTime": 98,
+        "statusCode": 200
+      },
+      {
+        "name": "Default Alive or Dead",
+        "key": "default-alive-or-dead",
+        "status": "up",
+        "responseTime": 80,
+        "statusCode": 200
+      },
+      {
+        "name": "Workforce Recruiter",
+        "key": "workforce-recruiter",
+        "status": "up",
+        "responseTime": 122,
+        "statusCode": 200
+      },
+      {
+        "name": "LightHouse",
+        "key": "lighthouse",
+        "status": "up",
+        "responseTime": 76,
+        "statusCode": 200
+      },
+      {
+        "name": "LostMail",
+        "key": "lostmail",
+        "status": "up",
+        "responseTime": 111,
+        "statusCode": 200
+      },
+      {
+        "name": "MechanicMatch",
+        "key": "mechanicmatch",
+        "status": "up",
+        "responseTime": 81,
+        "statusCode": 200
+      },
+      {
+        "name": "CompareNotes",
+        "key": "research",
+        "status": "up",
+        "responseTime": 113,
+        "statusCode": 200
+      },
+      {
+        "name": "SocketRelay",
+        "key": "socketrelay",
+        "status": "up",
+        "responseTime": 82,
+        "statusCode": 200
+      },
+      {
+        "name": "SupportMatch",
+        "key": "supportmatch",
+        "status": "up",
+        "responseTime": 96,
+        "statusCode": 200
+      },
+      {
+        "name": "TrustTransport",
+        "key": "trusttransport",
+        "status": "up",
+        "responseTime": 119,
+        "statusCode": 200
+      }
+    ],
+    "overall": {
+      "total": 14,
+      "up": 14,
+      "down": 0
+    }
+  },
+  {
+    "timestamp": "2025-12-16T09:54:01.243Z",
+    "services": [
+      {
+        "name": "Main Platform",
+        "key": "main",
+        "status": "up",
+        "responseTime": 399,
+        "statusCode": 200
+      },
+      {
+        "name": "ChatGroups",
+        "key": "chatgroups",
+        "status": "up",
+        "responseTime": 369,
+        "statusCode": 200
+      },
+      {
+        "name": "Directory",
+        "key": "directory",
+        "status": "up",
+        "responseTime": 487,
+        "statusCode": 200
+      },
+      {
+        "name": "GentlePulse",
+        "key": "gentlepulse",
+        "status": "up",
+        "responseTime": 438,
+        "statusCode": 200
+      },
+      {
+        "name": "Chyme",
+        "key": "chyme",
+        "status": "up",
+        "responseTime": 521,
+        "statusCode": 200
+      },
+      {
+        "name": "Default Alive or Dead",
+        "key": "default-alive-or-dead",
+        "status": "up",
+        "responseTime": 515,
+        "statusCode": 200
+      },
+      {
+        "name": "Workforce Recruiter",
+        "key": "workforce-recruiter",
+        "status": "up",
+        "responseTime": 503,
+        "statusCode": 200
+      },
+      {
+        "name": "LightHouse",
+        "key": "lighthouse",
+        "status": "up",
+        "responseTime": 568,
+        "statusCode": 200
+      },
+      {
+        "name": "LostMail",
+        "key": "lostmail",
+        "status": "up",
+        "responseTime": 620,
+        "statusCode": 200
+      },
+      {
+        "name": "MechanicMatch",
+        "key": "mechanicmatch",
+        "status": "up",
+        "responseTime": 573,
+        "statusCode": 200
+      },
+      {
+        "name": "CompareNotes",
+        "key": "research",
+        "status": "up",
+        "responseTime": 687,
+        "statusCode": 200
+      },
+      {
+        "name": "SocketRelay",
+        "key": "socketrelay",
+        "status": "up",
+        "responseTime": 624,
+        "statusCode": 200
+      },
+      {
+        "name": "SupportMatch",
+        "key": "supportmatch",
+        "status": "up",
+        "responseTime": 758,
+        "statusCode": 200
+      },
+      {
+        "name": "TrustTransport",
+        "key": "trusttransport",
+        "status": "up",
+        "responseTime": 690,
+        "statusCode": 200
+      }
+    ],
+    "overall": {
+      "total": 14,
+      "up": 14,
+      "down": 0
+    }
+  },
+  {
+    "timestamp": "2025-12-16T10:29:31.414Z",
+    "services": [
+      {
+        "name": "Main Platform",
+        "key": "main",
+        "status": "up",
+        "responseTime": 174,
+        "statusCode": 200
+      },
+      {
+        "name": "ChatGroups",
+        "key": "chatgroups",
+        "status": "up",
+        "responseTime": 142,
+        "statusCode": 200
+      },
+      {
+        "name": "Directory",
+        "key": "directory",
+        "status": "up",
+        "responseTime": 172,
+        "statusCode": 200
+      },
+      {
+        "name": "GentlePulse",
+        "key": "gentlepulse",
+        "status": "up",
+        "responseTime": 167,
+        "statusCode": 200
+      },
+      {
+        "name": "Chyme",
+        "key": "chyme",
+        "status": "up",
+        "responseTime": 237,
+        "statusCode": 200
+      },
+      {
+        "name": "Default Alive or Dead",
+        "key": "default-alive-or-dead",
+        "status": "up",
+        "responseTime": 219,
+        "statusCode": 200
+      },
+      {
+        "name": "Workforce Recruiter",
+        "key": "workforce-recruiter",
+        "status": "up",
+        "responseTime": 244,
+        "statusCode": 200
+      },
+      {
+        "name": "LightHouse",
+        "key": "lighthouse",
+        "status": "up",
+        "responseTime": 227,
+        "statusCode": 200
+      },
+      {
+        "name": "LostMail",
+        "key": "lostmail",
+        "status": "up",
+        "responseTime": 241,
+        "statusCode": 200
+      },
+      {
+        "name": "MechanicMatch",
+        "key": "mechanicmatch",
+        "status": "up",
+        "responseTime": 261,
+        "statusCode": 200
+      },
+      {
+        "name": "CompareNotes",
+        "key": "research",
+        "status": "up",
+        "responseTime": 270,
+        "statusCode": 200
+      },
+      {
+        "name": "SocketRelay",
+        "key": "socketrelay",
+        "status": "up",
+        "responseTime": 264,
+        "statusCode": 200
+      },
+      {
+        "name": "SupportMatch",
+        "key": "supportmatch",
+        "status": "up",
+        "responseTime": 300,
+        "statusCode": 200
+      },
+      {
+        "name": "TrustTransport",
+        "key": "trusttransport",
+        "status": "up",
+        "responseTime": 296,
+        "statusCode": 200
+      }
+    ],
+    "overall": {
+      "total": 14,
+      "up": 14,
+      "down": 0
+    }
+  },
+  {
+    "timestamp": "2025-12-16T10:53:14.167Z",
+    "services": [
+      {
+        "name": "Main Platform",
+        "key": "main",
+        "status": "up",
+        "responseTime": 440,
+        "statusCode": 200
+      },
+      {
+        "name": "ChatGroups",
+        "key": "chatgroups",
+        "status": "up",
+        "responseTime": 405,
+        "statusCode": 200
+      },
+      {
+        "name": "Directory",
+        "key": "directory",
+        "status": "up",
+        "responseTime": 382,
+        "statusCode": 200
+      },
+      {
+        "name": "GentlePulse",
+        "key": "gentlepulse",
+        "status": "up",
+        "responseTime": 433,
+        "statusCode": 200
+      },
+      {
+        "name": "Chyme",
+        "key": "chyme",
+        "status": "up",
+        "responseTime": 454,
+        "statusCode": 200
+      },
+      {
+        "name": "Default Alive or Dead",
+        "key": "default-alive-or-dead",
+        "status": "up",
+        "responseTime": 449,
+        "statusCode": 200
+      },
+      {
+        "name": "Workforce Recruiter",
+        "key": "workforce-recruiter",
+        "status": "up",
+        "responseTime": 417,
+        "statusCode": 200
+      },
+      {
+        "name": "LightHouse",
+        "key": "lighthouse",
+        "status": "up",
+        "responseTime": 482,
+        "statusCode": 200
+      },
+      {
+        "name": "LostMail",
+        "key": "lostmail",
+        "status": "up",
+        "responseTime": 482,
+        "statusCode": 200
+      },
+      {
+        "name": "MechanicMatch",
+        "key": "mechanicmatch",
+        "status": "up",
+        "responseTime": 554,
+        "statusCode": 200
+      },
+      {
+        "name": "CompareNotes",
+        "key": "research",
+        "status": "up",
+        "responseTime": 523,
+        "statusCode": 200
+      },
+      {
+        "name": "SocketRelay",
+        "key": "socketrelay",
+        "status": "up",
+        "responseTime": 497,
+        "statusCode": 200
+      },
+      {
+        "name": "SupportMatch",
+        "key": "supportmatch",
+        "status": "up",
+        "responseTime": 550,
+        "statusCode": 200
+      },
+      {
+        "name": "TrustTransport",
+        "key": "trusttransport",
+        "status": "up",
+        "responseTime": 475,
+        "statusCode": 200
+      }
+    ],
+    "overall": {
+      "total": 14,
+      "up": 14,
+      "down": 0
+    }
+  },
+  {
+    "timestamp": "2025-12-16T11:21:28.823Z",
+    "services": [
+      {
+        "name": "Main Platform",
+        "key": "main",
+        "status": "up",
+        "responseTime": 379,
+        "statusCode": 200
+      },
+      {
+        "name": "ChatGroups",
+        "key": "chatgroups",
+        "status": "up",
+        "responseTime": 361,
+        "statusCode": 200
+      },
+      {
+        "name": "Directory",
+        "key": "directory",
+        "status": "up",
+        "responseTime": 365,
+        "statusCode": 200
+      },
+      {
+        "name": "GentlePulse",
+        "key": "gentlepulse",
+        "status": "up",
+        "responseTime": 361,
+        "statusCode": 200
+      },
+      {
+        "name": "Chyme",
+        "key": "chyme",
+        "status": "up",
+        "responseTime": 494,
+        "statusCode": 200
+      },
+      {
+        "name": "Default Alive or Dead",
+        "key": "default-alive-or-dead",
+        "status": "up",
+        "responseTime": 499,
+        "statusCode": 200
+      },
+      {
+        "name": "Workforce Recruiter",
+        "key": "workforce-recruiter",
+        "status": "up",
+        "responseTime": 604,
+        "statusCode": 200
+      },
+      {
+        "name": "LightHouse",
+        "key": "lighthouse",
+        "status": "up",
+        "responseTime": 584,
+        "statusCode": 200
+      },
+      {
+        "name": "LostMail",
+        "key": "lostmail",
+        "status": "up",
+        "responseTime": 613,
+        "statusCode": 200
+      },
+      {
+        "name": "MechanicMatch",
+        "key": "mechanicmatch",
+        "status": "up",
+        "responseTime": 609,
+        "statusCode": 200
+      },
+      {
+        "name": "CompareNotes",
+        "key": "research",
+        "status": "up",
+        "responseTime": 661,
+        "statusCode": 200
+      },
+      {
+        "name": "SocketRelay",
+        "key": "socketrelay",
+        "status": "up",
+        "responseTime": 680,
+        "statusCode": 200
+      },
+      {
+        "name": "SupportMatch",
+        "key": "supportmatch",
+        "status": "up",
+        "responseTime": 682,
+        "statusCode": 200
+      },
+      {
+        "name": "TrustTransport",
+        "key": "trusttransport",
+        "status": "up",
+        "responseTime": 683,
+        "statusCode": 200
+      }
+    ],
+    "overall": {
+      "total": 14,
+      "up": 14,
+      "down": 0
+    }
+  },
+  {
+    "timestamp": "2025-12-16T11:40:18.495Z",
+    "services": [
+      {
+        "name": "Main Platform",
+        "key": "main",
+        "status": "up",
+        "responseTime": 490,
+        "statusCode": 200
+      },
+      {
+        "name": "ChatGroups",
+        "key": "chatgroups",
+        "status": "up",
+        "responseTime": 334,
+        "statusCode": 200
+      },
+      {
+        "name": "Directory",
+        "key": "directory",
+        "status": "up",
+        "responseTime": 306,
+        "statusCode": 200
+      },
+      {
+        "name": "GentlePulse",
+        "key": "gentlepulse",
+        "status": "up",
+        "responseTime": 391,
+        "statusCode": 200
+      },
+      {
+        "name": "Chyme",
+        "key": "chyme",
+        "status": "up",
+        "responseTime": 318,
+        "statusCode": 200
+      },
+      {
+        "name": "Default Alive or Dead",
+        "key": "default-alive-or-dead",
+        "status": "up",
+        "responseTime": 322,
+        "statusCode": 200
+      },
+      {
+        "name": "Workforce Recruiter",
+        "key": "workforce-recruiter",
+        "status": "up",
+        "responseTime": 370,
+        "statusCode": 200
+      },
+      {
+        "name": "LightHouse",
+        "key": "lighthouse",
+        "status": "up",
+        "responseTime": 378,
+        "statusCode": 200
+      },
+      {
+        "name": "LostMail",
+        "key": "lostmail",
+        "status": "up",
+        "responseTime": 439,
+        "statusCode": 200
+      },
+      {
+        "name": "MechanicMatch",
+        "key": "mechanicmatch",
+        "status": "up",
+        "responseTime": 452,
+        "statusCode": 200
+      },
+      {
+        "name": "CompareNotes",
+        "key": "research",
+        "status": "up",
+        "responseTime": 485,
+        "statusCode": 200
+      },
+      {
+        "name": "SocketRelay",
+        "key": "socketrelay",
+        "status": "up",
+        "responseTime": 500,
+        "statusCode": 200
+      },
+      {
+        "name": "SupportMatch",
+        "key": "supportmatch",
+        "status": "up",
+        "responseTime": 507,
+        "statusCode": 200
+      },
+      {
+        "name": "TrustTransport",
+        "key": "trusttransport",
+        "status": "up",
+        "responseTime": 508,
+        "statusCode": 200
+      }
+    ],
+    "overall": {
+      "total": 14,
+      "up": 14,
+      "down": 0
+    }
+  },
+  {
+    "timestamp": "2025-12-16T11:53:17.041Z",
+    "services": [
+      {
+        "name": "Main Platform",
+        "key": "main",
+        "status": "up",
+        "responseTime": 383,
+        "statusCode": 200
+      },
+      {
+        "name": "ChatGroups",
+        "key": "chatgroups",
+        "status": "up",
+        "responseTime": 327,
+        "statusCode": 200
+      },
+      {
+        "name": "Directory",
+        "key": "directory",
+        "status": "up",
+        "responseTime": 310,
+        "statusCode": 200
+      },
+      {
+        "name": "GentlePulse",
+        "key": "gentlepulse",
+        "status": "up",
+        "responseTime": 313,
+        "statusCode": 200
+      },
+      {
+        "name": "Chyme",
+        "key": "chyme",
+        "status": "up",
+        "responseTime": 389,
+        "statusCode": 200
+      },
+      {
+        "name": "Default Alive or Dead",
+        "key": "default-alive-or-dead",
+        "status": "up",
+        "responseTime": 447,
+        "statusCode": 200
+      },
+      {
+        "name": "Workforce Recruiter",
+        "key": "workforce-recruiter",
+        "status": "up",
+        "responseTime": 442,
+        "statusCode": 200
+      },
+      {
+        "name": "LightHouse",
+        "key": "lighthouse",
+        "status": "up",
+        "responseTime": 629,
+        "statusCode": 200
+      },
+      {
+        "name": "LostMail",
+        "key": "lostmail",
+        "status": "up",
+        "responseTime": 399,
+        "statusCode": 200
+      },
+      {
+        "name": "MechanicMatch",
+        "key": "mechanicmatch",
+        "status": "up",
+        "responseTime": 515,
+        "statusCode": 200
+      },
+      {
+        "name": "CompareNotes",
+        "key": "research",
+        "status": "up",
+        "responseTime": 534,
+        "statusCode": 200
+      },
+      {
+        "name": "SocketRelay",
+        "key": "socketrelay",
+        "status": "up",
+        "responseTime": 414,
+        "statusCode": 200
+      },
+      {
+        "name": "SupportMatch",
+        "key": "supportmatch",
+        "status": "up",
+        "responseTime": 433,
+        "statusCode": 200
+      },
+      {
+        "name": "TrustTransport",
+        "key": "trusttransport",
+        "status": "up",
+        "responseTime": 457,
+        "statusCode": 200
+      }
+    ],
+    "overall": {
+      "total": 14,
+      "up": 14,
+      "down": 0
+    }
+  },
+  {
+    "timestamp": "2025-12-16T12:49:42.061Z",
+    "services": [
+      {
+        "name": "Main Platform",
+        "key": "main",
+        "status": "up",
+        "responseTime": 308,
+        "statusCode": 200
+      },
+      {
+        "name": "ChatGroups",
+        "key": "chatgroups",
+        "status": "up",
+        "responseTime": 241,
+        "statusCode": 200
+      },
+      {
+        "name": "Directory",
+        "key": "directory",
+        "status": "up",
+        "responseTime": 282,
+        "statusCode": 200
+      },
+      {
+        "name": "GentlePulse",
+        "key": "gentlepulse",
+        "status": "up",
+        "responseTime": 278,
+        "statusCode": 200
+      },
+      {
+        "name": "Chyme",
+        "key": "chyme",
+        "status": "up",
+        "responseTime": 335,
+        "statusCode": 200
+      },
+      {
+        "name": "Default Alive or Dead",
+        "key": "default-alive-or-dead",
+        "status": "up",
+        "responseTime": 306,
+        "statusCode": 200
+      },
+      {
+        "name": "Workforce Recruiter",
+        "key": "workforce-recruiter",
+        "status": "up",
+        "responseTime": 374,
+        "statusCode": 200
+      },
+      {
+        "name": "LightHouse",
+        "key": "lighthouse",
+        "status": "up",
+        "responseTime": 408,
+        "statusCode": 200
+      },
+      {
+        "name": "LostMail",
+        "key": "lostmail",
+        "status": "up",
+        "responseTime": 425,
+        "statusCode": 200
+      },
+      {
+        "name": "MechanicMatch",
+        "key": "mechanicmatch",
+        "status": "up",
+        "responseTime": 455,
+        "statusCode": 200
+      },
+      {
+        "name": "CompareNotes",
+        "key": "research",
+        "status": "up",
+        "responseTime": 490,
+        "statusCode": 200
+      },
+      {
+        "name": "SocketRelay",
+        "key": "socketrelay",
+        "status": "up",
+        "responseTime": 481,
+        "statusCode": 200
+      },
+      {
+        "name": "SupportMatch",
+        "key": "supportmatch",
+        "status": "up",
+        "responseTime": 528,
+        "statusCode": 200
+      },
+      {
+        "name": "TrustTransport",
+        "key": "trusttransport",
+        "status": "up",
+        "responseTime": 526,
+        "statusCode": 200
+      }
+    ],
+    "overall": {
+      "total": 14,
+      "up": 14,
+      "down": 0
+    }
+  },
+  {
+    "timestamp": "2025-12-16T13:33:29.170Z",
+    "services": [
+      {
+        "name": "Main Platform",
+        "key": "main",
+        "status": "up",
+        "responseTime": 238,
+        "statusCode": 200
+      },
+      {
+        "name": "ChatGroups",
+        "key": "chatgroups",
+        "status": "up",
+        "responseTime": 142,
+        "statusCode": 200
+      },
+      {
+        "name": "Directory",
+        "key": "directory",
+        "status": "up",
+        "responseTime": 151,
+        "statusCode": 200
+      },
+      {
+        "name": "GentlePulse",
+        "key": "gentlepulse",
+        "status": "up",
+        "responseTime": 178,
+        "statusCode": 200
+      },
+      {
+        "name": "Chyme",
+        "key": "chyme",
+        "status": "up",
+        "responseTime": 204,
+        "statusCode": 200
+      },
+      {
+        "name": "Default Alive or Dead",
+        "key": "default-alive-or-dead",
+        "status": "up",
+        "responseTime": 186,
+        "statusCode": 200
+      },
+      {
+        "name": "Workforce Recruiter",
+        "key": "workforce-recruiter",
+        "status": "up",
+        "responseTime": 180,
+        "statusCode": 200
+      },
+      {
+        "name": "LightHouse",
+        "key": "lighthouse",
+        "status": "up",
+        "responseTime": 178,
+        "statusCode": 200
+      },
+      {
+        "name": "LostMail",
+        "key": "lostmail",
+        "status": "up",
+        "responseTime": 197,
+        "statusCode": 200
+      },
+      {
+        "name": "MechanicMatch",
+        "key": "mechanicmatch",
+        "status": "up",
+        "responseTime": 223,
+        "statusCode": 200
+      },
+      {
+        "name": "CompareNotes",
+        "key": "research",
+        "status": "up",
+        "responseTime": 210,
+        "statusCode": 200
+      },
+      {
+        "name": "SocketRelay",
+        "key": "socketrelay",
+        "status": "up",
+        "responseTime": 210,
+        "statusCode": 200
+      },
+      {
+        "name": "SupportMatch",
+        "key": "supportmatch",
+        "status": "up",
+        "responseTime": 223,
+        "statusCode": 200
+      },
+      {
+        "name": "TrustTransport",
+        "key": "trusttransport",
+        "status": "up",
+        "responseTime": 231,
+        "statusCode": 200
+      }
+    ],
+    "overall": {
+      "total": 14,
+      "up": 14,
+      "down": 0
+    }
+  },
+  {
+    "timestamp": "2025-12-16T13:59:04.968Z",
+    "services": [
+      {
+        "name": "Main Platform",
+        "key": "main",
+        "status": "up",
+        "responseTime": 277,
+        "statusCode": 200
+      },
+      {
+        "name": "ChatGroups",
+        "key": "chatgroups",
+        "status": "up",
+        "responseTime": 238,
+        "statusCode": 200
+      },
+      {
+        "name": "Directory",
+        "key": "directory",
+        "status": "up",
+        "responseTime": 259,
+        "statusCode": 200
+      },
+      {
+        "name": "GentlePulse",
+        "key": "gentlepulse",
+        "status": "up",
+        "responseTime": 272,
+        "statusCode": 200
+      },
+      {
+        "name": "Chyme",
+        "key": "chyme",
+        "status": "up",
+        "responseTime": 253,
+        "statusCode": 200
+      },
+      {
+        "name": "Default Alive or Dead",
+        "key": "default-alive-or-dead",
+        "status": "up",
+        "responseTime": 264,
+        "statusCode": 200
+      },
+      {
+        "name": "Workforce Recruiter",
+        "key": "workforce-recruiter",
+        "status": "up",
+        "responseTime": 246,
+        "statusCode": 200
+      },
+      {
+        "name": "LightHouse",
+        "key": "lighthouse",
+        "status": "up",
+        "responseTime": 276,
+        "statusCode": 200
+      },
+      {
+        "name": "LostMail",
+        "key": "lostmail",
+        "status": "up",
+        "responseTime": 283,
+        "statusCode": 200
+      },
+      {
+        "name": "MechanicMatch",
+        "key": "mechanicmatch",
+        "status": "up",
+        "responseTime": 265,
+        "statusCode": 200
+      },
+      {
+        "name": "CompareNotes",
+        "key": "research",
+        "status": "up",
+        "responseTime": 267,
+        "statusCode": 200
+      },
+      {
+        "name": "SocketRelay",
+        "key": "socketrelay",
+        "status": "up",
+        "responseTime": 270,
+        "statusCode": 200
+      },
+      {
+        "name": "SupportMatch",
+        "key": "supportmatch",
+        "status": "up",
+        "responseTime": 279,
+        "statusCode": 200
+      },
+      {
+        "name": "TrustTransport",
+        "key": "trusttransport",
+        "status": "up",
+        "responseTime": 271,
+        "statusCode": 200
+      }
+    ],
+    "overall": {
+      "total": 14,
+      "up": 14,
+      "down": 0
+    }
   }
 ]
