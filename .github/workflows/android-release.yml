@@ -3,8 +3,14 @@ name: Build and Release Android APK
 on:
   push:
     branches: [ main ]
+    paths:
+      - 'chyme-android/**'
+      - '.github/workflows/android-release.yml'
   pull_request:
     branches: [ main ]
+    paths:
+      - 'chyme-android/**'
+      - '.github/workflows/android-release.yml'
 
 jobs:
   build:
