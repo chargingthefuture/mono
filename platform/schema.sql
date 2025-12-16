@@ -883,6 +883,47 @@ CREATE TABLE IF NOT EXISTS chyme_announcements (
   updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
+-- Chyme Rooms
+CREATE TABLE IF NOT EXISTS chyme_rooms (
+  id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+  name VARCHAR(200) NOT NULL,
+  description TEXT,
+  room_type VARCHAR(20) NOT NULL DEFAULT 'public',
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  max_participants INTEGER,
+  created_by VARCHAR NOT NULL REFERENCES users(id),
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Chyme Room Participants
+CREATE TABLE IF NOT EXISTS chyme_room_participants (
+  id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+  room_id VARCHAR NOT NULL REFERENCES chyme_rooms(id) ON DELETE CASCADE,
+  user_id VARCHAR NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  is_muted BOOLEAN NOT NULL DEFAULT false,
+  is_speaking BOOLEAN NOT NULL DEFAULT false,
+  joined_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  left_at TIMESTAMP
+);
+
+CREATE INDEX IF NOT EXISTS chyme_room_participants_room_id_idx ON chyme_room_participants(room_id);
+CREATE INDEX IF NOT EXISTS chyme_room_participants_user_id_idx ON chyme_room_participants(user_id);
+CREATE INDEX IF NOT EXISTS chyme_room_participants_active_idx ON chyme_room_participants(room_id, left_at);
+
+-- Chyme Messages
+CREATE TABLE IF NOT EXISTS chyme_messages (
+  id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+  room_id VARCHAR NOT NULL REFERENCES chyme_rooms(id) ON DELETE CASCADE,
+  user_id VARCHAR NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  content TEXT NOT NULL,
+  is_anonymous BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS chyme_messages_room_id_idx ON chyme_messages(room_id);
+CREATE INDEX IF NOT EXISTS chyme_messages_created_at_idx ON chyme_messages(created_at);
+
 -- ========================================
 -- WORKFORCE RECRUITER TRACKER APP TABLES
 -- ========================================

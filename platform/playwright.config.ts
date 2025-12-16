@@ -1,4 +1,10 @@
 import { defineConfig, devices } from '@playwright/test';
+import { config } from 'dotenv';
+import { resolve } from 'path';
+
+// Load environment variables from .env files (same as db.ts does)
+config({ path: resolve(process.cwd(), '.env.local') });
+config({ path: resolve(process.cwd(), '.env') });
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -62,6 +68,10 @@ export default defineConfig({
     url: 'http://localhost:5000',
     reuseExistingServer: !process.env.CI,
     timeout: process.env.CI ? 180 * 1000 : 120 * 1000, // 3 minutes for CI, 2 minutes locally
+    env: {
+      // Pass through all environment variables to the webServer (including those loaded from .env files)
+      ...process.env,
+    },
   },
 });
 

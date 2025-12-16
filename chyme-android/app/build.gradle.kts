@@ -30,7 +30,7 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
-        
+
         // BuildConfig fields from local.properties or environment variables (for CI)
         // Priority: Environment variable > local.properties > default
         val platformApiUrl = System.getenv("PLATFORM_API_BASE_URL")
@@ -38,6 +38,13 @@ android {
             ?: "https://your-platform-domain.com"
         
         buildConfigField("String", "PLATFORM_API_BASE_URL", "\"$platformApiUrl\"")
+
+        // Sentry DSN for Android (client-side error reporting)
+        // Priority: Environment variable > local.properties > empty (disabled)
+        val sentryDsnAndroid = System.getenv("SENTRY_DSN_ANDROID")
+            ?: localProperties.getProperty("SENTRY_DSN_ANDROID")
+            ?: ""
+        buildConfigField("String", "SENTRY_DSN", "\"$sentryDsnAndroid\"")
     }
 
     signingConfigs {
@@ -242,5 +249,9 @@ dependencies {
     androidTestImplementation("io.mockk:mockk-android:1.13.8")
     debugImplementation("androidx.compose.ui:ui-tooling")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
+
+    // Sentry for Android (client-side error tracking and performance)
+    implementation("io.sentry:sentry-android:7.16.0")
+    implementation("io.sentry:sentry-android-okhttp:7.16.0")
 }
 

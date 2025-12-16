@@ -210,6 +210,15 @@ import {
   type InsertDefaultAliveOrDeadEbitdaSnapshot,
   type ChymeAnnouncement,
   type InsertChymeAnnouncement,
+  chymeRooms,
+  type ChymeRoom,
+  type InsertChymeRoom,
+  chymeRoomParticipants,
+  type ChymeRoomParticipant,
+  type InsertChymeRoomParticipant,
+  chymeMessages,
+  type ChymeMessage,
+  type InsertChymeMessage,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, asc, sql, or, inArray, gte, lte, lt } from "drizzle-orm";
@@ -773,6 +782,25 @@ export interface IStorage {
   getAllChymeAnnouncements(): Promise<ChymeAnnouncement[]>;
   updateChymeAnnouncement(id: string, announcement: Partial<InsertChymeAnnouncement>): Promise<ChymeAnnouncement>;
   deactivateChymeAnnouncement(id: string): Promise<ChymeAnnouncement>;
+
+  // Chyme Room operations
+  createChymeRoom(room: InsertChymeRoom): Promise<ChymeRoom>;
+  getChymeRoom(id: string): Promise<ChymeRoom | undefined>;
+  getChymeRooms(roomType?: "public" | "private"): Promise<ChymeRoom[]>;
+  updateChymeRoom(id: string, room: Partial<InsertChymeRoom>): Promise<ChymeRoom>;
+  deactivateChymeRoom(id: string): Promise<ChymeRoom>;
+  getChymeRoomParticipantCount(roomId: string): Promise<number>;
+
+  // Chyme Room Participant operations
+  joinChymeRoom(participant: InsertChymeRoomParticipant): Promise<ChymeRoomParticipant>;
+  leaveChymeRoom(roomId: string, userId: string): Promise<void>;
+  getChymeRoomParticipants(roomId: string): Promise<ChymeRoomParticipant[]>;
+  getChymeRoomParticipant(roomId: string, userId: string): Promise<ChymeRoomParticipant | undefined>;
+  updateChymeRoomParticipant(roomId: string, userId: string, updates: Partial<InsertChymeRoomParticipant>): Promise<ChymeRoomParticipant>;
+
+  // Chyme Message operations
+  createChymeMessage(message: InsertChymeMessage): Promise<ChymeMessage>;
+  getChymeMessages(roomId: string): Promise<ChymeMessage[]>;
 
   // ========================================
   // WORKFORCE RECRUITER OPERATIONS
@@ -6473,6 +6501,191 @@ export class DatabaseStorage implements IStorage {
       .where(eq(chymeAnnouncements.id, id))
       .returning();
     return announcement;
+  }
+
+  // Chyme Room operations
+  async createChymeRoom(roomData: InsertChymeRoom): Promise<ChymeRoom> {
+    const [room] = await db
+      .insert(chymeRooms)
+      .values(roomData)
+      .returning();
+    return room;
+  }
+
+  async getChymeRoom(id: string): Promise<ChymeRoom | undefined> {
+    const [room] = await db
+      .select()
+      .from(chymeRooms)
+      .where(eq(chymeRooms.id, id));
+    return room;
+  }
+
+  async getChymeRooms(roomType?: "public" | "private"): Promise<ChymeRoom[]> {
+    const conditions = [eq(chymeRooms.isActive, true)];
+    if (roomType) {
+      conditions.push(eq(chymeRooms.roomType, roomType));
+    }
+    return await db
+      .select()
+      .from(chymeRooms)
+      .where(and(...conditions))
+      .orderBy(desc(chymeRooms.createdAt));
+  }
+
+  async updateChymeRoom(id: string, roomData: Partial<InsertChymeRoom>): Promise<ChymeRoom> {
+    const [room] = await db
+      .update(chymeRooms)
+      .set({
+        ...roomData,
+        updatedAt: new Date(),
+      })
+      .where(eq(chymeRooms.id, id))
+      .returning();
+    return room;
+  }
+
+  async deactivateChymeRoom(id: string): Promise<ChymeRoom> {
+    const [room] = await db
+      .update(chymeRooms)
+      .set({
+        isActive: false,
+        updatedAt: new Date(),
+      })
+      .where(eq(chymeRooms.id, id))
+      .returning();
+    return room;
+  }
+
+  async getChymeRoomParticipantCount(roomId: string): Promise<number> {
+    const result = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(chymeRoomParticipants)
+      .where(
+        and(
+          eq(chymeRoomParticipants.roomId, roomId),
+          sql`${chymeRoomParticipants.leftAt} IS NULL`
+        )
+      );
+    return Number(result[0]?.count || 0);
+  }
+
+  // Chyme Room Participant operations
+  async joinChymeRoom(participantData: InsertChymeRoomParticipant): Promise<ChymeRoomParticipant> {
+    // Check if participant already exists and has left
+    const existing = await this.getChymeRoomParticipant(participantData.roomId, participantData.userId);
+    
+    if (existing && existing.leftAt) {
+      // Re-join by updating leftAt to null
+      const [participant] = await db
+        .update(chymeRoomParticipants)
+        .set({
+          leftAt: null,
+          isMuted: participantData.isMuted ?? false,
+          isSpeaking: participantData.isSpeaking ?? false,
+        })
+        .where(
+          and(
+            eq(chymeRoomParticipants.roomId, participantData.roomId),
+            eq(chymeRoomParticipants.userId, participantData.userId)
+          )
+        )
+        .returning();
+      return participant;
+    } else if (existing) {
+      // Already in room, just update
+      const [participant] = await db
+        .update(chymeRoomParticipants)
+        .set({
+          isMuted: participantData.isMuted ?? false,
+          isSpeaking: participantData.isSpeaking ?? false,
+        })
+        .where(
+          and(
+            eq(chymeRoomParticipants.roomId, participantData.roomId),
+            eq(chymeRoomParticipants.userId, participantData.userId)
+          )
+        )
+        .returning();
+      return participant;
+    } else {
+      // New participant
+      const [participant] = await db
+        .insert(chymeRoomParticipants)
+        .values(participantData)
+        .returning();
+      return participant;
+    }
+  }
+
+  async leaveChymeRoom(roomId: string, userId: string): Promise<void> {
+    await db
+      .update(chymeRoomParticipants)
+      .set({
+        leftAt: new Date(),
+      })
+      .where(
+        and(
+          eq(chymeRoomParticipants.roomId, roomId),
+          eq(chymeRoomParticipants.userId, userId)
+        )
+      );
+  }
+
+  async getChymeRoomParticipants(roomId: string): Promise<ChymeRoomParticipant[]> {
+    return await db
+      .select()
+      .from(chymeRoomParticipants)
+      .where(eq(chymeRoomParticipants.roomId, roomId))
+      .orderBy(desc(chymeRoomParticipants.joinedAt));
+  }
+
+  async getChymeRoomParticipant(roomId: string, userId: string): Promise<ChymeRoomParticipant | undefined> {
+    const [participant] = await db
+      .select()
+      .from(chymeRoomParticipants)
+      .where(
+        and(
+          eq(chymeRoomParticipants.roomId, roomId),
+          eq(chymeRoomParticipants.userId, userId)
+        )
+      )
+      .orderBy(desc(chymeRoomParticipants.joinedAt))
+      .limit(1);
+    return participant;
+  }
+
+  async updateChymeRoomParticipant(roomId: string, userId: string, updates: Partial<InsertChymeRoomParticipant>): Promise<ChymeRoomParticipant> {
+    const [participant] = await db
+      .update(chymeRoomParticipants)
+      .set(updates)
+      .where(
+        and(
+          eq(chymeRoomParticipants.roomId, roomId),
+          eq(chymeRoomParticipants.userId, userId)
+        )
+      )
+      .returning();
+    if (!participant) {
+      throw new Error("Participant not found");
+    }
+    return participant;
+  }
+
+  // Chyme Message operations
+  async createChymeMessage(messageData: InsertChymeMessage): Promise<ChymeMessage> {
+    const [message] = await db
+      .insert(chymeMessages)
+      .values(messageData)
+      .returning();
+    return message;
+  }
+
+  async getChymeMessages(roomId: string): Promise<ChymeMessage[]> {
+    return await db
+      .select()
+      .from(chymeMessages)
+      .where(eq(chymeMessages.roomId, roomId))
+      .orderBy(asc(chymeMessages.createdAt));
   }
 
   // ========================================

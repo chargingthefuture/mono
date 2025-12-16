@@ -2369,6 +2369,75 @@ export const insertChymeAnnouncementSchema = createInsertSchema(chymeAnnouncemen
 export type InsertChymeAnnouncement = z.infer<typeof insertChymeAnnouncementSchema>;
 export type ChymeAnnouncement = typeof chymeAnnouncements.$inferSelect;
 
+// Chyme Rooms
+export const chymeRooms = pgTable("chyme_rooms", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  name: varchar("name", { length: 200 }).notNull(),
+  description: text("description"),
+  roomType: varchar("room_type", { length: 20 }).notNull().default('public'), // 'public' or 'private'
+  isActive: boolean("is_active").notNull().default(true),
+  maxParticipants: integer("max_participants"),
+  createdBy: varchar("created_by").notNull().references(() => users.id),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertChymeRoomSchema = createInsertSchema(chymeRooms).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  roomType: z.enum(["public", "private"]),
+  maxParticipants: z.coerce.number().int().positive().optional().nullable(),
+});
+
+export type InsertChymeRoom = z.infer<typeof insertChymeRoomSchema>;
+export type ChymeRoom = typeof chymeRooms.$inferSelect;
+
+// Chyme Room Participants
+export const chymeRoomParticipants = pgTable("chyme_room_participants", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  roomId: varchar("room_id").notNull().references(() => chymeRooms.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  isMuted: boolean("is_muted").notNull().default(false),
+  isSpeaking: boolean("is_speaking").notNull().default(false),
+  joinedAt: timestamp("joined_at").defaultNow().notNull(),
+  leftAt: timestamp("left_at"),
+}, (table) => [
+  index("chyme_room_participants_room_id_idx").on(table.roomId),
+  index("chyme_room_participants_user_id_idx").on(table.userId),
+  index("chyme_room_participants_active_idx").on(table.roomId, table.leftAt),
+]);
+
+export const insertChymeRoomParticipantSchema = createInsertSchema(chymeRoomParticipants).omit({
+  id: true,
+  joinedAt: true,
+});
+
+export type InsertChymeRoomParticipant = z.infer<typeof insertChymeRoomParticipantSchema>;
+export type ChymeRoomParticipant = typeof chymeRoomParticipants.$inferSelect;
+
+// Chyme Messages
+export const chymeMessages = pgTable("chyme_messages", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  roomId: varchar("room_id").notNull().references(() => chymeRooms.id, { onDelete: "cascade" }),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  content: text("content").notNull(),
+  isAnonymous: boolean("is_anonymous").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("chyme_messages_room_id_idx").on(table.roomId),
+  index("chyme_messages_created_at_idx").on(table.createdAt),
+]);
+
+export const insertChymeMessageSchema = createInsertSchema(chymeMessages).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertChymeMessage = z.infer<typeof insertChymeMessageSchema>;
+export type ChymeMessage = typeof chymeMessages.$inferSelect;
+
 // ========================================
 // WORKFORCE RECRUITER TRACKER APP TABLES
 // ========================================

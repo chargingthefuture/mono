@@ -67,6 +67,8 @@ import {
   insertGentlepulseFavoriteSchema,
   insertGentlepulseAnnouncementSchema,
   insertChymeAnnouncementSchema,
+  insertChymeRoomSchema,
+  insertChymeMessageSchema,
   insertWorkforceRecruiterProfileSchema,
   insertWorkforceRecruiterConfigSchema,
   insertWorkforceRecruiterOccupationSchema,
@@ -5911,6 +5913,198 @@ export async function registerRoutes(app: Express): Promise<Server> {
         isApproved: user.isApproved
       }
     });
+  }));
+
+  // ========================================
+  // CHYME ROOMS ROUTES (Database-backed)
+  // ========================================
+
+  // GET /api/chyme/rooms?roomType=public|private
+  app.get('/api/chyme/rooms', isAuthenticated, asyncHandler(async (req: any, res) => {
+    const roomType = (req.query.roomType as string | undefined) || undefined;
+    const validRoomType = roomType === "public" || roomType === "private" ? roomType : undefined;
+
+    const rooms = await withDatabaseErrorHandling(
+      () => storage.getChymeRooms(validRoomType),
+      'getChymeRooms'
+    );
+
+    // Add currentParticipants count to each room
+    const roomsWithCounts = await Promise.all(
+      rooms.map(async (room) => {
+        const count = await withDatabaseErrorHandling(
+          () => storage.getChymeRoomParticipantCount(room.id),
+          'getChymeRoomParticipantCount'
+        );
+        return {
+          ...room,
+          currentParticipants: count,
+        };
+      })
+    );
+
+    res.json(roomsWithCounts);
+  }));
+
+  // GET /api/chyme/rooms/:id
+  app.get('/api/chyme/rooms/:id', isAuthenticated, asyncHandler(async (req: any, res) => {
+    const room = await withDatabaseErrorHandling(
+      () => storage.getChymeRoom(req.params.id),
+      'getChymeRoom'
+    );
+
+    if (!room || !room.isActive) {
+      return res.status(404).json({ message: "Room not found" });
+    }
+
+    const currentParticipants = await withDatabaseErrorHandling(
+      () => storage.getChymeRoomParticipantCount(room.id),
+      'getChymeRoomParticipantCount'
+    );
+
+    res.json({
+      ...room,
+      currentParticipants,
+    });
+  }));
+
+  // POST /api/chyme/admin/rooms (admin-only)
+  app.post('/api/chyme/admin/rooms', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
+    const userId = getUserId(req);
+    const validatedData = validateWithZod(insertChymeRoomSchema, req.body, 'Invalid room data');
+
+    const room = await withDatabaseErrorHandling(
+      () => storage.createChymeRoom({
+        ...validatedData,
+        createdBy: userId,
+      }),
+      'createChymeRoom'
+    );
+
+    res.status(201).json({
+      ...room,
+      currentParticipants: 0,
+    });
+  }));
+
+  // POST /api/chyme/rooms/:roomId/join
+  app.post('/api/chyme/rooms/:roomId/join', isAuthenticated, asyncHandler(async (req: any, res) => {
+    const userId = getUserId(req);
+    const roomId = req.params.roomId;
+
+    const room = await withDatabaseErrorHandling(
+      () => storage.getChymeRoom(roomId),
+      'getChymeRoom'
+    );
+
+    if (!room || !room.isActive) {
+      return res.status(404).json({ message: "Room not found" });
+    }
+
+    // Check max participants if set
+    if (room.maxParticipants !== null) {
+      const currentCount = await withDatabaseErrorHandling(
+        () => storage.getChymeRoomParticipantCount(roomId),
+        'getChymeRoomParticipantCount'
+      );
+      if (currentCount >= room.maxParticipants) {
+        return res.status(403).json({ message: "Room is full" });
+      }
+    }
+
+    await withDatabaseErrorHandling(
+      () => storage.joinChymeRoom({
+        roomId,
+        userId,
+        isMuted: false,
+        isSpeaking: false,
+      }),
+      'joinChymeRoom'
+    );
+
+    res.json({ message: "Joined room" });
+  }));
+
+  // POST /api/chyme/rooms/:roomId/leave
+  app.post('/api/chyme/rooms/:roomId/leave', isAuthenticated, asyncHandler(async (req: any, res) => {
+    const userId = getUserId(req);
+    const roomId = req.params.roomId;
+
+    await withDatabaseErrorHandling(
+      () => storage.leaveChymeRoom(roomId, userId),
+      'leaveChymeRoom'
+    );
+
+    res.json({ message: "Left room" });
+  }));
+
+  // GET /api/chyme/rooms/:roomId/participants
+  app.get('/api/chyme/rooms/:roomId/participants', isAuthenticated, asyncHandler(async (req: any, res) => {
+    const roomId = req.params.roomId;
+
+    const room = await withDatabaseErrorHandling(
+      () => storage.getChymeRoom(roomId),
+      'getChymeRoom'
+    );
+
+    if (!room || !room.isActive) {
+      return res.status(404).json({ message: "Room not found" });
+    }
+
+    const participants = await withDatabaseErrorHandling(
+      () => storage.getChymeRoomParticipants(roomId),
+      'getChymeRoomParticipants'
+    );
+
+    res.json(participants);
+  }));
+
+  // GET /api/chyme/rooms/:roomId/messages
+  app.get('/api/chyme/rooms/:roomId/messages', isAuthenticated, asyncHandler(async (req: any, res) => {
+    const roomId = req.params.roomId;
+
+    const room = await withDatabaseErrorHandling(
+      () => storage.getChymeRoom(roomId),
+      'getChymeRoom'
+    );
+
+    if (!room || !room.isActive) {
+      return res.status(404).json({ message: "Room not found" });
+    }
+
+    const messages = await withDatabaseErrorHandling(
+      () => storage.getChymeMessages(roomId),
+      'getChymeMessages'
+    );
+
+    res.json(messages);
+  }));
+
+  // POST /api/chyme/rooms/:roomId/messages
+  app.post('/api/chyme/rooms/:roomId/messages', isAuthenticated, asyncHandler(async (req: any, res) => {
+    const userId = getUserId(req);
+    const roomId = req.params.roomId;
+    const validatedData = validateWithZod(insertChymeMessageSchema, {
+      ...req.body,
+      roomId,
+      userId,
+    }, 'Invalid message data');
+
+    const room = await withDatabaseErrorHandling(
+      () => storage.getChymeRoom(roomId),
+      'getChymeRoom'
+    );
+
+    if (!room || !room.isActive) {
+      return res.status(404).json({ message: "Room not found" });
+    }
+
+    const message = await withDatabaseErrorHandling(
+      () => storage.createChymeMessage(validatedData),
+      'createChymeMessage'
+    );
+
+    res.status(201).json(message);
   }));
 
   app.delete('/api/chyme/admin/announcements/:id', isAuthenticated, ...isAdminWithCsrf, asyncHandler(async (req: any, res) => {

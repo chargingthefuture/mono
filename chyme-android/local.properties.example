@@ -3,7 +3,8 @@
 # DO NOT commit local.properties to version control
 
 # Your Platform API Base URL
-PLATFORM_API_BASE_URL=https://your-platform-domain.com
+# Production:
+PLATFORM_API_BASE_URL=https://app.chargingthefuture.com
 
 # Optional: For local development with Android emulator
 # PLATFORM_API_BASE_URL=http://10.0.2.2:3000
