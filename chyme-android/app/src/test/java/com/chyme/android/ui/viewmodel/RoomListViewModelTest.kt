@@ -22,6 +22,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import okhttp3.ResponseBody
 import retrofit2.Response
 
 class RoomListViewModelTest {
@@ -132,11 +133,13 @@ class RoomListViewModelTest {
 
     @Test
     fun `loadRooms should set error on failed response`() = runTest(testDispatcher) {
+        val errorBody = mockk<ResponseBody>(relaxed = true)
+        every { errorBody.string() } returns ""
         val errorResponse = mockk<retrofit2.Response<List<Room>>>(relaxed = true)
         coEvery { apiService.getRooms(null) } returns errorResponse
         every { errorResponse.isSuccessful } returns false
         every { errorResponse.code() } returns 500
-        every { errorResponse.errorBody() } returns null
+        every { errorResponse.errorBody() } returns errorBody
         
         viewModel = RoomListViewModel()
         viewModel.loadRooms()

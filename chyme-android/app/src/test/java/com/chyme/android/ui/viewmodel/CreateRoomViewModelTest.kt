@@ -23,6 +23,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import okhttp3.ResponseBody
 import retrofit2.Response
 
 class CreateRoomViewModelTest {
@@ -196,11 +197,13 @@ class CreateRoomViewModelTest {
         val roomName = "Test Room"
         val roomType = "public"
         
+        val errorBody = mockk<ResponseBody>(relaxed = true)
+        every { errorBody.string() } returns ""
         val errorResponse = mockk<retrofit2.Response<Room>>(relaxed = true)
         coEvery { apiService.createRoom(any()) } returns errorResponse
         every { errorResponse.isSuccessful } returns false
         every { errorResponse.code() } returns 400
-        every { errorResponse.errorBody() } returns null
+        every { errorResponse.errorBody() } returns errorBody
         
         viewModel = CreateRoomViewModel()
         viewModel.createRoom(roomName, null, roomType, null)
@@ -256,11 +259,13 @@ class CreateRoomViewModelTest {
         val roomName = "Test Room"
         val roomType = "public"
         
+        val errorBody = mockk<ResponseBody>(relaxed = true)
+        every { errorBody.string() } returns ""
         val errorResponse = mockk<retrofit2.Response<Room>>(relaxed = true)
         coEvery { apiService.createRoom(any()) } returns errorResponse
         every { errorResponse.isSuccessful } returns false
         every { errorResponse.code() } returns 400
-        every { errorResponse.errorBody() } returns null
+        every { errorResponse.errorBody() } returns errorBody
         
         viewModel = CreateRoomViewModel()
         viewModel.createRoom(roomName, null, roomType, null)

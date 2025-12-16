@@ -26,6 +26,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import okhttp3.ResponseBody
 import retrofit2.Response
 
 class AuthViewModelTest {
@@ -95,11 +96,13 @@ class AuthViewModelTest {
 
     @Test
     fun `loadUser should set error on failed response`() = runTest(testDispatcher) {
+        val errorBody = mockk<ResponseBody>(relaxed = true)
+        every { errorBody.string() } returns ""
         val errorResponse = mockk<retrofit2.Response<User>>(relaxed = true)
         coEvery { apiService.getCurrentUser() } returns errorResponse
         every { errorResponse.isSuccessful } returns false
         every { errorResponse.code() } returns 404
-        every { errorResponse.errorBody() } returns null
+        every { errorResponse.errorBody() } returns errorBody
         
         viewModel = AuthViewModel(authManager)
         advanceUntilIdle()
@@ -161,11 +164,13 @@ class AuthViewModelTest {
     @Test
     fun `signInWithOTP should set error on invalid OTP`() = runTest(testDispatcher) {
         val otp = "invalid"
+        val errorBody = mockk<ResponseBody>(relaxed = true)
+        every { errorBody.string() } returns ""
         val errorResponse = mockk<retrofit2.Response<ValidateOTPResponse>>(relaxed = true)
         coEvery { apiService.validateOTP(any()) } returns errorResponse
         every { errorResponse.isSuccessful } returns false
         every { errorResponse.code() } returns 401
-        every { errorResponse.errorBody() } returns null
+        every { errorResponse.errorBody() } returns errorBody
         
         viewModel = AuthViewModel(authManager)
         viewModel.signInWithOTP(otp)
@@ -219,11 +224,13 @@ class AuthViewModelTest {
     @Test
     fun `updateQuoraProfileUrl should set error on failure`() = runTest(testDispatcher) {
         val url = "https://quora.com/profile/test"
+        val errorBody = mockk<ResponseBody>(relaxed = true)
+        every { errorBody.string() } returns ""
         val errorResponse = mockk<retrofit2.Response<User>>(relaxed = true)
         coEvery { apiService.updateQuoraProfileUrl(any()) } returns errorResponse
         every { errorResponse.isSuccessful } returns false
         every { errorResponse.code() } returns 400
-        every { errorResponse.errorBody() } returns null
+        every { errorResponse.errorBody() } returns errorBody
         
         viewModel = AuthViewModel(authManager)
         viewModel.updateQuoraProfileUrl(url)

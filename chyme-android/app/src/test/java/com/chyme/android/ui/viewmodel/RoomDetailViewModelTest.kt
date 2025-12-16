@@ -25,6 +25,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
+import okhttp3.ResponseBody
 import retrofit2.Response
 
 class RoomDetailViewModelTest {
@@ -116,13 +117,15 @@ class RoomDetailViewModelTest {
 
     @Test
     fun `loadRoom should set error on failed response`() = runTest(testDispatcher) {
+        val errorBody = mockk<ResponseBody>(relaxed = true)
+        every { errorBody.string() } returns ""
         val errorResponse = mockk<retrofit2.Response<Room>>(relaxed = true)
         val successResponse = mockk<retrofit2.Response<List<Message>>>(relaxed = true)
         coEvery { apiService.getRoom(roomId) } returns errorResponse
         coEvery { apiService.getMessages(roomId) } returns successResponse
         every { errorResponse.isSuccessful } returns false
         every { errorResponse.code() } returns 404
-        every { errorResponse.errorBody() } returns null
+        every { errorResponse.errorBody() } returns errorBody
         every { successResponse.isSuccessful } returns true
         every { successResponse.body() } returns emptyList()
         
@@ -220,9 +223,11 @@ class RoomDetailViewModelTest {
         every { roomResponse.isSuccessful } returns true
         every { messagesResponse.isSuccessful } returns true
         every { messagesResponse.body() } returns emptyList()
+        val errorBody = mockk<ResponseBody>(relaxed = true)
+        every { errorBody.string() } returns ""
         every { errorResponse.isSuccessful } returns false
         every { errorResponse.code() } returns 400
-        every { errorResponse.errorBody() } returns null
+        every { errorResponse.errorBody() } returns errorBody
         
         viewModel = RoomDetailViewModel(roomId)
         advanceUntilIdle()
@@ -285,9 +290,11 @@ class RoomDetailViewModelTest {
         every { roomResponse.isSuccessful } returns true
         every { messagesResponse.isSuccessful } returns true
         every { messagesResponse.body() } returns emptyList()
+        val errorBody = mockk<ResponseBody>(relaxed = true)
+        every { errorBody.string() } returns ""
         every { errorResponse.isSuccessful } returns false
         every { errorResponse.code() } returns 403
-        every { errorResponse.errorBody() } returns null
+        every { errorResponse.errorBody() } returns errorBody
         
         viewModel = RoomDetailViewModel(roomId)
         advanceUntilIdle()
@@ -343,9 +350,11 @@ class RoomDetailViewModelTest {
         every { roomResponse.isSuccessful } returns true
         every { messagesResponse.isSuccessful } returns true
         every { messagesResponse.body() } returns emptyList()
+        val errorBody = mockk<ResponseBody>(relaxed = true)
+        every { errorBody.string() } returns ""
         every { errorResponse.isSuccessful } returns false
         every { errorResponse.code() } returns 500
-        every { errorResponse.errorBody() } returns null
+        every { errorResponse.errorBody() } returns errorBody
         
         viewModel = RoomDetailViewModel(roomId)
         advanceUntilIdle()
