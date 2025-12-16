@@ -3,7 +3,6 @@ package com.chyme.android.auth
 import android.content.Context
 import android.content.SharedPreferences
 import com.chyme.android.data.model.User
-import io.mockk.capture
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.slot

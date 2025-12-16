@@ -355,6 +355,16 @@ export default function AdminDirectoryPage() {
             <Input value={newDescription} onChange={(e) => setNewDescription(e.target.value.slice(0,140))} placeholder="140 chars max" />
           </div>
           <div className="space-y-2">
+            <Label htmlFor="new-first-name">First Name</Label>
+            <Input 
+              id="new-first-name"
+              value={newFirstName} 
+              onChange={(e) => setNewFirstName(e.target.value)} 
+              placeholder="First name (for unclaimed profiles)" 
+              data-testid="input-new-first-name"
+            />
+          </div>
+          <div className="space-y-2">
             <Label htmlFor="new-signal-url">Signal URL</Label>
             <Input 
               id="new-signal-url"
