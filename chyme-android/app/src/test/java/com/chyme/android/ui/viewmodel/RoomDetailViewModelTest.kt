@@ -7,6 +7,7 @@ import com.chyme.android.data.model.Room
 import com.chyme.android.data.model.RoomParticipant
 import com.chyme.android.data.model.SendMessageRequest
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
@@ -166,8 +167,8 @@ class RoomDetailViewModelTest {
         viewModel.sendMessage(messageContent)
         advanceUntilIdle()
         
-        verify { apiService.sendMessage(roomId, SendMessageRequest(messageContent)) }
-        verify(exactly = 2) { apiService.getMessages(roomId) }
+        coVerify { apiService.sendMessage(roomId, SendMessageRequest(messageContent)) }
+        coVerify(exactly = 2) { apiService.getMessages(roomId) }
         assertNull(viewModel.error.value)
     }
 
@@ -214,8 +215,8 @@ class RoomDetailViewModelTest {
         advanceUntilIdle()
         
         assertTrue(viewModel.isJoined.value)
-        verify { apiService.joinRoom(roomId) }
-        verify { apiService.getParticipants(roomId) }
+        coVerify { apiService.joinRoom(roomId) }
+        coVerify { apiService.getParticipants(roomId) }
         assertEquals(1, viewModel.participants.value.size)
     }
 
@@ -255,7 +256,7 @@ class RoomDetailViewModelTest {
         
         assertFalse(viewModel.isJoined.value)
         assertFalse(viewModel.isSpeaking.value)
-        verify { apiService.leaveRoom(roomId) }
+        coVerify { apiService.leaveRoom(roomId) }
     }
 
     @Test
@@ -370,8 +371,8 @@ class RoomDetailViewModelTest {
         viewModel.refresh()
         advanceUntilIdle()
         
-        verify(exactly = 2) { apiService.getRoom(roomId) }
-        verify(exactly = 2) { apiService.getMessages(roomId) }
+        coVerify(exactly = 2) { apiService.getRoom(roomId) }
+        coVerify(exactly = 2) { apiService.getMessages(roomId) }
     }
 }
 

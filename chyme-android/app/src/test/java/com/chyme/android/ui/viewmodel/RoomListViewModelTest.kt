@@ -114,7 +114,7 @@ class RoomListViewModelTest {
         viewModel.loadRooms("public")
         advanceUntilIdle()
         
-        verify { apiService.getRooms("public") }
+        coVerify { apiService.getRooms("public") }
         assertEquals(1, viewModel.rooms.value.size)
         assertEquals("public", viewModel.rooms.value.first().roomType)
     }
@@ -170,7 +170,7 @@ class RoomListViewModelTest {
         advanceUntilIdle()
         
         assertEquals("private", viewModel.filterType.value)
-        verify { apiService.getRooms("private") }
+        coVerify { apiService.getRooms("private") }
         assertEquals(1, viewModel.rooms.value.size)
     }
 
@@ -187,7 +187,7 @@ class RoomListViewModelTest {
         advanceUntilIdle()
         
         assertNull(viewModel.filterType.value)
-        verify { apiService.getRooms(null) }
+        coVerify { apiService.getRooms(null) }
     }
 
     @Test
@@ -203,7 +203,7 @@ class RoomListViewModelTest {
         viewModel.refresh()
         advanceUntilIdle()
         
-        verify(exactly = 2) { apiService.getRooms("public") }
+        coVerify(exactly = 2) { apiService.getRooms("public") }
     }
 
     @Test
