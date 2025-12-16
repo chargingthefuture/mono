@@ -126,6 +126,13 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Release version: $VERSION"
 
+      - name: Get build date
+        id: build-date
+        run: |
+          BUILD_DATE=$(date -u +'%Y-%m-%d %H:%M:%S UTC')
+          echo "date=$BUILD_DATE" >> $GITHUB_OUTPUT
+          echo "Build date: $BUILD_DATE"
+
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
@@ -136,7 +143,7 @@ jobs:
             
             **Version:** ${{ steps.version.outputs.version }}
             **Commit:** ${{ github.sha }}
-            **Build Date:** $(date -u +'%Y-%m-%d %H:%M:%S UTC')
+            **Build Date:** ${{ steps.build-date.outputs.date }}
             
             Download the APK below to install on your Android device.
           files: ./apk/*.apk
