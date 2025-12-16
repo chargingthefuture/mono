@@ -83,6 +83,7 @@ android {
             }
             
             // Only configure signing if we have the required credentials
+            // Don't throw errors during configuration - only validate when actually used
             if (keystorePassword != null && keystorePath.isNotBlank()) {
                 val keystoreFile = rootProject.file(keystorePath)
                 if (keystoreFile.exists()) {
@@ -90,19 +91,10 @@ android {
                     storePassword = keystorePassword
                     this.keyAlias = keyAlias
                     this.keyPassword = keyPassword
-                } else {
-                    throw GradleException(
-                        "Keystore file not found at: ${keystoreFile.absolutePath}\n" +
-                        "Please ensure KEYSTORE_PATH in local.properties or KEYSTORE_PATH environment variable points to a valid keystore file."
-                    )
                 }
-            } else {
-                throw GradleException(
-                    "Missing keystore password for release signing!\n" +
-                    "Please set KEYSTORE_PASSWORD in local.properties or as KEYSTORE_PASSWORD environment variable.\n" +
-                    "You may also need KEY_PASSWORD and KEY_ALIAS (defaults to 'chyme-release')."
-                )
+                // If keystore doesn't exist, we'll validate when it's actually used
             }
+            // If credentials are missing, we'll validate when signing config is actually accessed
         }
     }
 
@@ -113,8 +105,28 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            // Always use the release signing config (it will fail during config if credentials are missing)
-            signingConfig = signingConfigs.getByName("release")
+            // Use signing config if available, validate when actually building
+            val releaseSigningConfig = signingConfigs.findByName("release")
+            if (releaseSigningConfig?.storeFile != null) {
+                signingConfig = releaseSigningConfig
+            }
+            // Validation happens in tasks.whenTaskAdded for assembleRelease
+        }
+    }
+    
+    // Validate signing only when actually building release APK
+    tasks.whenTaskAdded {
+        if (name == "assembleRelease" || name == "bundleRelease") {
+            doFirst {
+                val releaseSigningConfig = signingConfigs.findByName("release")
+                if (releaseSigningConfig?.storeFile == null) {
+                    throw GradleException(
+                        "Missing keystore password for release signing!\n" +
+                        "Please set KEYSTORE_PASSWORD in local.properties or as KEYSTORE_PASSWORD environment variable.\n" +
+                        "You may also need KEY_PASSWORD and KEY_ALIAS (defaults to 'chyme-release')."
+                    )
+                }
+            }
         }
     }
     compileOptions {
