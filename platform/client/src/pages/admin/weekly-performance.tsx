@@ -1038,7 +1038,7 @@ export default function WeeklyPerformanceReview() {
                     <tr className="border-b">
                       <td className="py-2 px-4 font-medium">Net Promoter Score (NPS)</td>
                       <td className="text-right py-2 px-4" data-testid="table-nps-current">
-                        {data.metrics?.nps ?? 0}
+                        {(data.metrics?.nps ?? 0).toFixed(1)}
                       </td>
                       <td className="text-right py-2 px-4" data-testid="table-nps-previous">
                         {previousWeekNps !== null ? previousWeekNps.toFixed(1) : <span className="text-muted-foreground">—</span>}
@@ -1059,7 +1059,7 @@ export default function WeeklyPerformanceReview() {
                     <tr className="border-b">
                       <td className="py-2 px-4 font-medium">Mood</td>
                       <td className="text-right py-2 px-4" data-testid="table-mood-current">
-                        {data.metrics?.averageMood ?? 0}
+                        {(data.metrics?.averageMood ?? 0).toFixed(2)}
                       </td>
                       <td className="text-right py-2 px-4" data-testid="table-mood-previous">
                         {previousWeekMood !== null ? previousWeekMood.toFixed(2) : <span className="text-muted-foreground">—</span>}

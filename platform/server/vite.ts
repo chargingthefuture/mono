@@ -120,14 +120,28 @@ export function serveStatic(app: Express) {
   }
 
   // Serve static files (JS, CSS, images, etc.) with proper caching headers
-  app.use(express.static(distPath, {
-    // Don't serve index.html automatically - let the catch-all handle it for SPA routing
-    index: false,
-    // Set cache headers for static assets
-    maxAge: '1y',
-    etag: true,
-    lastModified: true,
-  }));
+  // Only apply static middleware to requests that look like static assets
+  // This prevents express.static from interfering with SPA routes like /admin/users
+  const staticExtensions = ['.js', '.css', '.png', '.jpg', '.jpeg', '.gif', '.svg', '.ico', '.woff', '.woff2', '.ttf', '.eot', '.map', '.json'];
+  
+  app.use((req, res, next) => {
+    // Check if this is a request for a static asset (has a file extension)
+    const hasExtension = staticExtensions.some(ext => req.path.toLowerCase().endsWith(ext));
+    
+    if (hasExtension) {
+      // Apply static middleware only for files with extensions
+      // express.static will call next() if the file doesn't exist
+      express.static(distPath, {
+        index: false,
+        maxAge: '1y',
+        etag: true,
+        lastModified: true,
+      })(req, res, next);
+    } else {
+      // Not a static file - skip static middleware and go to catch-all
+      next();
+    }
+  });
 
   // Fall through to index.html for all non-API GET requests (SPA routing)
   // This allows client-side routing to work - all routes serve the same HTML
