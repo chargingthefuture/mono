@@ -8,8 +8,6 @@ on:
     paths:
       - 'platform/shared/schema.ts'
       - 'platform/drizzle.config.ts'
-      - 'platform/package.json'
-      - '.github/workflows/neon_workflow.yml'
   workflow_dispatch:
     inputs:
       force:
@@ -53,10 +51,10 @@ jobs:
             DB_URL="${{ secrets.DATABASE_URL }}"
             SECRET_NAME="DATABASE_URL"
           else
-            # For workflow_dispatch or other branches, default to production
-            ENV="production"
-            DB_URL="${{ secrets.DATABASE_URL }}"
-            SECRET_NAME="DATABASE_URL"
+            # For workflow_dispatch or other branches, default to staging (safer)
+            ENV="staging"
+            DB_URL="${{ secrets.DATABASE_URL_STAGING }}"
+            SECRET_NAME="DATABASE_URL_STAGING"
           fi
           
           echo "environment=$ENV" >> $GITHUB_OUTPUT

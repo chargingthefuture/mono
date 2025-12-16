@@ -75,6 +75,7 @@ import {
   insertWorkforceRecruiterAnnouncementSchema,
   insertDefaultAliveOrDeadFinancialEntrySchema,
   insertDefaultAliveOrDeadEbitdaSnapshotSchema,
+  type User,
 } from "@shared/schema";
 import { z } from "zod";
 import { asyncHandler } from "./errorHandler";
