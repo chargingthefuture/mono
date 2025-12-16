@@ -45,6 +45,7 @@ import type { User } from "@shared/schema";
 
 const adminProfileFormSchema = z
   .object({
+    firstName: z.string().max(100).optional().nullable(),
     isCarOwner: z.boolean().default(false),
     isMechanic: z.boolean().default(true),
     city: z.string().optional().nullable(),
@@ -119,6 +120,7 @@ export default function MechanicMatchAdminProfiles() {
   const createForm = useForm<AdminProfileFormValues>({
     resolver: zodResolver(adminProfileFormSchema),
     defaultValues: {
+      firstName: "",
       isCarOwner: false,
       isMechanic: true,
       city: "",
@@ -136,6 +138,7 @@ export default function MechanicMatchAdminProfiles() {
   useEffect(() => {
     if (editingProfile) {
       editForm.reset({
+        firstName: editingProfile.firstName || "",
         isCarOwner: editingProfile.isCarOwner,
         isMechanic: editingProfile.isMechanic,
         city: editingProfile.city || "",
@@ -247,6 +250,20 @@ export default function MechanicMatchAdminProfiles() {
                 <RoleCheckbox control={createForm.control} name="isCarOwner" label="Car Owner" description="Provide owner context" dataTestId="checkbox-car-owner-create" />
                 <RoleCheckbox control={createForm.control} name="isMechanic" label="Mechanic" description="Available for bookings" dataTestId="checkbox-mechanic-create" />
               </div>
+
+              <FormField
+                control={createForm.control}
+                name="firstName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>First Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} value={field.value ?? ""} placeholder="First name (for unclaimed profiles)" data-testid="input-first-name-create" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <div className="grid gap-4 md:grid-cols-3">
                 <FormField
@@ -380,6 +397,12 @@ export default function MechanicMatchAdminProfiles() {
                         {profile.isClaimed ? "Claimed" : "Unclaimed"}
                       </Badge>
                     </div>
+                    {(() => {
+                      const firstName = (profile as any).firstName?.trim();
+                      return firstName ? (
+                        <div className="text-base font-medium">{firstName}</div>
+                      ) : null;
+                    })()}
                     <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                       {profile.city && <span>{profile.city}</span>}
                       {profile.state && <span>{profile.state}</span>}
@@ -459,6 +482,20 @@ export default function MechanicMatchAdminProfiles() {
                 <RoleCheckbox control={editForm.control} name="isCarOwner" label="Car Owner" description="Has owner profile" dataTestId="checkbox-car-owner-edit" />
                 <RoleCheckbox control={editForm.control} name="isMechanic" label="Mechanic" description="Offers services" dataTestId="checkbox-mechanic-edit" />
               </div>
+
+              <FormField
+                control={editForm.control}
+                name="firstName"
+                render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>First Name</FormLabel>
+                    <FormControl>
+                      <Input {...field} value={field.value ?? ""} placeholder="First name (for unclaimed profiles)" data-testid="input-first-name-edit" />
+                    </FormControl>
+                    <FormMessage />
+                  </FormItem>
+                )}
+              />
 
               <div className="grid gap-4 md:grid-cols-3">
                 <FormField
@@ -664,6 +701,7 @@ export default function MechanicMatchAdminProfiles() {
 function transformProfilePayload(values: AdminProfileFormValues) {
   // Explicitly set all fields to ensure defaults are applied and undefined values are handled
   return {
+    firstName: values.firstName?.trim() || null,
     isCarOwner: values.isCarOwner ?? false,
     isMechanic: values.isMechanic ?? false,
     city: values.city?.trim() || null,

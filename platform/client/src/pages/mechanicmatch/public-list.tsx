@@ -10,6 +10,7 @@ import type { MechanicmatchProfile } from "@shared/schema";
 
 type PublicMechanicMatchProfile = MechanicmatchProfile & {
   userIsVerified?: boolean;
+  firstName?: string | null;
 };
 
 export default function PublicMechanicMatchList() {
@@ -129,13 +130,15 @@ export default function PublicMechanicMatchList() {
                 const isMechanic = profile.isMechanic || false;
                 const isCarOwner = profile.isCarOwner || false;
 
+                const displayName = profile.firstName?.trim() || "MechanicMatch Profile";
+
                 return (
                   <Card key={profile.id} className="flex flex-col hover:shadow-lg transition-shadow" data-testid={`card-profile-${profile.id}`}>
                     <CardHeader className="pb-3">
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-2 flex-1 min-w-0">
                           <CardTitle className="text-base sm:text-lg line-clamp-1 flex-1">
-                            MechanicMatch Profile
+                            {displayName}
                           </CardTitle>
                           <VerifiedBadge isVerified={profile.userIsVerified || false} testId={`badge-verified-${profile.id}`} />
                         </div>

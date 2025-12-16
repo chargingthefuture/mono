@@ -3602,16 +3602,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
     if (!profile || !profile.isPublic) {
       return res.status(404).json({ message: "Profile not found" });
     }
-    // Get verification status from user
+    // Get verification status and first name:
+    // - For claimed profiles: from the user record
+    // - For unclaimed profiles: from the profile's own firstName field
     let userIsVerified = false;
+    let userFirstName: string | null = null;
     if (profile.userId) {
       const user = await withDatabaseErrorHandling(
         () => storage.getUser(profile.userId!),
         'getUserVerificationForPublicMechanicmatchProfile'
       );
-      userIsVerified = user?.isVerified || false;
+      if (user) {
+        userIsVerified = user.isVerified || false;
+        userFirstName = (user.firstName && user.firstName.trim()) || null;
+      }
+    } else {
+      userIsVerified = profile.isVerified || false;
+      userFirstName = (profile.firstName && profile.firstName.trim()) || null;
     }
-    res.json({ ...profile, userIsVerified });
+    res.json({ ...profile, userIsVerified, firstName: userFirstName });
   }));
 
   app.get('/api/mechanicmatch/public', publicListingLimiter, asyncHandler(async (req, res) => {
@@ -3634,15 +3643,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     );
     const withVerification = await Promise.all(profiles.map(async (p) => {
       let userIsVerified = false;
+      let userFirstName: string | null = null;
       if (p.userId) {
         const userId = p.userId;
         const u = await withDatabaseErrorHandling(
           () => storage.getUser(userId),
           'getUserVerificationForPublicMechanicmatchList'
         );
-        userIsVerified = u?.isVerified || false;
+        if (u) {
+          userIsVerified = u.isVerified || false;
+          userFirstName = (u.firstName && u.firstName.trim()) || null;
+        }
+      } else {
+        userIsVerified = p.isVerified || false;
+        userFirstName = (p.firstName && p.firstName.trim()) || null;
       }
-      return { ...p, userIsVerified };
+      return { ...p, userIsVerified, firstName: userFirstName };
     }));
     
     // Rotate display order to make scraping harder
@@ -4056,7 +4072,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }),
       'listMechanicmatchProfiles'
     );
-    res.json(profiles);
+    
+    // Enrich profiles with user data (firstName, lastName) like the public route does
+    const withNames = await Promise.all(profiles.items.map(async (p) => {
+      let userIsVerified = false;
+      let userFirstName: string | null = null;
+      let userLastName: string | null = null;
+      
+      // Fetch user data if userId exists
+      if (p.userId) {
+        const user = await withDatabaseErrorHandling(
+          () => storage.getUser(p.userId!),
+          'getUserForMechanicmatchAdmin'
+        );
+        if (user) {
+          userFirstName = (user.firstName && user.firstName.trim()) || null;
+          userLastName = (user.lastName && user.lastName.trim()) || null;
+          userIsVerified = user.isVerified || false;
+        }
+      } else {
+        // For admin-created profiles without userId, use profile's own isVerified field
+        // and use profile's firstName field (for unclaimed profiles)
+        userIsVerified = p.isVerified || false;
+        userFirstName = (p.firstName && p.firstName.trim()) || null;
+      }
+      
+      // Return enriched profile with firstName, lastName, and userIsVerified
+      return {
+        ...p,
+        userIsVerified,
+        firstName: userFirstName || null,
+        lastName: userLastName || null,
+      };
+    }));
+    
+    res.json({ ...profiles, items: withNames });
   }));
 
   app.post('/api/mechanicmatch/admin/profiles', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {

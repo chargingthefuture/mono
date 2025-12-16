@@ -1320,6 +1320,7 @@ export const mechanicmatchProfiles = pgTable("mechanicmatch_profiles", {
   isMechanic: boolean("is_mechanic").notNull().default(false),
   
   // Common fields
+  firstName: varchar("first_name", { length: 100 }), // First name for unclaimed profiles (admin-entered)
   city: varchar("city", { length: 100 }),
   state: varchar("state", { length: 100 }),
   country: varchar("country", { length: 100 }),
@@ -1376,6 +1377,7 @@ export const insertMechanicmatchProfileSchema = createInsertSchema(mechanicmatch
   userId: z.string().optional().nullable().transform(val => val === "" || val === undefined ? null : val),
   isCarOwner: z.boolean().default(false),
   isMechanic: z.boolean().default(false),
+  firstName: z.string().max(100).optional().nullable(),
   city: z.string().max(100).optional().nullable(),
   state: z.string().max(100).optional().nullable(),
   country: z.string().max(100).optional().nullable(),

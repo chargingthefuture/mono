@@ -1588,13 +1588,22 @@ Admin endpoints for monitoring suspicious activity:
 
 ## 📋 Database Migration Workflow
 
-**🚨 NEVER manually write SQL migrations!**
+**🚨 PRODUCTION RULES (Schema changes):**
+
+1. **Whenever you change `shared/schema.ts` and `schema.sql` for an existing product database, you MUST also create an idempotent SQL migration in `platform/migrations/`.**
+2. **Migrations MUST be idempotent** – safe to run multiple times:
+   - Use `information_schema.columns` checks before `ALTER TABLE` / `ALTER COLUMN` / `DROP COLUMN`
+   - Use `pg_constraint` checks before adding or dropping constraints and indexes
+   - Wrap logic in `DO $$ BEGIN ... END $$;` blocks with conditional checks
+3. **NEVER drop or recreate the production database** to apply schema changes. Always evolve it via migrations.
+4. **Keep IDs stable:** **NEVER change ID column types** (serial ↔ varchar) – this breaks existing data.
+
+**Local development / non-production:**
 
 1. Update `shared/schema.ts`
-2. Run: `npm run db:push` (or `npm run db:push --force` if data loss warning)
-3. That's it - Drizzle handles everything
-
-**NEVER change ID column types** (serial ↔ varchar) - This breaks existing data!
+2. Optionally run: `npm run db:push` to sync a local/dev database
+3. Regenerate and commit `schema.sql` (see below)
+4. Add a matching, idempotent SQL migration under `platform/migrations/` that brings production into alignment with the new schema
 
 ### **🚨 CRITICAL: Keep `schema.sql` Updated**
 

@@ -12,6 +12,7 @@ import type { MechanicmatchProfile } from "@shared/schema";
 
 type PublicMechanicMatchProfile = MechanicmatchProfile & {
   userIsVerified?: boolean;
+  firstName?: string | null;
 };
 
 export default function PublicMechanicMatchProfile() {
@@ -140,7 +141,7 @@ export default function PublicMechanicMatchProfile() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2 flex-wrap">
               <CardTitle className="text-lg sm:text-xl">
-                MechanicMatch Profile
+                {profile.firstName?.trim() || "MechanicMatch Profile"}
               </CardTitle>
               <VerifiedBadge isVerified={userIsVerified} testId="badge-verified-public" />
               {isMechanic && (
