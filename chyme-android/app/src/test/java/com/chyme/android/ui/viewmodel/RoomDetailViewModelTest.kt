@@ -14,7 +14,7 @@ import io.mockk.mockkObject
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -33,7 +33,7 @@ import retrofit2.Response
 class RoomDetailViewModelTest {
     private lateinit var apiService: ApiService
     private lateinit var viewModel: RoomDetailViewModel
-    private val testDispatcher = StandardTestDispatcher()
+    private val testDispatcher = UnconfinedTestDispatcher()
     private val roomId = "test-room-id"
 
     @Before
@@ -432,14 +432,9 @@ class RoomDetailViewModelTest {
         viewModel = RoomDetailViewModel(roomId)
         advanceUntilIdle()
         
-        // Should not crash when exception is thrown
-        try {
-            viewModel.loadParticipants()
-            advanceUntilIdle()
-        } catch (e: Exception) {
-            // Should not throw - exceptions are handled silently in loadParticipants
-            assertTrue("loadParticipants should handle exceptions silently", false)
-        }
+        // Should not crash when exception is thrown - exceptions are handled silently in loadParticipants
+        viewModel.loadParticipants()
+        advanceUntilIdle()
         
         // Should not crash and participants should remain empty
         assertTrue(viewModel.participants.value.isEmpty())

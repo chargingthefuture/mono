@@ -15,7 +15,7 @@ import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -35,7 +35,7 @@ class AuthViewModelTest {
     private lateinit var authManager: OTPAuthManager
     private lateinit var apiService: ApiService
     private lateinit var viewModel: AuthViewModel
-    private val testDispatcher = StandardTestDispatcher()
+    private val testDispatcher = UnconfinedTestDispatcher()
 
     @Before
     fun setup() {
@@ -280,11 +280,9 @@ class AuthViewModelTest {
         advanceUntilIdle()
         
         viewModel.loadUser()
-        // Advance the dispatcher to start the coroutine and execute until the API call
-        testDispatcher.scheduler.advanceUntilIdle()
+        advanceUntilIdle()
         
         assertTrue("isLoading should be true during API call", isLoadingDuringCall)
-        advanceUntilIdle()
         assertFalse(viewModel.isLoading.value)
     }
 }

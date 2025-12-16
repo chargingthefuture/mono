@@ -12,7 +12,7 @@ import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
@@ -31,7 +31,7 @@ import retrofit2.Response
 class CreateRoomViewModelTest {
     private lateinit var apiService: ApiService
     private lateinit var viewModel: CreateRoomViewModel
-    private val testDispatcher = StandardTestDispatcher()
+    private val testDispatcher = UnconfinedTestDispatcher()
 
     @Before
     fun setup() {
@@ -265,11 +265,9 @@ class CreateRoomViewModelTest {
         viewModel = CreateRoomViewModel()
         advanceUntilIdle()
         viewModel.createRoom(roomName, null, roomType, null)
-        // Advance the dispatcher to start the coroutine and execute until the API call
-        testDispatcher.scheduler.advanceUntilIdle()
+        advanceUntilIdle()
         
         assertTrue("isLoading should be true during API call", isLoadingDuringCall)
-        advanceUntilIdle()
         assertFalse(viewModel.isLoading.value)
     }
 
