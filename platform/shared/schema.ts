@@ -1374,16 +1374,8 @@ export const insertMechanicmatchProfileSchema = createInsertSchema(mechanicmatch
   totalJobsCompleted: true,
 }).extend({
   // userId is optional to allow unclaimed profile creation by admin
-  // Use preprocess to convert empty strings/null to undefined so field is omitted from output
-  // This ensures userId is never included in validated data when creating unclaimed profiles
-  userId: z.preprocess(
-    (val) => {
-      // Convert empty strings and null to undefined so the field is omitted
-      if (val === undefined || val === null || val === "") return undefined;
-      return val;
-    },
-    z.string().optional()
-  ),
+  // Follow the same pattern as directory profiles - allow null for unclaimed profiles
+  userId: z.string().optional().nullable(),
   isCarOwner: z.boolean().default(false),
   isMechanic: z.boolean().default(false),
   firstName: z.string().max(100).optional().nullable(),

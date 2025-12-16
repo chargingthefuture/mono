@@ -4139,40 +4139,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/mechanicmatch/admin/profiles', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const adminId = getUserId(req);
-    // Ensure all required fields with defaults are explicitly set
-    // Handle userId: if not provided or empty, omit it entirely for unclaimed profiles
-    const userIdValue = req.body.userId && typeof req.body.userId === 'string' && req.body.userId.trim() !== "" 
-      ? req.body.userId.trim() 
-      : undefined;
-    // Exclude userId from the spread to avoid including null/empty values, then add it conditionally
-    const { userId: _userId, ...bodyWithoutUserId } = req.body;
-    const payload: any = {
-      ...bodyWithoutUserId,
-      isClaimed: !!userIdValue,
+    // Follow the same pattern as directory profiles: set userId to null if not provided
+    // The storage function will handle omitting it from the insert
+    const validated = validateWithZod(insertMechanicmatchProfileSchema, {
+      ...req.body,
+      userId: req.body.userId || null,
+      isClaimed: !!req.body.userId,
       // Explicitly set defaults for fields that have NOT NULL constraints
       isCarOwner: req.body.isCarOwner ?? false,
       isMechanic: req.body.isMechanic ?? false,
       isMobileMechanic: req.body.isMobileMechanic ?? false,
-    };
-    // Only include userId if it has a valid value (omit it for unclaimed profiles)
-    if (userIdValue) {
-      payload.userId = userIdValue;
-    }
-    const validated = validateWithZod(insertMechanicmatchProfileSchema, payload, 'Invalid profile data');
+    }, 'Invalid profile data');
 
     if (!validated.isCarOwner && !validated.isMechanic) {
       return res.status(400).json({ message: "Profile must be at least a car owner or mechanic" });
     }
 
-    // Ensure userId is completely removed from validated data if it's null/undefined/empty
-    // This prevents it from being passed to the storage function
-    const validatedData: any = { ...validated };
-    if (validatedData.userId === null || validatedData.userId === undefined || validatedData.userId === '') {
-      delete validatedData.userId;
-    }
-
     const profile = await withDatabaseErrorHandling(
-      () => storage.createMechanicmatchProfile(validatedData),
+      () => storage.createMechanicmatchProfile(validated),
       'createMechanicmatchProfile'
     );
 
