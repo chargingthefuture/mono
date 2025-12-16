@@ -4,6 +4,7 @@ import com.chyme.android.data.api.ApiClient
 import com.chyme.android.data.api.ApiService
 import com.chyme.android.data.model.Room
 import io.mockk.coEvery
+import io.mockk.coVerify
 import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
