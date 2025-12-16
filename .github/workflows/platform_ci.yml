@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - 'platform/**'
-      - '.github/workflows/platform-ci.yml'
+      - '.github/workflows/platform_ci.yml'
   pull_request:
     branches:
       - main

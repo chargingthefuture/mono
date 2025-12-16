@@ -7,7 +7,7 @@ on:
       - 'v*'
     paths:
       - 'chyme-android/**'
-      - '.github/workflows/android-release.yml'
+      - '.github/workflows/android_release.yml'
   pull_request:
     branches: [ main ]
     paths:

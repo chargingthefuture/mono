@@ -6,7 +6,7 @@ on:
       - main
     paths:
       - 'status/**'
-      - '.github/workflows/deploy-status-pages.yml'
+      - '.github/workflows/deploy_status_pages.yml'
   workflow_dispatch: # Allow manual triggering
   schedule:
     # Run health checks every 5 minutes

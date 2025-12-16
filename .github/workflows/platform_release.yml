@@ -9,7 +9,7 @@ on:
       - main
     paths:
       - 'platform/**'
-      - '.github/workflows/platform-release.yml'
+      - '.github/workflows/platform_release.yml'
 
 jobs:
   build:
