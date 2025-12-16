@@ -72,7 +72,6 @@
 
 # CI/CD - not needed for indexing
 **/.circleci/
-**/.github/
 **/.gitlab-ci.yml
 **/.travis.yml
 
