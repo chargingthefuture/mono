@@ -1,0 +1,16 @@
+[
+  {
+    "timestamp": "2025-12-16T06:51:02.426Z",
+    "status": "down",
+    "statusCode": 404,
+    "responseTime": 283,
+    "error": "HTTP 404"
+  },
+  {
+    "timestamp": "2025-12-16T06:59:22.739Z",
+    "status": "down",
+    "statusCode": 404,
+    "responseTime": 248,
+    "error": "HTTP 404"
+  }
+]
