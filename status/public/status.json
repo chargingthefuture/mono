@@ -1,102 +1,102 @@
 {
-  "timestamp": "2025-12-16T06:51:02.791Z",
+  "timestamp": "2025-12-16T06:59:23.067Z",
   "services": [
     {
       "name": "Main Platform",
       "key": "main",
       "status": "down",
-      "responseTime": 339,
+      "responseTime": 274,
       "statusCode": 404
     },
     {
       "name": "ChatGroups",
       "key": "chatgroups",
       "status": "down",
-      "responseTime": 269,
+      "responseTime": 225,
       "statusCode": 404
     },
     {
       "name": "Directory",
       "key": "directory",
       "status": "down",
-      "responseTime": 363,
+      "responseTime": 239,
       "statusCode": 404
     },
     {
       "name": "GentlePulse",
       "key": "gentlepulse",
       "status": "down",
-      "responseTime": 274,
+      "responseTime": 229,
       "statusCode": 404
     },
     {
       "name": "Chyme",
       "key": "chyme",
       "status": "down",
-      "responseTime": 283,
+      "responseTime": 248,
       "statusCode": 404
     },
     {
       "name": "Default Alive or Dead",
       "key": "default-alive-or-dead",
       "status": "down",
-      "responseTime": 286,
+      "responseTime": 251,
       "statusCode": 404
     },
     {
       "name": "Workforce Recruiter",
       "key": "workforce-recruiter",
       "status": "down",
-      "responseTime": 303,
+      "responseTime": 251,
       "statusCode": 404
     },
     {
       "name": "LightHouse",
       "key": "lighthouse",
       "status": "down",
-      "responseTime": 309,
+      "responseTime": 257,
       "statusCode": 404
     },
     {
       "name": "LostMail",
       "key": "lostmail",
       "status": "down",
-      "responseTime": 322,
+      "responseTime": 269,
       "statusCode": 404
     },
     {
       "name": "MechanicMatch",
       "key": "mechanicmatch",
       "status": "down",
-      "responseTime": 319,
+      "responseTime": 261,
       "statusCode": 404
     },
     {
       "name": "CompareNotes",
       "key": "research",
       "status": "down",
-      "responseTime": 330,
+      "responseTime": 272,
       "statusCode": 404
     },
     {
       "name": "SocketRelay",
       "key": "socketrelay",
       "status": "down",
-      "responseTime": 336,
+      "responseTime": 276,
       "statusCode": 404
     },
     {
       "name": "SupportMatch",
       "key": "supportmatch",
       "status": "down",
-      "responseTime": 343,
+      "responseTime": 318,
       "statusCode": 404
     },
     {
       "name": "TrustTransport",
       "key": "trusttransport",
       "status": "down",
-      "responseTime": 349,
+      "responseTime": 295,
       "statusCode": 404
     }
   ],
