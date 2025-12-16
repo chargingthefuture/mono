@@ -32,7 +32,6 @@ function isInternalLink(url: string): boolean {
 export function useExternalLink() {
   const [url, setUrl] = useState<string | null>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   const isInternal = useMemo(() => {
     return url ? isInternalLink(url) : false;
@@ -42,7 +41,6 @@ export function useExternalLink() {
     // Show dialog for all links (both internal and external) for consistency
     setUrl(linkUrl);
     setIsOpen(true);
-    setCopied(false);
   };
 
   const handleConfirm = () => {
@@ -50,22 +48,18 @@ export function useExternalLink() {
       window.open(url, "_blank", "noopener,noreferrer");
       setIsOpen(false);
       setUrl(null);
-      setCopied(false);
     }
   };
 
   const handleCancel = () => {
     setIsOpen(false);
     setUrl(null);
-    setCopied(false);
   };
 
   const handleCopy = async () => {
     if (url) {
       try {
         await navigator.clipboard.writeText(url);
-        setCopied(true);
-        setTimeout(() => setCopied(false), 2000);
       } catch (err) {
         // Fallback for older browsers
         console.error("Failed to copy URL:", err);
@@ -73,47 +67,60 @@ export function useExternalLink() {
     }
   };
 
-  const ExternalLinkDialog = () => (
-    <Dialog open={isOpen} onOpenChange={setIsOpen}>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>
-            {isInternal ? "Open Link in New Window" : "Open External Link"}
-          </DialogTitle>
-          <DialogDescription>
-            {isInternal
-              ? "You are about to open a link in a new window. This will take you to another page within this application."
-              : "You are about to open a link in a new window. This will take you to an external site."}
-          </DialogDescription>
-        </DialogHeader>
-        <div className="py-4">
-          <p className="text-sm text-muted-foreground break-all">{url}</p>
-        </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={handleCancel}>
-            Cancel
-          </Button>
-          <Button variant="outline" onClick={handleCopy}>
-            {copied ? (
-              <>
-                <Check className="w-4 h-4 mr-2" />
-                Copied
-              </>
-            ) : (
-              <>
-                <Copy className="w-4 h-4 mr-2" />
-                Copy URL
-              </>
-            )}
-          </Button>
-          <Button onClick={handleConfirm}>
-            <ExternalLink className="w-4 h-4 mr-2" />
-            Open Link
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
+  const ExternalLinkDialog = () => {
+    const [copied, setCopied] = useState(false);
+
+    const handleCopyClick = async () => {
+      await handleCopy();
+      // Only show "Copied" state if the URL was set and clipboard write didn't throw
+      if (url) {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
+    };
+
+    return (
+      <Dialog open={isOpen} onOpenChange={setIsOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>
+              {isInternal ? "Open Link in New Window" : "Open External Link"}
+            </DialogTitle>
+            <DialogDescription>
+              {isInternal
+                ? "You are about to open a link in a new window. This will take you to another page within this application."
+                : "You are about to open a link in a new window. This will take you to an external site."}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <p className="text-sm text-muted-foreground break-all">{url}</p>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={handleCancel}>
+              Cancel
+            </Button>
+            <Button variant="outline" onClick={handleCopyClick}>
+              {copied ? (
+                <>
+                  <Check className="w-4 h-4 mr-2" />
+                  Copied
+                </>
+              ) : (
+                <>
+                  <Copy className="w-4 h-4 mr-2" />
+                  Copy URL
+                </>
+              )}
+            </Button>
+            <Button onClick={handleConfirm}>
+              <ExternalLink className="w-4 h-4 mr-2" />
+              Open Link
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    );
+  };
 
   return { openExternal, ExternalLinkDialog };
 }
