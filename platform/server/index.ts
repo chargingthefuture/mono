@@ -128,7 +128,8 @@ app.use((req, res, next) => {
   app.all("*", async (req, res, next) => {
     // Only handle API routes that weren't matched by any route handler
     // Express will only reach this route if no other route matched
-    if (req.path.startsWith("/api/")) {
+    // Use req.originalUrl to be consistent with serveStatic
+    if (req.originalUrl.startsWith("/api/")) {
       return notFoundHandler(req, res, next);
     }
 

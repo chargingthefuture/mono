@@ -4637,13 +4637,15 @@ export class DatabaseStorage implements IStorage {
     if (dataToInsert.averageRating !== undefined && dataToInsert.averageRating !== null) {
       dataToInsert.averageRating = dataToInsert.averageRating.toString();
     }
-    // Explicitly handle userId: if null/undefined, omit it from insert to allow unclaimed profiles
-    if (dataToInsert.userId === null || dataToInsert.userId === undefined) {
-      delete dataToInsert.userId;
-    }
+    // Explicitly handle userId: if null/undefined/empty string, omit it from insert to allow unclaimed profiles
+    // Use object destructuring to ensure userId is completely excluded when null/undefined/empty
+    const { userId, ...restData } = dataToInsert;
+    const finalData = (userId === null || userId === undefined || userId === "") 
+      ? restData 
+      : { ...restData, userId };
     const [profile] = await db
       .insert(mechanicmatchProfiles)
-      .values(dataToInsert)
+      .values(finalData)
       .returning();
     return profile;
   }

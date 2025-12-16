@@ -59,7 +59,8 @@ const BLOCKED_PATH_PATTERNS = [
   /^\/api\/package-lock\.json$/, // API package lock
   /^\/yarn\.lock$/,       // Expose package info (block it)
   /^\/api\/yarn\.lock$/,  // API yarn lock
-  /^\/admin\//,           // Legit admin route (but block /api/admin/ for security probes)
+  // Note: /admin/ routes are legitimate and should NOT be blocked
+  // Admin routes are handled by the SPA router and should be served index.html
 ];
 
 /**
