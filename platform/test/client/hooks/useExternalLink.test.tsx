@@ -61,34 +61,38 @@ describe('useExternalLink', () => {
     expect(screen.getByText(/take you to an external site/i)).toBeInTheDocument();
   });
 
-  it('should show internal link dialog for relative paths', () => {
+  it('should open internal links directly without dialog for relative paths', () => {
     const { result } = renderHook(() => useExternalLink());
+    const internalUrl = '/apps/directory/public';
 
     act(() => {
-      result.current.openExternal('/apps/directory/public');
+      result.current.openExternal(internalUrl);
     });
 
+    // Internal links should open directly without showing dialog
+    expect(window.open).toHaveBeenCalledWith(internalUrl, '_blank', 'noopener,noreferrer');
+    
+    // Dialog should not be open for internal links
     const { ExternalLinkDialog } = result.current;
     render(<ExternalLinkDialog />);
-    
-    // Dialog should show internal link title and description
-    expect(screen.getByText(/open link in new window/i)).toBeInTheDocument();
-    expect(screen.getByText(/another page within this application/i)).toBeInTheDocument();
+    expect(screen.queryByText(/open link in new window/i)).not.toBeInTheDocument();
   });
 
-  it('should show internal link dialog for same-origin absolute URLs', () => {
+  it('should open internal links directly without dialog for same-origin absolute URLs', () => {
     const { result } = renderHook(() => useExternalLink());
+    const internalUrl = 'https://the-comic.com/apps/directory/public';
 
     act(() => {
-      result.current.openExternal('https://the-comic.com/apps/directory/public');
+      result.current.openExternal(internalUrl);
     });
 
+    // Internal links should open directly without showing dialog
+    expect(window.open).toHaveBeenCalledWith(internalUrl, '_blank', 'noopener,noreferrer');
+    
+    // Dialog should not be open for internal links
     const { ExternalLinkDialog } = result.current;
     render(<ExternalLinkDialog />);
-    
-    // Dialog should show internal link title and description
-    expect(screen.getByText(/open link in new window/i)).toBeInTheDocument();
-    expect(screen.getByText(/another page within this application/i)).toBeInTheDocument();
+    expect(screen.queryByText(/open link in new window/i)).not.toBeInTheDocument();
   });
 
   it('should open link in new window when confirmed', async () => {
@@ -140,26 +144,26 @@ describe('useExternalLink', () => {
     expect(screen.getByText(testUrl)).toBeInTheDocument();
   });
 
-  it('should show copy button for internal links', () => {
+  it('should show copy button for external links in dialog', () => {
     const { result } = renderHook(() => useExternalLink());
 
     act(() => {
-      result.current.openExternal('/apps/directory/public');
+      result.current.openExternal('https://example.com');
     });
 
     const { ExternalLinkDialog } = result.current;
     render(<ExternalLinkDialog />);
     
-    // Dialog should show internal link title
-    expect(screen.getByText(/open link in new window/i)).toBeInTheDocument();
+    // Dialog should show external link title
+    expect(screen.getByText(/open external link/i)).toBeInTheDocument();
     // Copy button should be present
     expect(screen.getByRole('button', { name: /copy url/i })).toBeInTheDocument();
   });
 
-  it('should copy URL when copy button is clicked', async () => {
+  it('should copy URL when copy button is clicked in external link dialog', async () => {
     const user = userEvent.setup();
     const { result } = renderHook(() => useExternalLink());
-    const testUrl = '/apps/directory/public';
+    const testUrl = 'https://example.com/test-page';
     
     // Mock clipboard API - use defineProperty since clipboard is read-only
     const writeTextMock = vi.fn().mockResolvedValue(undefined);

@@ -4138,10 +4138,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/mechanicmatch/admin/profiles', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const adminId = getUserId(req);
     // Ensure all required fields with defaults are explicitly set
+    // Handle userId: if not provided or empty, set to null for unclaimed profiles
+    const userIdValue = req.body.userId && typeof req.body.userId === 'string' && req.body.userId.trim() !== "" 
+      ? req.body.userId.trim() 
+      : null;
     const payload = {
       ...req.body,
-      userId: req.body.userId && req.body.userId.trim() !== "" ? req.body.userId : null,
-      isClaimed: !!(req.body.userId && req.body.userId.trim() !== ""),
+      userId: userIdValue,
+      isClaimed: !!userIdValue,
       // Explicitly set defaults for fields that have NOT NULL constraints
       isCarOwner: req.body.isCarOwner ?? false,
       isMechanic: req.body.isMechanic ?? false,
