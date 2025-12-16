@@ -12,10 +12,13 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.verify
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -33,6 +36,7 @@ class AuthViewModelTest {
 
     @Before
     fun setup() {
+        Dispatchers.setMain(testDispatcher)
         authManager = mockk(relaxed = true)
         apiService = mockk(relaxed = true)
         
@@ -49,7 +53,7 @@ class AuthViewModelTest {
 
     @After
     fun tearDown() {
-        // Clean up if needed
+        Dispatchers.resetMain()
     }
 
     @Test
@@ -81,6 +85,9 @@ class AuthViewModelTest {
         viewModel = AuthViewModel(authManager)
         advanceUntilIdle()
         
+        viewModel.loadUser()
+        advanceUntilIdle()
+        
         assertEquals(mockUser, viewModel.user.value)
         assertFalse(viewModel.isLoading.value)
         assertNull(viewModel.error.value)
@@ -91,6 +98,9 @@ class AuthViewModelTest {
         coEvery { apiService.getCurrentUser() } returns Response.error(404, mockk())
         
         viewModel = AuthViewModel(authManager)
+        advanceUntilIdle()
+        
+        viewModel.loadUser()
         advanceUntilIdle()
         
         assertNull(viewModel.user.value)
@@ -104,6 +114,9 @@ class AuthViewModelTest {
         coEvery { apiService.getCurrentUser() } throws Exception(exceptionMessage)
         
         viewModel = AuthViewModel(authManager)
+        advanceUntilIdle()
+        
+        viewModel.loadUser()
         advanceUntilIdle()
         
         assertEquals(exceptionMessage, viewModel.error.value)
@@ -222,7 +235,6 @@ class AuthViewModelTest {
 
     @Test
     fun `isLoading should be true during API call`() = runTest(testDispatcher) {
-        val loadingSlot = slot<Boolean>()
         coEvery { apiService.getCurrentUser() } coAnswers {
             // Check that loading is true during the call
             assertTrue(viewModel.isLoading.value)
@@ -230,6 +242,9 @@ class AuthViewModelTest {
         }
         
         viewModel = AuthViewModel(authManager)
+        advanceUntilIdle()
+        
+        viewModel.loadUser()
         advanceUntilIdle()
         
         assertFalse(viewModel.isLoading.value)

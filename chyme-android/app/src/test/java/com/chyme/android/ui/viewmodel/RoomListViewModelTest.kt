@@ -9,9 +9,12 @@ import io.mockk.every
 import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.verify
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
 import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
@@ -28,6 +31,7 @@ class RoomListViewModelTest {
 
     @Before
     fun setup() {
+        Dispatchers.setMain(testDispatcher)
         apiService = mockk(relaxed = true)
         
         // Mock ApiClient
@@ -37,7 +41,7 @@ class RoomListViewModelTest {
 
     @After
     fun tearDown() {
-        // Clean up if needed
+        Dispatchers.resetMain()
     }
 
     @Test
