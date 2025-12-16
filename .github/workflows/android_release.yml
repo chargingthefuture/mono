@@ -139,7 +139,7 @@ jobs:
           tag_name: ${{ steps.version.outputs.version }}
           name: Android Release ${{ steps.version.outputs.version }}
           body: |
-            Android APK Release
+            Android APK Release of Chyme - Social Audio for TIs
             
             **Version:** ${{ steps.version.outputs.version }}
             **Commit:** ${{ github.sha }}
