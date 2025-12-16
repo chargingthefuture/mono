@@ -1,108 +1,108 @@
 {
-  "timestamp": "2025-12-16T07:18:35.307Z",
+  "timestamp": "2025-12-16T07:36:05.702Z",
   "services": [
     {
       "name": "Main Platform",
       "key": "main",
-      "status": "down",
-      "responseTime": 532,
-      "statusCode": 404
+      "status": "up",
+      "responseTime": 398,
+      "statusCode": 200
     },
     {
       "name": "ChatGroups",
       "key": "chatgroups",
-      "status": "down",
-      "responseTime": 490,
-      "statusCode": 404
+      "status": "up",
+      "responseTime": 330,
+      "statusCode": 200
     },
     {
       "name": "Directory",
       "key": "directory",
-      "status": "down",
-      "responseTime": 503,
-      "statusCode": 404
+      "status": "up",
+      "responseTime": 304,
+      "statusCode": 200
     },
     {
       "name": "GentlePulse",
       "key": "gentlepulse",
-      "status": "down",
-      "responseTime": 510,
-      "statusCode": 404
+      "status": "up",
+      "responseTime": 345,
+      "statusCode": 200
     },
     {
       "name": "Chyme",
       "key": "chyme",
-      "status": "down",
-      "responseTime": 531,
-      "statusCode": 404
+      "status": "up",
+      "responseTime": 343,
+      "statusCode": 200
     },
     {
       "name": "Default Alive or Dead",
       "key": "default-alive-or-dead",
-      "status": "down",
-      "responseTime": 521,
-      "statusCode": 404
+      "status": "up",
+      "responseTime": 403,
+      "statusCode": 200
     },
     {
       "name": "Workforce Recruiter",
       "key": "workforce-recruiter",
-      "status": "down",
-      "responseTime": 549,
-      "statusCode": 404
+      "status": "up",
+      "responseTime": 372,
+      "statusCode": 200
     },
     {
       "name": "LightHouse",
       "key": "lighthouse",
-      "status": "down",
-      "responseTime": 536,
-      "statusCode": 404
+      "status": "up",
+      "responseTime": 367,
+      "statusCode": 200
     },
     {
       "name": "LostMail",
       "key": "lostmail",
-      "status": "down",
-      "responseTime": 579,
-      "statusCode": 404
+      "status": "up",
+      "responseTime": 388,
+      "statusCode": 200
     },
     {
       "name": "MechanicMatch",
       "key": "mechanicmatch",
-      "status": "down",
-      "responseTime": 569,
-      "statusCode": 404
+      "status": "up",
+      "responseTime": 389,
+      "statusCode": 200
     },
     {
       "name": "CompareNotes",
       "key": "research",
-      "status": "down",
-      "responseTime": 572,
-      "statusCode": 404
+      "status": "up",
+      "responseTime": 452,
+      "statusCode": 200
     },
     {
       "name": "SocketRelay",
       "key": "socketrelay",
-      "status": "down",
-      "responseTime": 561,
-      "statusCode": 404
+      "status": "up",
+      "responseTime": 433,
+      "statusCode": 200
     },
     {
       "name": "SupportMatch",
       "key": "supportmatch",
-      "status": "down",
-      "responseTime": 583,
-      "statusCode": 404
+      "status": "up",
+      "responseTime": 457,
+      "statusCode": 200
     },
     {
       "name": "TrustTransport",
       "key": "trusttransport",
-      "status": "down",
-      "responseTime": 586,
-      "statusCode": 404
+      "status": "up",
+      "responseTime": 425,
+      "statusCode": 200
     }
   ],
   "overall": {
     "total": 14,
-    "up": 0,
-    "down": 14
+    "up": 14,
+    "down": 0
   }
 }
