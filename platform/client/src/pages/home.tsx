@@ -4,12 +4,13 @@ import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { DollarSign, Package, Calendar } from "lucide-react";
+import { DollarSign, Package, Calendar, ExternalLink } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { PrivacyField } from "@/components/ui/privacy-field";
 import { PaymentReminderBanner } from "@/components/payment-reminder-banner";
 import { useToast } from "@/hooks/use-toast";
+import { useExternalLink } from "@/hooks/useExternalLink";
 
 const PAYMENT_TOAST_KEY = "payment-toast-shown";
 
@@ -18,6 +19,7 @@ export default function Home() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [toastShown, setToastShown] = useState(false);
+  const { openExternal, ExternalLinkDialog } = useExternalLink();
 
   const { data: paymentStatus } = useQuery<{
     isDelinquent: boolean;
@@ -203,6 +205,20 @@ export default function Home() {
                   ${user?.pricingTier}/month
                 </span>
               </div>
+              <div className="pt-2">
+                <Button
+                  variant="outline"
+                  className="mt-2"
+                  onClick={() => openExternal("https://accounts.app.chargingthefuture.com/user")}
+                  data-testid="button-manage-clerk-identity"
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" />
+                  Manage your Clerk identity
+                </Button>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Opens the Clerk User Dashboard in a new tab so you can manage your identity settings.
+                </p>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -288,6 +304,7 @@ export default function Home() {
           </Link>
         </CardContent>
       </Card>
+      <ExternalLinkDialog />
     </div>
   );
 }
