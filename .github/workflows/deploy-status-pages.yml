@@ -43,6 +43,7 @@ jobs:
 
       - name: Run health checks
         working-directory: status
+        continue-on-error: true  # Continue deployment even if services are down
         env:
           BASE_URL: ${{ secrets.STATUS_BASE_URL || 'https://app.chargingthefuture.com' }}
         run: |

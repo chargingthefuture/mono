@@ -55,7 +55,6 @@ function makeRequest(url) {
       port: urlObj.port || (isHttps ? 443 : 80),
       path: urlObj.pathname + urlObj.search,
       method: 'GET',
-      timeout: 10000, // 10 second timeout
       headers: {
         'User-Agent': 'Status-Page-Health-Check/1.0',
       },
@@ -87,7 +86,8 @@ function makeRequest(url) {
       });
     });
 
-    req.on('timeout', () => {
+    // Set timeout explicitly - this is required for the timeout event to fire
+    req.setTimeout(10000, () => {
       req.destroy();
       const responseTime = Date.now() - startTime;
       reject({
@@ -119,7 +119,7 @@ async function checkService(service) {
       statusCode: result.status,
       responseTime: result.responseTime,
       timestamp,
-      error: null,
+      error: isUp ? null : `HTTP ${result.status}`,
     };
   } catch (error) {
     return {
@@ -239,7 +239,10 @@ async function main() {
     // Save individual service histories
     results.forEach(result => {
       saveServiceHistory(result);
-      console.log(`${result.name}: ${result.status.toUpperCase()} (${result.responseTime}ms)`);
+      const statusInfo = result.statusCode 
+        ? `${result.status.toUpperCase()} (HTTP ${result.statusCode}, ${result.responseTime}ms)`
+        : `${result.status.toUpperCase()} (${result.error || 'error'}, ${result.responseTime || 'N/A'}ms)`;
+      console.log(`${result.name}: ${statusInfo}`);
     });
     
     // Save summary

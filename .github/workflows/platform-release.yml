@@ -1,4 +1,4 @@
-name: Build and Release Web App
+name: Platform Release
 
 on:
   release:
