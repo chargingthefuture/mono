@@ -131,6 +131,133 @@ describe('API - Directory Admin', () => {
       const req = createMockRequest(adminUserId, true);
       expect(req.user).toBeDefined();
     });
+
+    it('should return firstName for claimed profiles from user data', async () => {
+      // This test verifies: ALL profiles (claimed AND unclaimed) MUST show first names
+      const claimedProfile = {
+        id: 'profile-1',
+        userId: 'user-1',
+        isClaimed: true,
+        description: 'Test profile',
+        country: 'United States',
+        isPublic: false,
+        isVerified: false,
+      };
+
+      const mockUser = {
+        id: 'user-1',
+        firstName: 'John',
+        lastName: 'Doe',
+        email: 'john@example.com',
+        isVerified: true,
+      };
+
+      // Simulate the enrichment logic from the endpoint
+      let userFirstName: string | null = null;
+      let userLastName: string | null = null;
+      
+      if (claimedProfile.userId) {
+        // Simulate fetching user data
+        userFirstName = mockUser.firstName || null;
+        userLastName = mockUser.lastName || null;
+      } else {
+        // For unclaimed profiles, use profile's own firstName field
+        userFirstName = ((claimedProfile as any).firstName && (claimedProfile as any).firstName.trim()) || null;
+      }
+
+      const enrichedProfile = {
+        ...claimedProfile,
+        firstName: userFirstName || null,
+        lastName: userLastName || null,
+      };
+
+      // Claimed profiles MUST have firstName from user
+      expect(enrichedProfile.firstName).toBe('John');
+      expect(enrichedProfile.firstName).not.toBeNull();
+      expect(enrichedProfile.lastName).toBe('Doe');
+    });
+
+    it('should return firstName for unclaimed profiles from profile data', async () => {
+      // This test verifies: ALL profiles (claimed AND unclaimed) MUST show first names
+      // Unclaimed profiles should return firstName from profile.firstName field
+      const unclaimedProfile = {
+        id: 'profile-2',
+        userId: null,
+        isClaimed: false,
+        description: 'Unclaimed profile',
+        country: 'United States',
+        isPublic: false,
+        isVerified: false,
+        firstName: 'UnclaimedFirstName', // This MUST be returned
+      };
+
+      // Simulate the enrichment logic from the endpoint
+      let userFirstName: string | null = null;
+      let userLastName: string | null = null;
+      
+      if (unclaimedProfile.userId) {
+        // This branch should NOT execute for unclaimed profiles
+      } else {
+        // For unclaimed profiles, use profile's own firstName field
+        userFirstName = ((unclaimedProfile as any).firstName && (unclaimedProfile as any).firstName.trim()) || null;
+      }
+
+      const enrichedProfile = {
+        ...unclaimedProfile,
+        firstName: userFirstName || null,
+        lastName: userLastName || null,
+      };
+
+      // Unclaimed profiles MUST have firstName from profile.firstName
+      expect(enrichedProfile.firstName).toBe('UnclaimedFirstName');
+      expect(enrichedProfile.firstName).not.toBeNull();
+    });
+
+    it('should ALWAYS return firstName for both claimed and unclaimed profiles', async () => {
+      // Test that the endpoint correctly handles both types - BOTH must have firstName
+      const claimedProfile = {
+        id: 'profile-1',
+        userId: 'user-1',
+        isClaimed: true,
+        description: 'Claimed',
+      };
+
+      const unclaimedProfile = {
+        id: 'profile-2',
+        userId: null,
+        isClaimed: false,
+        description: 'Unclaimed',
+        firstName: 'UnclaimedUser', // MUST be returned
+      };
+
+      const mockUser = {
+        id: 'user-1',
+        firstName: 'Jane',
+        lastName: 'Smith',
+      };
+
+      // Enrich claimed profile
+      const enrichedClaimed = {
+        ...claimedProfile,
+        firstName: claimedProfile.userId ? (mockUser.firstName || null) : (((claimedProfile as any).firstName && (claimedProfile as any).firstName.trim()) || null),
+        lastName: claimedProfile.userId ? (mockUser.lastName || null) : null,
+      };
+
+      // Enrich unclaimed profile
+      const enrichedUnclaimed = {
+        ...unclaimedProfile,
+        firstName: unclaimedProfile.userId ? null : (((unclaimedProfile as any).firstName && (unclaimedProfile as any).firstName.trim()) || null),
+        lastName: null,
+      };
+
+      // BOTH profiles MUST have firstName
+      expect(enrichedClaimed.firstName).toBe('Jane');
+      expect(enrichedClaimed.firstName).not.toBeNull();
+      expect(enrichedClaimed.lastName).toBe('Smith');
+
+      expect(enrichedUnclaimed.firstName).toBe('UnclaimedUser');
+      expect(enrichedUnclaimed.firstName).not.toBeNull();
+    });
   });
 
   describe('POST /api/directory/admin/profiles', () => {

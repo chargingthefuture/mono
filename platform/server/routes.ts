@@ -1325,7 +1325,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       } else {
         // For admin-created profiles without userId, use profile's own isVerified field
+        // and use profile's firstName field (for unclaimed profiles)
         userIsVerified = p.isVerified || false;
+        userFirstName = ((p as any).firstName && (p as any).firstName.trim()) || null;
       }
       
       // Ensure we always return displayName, firstName, and lastName (even if null)
@@ -1955,7 +1957,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       'getAllSupportMatchProfiles'
     );
     
-    // Enrich profiles with firstName from user table
+    // Enrich profiles with firstName from user table or profile's own firstName for unclaimed
     const profilesWithNames = await Promise.all(profiles.map(async (profile) => {
       let userFirstName: string | null = null;
       if (profile.userId) {
@@ -1967,6 +1969,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         if (user) {
           userFirstName = user.firstName || null;
         }
+      } else {
+        // For unclaimed profiles, use profile's own firstName field
+        userFirstName = ((profile as any).firstName && (profile as any).firstName.trim()) || null;
       }
       return { ...profile, firstName: userFirstName };
     }));
@@ -2502,7 +2507,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
       () => storage.getAllLighthouseProfiles(),
       'getAllLighthouseProfiles'
     );
-    res.json(profiles);
+    
+    // Enrich profiles with firstName from user table or profile's own firstName for unclaimed
+    const profilesWithNames = await Promise.all(profiles.map(async (profile) => {
+      let userFirstName: string | null = null;
+      if (profile.userId) {
+        const user = await withDatabaseErrorHandling(
+          () => storage.getUser(profile.userId!),
+          'getUserForLighthouseAdminProfiles'
+        );
+        if (user) {
+          userFirstName = user.firstName || null;
+        }
+      } else {
+        // For unclaimed profiles, use profile's own firstName field if available
+        userFirstName = ((profile as any).firstName && (profile as any).firstName.trim()) || null;
+      }
+      return { ...profile, firstName: userFirstName };
+    }));
+    
+    res.json(profilesWithNames);
   }));
 
   app.get('/api/lighthouse/admin/profiles/:id', isAuthenticated, isAdmin, asyncHandler(async (req, res) => {

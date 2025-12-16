@@ -41,17 +41,7 @@ class MainActivity : ComponentActivity() {
                         modifier = Modifier.fillMaxSize(),
                         color = MaterialTheme.colorScheme.background
                     ) {
-                        try {
-                            ChymeApp(this@MainActivity, authManager)
-                        } catch (e: Exception) {
-                            Log.e("MainActivity", "Error in ChymeApp composable", e)
-                            Sentry.captureException(e)
-                            // Fallback UI
-                            androidx.compose.material3.Text(
-                                text = "Error loading app. Please restart.",
-                                modifier = Modifier.padding(16.dp)
-                            )
-                        }
+                        ChymeApp(this@MainActivity, authManager)
                     }
                 }
             }
@@ -66,18 +56,19 @@ class MainActivity : ComponentActivity() {
 @Composable
 fun ChymeApp(context: Context, authManager: OTPAuthManager) {
     val navController = rememberNavController()
+    val authViewModel: AuthViewModel = viewModel { AuthViewModel(authManager) }
     
-    try {
-        val authViewModel: AuthViewModel = viewModel { AuthViewModel(authManager) }
-        
-        val isSignedIn by authViewModel.isSignedIn.collectAsState()
-        val user by authViewModel.user.collectAsState()
-        val needsApproval = remember(user) { 
-            user != null && !user.isApproved && !user.isAdmin 
-        }
-        val isAdmin = remember(user) { 
-            user?.isAdmin == true 
-        }
+    val isSignedIn by authViewModel.isSignedIn.collectAsState()
+    val user by authViewModel.user.collectAsState()
+    
+    // Store user in local variable to avoid smart cast issues
+    val currentUser = user
+    val needsApproval = remember(currentUser) { 
+        currentUser != null && !currentUser.isApproved && !currentUser.isAdmin 
+    }
+    val isAdmin = remember(currentUser) { 
+        currentUser?.isAdmin == true 
+    }
         
         Log.d("ChymeApp", "Auth state: isSignedIn=$isSignedIn, needsApproval=$needsApproval, user=${user?.id}")
         
@@ -174,7 +165,7 @@ fun ChymeApp(context: Context, authManager: OTPAuthManager) {
                 RoomDetailScreen(
                     roomId = roomId,
                     isSignedIn = isSignedIn == true,
-                    isApproved = user?.isApproved == true,
+                    isApproved = currentUser?.isApproved == true,
                     onBackClick = {
                         navController.popBackStack()
                     },
@@ -195,14 +186,5 @@ fun ChymeApp(context: Context, authManager: OTPAuthManager) {
                 )
             }
         }
-    } catch (e: Exception) {
-        Log.e("ChymeApp", "Error in ChymeApp composable", e)
-        Sentry.captureException(e)
-        // Fallback UI
-        androidx.compose.material3.Text(
-            text = "Error loading app: ${e.message}",
-            modifier = Modifier.padding(16.dp)
-        )
-    }
 }
 

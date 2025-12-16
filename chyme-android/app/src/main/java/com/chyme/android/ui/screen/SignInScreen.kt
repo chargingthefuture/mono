@@ -27,21 +27,12 @@ fun SignInScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // Chyme logo - with error handling
-        try {
-            Image(
-                painter = painterResource(id = R.drawable.chyme_logo),
-                contentDescription = "Chyme Logo",
-                modifier = Modifier.size(120.dp)
-            )
-        } catch (e: Exception) {
-            // If logo fails to load, show text instead
-            Text(
-                text = "Chyme",
-                style = MaterialTheme.typography.headlineLarge,
-                color = androidx.compose.ui.graphics.Color(0xFF4CAF50)
-            )
-        }
+        // Chyme logo
+        Image(
+            painter = painterResource(id = R.drawable.chyme_logo),
+            contentDescription = "Chyme Logo",
+            modifier = Modifier.size(120.dp)
+        )
         
         Spacer(modifier = Modifier.height(24.dp))
         
