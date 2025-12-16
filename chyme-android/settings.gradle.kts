@@ -14,6 +14,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Chyme"
+rootProject.name = "Treehouse"
 include(":app")
-

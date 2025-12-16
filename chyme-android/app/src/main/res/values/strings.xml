@@ -1,34 +1,3 @@
 <resources>
-    <string name="app_name">Chyme</string>
-    <string name="rooms_title">Rooms</string>
-    <string name="create_room">Create Room</string>
-    <string name="room_name">Room Name</string>
-    <string name="room_description">Description</string>
-    <string name="room_type_private">Private</string>
-    <string name="room_type_public">Public</string>
-    <string name="join_room">Join Room</string>
-    <string name="leave_room">Leave Room</string>
-    <string name="join_stage">Join Stage</string>
-    <string name="leave_stage">Leave Stage</string>
-    <string name="mute">Mute</string>
-    <string name="unmute">Unmute</string>
-    <string name="sign_in">Sign In</string>
-    <string name="sign_up">Sign Up</string>
-    <string name="sign_out">Sign Out</string>
-    <string name="pending_approval">Access Pending</string>
-    <string name="pending_approval_message">Your account is pending approval. An administrator will review your request shortly.</string>
-    <string name="quora_profile_url">Quora Profile URL</string>
-    <string name="quora_profile_url_hint">Enter your Quora profile handle</string>
-    <string name="save_quora_url">Save Quora Profile URL</string>
-    <string name="chat_hint">Type a message...</string>
-    <string name="send">Send</string>
-    <string name="listening">Listening</string>
-    <string name="speaking">Speaking</string>
-    <string name="admin_only_create_room">Only administrators can create rooms</string>
-    <string name="sign_in_required">Sign in required to interact</string>
-    <string name="error_loading_rooms">Error loading rooms</string>
-    <string name="error_loading_messages">Error loading messages</string>
-    <string name="error_sending_message">Error sending message</string>
-    <string name="no_rooms_available">No rooms available</string>
+    <string name="app_name">Treehouse</string>
 </resources>
-
