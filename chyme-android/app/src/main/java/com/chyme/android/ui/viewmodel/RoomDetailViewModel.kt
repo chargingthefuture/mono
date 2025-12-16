@@ -1,5 +1,6 @@
 package com.chyme.android.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.chyme.android.data.api.ApiClient
@@ -7,10 +8,12 @@ import com.chyme.android.data.model.Message
 import com.chyme.android.data.model.Room
 import com.chyme.android.data.model.RoomParticipant
 import com.chyme.android.data.model.SendMessageRequest
+import io.sentry.Sentry
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
 
 class RoomDetailViewModel(private val roomId: String) : ViewModel() {
     private val _room = MutableStateFlow<Room?>(null)
@@ -47,10 +50,25 @@ class RoomDetailViewModel(private val roomId: String) : ViewModel() {
                 if (response.isSuccessful) {
                     _room.value = response.body()
                 } else {
+                    val code = response.code()
+                    val errorBodyString = try {
+                        response.errorBody()?.string()
+                    } catch (e: Exception) {
+                        "unable to read error body: ${e.message}"
+                    }
+                    val detailedMessage = "Failed to load room (code=$code, error=$errorBodyString, roomId=$roomId)"
+                    Log.e("RoomDetailViewModel", detailedMessage)
+                    Sentry.captureMessage("getRoom API failed: $detailedMessage")
                     _error.value = "Failed to load room"
                 }
             } catch (e: Exception) {
-                _error.value = e.message ?: "Unknown error"
+                val message = when (e) {
+                    is HttpException -> "HTTP ${e.code()} - ${e.message()}"
+                    else -> e.message ?: "Unknown error"
+                }
+                Log.e("RoomDetailViewModel", "Exception while loading room: $message", e)
+                Sentry.captureException(e)
+                _error.value = message
             } finally {
                 _isLoading.value = false
             }
@@ -64,10 +82,25 @@ class RoomDetailViewModel(private val roomId: String) : ViewModel() {
                 if (response.isSuccessful) {
                     _messages.value = response.body() ?: emptyList()
                 } else {
+                    val code = response.code()
+                    val errorBodyString = try {
+                        response.errorBody()?.string()
+                    } catch (e: Exception) {
+                        "unable to read error body: ${e.message}"
+                    }
+                    val detailedMessage = "Failed to load messages (code=$code, error=$errorBodyString, roomId=$roomId)"
+                    Log.e("RoomDetailViewModel", detailedMessage)
+                    Sentry.captureMessage("getMessages API failed: $detailedMessage")
                     _error.value = "Failed to load messages"
                 }
             } catch (e: Exception) {
-                _error.value = e.message ?: "Unknown error"
+                val message = when (e) {
+                    is HttpException -> "HTTP ${e.code()} - ${e.message()}"
+                    else -> e.message ?: "Unknown error"
+                }
+                Log.e("RoomDetailViewModel", "Exception while loading messages: $message", e)
+                Sentry.captureException(e)
+                _error.value = message
             }
         }
     }
@@ -82,10 +115,25 @@ class RoomDetailViewModel(private val roomId: String) : ViewModel() {
                 if (response.isSuccessful) {
                     loadMessages() // Refresh messages
                 } else {
+                    val code = response.code()
+                    val errorBodyString = try {
+                        response.errorBody()?.string()
+                    } catch (e: Exception) {
+                        "unable to read error body: ${e.message}"
+                    }
+                    val detailedMessage = "Failed to send message (code=$code, error=$errorBodyString, roomId=$roomId)"
+                    Log.e("RoomDetailViewModel", detailedMessage)
+                    Sentry.captureMessage("sendMessage API failed: $detailedMessage")
                     _error.value = "Failed to send message"
                 }
             } catch (e: Exception) {
-                _error.value = e.message ?: "Unknown error"
+                val message = when (e) {
+                    is HttpException -> "HTTP ${e.code()} - ${e.message()}"
+                    else -> e.message ?: "Unknown error"
+                }
+                Log.e("RoomDetailViewModel", "Exception while sending message: $message", e)
+                Sentry.captureException(e)
+                _error.value = message
             }
         }
     }
@@ -98,10 +146,25 @@ class RoomDetailViewModel(private val roomId: String) : ViewModel() {
                     _isJoined.value = true
                     loadParticipants()
                 } else {
+                    val code = response.code()
+                    val errorBodyString = try {
+                        response.errorBody()?.string()
+                    } catch (e: Exception) {
+                        "unable to read error body: ${e.message}"
+                    }
+                    val detailedMessage = "Failed to join room (code=$code, error=$errorBodyString, roomId=$roomId)"
+                    Log.e("RoomDetailViewModel", detailedMessage)
+                    Sentry.captureMessage("joinRoom API failed: $detailedMessage")
                     _error.value = "Failed to join room"
                 }
             } catch (e: Exception) {
-                _error.value = e.message ?: "Unknown error"
+                val message = when (e) {
+                    is HttpException -> "HTTP ${e.code()} - ${e.message()}"
+                    else -> e.message ?: "Unknown error"
+                }
+                Log.e("RoomDetailViewModel", "Exception while joining room: $message", e)
+                Sentry.captureException(e)
+                _error.value = message
             }
         }
     }
@@ -114,10 +177,25 @@ class RoomDetailViewModel(private val roomId: String) : ViewModel() {
                     _isJoined.value = false
                     _isSpeaking.value = false
                 } else {
+                    val code = response.code()
+                    val errorBodyString = try {
+                        response.errorBody()?.string()
+                    } catch (e: Exception) {
+                        "unable to read error body: ${e.message}"
+                    }
+                    val detailedMessage = "Failed to leave room (code=$code, error=$errorBodyString, roomId=$roomId)"
+                    Log.e("RoomDetailViewModel", detailedMessage)
+                    Sentry.captureMessage("leaveRoom API failed: $detailedMessage")
                     _error.value = "Failed to leave room"
                 }
             } catch (e: Exception) {
-                _error.value = e.message ?: "Unknown error"
+                val message = when (e) {
+                    is HttpException -> "HTTP ${e.code()} - ${e.message()}"
+                    else -> e.message ?: "Unknown error"
+                }
+                Log.e("RoomDetailViewModel", "Exception while leaving room: $message", e)
+                Sentry.captureException(e)
+                _error.value = message
             }
         }
     }
@@ -128,9 +206,15 @@ class RoomDetailViewModel(private val roomId: String) : ViewModel() {
                 val response = ApiClient.apiService.getParticipants(roomId)
                 if (response.isSuccessful) {
                     _participants.value = response.body() ?: emptyList()
+                } else {
+                    // Log but don't set error - participants are optional
+                    val code = response.code()
+                    Log.w("RoomDetailViewModel", "Failed to load participants (code=$code, roomId=$roomId)")
                 }
             } catch (e: Exception) {
-                // Silently fail - participants are optional
+                // Log but don't set error - participants are optional
+                Log.w("RoomDetailViewModel", "Exception while loading participants: ${e.message}", e)
+                Sentry.captureException(e)
             }
         }
     }

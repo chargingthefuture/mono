@@ -1,14 +1,17 @@
 package com.chyme.android.ui.viewmodel
 
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.chyme.android.auth.OTPAuthManager
 import com.chyme.android.data.api.ApiClient
 import com.chyme.android.data.model.User
+import io.sentry.Sentry
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import retrofit2.HttpException
 
 class AuthViewModel(private val authManager: OTPAuthManager) : ViewModel() {
     private val _user = MutableStateFlow<User?>(null)
@@ -44,10 +47,25 @@ class AuthViewModel(private val authManager: OTPAuthManager) : ViewModel() {
                 if (response.isSuccessful) {
                     _user.value = response.body()
                 } else {
+                    val code = response.code()
+                    val errorBodyString = try {
+                        response.errorBody()?.string()
+                    } catch (e: Exception) {
+                        "unable to read error body: ${e.message}"
+                    }
+                    val detailedMessage = "Failed to load user (code=$code, error=$errorBodyString)"
+                    Log.e("AuthViewModel", detailedMessage)
+                    Sentry.captureMessage("getCurrentUser API failed: $detailedMessage")
                     _error.value = "Failed to load user"
                 }
             } catch (e: Exception) {
-                _error.value = e.message ?: "Unknown error"
+                val message = when (e) {
+                    is HttpException -> "HTTP ${e.code()} - ${e.message()}"
+                    else -> e.message ?: "Unknown error"
+                }
+                Log.e("AuthViewModel", "Exception while loading user: $message", e)
+                Sentry.captureException(e)
+                _error.value = message
             } finally {
                 _isLoading.value = false
             }
@@ -65,10 +83,25 @@ class AuthViewModel(private val authManager: OTPAuthManager) : ViewModel() {
                 if (response.isSuccessful) {
                     _user.value = response.body()
                 } else {
+                    val code = response.code()
+                    val errorBodyString = try {
+                        response.errorBody()?.string()
+                    } catch (e: Exception) {
+                        "unable to read error body: ${e.message}"
+                    }
+                    val detailedMessage = "Failed to update Quora profile URL (code=$code, error=$errorBodyString)"
+                    Log.e("AuthViewModel", detailedMessage)
+                    Sentry.captureMessage("updateQuoraProfileUrl API failed: $detailedMessage")
                     _error.value = "Failed to update Quora profile URL"
                 }
             } catch (e: Exception) {
-                _error.value = e.message ?: "Unknown error"
+                val message = when (e) {
+                    is HttpException -> "HTTP ${e.code()} - ${e.message()}"
+                    else -> e.message ?: "Unknown error"
+                }
+                Log.e("AuthViewModel", "Exception while updating Quora profile URL: $message", e)
+                Sentry.captureException(e)
+                _error.value = message
             } finally {
                 _isLoading.value = false
             }
@@ -89,10 +122,25 @@ class AuthViewModel(private val authManager: OTPAuthManager) : ViewModel() {
                     authManager.updateUser(body.user)
                     _user.value = body.user
                 } else {
+                    val code = response.code()
+                    val errorBodyString = try {
+                        response.errorBody()?.string()
+                    } catch (e: Exception) {
+                        "unable to read error body: ${e.message}"
+                    }
+                    val detailedMessage = "Invalid OTP (code=$code, error=$errorBodyString)"
+                    Log.e("AuthViewModel", detailedMessage)
+                    Sentry.captureMessage("validateOTP API failed: $detailedMessage")
                     _error.value = "Invalid OTP code. Please try again."
                 }
             } catch (e: Exception) {
-                _error.value = e.message ?: "Failed to validate OTP"
+                val message = when (e) {
+                    is HttpException -> "HTTP ${e.code()} - ${e.message()}"
+                    else -> e.message ?: "Failed to validate OTP"
+                }
+                Log.e("AuthViewModel", "Exception while validating OTP: $message", e)
+                Sentry.captureException(e)
+                _error.value = message
             } finally {
                 _isLoading.value = false
             }
