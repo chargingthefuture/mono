@@ -757,6 +757,8 @@ export default function MechanicMatchAdminProfiles() {
 
 function transformProfilePayload(values: AdminProfileFormValues) {
   // Explicitly set all fields to ensure defaults are applied and undefined values are handled
+  // Note: isClaimed is only set when creating new profiles, not when updating
+  // This prevents claimed profiles from becoming unclaimed when edited
   return {
     firstName: values.firstName?.trim() || null,
     isCarOwner: values.isCarOwner ?? false,
@@ -769,7 +771,7 @@ function transformProfilePayload(values: AdminProfileFormValues) {
     isPublic: values.isPublic ?? false,
     // Explicitly set defaults for fields that have NOT NULL constraints
     isMobileMechanic: false,
-    isClaimed: false,
+    // isClaimed is only set when creating (handled in route), not when updating
   };
 }
 

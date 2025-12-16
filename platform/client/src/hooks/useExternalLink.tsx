@@ -39,12 +39,7 @@ export function useExternalLink() {
   }, [url]);
 
   const openExternal = (linkUrl: string) => {
-    // For internal links, open directly without showing dialog to avoid flash
-    if (isInternalLink(linkUrl)) {
-      window.open(linkUrl, "_blank", "noopener,noreferrer");
-      return;
-    }
-    // For external links, show confirmation dialog
+    // Show dialog for all links (both internal and external) for consistency
     setUrl(linkUrl);
     setIsOpen(true);
     setCopied(false);

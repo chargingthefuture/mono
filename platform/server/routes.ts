@@ -4209,7 +4209,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.put('/api/mechanicmatch/admin/profiles/:id', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const adminId = getUserId(req);
-    const validated = validateWithZod(insertMechanicmatchProfileSchema.partial(), req.body, 'Invalid profile update') as Partial<z.infer<typeof insertMechanicmatchProfileSchema>>;
+    
+    // Get existing profile to preserve isClaimed and userId for claimed profiles
+    const existingProfile = await withDatabaseErrorHandling(
+      () => storage.getMechanicmatchProfileById(req.params.id),
+      'getMechanicmatchProfileById'
+    );
+
+    if (!existingProfile) {
+      return res.status(404).json({ message: "Profile not found" });
+    }
+
+    // Exclude isClaimed and userId from update payload to preserve existing values
+    // This prevents claimed profiles from becoming unclaimed when edited
+    const { isClaimed: _isClaimed, userId: _userId, ...updateData } = req.body;
+    const validated = validateWithZod(insertMechanicmatchProfileSchema.partial(), updateData, 'Invalid profile update') as Partial<z.infer<typeof insertMechanicmatchProfileSchema>>;
 
     const updated = await withDatabaseErrorHandling(
       () => storage.updateMechanicmatchProfileById(req.params.id, validated as any),

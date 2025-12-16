@@ -61,7 +61,7 @@ describe('useExternalLink', () => {
     expect(screen.getByText(/take you to an external site/i)).toBeInTheDocument();
   });
 
-  it('should open internal links directly without dialog for relative paths', () => {
+  it('should show internal link dialog for relative paths', () => {
     const { result } = renderHook(() => useExternalLink());
     const internalUrl = '/apps/directory/public';
 
@@ -69,16 +69,17 @@ describe('useExternalLink', () => {
       result.current.openExternal(internalUrl);
     });
 
-    // Internal links should open directly without showing dialog
-    expect(window.open).toHaveBeenCalledWith(internalUrl, '_blank', 'noopener,noreferrer');
+    // Internal links should show dialog (not open directly)
+    expect(window.open).not.toHaveBeenCalled();
     
-    // Dialog should not be open for internal links
+    // Dialog should be open for internal links
     const { ExternalLinkDialog } = result.current;
     render(<ExternalLinkDialog />);
-    expect(screen.queryByText(/open link in new window/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/open link in new window/i)).toBeInTheDocument();
+    expect(screen.getByText(/another page within this application/i)).toBeInTheDocument();
   });
 
-  it('should open internal links directly without dialog for same-origin absolute URLs', () => {
+  it('should show internal link dialog for same-origin absolute URLs', () => {
     const { result } = renderHook(() => useExternalLink());
     const internalUrl = 'https://the-comic.com/apps/directory/public';
 
@@ -86,16 +87,17 @@ describe('useExternalLink', () => {
       result.current.openExternal(internalUrl);
     });
 
-    // Internal links should open directly without showing dialog
-    expect(window.open).toHaveBeenCalledWith(internalUrl, '_blank', 'noopener,noreferrer');
+    // Internal links should show dialog (not open directly)
+    expect(window.open).not.toHaveBeenCalled();
     
-    // Dialog should not be open for internal links
+    // Dialog should be open for internal links
     const { ExternalLinkDialog } = result.current;
     render(<ExternalLinkDialog />);
-    expect(screen.queryByText(/open link in new window/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/open link in new window/i)).toBeInTheDocument();
+    expect(screen.getByText(/another page within this application/i)).toBeInTheDocument();
   });
 
-  it('should open link in new window when confirmed', async () => {
+  it('should open external link in new window when confirmed', async () => {
     const user = userEvent.setup();
     const { result } = renderHook(() => useExternalLink());
     const testUrl = 'https://example.com';
@@ -111,6 +113,24 @@ describe('useExternalLink', () => {
     await user.click(confirmButton);
 
     expect(window.open).toHaveBeenCalledWith(testUrl, '_blank', 'noopener,noreferrer');
+  });
+
+  it('should open internal link in new window when confirmed', async () => {
+    const user = userEvent.setup();
+    const { result } = renderHook(() => useExternalLink());
+    const internalUrl = 'https://the-comic.com/apps/directory/public';
+
+    act(() => {
+      result.current.openExternal(internalUrl);
+    });
+
+    const { ExternalLinkDialog } = result.current;
+    render(<ExternalLinkDialog />);
+
+    const confirmButton = screen.getByRole('button', { name: /open link/i });
+    await user.click(confirmButton);
+
+    expect(window.open).toHaveBeenCalledWith(internalUrl, '_blank', 'noopener,noreferrer');
   });
 
   it('should close dialog when canceled', async () => {
