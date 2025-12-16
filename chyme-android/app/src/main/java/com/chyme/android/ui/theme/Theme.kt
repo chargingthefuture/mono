@@ -44,9 +44,17 @@ fun ChymeTheme(
     val view = LocalView.current
     if (!view.isInEditMode) {
         SideEffect {
-            val window = (view.context as Activity).window
-            window.statusBarColor = colorScheme.primary.toArgb()
-            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
+            try {
+                val context = view.context
+                if (context is Activity) {
+                    val window = context.window
+                    window.statusBarColor = colorScheme.primary.toArgb()
+                    WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = darkTheme
+                }
+            } catch (e: Exception) {
+                // Log but don't crash - theme setup is not critical
+                android.util.Log.w("ChymeTheme", "Failed to set status bar color", e)
+            }
         }
     }
 

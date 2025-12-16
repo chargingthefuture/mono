@@ -22,8 +22,18 @@ object ApiClient {
      * Call this in your Application class or MainActivity
      */
     fun initialize(authManager: OTPAuthManager) {
-        Log.i("ApiClient", "Initializing ApiClient with provided OTPAuthManager")
-        ApiClient.authManager = authManager
+        try {
+            Log.i("ApiClient", "Initializing ApiClient with provided OTPAuthManager")
+            Log.i("ApiClient", "Base URL: $BASE_URL")
+            if (BASE_URL.isBlank() || BASE_URL == "https://your-platform-domain.com") {
+                Log.w("ApiClient", "WARNING: PLATFORM_API_BASE_URL is not configured properly!")
+            }
+            ApiClient.authManager = authManager
+        } catch (e: Exception) {
+            Log.e("ApiClient", "Error initializing ApiClient", e)
+            io.sentry.Sentry.captureException(e)
+            throw e
+        }
     }
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {

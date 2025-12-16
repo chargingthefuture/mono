@@ -2,6 +2,7 @@ package com.chyme.android
 
 import android.content.Context
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
@@ -20,24 +21,31 @@ import com.chyme.android.ui.theme.ChymeTheme
 import com.chyme.android.ui.viewmodel.AuthViewModel
 import com.chyme.android.ui.viewmodel.RoomDetailViewModel
 import com.chyme.android.ui.viewmodel.RoomListViewModel
+import io.sentry.Sentry
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
-        // Initialize OTPAuthManager and ApiClient
-        val authManager = OTPAuthManager(this)
-        ApiClient.initialize(authManager)
-        
-        setContent {
-            ChymeTheme {
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-                    ChymeApp(this, authManager)
+        try {
+            // Initialize OTPAuthManager and ApiClient
+            val authManager = OTPAuthManager(this)
+            ApiClient.initialize(authManager)
+            
+            setContent {
+                ChymeTheme {
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.background
+                    ) {
+                        ChymeApp(this@MainActivity, authManager)
+                    }
                 }
             }
+        } catch (e: Exception) {
+            android.util.Log.e("MainActivity", "Fatal error in onCreate", e)
+            io.sentry.Sentry.captureException(e)
+            throw e
         }
     }
 }
@@ -57,13 +65,19 @@ fun ChymeApp(context: Context, authManager: OTPAuthManager) {
         authViewModel.loadUser()
     }
     
-    NavHost(
-        navController = navController,
-        startDestination = when {
+    // Determine start destination based on auth state
+    val startDestination = remember(isSignedIn, needsApproval) {
+        when {
+            isSignedIn == null -> "signin" // Unknown state, show sign in
             isSignedIn == false -> "signin"
             needsApproval -> "pending_approval"
             else -> "rooms"
         }
+    }
+    
+    NavHost(
+        navController = navController,
+        startDestination = startDestination
     ) {
         composable("signin") {
             SignInScreen(

@@ -30,12 +30,23 @@ class AuthViewModel(private val authManager: OTPAuthManager) : ViewModel() {
         get() = authManager.isAdmin()
     
     init {
-        viewModelScope.launch {
-            authManager.user.collect { user ->
-                _user.value = user
+        try {
+            viewModelScope.launch {
+                try {
+                    authManager.user.collect { user ->
+                        _user.value = user
+                    }
+                } catch (e: Exception) {
+                    Log.e("AuthViewModel", "Error collecting user state", e)
+                    Sentry.captureException(e)
+                }
             }
+            // Don't call loadUser() in init - let the UI call it explicitly
+            // This prevents crashes on startup if API is not available
+        } catch (e: Exception) {
+            Log.e("AuthViewModel", "Error in init", e)
+            Sentry.captureException(e)
         }
-        loadUser()
     }
     
     fun loadUser() {
@@ -45,7 +56,10 @@ class AuthViewModel(private val authManager: OTPAuthManager) : ViewModel() {
             try {
                 val response = ApiClient.apiService.getCurrentUser()
                 if (response.isSuccessful) {
-                    _user.value = response.body()
+                    val user = response.body()
+                    _user.value = user
+                    // Sync to authManager so needsApproval and isAdmin work correctly
+                    authManager.updateUser(user)
                 } else {
                     val code = response.code()
                     val errorBodyString = try {
@@ -81,7 +95,10 @@ class AuthViewModel(private val authManager: OTPAuthManager) : ViewModel() {
                     mapOf("quoraProfileUrl" to url)
                 )
                 if (response.isSuccessful) {
-                    _user.value = response.body()
+                    val user = response.body()
+                    _user.value = user
+                    // Sync to authManager so needsApproval and isAdmin work correctly
+                    authManager.updateUser(user)
                 } else {
                     val code = response.code()
                     val errorBodyString = try {
