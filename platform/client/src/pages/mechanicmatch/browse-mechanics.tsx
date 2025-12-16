@@ -34,13 +34,9 @@ export default function BrowseMechanicsPage() {
     queryKey: [`/api/mechanicmatch/search/mechanics?${queryParams.toString()}`],
   });
 
-  // Apply fuzzy search to results (displayName may not exist, so we'll compute it)
-  const mechanicsWithDisplayName = mechanics.map(m => ({
-    ...m,
-    displayName: (m.city && m.state ? `${m.city}, ${m.state}` : 'Mechanic')
-  }));
-  const filteredMechanics = useFuzzySearch(mechanicsWithDisplayName, searchQuery, {
-    searchFields: ['displayName', 'city', 'state', 'mechanicBio', 'specialties'],
+  // Apply fuzzy search to results (include firstName in search)
+  const filteredMechanics = useFuzzySearch(mechanics, searchQuery, {
+    searchFields: ['firstName', 'city', 'state', 'mechanicBio', 'specialties'],
     threshold: 0.3,
   });
 
@@ -206,7 +202,7 @@ export default function BrowseMechanicsPage() {
                   <CardHeader>
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
-                        <CardTitle className="text-lg">{mechanic.displayName}</CardTitle>
+                        <CardTitle className="text-lg">{mechanic.firstName?.trim() || 'Mechanic'}</CardTitle>
                         <CardDescription className="mt-1">
                           {mechanic.city && mechanic.state && (
                             <div className="flex items-center gap-1 text-sm">

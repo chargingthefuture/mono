@@ -1134,6 +1134,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       } else {
         // For admin-created profiles without userId, use profile's own isVerified field
         userIsVerified = p.isVerified || false;
+        // For unclaimed profiles, fall back to the profile's own firstName field if set
+        userFirstName = (p as any).firstName || null;
+        // Build display name from profile's firstName if available
+        if (userFirstName) {
+          name = userFirstName;
+        }
       }
       
       // Ensure we always return displayName, firstName, and lastName (even if null)
@@ -4045,7 +4051,27 @@ export async function registerRoutes(app: Express): Promise<Server> {
       () => storage.searchMechanicmatchMechanics(filters),
       'searchMechanicmatchMechanics'
     );
-    res.json(mechanics);
+    
+    // Enrich profiles with firstName from users for claimed profiles
+    const enrichedMechanics = await Promise.all(mechanics.map(async (mechanic) => {
+      let firstName: string | null = null;
+      if (mechanic.userId) {
+        // For claimed profiles, get firstName from user record
+        const user = await withDatabaseErrorHandling(
+          () => storage.getUser(mechanic.userId!),
+          'getUserForMechanicmatchSearch'
+        );
+        if (user) {
+          firstName = (user.firstName && user.firstName.trim()) || null;
+        }
+      } else {
+        // For unclaimed profiles, use profile's own firstName field
+        firstName = (mechanic.firstName && mechanic.firstName.trim()) || null;
+      }
+      return { ...mechanic, firstName };
+    }));
+    
+    res.json(enrichedMechanics);
   }));
 
   // MechanicMatch Admin Profile routes
