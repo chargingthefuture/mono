@@ -1844,39 +1844,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
       'getAllPartnerships'
     );
     
-    // Enrich partnerships with firstName for both users
-    const partnershipsWithNames = await Promise.all(partnerships.map(async (partnership) => {
-      let user1FirstName: string | null = null;
-      let user2FirstName: string | null = null;
-      
-      // Get firstName for user1
-      if (partnership.user1Id) {
-        const user1 = await withDatabaseErrorHandling(
-          () => storage.getUser(partnership.user1Id),
-          'getUser1ForSupportMatchAdminPartnerships'
+    // Get all unique user IDs
+    const userIds = new Set<string>();
+    partnerships.forEach(p => {
+      if (p.user1Id) userIds.add(p.user1Id);
+      if (p.user2Id) userIds.add(p.user2Id);
+    });
+    
+    // Fetch all user data in one query
+    const allUsers = userIds.size > 0 ? await withDatabaseErrorHandling(
+      async () => {
+        const userList = Array.from(userIds);
+        const users = await Promise.all(
+          userList.map(userId => storage.getUser(userId))
         );
-        if (user1) {
-          user1FirstName = user1.firstName || null;
-        }
-      }
-      
-      // Get firstName for user2
-      if (partnership.user2Id) {
-        const user2 = await withDatabaseErrorHandling(
-          () => storage.getUser(partnership.user2Id),
-          'getUser2ForSupportMatchAdminPartnerships'
-        );
-        if (user2) {
-          user2FirstName = user2.firstName || null;
-        }
-      }
+        return users.filter((u): u is User => !!u);
+      },
+      'getAllUsersForSupportMatchAdminPartnerships'
+    ) : [];
+    
+    // Create a map of userId -> user data
+    const userMap = new Map(allUsers.map(u => [u.id, u]));
+    
+    // Enrich partnerships with firstName and lastName for both users
+    const partnershipsWithNames = partnerships.map((partnership) => {
+      const user1 = partnership.user1Id ? userMap.get(partnership.user1Id) : null;
+      const user2 = partnership.user2Id ? userMap.get(partnership.user2Id) : null;
       
       return {
         ...partnership,
-        user1FirstName,
-        user2FirstName,
+        user1FirstName: user1?.firstName || null,
+        user1LastName: user1?.lastName || null,
+        user2FirstName: user2?.firstName || null,
+        user2LastName: user2?.lastName || null,
       };
-    }));
+    });
     
     res.json(partnershipsWithNames);
   }));

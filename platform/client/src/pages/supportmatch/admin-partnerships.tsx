@@ -12,7 +12,12 @@ import { Link } from "wouter";
 export default function SupportMatchAdminPartnerships() {
   const { toast } = useToast();
 
-  const { data: partnerships, isLoading } = useQuery<(Partnership & { user1FirstName?: string | null; user2FirstName?: string | null })[]>({
+  const { data: partnerships, isLoading } = useQuery<(Partnership & { 
+    user1FirstName?: string | null; 
+    user1LastName?: string | null;
+    user2FirstName?: string | null; 
+    user2LastName?: string | null;
+  })[]>({
     queryKey: ["/api/supportmatch/admin/partnerships"],
   });
 
@@ -58,14 +63,26 @@ export default function SupportMatchAdminPartnerships() {
     },
   });
 
-  const getUserDisplayName = (partnership: Partnership & { user1FirstName?: string | null; user2FirstName?: string | null }, userId: string) => {
+  const getUserDisplayName = (partnership: Partnership & { 
+    user1FirstName?: string | null; 
+    user1LastName?: string | null;
+    user2FirstName?: string | null; 
+    user2LastName?: string | null;
+  }, userId: string) => {
+    let firstName: string | null = null;
+    let lastName: string | null = null;
+    
     if (userId === partnership.user1Id) {
-      return partnership.user1FirstName || "Anonymous";
+      firstName = partnership.user1FirstName || null;
+      lastName = partnership.user1LastName || null;
+    } else if (userId === partnership.user2Id) {
+      firstName = partnership.user2FirstName || null;
+      lastName = partnership.user2LastName || null;
     }
-    if (userId === partnership.user2Id) {
-      return partnership.user2FirstName || "Anonymous";
-    }
-    return "Anonymous";
+    
+    // Build full name from firstName and lastName
+    const nameParts = [firstName, lastName].filter(Boolean);
+    return nameParts.length > 0 ? nameParts.join(" ") : "Anonymous";
   };
 
   const activePartnerships = partnerships?.filter(p => p.status === "active") || [];

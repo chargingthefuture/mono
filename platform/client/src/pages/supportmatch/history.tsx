@@ -4,8 +4,13 @@ import { Badge } from "@/components/ui/badge";
 import type { Partnership } from "@shared/schema";
 import { format } from "date-fns";
 
+type PartnershipWithPartner = Partnership & {
+  partnerFirstName?: string | null;
+  partnerLastName?: string | null;
+};
+
 export default function SupportMatchHistory() {
-  const { data: partnerships, isLoading } = useQuery<Partnership[]>({
+  const { data: partnerships, isLoading } = useQuery<PartnershipWithPartner[]>({
     queryKey: ["/api/supportmatch/partnership/history"],
   });
 
@@ -73,6 +78,14 @@ export default function SupportMatchHistory() {
                 </div>
               </CardHeader>
               <CardContent className="space-y-2">
+                {(partnership.partnerFirstName || partnership.partnerLastName) && (
+                  <div>
+                    <p className="text-xs sm:text-sm text-muted-foreground">Matched With</p>
+                    <p className="font-medium text-sm sm:text-base">
+                      {[partnership.partnerFirstName, partnership.partnerLastName].filter(Boolean).join(" ") || "Unknown"}
+                    </p>
+                  </div>
+                )}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div>
                     <p className="text-xs sm:text-sm text-muted-foreground">Start Date</p>

@@ -324,7 +324,7 @@ export interface IStorage {
   getPartnershipById(id: string): Promise<Partnership | undefined>;
   getActivePartnershipByUser(userId: string): Promise<Partnership | undefined>;
   getAllPartnerships(): Promise<Partnership[]>;
-  getPartnershipHistory(userId: string): Promise<Partnership[]>;
+  getPartnershipHistory(userId: string): Promise<(Partnership & { partnerFirstName?: string | null; partnerLastName?: string | null })[]>;
   updatePartnershipStatus(id: string, status: string): Promise<Partnership>;
   createAlgorithmicMatches(): Promise<Partnership[]>;
   
@@ -2366,8 +2366,9 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(partnerships.createdAt));
   }
   
-  async getPartnershipHistory(userId: string): Promise<Partnership[]> {
-    return await db
+  async getPartnershipHistory(userId: string): Promise<(Partnership & { partnerFirstName?: string | null; partnerLastName?: string | null })[]> {
+    // Get all partnerships for this user
+    const userPartnerships = await db
       .select()
       .from(partnerships)
       .where(
@@ -2377,6 +2378,39 @@ export class DatabaseStorage implements IStorage {
         )
       )
       .orderBy(desc(partnerships.startDate));
+
+    // Get all unique partner user IDs
+    const partnerIds = userPartnerships
+      .map(p => p.user1Id === userId ? p.user2Id : p.user1Id)
+      .filter((id): id is string => !!id);
+
+    if (partnerIds.length === 0) {
+      return userPartnerships.map(p => ({ ...p, partnerFirstName: null, partnerLastName: null }));
+    }
+
+    // Fetch all partner user data in one query
+    const partnerUsers = await db
+      .select({
+        id: users.id,
+        firstName: users.firstName,
+        lastName: users.lastName,
+      })
+      .from(users)
+      .where(inArray(users.id, partnerIds));
+
+    // Create a map of userId -> user data
+    const userMap = new Map(partnerUsers.map(u => [u.id, u]));
+
+    // Enrich partnerships with partner user data
+    return userPartnerships.map(partnership => {
+      const partnerId = partnership.user1Id === userId ? partnership.user2Id : partnership.user1Id;
+      const partnerUser = userMap.get(partnerId);
+      return {
+        ...partnership,
+        partnerFirstName: partnerUser?.firstName || null,
+        partnerLastName: partnerUser?.lastName || null,
+      };
+    });
   }
   
   async updatePartnershipStatus(id: string, status: string): Promise<Partnership> {
