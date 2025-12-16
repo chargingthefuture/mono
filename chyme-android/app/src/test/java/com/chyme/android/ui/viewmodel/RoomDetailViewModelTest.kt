@@ -13,6 +13,7 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -28,6 +29,7 @@ import org.junit.Test
 import okhttp3.ResponseBody
 import retrofit2.Response
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class RoomDetailViewModelTest {
     private lateinit var apiService: ApiService
     private lateinit var viewModel: RoomDetailViewModel
@@ -312,15 +314,19 @@ class RoomDetailViewModelTest {
         val messagesResponse = mockk<retrofit2.Response<List<Message>>>(relaxed = true)
         val joinResponse = mockk<retrofit2.Response<Map<String, String>>>(relaxed = true)
         val leaveResponse = mockk<retrofit2.Response<Map<String, String>>>(relaxed = true)
+        val participantsResponse = mockk<retrofit2.Response<List<RoomParticipant>>>(relaxed = true)
         coEvery { apiService.getRoom(roomId) } returns roomResponse
         coEvery { apiService.getMessages(roomId) } returns messagesResponse
         coEvery { apiService.joinRoom(roomId) } returns joinResponse
         coEvery { apiService.leaveRoom(roomId) } returns leaveResponse
+        coEvery { apiService.getParticipants(roomId) } returns participantsResponse
         every { roomResponse.isSuccessful } returns true
         every { messagesResponse.isSuccessful } returns true
         every { messagesResponse.body() } returns emptyList()
         every { joinResponse.isSuccessful } returns true
         every { leaveResponse.isSuccessful } returns true
+        every { participantsResponse.isSuccessful } returns true
+        every { participantsResponse.body() } returns emptyList()
         
         viewModel = RoomDetailViewModel(roomId)
         advanceUntilIdle()
@@ -328,8 +334,10 @@ class RoomDetailViewModelTest {
         // Set joined and speaking to true first
         viewModel.joinRoom()
         advanceUntilIdle()
+        assertTrue(viewModel.isJoined.value)
         viewModel.toggleSpeaking()
         advanceUntilIdle()
+        assertTrue(viewModel.isSpeaking.value)
         
         viewModel.leaveRoom()
         advanceUntilIdle()
@@ -424,8 +432,14 @@ class RoomDetailViewModelTest {
         viewModel = RoomDetailViewModel(roomId)
         advanceUntilIdle()
         
-        viewModel.loadParticipants()
-        advanceUntilIdle()
+        // Should not crash when exception is thrown
+        try {
+            viewModel.loadParticipants()
+            advanceUntilIdle()
+        } catch (e: Exception) {
+            // Should not throw - exceptions are handled silently in loadParticipants
+            assertTrue("loadParticipants should handle exceptions silently", false)
+        }
         
         // Should not crash and participants should remain empty
         assertTrue(viewModel.participants.value.isEmpty())

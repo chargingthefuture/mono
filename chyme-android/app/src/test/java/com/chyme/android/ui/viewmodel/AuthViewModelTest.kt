@@ -13,6 +13,7 @@ import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
@@ -29,6 +30,7 @@ import org.junit.Test
 import okhttp3.ResponseBody
 import retrofit2.Response
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class AuthViewModelTest {
     private lateinit var authManager: OTPAuthManager
     private lateinit var apiService: ApiService
@@ -255,13 +257,24 @@ class AuthViewModelTest {
     @Test
     fun `isLoading should be true during API call`() = runTest(testDispatcher) {
         var isLoadingDuringCall = false
-        val successResponse = mockk<retrofit2.Response<User>>(relaxed = true)
+        val successResponse = Response.success(
+            User(
+                id = "user1",
+                email = "test@example.com",
+                firstName = "Test",
+                lastName = "User",
+                profileImageUrl = null,
+                quoraProfileUrl = null,
+                isAdmin = false,
+                isVerified = true,
+                isApproved = true
+            )
+        )
         coEvery { apiService.getCurrentUser() } coAnswers {
             // At this point, the coroutine should have set isLoading = true
             isLoadingDuringCall = viewModel.isLoading.value
             successResponse
         }
-        every { successResponse.isSuccessful } returns true
         
         viewModel = AuthViewModel(authManager)
         advanceUntilIdle()
@@ -271,6 +284,7 @@ class AuthViewModelTest {
         testDispatcher.scheduler.advanceUntilIdle()
         
         assertTrue("isLoading should be true during API call", isLoadingDuringCall)
+        advanceUntilIdle()
         assertFalse(viewModel.isLoading.value)
     }
 }

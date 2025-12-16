@@ -10,6 +10,7 @@ import io.mockk.mockk
 import io.mockk.mockkObject
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -25,6 +26,7 @@ import org.junit.Test
 import okhttp3.ResponseBody
 import retrofit2.Response
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class RoomListViewModelTest {
     private lateinit var apiService: ApiService
     private lateinit var viewModel: RoomListViewModel
@@ -187,6 +189,7 @@ class RoomListViewModelTest {
         every { successResponse.body() } returns privateRooms
         
         viewModel = RoomListViewModel()
+        advanceUntilIdle()
         viewModel.setFilter("private")
         advanceUntilIdle()
         
@@ -208,6 +211,7 @@ class RoomListViewModelTest {
         every { successResponse2.body() } returns allRooms
         
         viewModel = RoomListViewModel()
+        advanceUntilIdle()
         viewModel.setFilter("public")
         advanceUntilIdle()
         
@@ -230,6 +234,7 @@ class RoomListViewModelTest {
         every { successResponse2.body() } returns mockRooms
         
         viewModel = RoomListViewModel()
+        advanceUntilIdle()
         viewModel.setFilter("public")
         advanceUntilIdle()
         
@@ -252,11 +257,13 @@ class RoomListViewModelTest {
         every { successResponse.body() } returns emptyList()
         
         viewModel = RoomListViewModel()
+        advanceUntilIdle()
         viewModel.loadRooms()
         // Advance the dispatcher to start the coroutine and execute until the API call
         testDispatcher.scheduler.advanceUntilIdle()
         
         assertTrue("isLoading should be true during API call", isLoadingDuringCall)
+        advanceUntilIdle()
         assertFalse(viewModel.isLoading.value)
     }
 

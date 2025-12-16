@@ -11,6 +11,7 @@ import io.mockk.mockkObject
 import io.mockk.slot
 import io.mockk.verify
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.resetMain
@@ -26,6 +27,7 @@ import org.junit.Test
 import okhttp3.ResponseBody
 import retrofit2.Response
 
+@OptIn(ExperimentalCoroutinesApi::class)
 class CreateRoomViewModelTest {
     private lateinit var apiService: ApiService
     private lateinit var viewModel: CreateRoomViewModel
@@ -121,6 +123,7 @@ class CreateRoomViewModelTest {
         every { successResponse.body() } returns mockRoom
         
         viewModel = CreateRoomViewModel()
+        advanceUntilIdle()
         viewModel.createRoom(roomName, roomDescription, roomType, maxParticipants)
         advanceUntilIdle()
         
@@ -186,6 +189,7 @@ class CreateRoomViewModelTest {
         every { successResponse.body() } returns mockRoom
         
         viewModel = CreateRoomViewModel()
+        advanceUntilIdle()
         viewModel.createRoom(roomName, null, roomType, null)
         advanceUntilIdle()
         
@@ -237,6 +241,18 @@ class CreateRoomViewModelTest {
         val roomType = "public"
         
         var isLoadingDuringCall = false
+        val mockRoom = Room(
+            id = "room1",
+            name = roomName,
+            description = null,
+            roomType = roomType,
+            isActive = true,
+            maxParticipants = null,
+            currentParticipants = null,
+            createdBy = "user1",
+            createdAt = "2024-01-01T00:00:00Z",
+            updatedAt = "2024-01-01T00:00:00Z"
+        )
         val successResponse = mockk<retrofit2.Response<Room>>(relaxed = true)
         coEvery { apiService.createRoom(any()) } coAnswers {
             // At this point, the coroutine should have set isLoading = true
@@ -244,13 +260,16 @@ class CreateRoomViewModelTest {
             successResponse
         }
         every { successResponse.isSuccessful } returns true
+        every { successResponse.body() } returns mockRoom
         
         viewModel = CreateRoomViewModel()
+        advanceUntilIdle()
         viewModel.createRoom(roomName, null, roomType, null)
         // Advance the dispatcher to start the coroutine and execute until the API call
         testDispatcher.scheduler.advanceUntilIdle()
         
         assertTrue("isLoading should be true during API call", isLoadingDuringCall)
+        advanceUntilIdle()
         assertFalse(viewModel.isLoading.value)
     }
 
