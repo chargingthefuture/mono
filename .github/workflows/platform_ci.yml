@@ -19,6 +19,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       id-token: write
+    env:
+      DATABASE_URL: ${{ github.ref == 'refs/heads/main' && secrets.DATABASE_URL || secrets.DATABASE_URL_STAGING }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
