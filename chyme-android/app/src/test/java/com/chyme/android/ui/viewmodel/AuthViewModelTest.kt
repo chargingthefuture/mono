@@ -95,7 +95,7 @@ class AuthViewModelTest {
 
     @Test
     fun `loadUser should set error on failed response`() = runTest(testDispatcher) {
-        val errorResponse = mockk<retrofit2.Response<retrofit2.ResponseBody>>(relaxed = true)
+        val errorResponse = mockk<retrofit2.Response<User>>(relaxed = true)
         coEvery { apiService.getCurrentUser() } returns errorResponse
         every { errorResponse.isSuccessful } returns false
         every { errorResponse.code() } returns 404
