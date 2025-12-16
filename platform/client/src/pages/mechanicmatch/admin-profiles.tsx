@@ -15,7 +15,7 @@ import { useFuzzySearch } from "@/hooks/useFuzzySearch";
 import type { MechanicmatchProfile } from "@shared/schema";
 import { PaginationControls } from "@/components/pagination-controls";
 import { Link } from "wouter";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
 import {
   Dialog,
   DialogContent,
@@ -53,6 +53,7 @@ const adminProfileFormSchema = z
     country: z.string().optional().nullable(),
     phoneNumber: z.string().optional().nullable(),
     signalUrl: z.string().url("Must be a valid URL").optional().nullable().or(z.literal("")),
+    isPublic: z.boolean().default(false),
   })
   .refine((data) => data.isCarOwner || data.isMechanic, {
     message: "Select at least one role",
@@ -128,6 +129,7 @@ export default function MechanicMatchAdminProfiles() {
       country: "",
       phoneNumber: "",
       signalUrl: "",
+      isPublic: false,
     },
   });
 
@@ -146,6 +148,7 @@ export default function MechanicMatchAdminProfiles() {
         country: editingProfile.country || "",
         phoneNumber: editingProfile.phoneNumber || "",
         signalUrl: editingProfile.signalUrl || "",
+        isPublic: editingProfile.isPublic ?? false,
       });
     }
   }, [editForm, editingProfile]);
@@ -153,12 +156,22 @@ export default function MechanicMatchAdminProfiles() {
   const createProfileMutation = useMutation({
     mutationFn: async (values: AdminProfileFormValues) => {
       const payload = transformProfilePayload(values);
-      await apiRequest("POST", "/api/mechanicmatch/admin/profiles", payload);
+      const response = await apiRequest("POST", "/api/mechanicmatch/admin/profiles", payload);
+      return await response.json();
     },
-    onSuccess: () => {
+    onSuccess: (data) => {
       invalidateProfiles();
+      const wasPublic = createForm.getValues("isPublic");
       createForm.reset();
-      toast({ title: "Profile Created", description: "Unclaimed profile created successfully." });
+      if (data?.id && wasPublic) {
+        toast({ 
+          title: "Profile Created", 
+          description: `Unclaimed profile created. Public URL: ${window.location.origin}/apps/mechanicmatch/public/${data.id}`,
+          duration: 8000,
+        });
+      } else {
+        toast({ title: "Profile Created", description: "Unclaimed profile created successfully." });
+      }
     },
     onError: (error: any) => {
       toast({ title: "Error", description: error.message || "Failed to create profile", variant: "destructive" });
@@ -311,6 +324,28 @@ export default function MechanicMatchAdminProfiles() {
                   )}
                 />
               </div>
+
+              <FormField
+                control={createForm.control}
+                name="isPublic"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-lg border p-4">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        data-testid="checkbox-public-create"
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Make profile public</FormLabel>
+                      <p className="text-sm text-muted-foreground">
+                        Allow this profile to be visible in the public directory
+                      </p>
+                    </div>
+                  </FormItem>
+                )}
+              />
 
               <div className="flex flex-col sm:flex-row gap-3">
                 <Button type="submit" className="flex-1" disabled={createProfileMutation.isPending} data-testid="button-admin-create-profile">
@@ -544,6 +579,28 @@ export default function MechanicMatchAdminProfiles() {
                 />
               </div>
 
+              <FormField
+                control={editForm.control}
+                name="isPublic"
+                render={({ field }) => (
+                  <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-lg border p-4">
+                    <FormControl>
+                      <Checkbox
+                        checked={field.value}
+                        onCheckedChange={field.onChange}
+                        data-testid="checkbox-public-edit"
+                      />
+                    </FormControl>
+                    <div className="space-y-1 leading-none">
+                      <FormLabel>Make profile public</FormLabel>
+                      <p className="text-sm text-muted-foreground">
+                        Allow this profile to be visible in the public directory
+                      </p>
+                    </div>
+                  </FormItem>
+                )}
+              />
+
               <DialogFooter>
                 <Button type="button" variant="outline" onClick={() => setEditDialogOpen(false)} data-testid="button-cancel-edit">
                   Cancel
@@ -709,6 +766,7 @@ function transformProfilePayload(values: AdminProfileFormValues) {
     country: values.country?.trim() || null,
     phoneNumber: values.phoneNumber?.trim() || null,
     signalUrl: values.signalUrl?.trim() || null,
+    isPublic: values.isPublic ?? false,
     // Explicitly set defaults for fields that have NOT NULL constraints
     isMobileMechanic: false,
     isClaimed: false,
