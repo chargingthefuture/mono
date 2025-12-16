@@ -4164,8 +4164,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(400).json({ message: "Profile must be at least a car owner or mechanic" });
     }
 
+    // Ensure userId is completely removed from validated data if it's null/undefined/empty
+    // This prevents it from being passed to the storage function
+    const validatedData: any = { ...validated };
+    if (validatedData.userId === null || validatedData.userId === undefined || validatedData.userId === '') {
+      delete validatedData.userId;
+    }
+
     const profile = await withDatabaseErrorHandling(
-      () => storage.createMechanicmatchProfile(validated),
+      () => storage.createMechanicmatchProfile(validatedData),
       'createMechanicmatchProfile'
     );
 

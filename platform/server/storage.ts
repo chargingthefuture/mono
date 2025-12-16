@@ -4673,19 +4673,20 @@ export class DatabaseStorage implements IStorage {
     }
     // Explicitly handle userId: if null/undefined/empty string, completely omit it from insert to allow unclaimed profiles
     // This is critical because the database may have a NOT NULL constraint on user_id
-    // Remove userId from the object if it's null, undefined, or empty string
-    if ('userId' in dataToInsert) {
-      const userIdValue = dataToInsert.userId;
-      if (userIdValue === null || userIdValue === undefined || userIdValue === '' || 
-          (typeof userIdValue === 'string' && userIdValue.trim() === '')) {
-        delete dataToInsert.userId;
-      } else if (typeof userIdValue === 'string') {
-        dataToInsert.userId = userIdValue.trim();
-      }
+    // Build a new object without userId if it's invalid, to ensure it's completely excluded
+    const { userId, ...restData } = dataToInsert;
+    const finalData: any = { ...restData };
+    // Only add userId if it's a valid non-empty string
+    if (userId && typeof userId === 'string' && userId.trim() !== '') {
+      finalData.userId = userId.trim();
+    }
+    // Double-check: explicitly remove userId if it somehow got included as null/undefined/empty
+    if (finalData.userId === null || finalData.userId === undefined || finalData.userId === '') {
+      delete finalData.userId;
     }
     const [profile] = await db
       .insert(mechanicmatchProfiles)
-      .values(dataToInsert)
+      .values(finalData)
       .returning();
     return profile;
   }
