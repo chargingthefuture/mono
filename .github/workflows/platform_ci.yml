@@ -55,7 +55,7 @@ jobs:
         if: ${{ !cancelled() }}
         run: |
           # Create a simple merge script
-          cat > merge-junit.js << 'INNER_EOF'
+          cat > merge-junit.cjs << 'INNER_EOF'
           const fs = require('fs');
           const vitestFile = 'test-results/vitest-junit.xml';
           const playwrightFile = 'test-results/junit.xml';
@@ -90,7 +90,7 @@ jobs:
             fs.copyFileSync(vitestFile, outputFile);
           }
           INNER_EOF
-          node merge-junit.js
+          node merge-junit.cjs
 
       - name: Upload test results to Sentry Prevent
         if: ${{ !cancelled() }}
