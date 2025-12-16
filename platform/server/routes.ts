@@ -91,6 +91,139 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Anti-scraping: Fingerprint requests (must be before rate limiting)
   app.use(fingerprintRequests);
 
+  // =====================================================
+  // Public health check endpoints (used by status page)
+  // =====================================================
+  // These endpoints are intentionally unauthenticated and very simple.
+  // They are only meant to answer "is this service reachable at all?"
+  // without exposing any sensitive information.
+
+  // Main platform health
+  app.get("/api/health", (_req, res) => {
+    res.json({
+      status: "ok",
+      service: "main",
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // ChatGroups health
+  app.get("/api/health/chatgroups", (_req, res) => {
+    res.json({
+      status: "ok",
+      service: "chatgroups",
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // Directory health
+  app.get("/api/health/directory", (_req, res) => {
+    res.json({
+      status: "ok",
+      service: "directory",
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // GentlePulse health
+  app.get("/api/health/gentlepulse", (_req, res) => {
+    res.json({
+      status: "ok",
+      service: "gentlepulse",
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // Chyme health
+  app.get("/api/health/chyme", (_req, res) => {
+    res.json({
+      status: "ok",
+      service: "chyme",
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // Default Alive or Dead health
+  app.get("/api/health/default-alive-or-dead", (_req, res) => {
+    res.json({
+      status: "ok",
+      service: "default-alive-or-dead",
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // Workforce Recruiter health
+  app.get("/api/health/workforce-recruiter", (_req, res) => {
+    res.json({
+      status: "ok",
+      service: "workforce-recruiter",
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // LightHouse health
+  app.get("/api/health/lighthouse", (_req, res) => {
+    res.json({
+      status: "ok",
+      service: "lighthouse",
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // LostMail health
+  app.get("/api/health/lostmail", (_req, res) => {
+    res.json({
+      status: "ok",
+      service: "lostmail",
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // MechanicMatch health
+  app.get("/api/health/mechanicmatch", (_req, res) => {
+    res.json({
+      status: "ok",
+      service: "mechanicmatch",
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // CompareNotes / Research health
+  app.get("/api/health/research", (_req, res) => {
+    res.json({
+      status: "ok",
+      service: "research",
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // SocketRelay health
+  app.get("/api/health/socketrelay", (_req, res) => {
+    res.json({
+      status: "ok",
+      service: "socketrelay",
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // SupportMatch health
+  app.get("/api/health/supportmatch", (_req, res) => {
+    res.json({
+      status: "ok",
+      service: "supportmatch",
+      timestamp: new Date().toISOString(),
+    });
+  });
+
+  // TrustTransport health
+  app.get("/api/health/trusttransport", (_req, res) => {
+    res.json({
+      status: "ok",
+      service: "trusttransport",
+      timestamp: new Date().toISOString(),
+    });
+  });
+
   // Helper to get user ID from request (imported from auth module)
 
   // Helper to log admin actions
