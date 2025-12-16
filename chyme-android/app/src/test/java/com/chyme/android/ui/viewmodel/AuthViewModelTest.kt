@@ -95,7 +95,10 @@ class AuthViewModelTest {
 
     @Test
     fun `loadUser should set error on failed response`() = runTest(testDispatcher) {
-        coEvery { apiService.getCurrentUser() } returns Response.error(404, mockk())
+        val errorResponse = mockk<retrofit2.Response<retrofit2.ResponseBody>>(relaxed = true)
+        coEvery { apiService.getCurrentUser() } returns errorResponse
+        every { errorResponse.isSuccessful } returns false
+        every { errorResponse.code() } returns 404
         
         viewModel = AuthViewModel(authManager)
         advanceUntilIdle()
@@ -157,7 +160,10 @@ class AuthViewModelTest {
     @Test
     fun `signInWithOTP should set error on invalid OTP`() = runTest(testDispatcher) {
         val otp = "invalid"
-        coEvery { apiService.validateOTP(any()) } returns Response.error(401, mockk())
+        val errorResponse = mockk<retrofit2.Response<ValidateOTPResponse>>(relaxed = true)
+        coEvery { apiService.validateOTP(any()) } returns errorResponse
+        every { errorResponse.isSuccessful } returns false
+        every { errorResponse.code() } returns 401
         
         viewModel = AuthViewModel(authManager)
         viewModel.signInWithOTP(otp)
@@ -211,7 +217,10 @@ class AuthViewModelTest {
     @Test
     fun `updateQuoraProfileUrl should set error on failure`() = runTest(testDispatcher) {
         val url = "https://quora.com/profile/test"
-        coEvery { apiService.updateQuoraProfileUrl(any()) } returns Response.error(400, mockk())
+        val errorResponse = mockk<retrofit2.Response<User>>(relaxed = true)
+        coEvery { apiService.updateQuoraProfileUrl(any()) } returns errorResponse
+        every { errorResponse.isSuccessful } returns false
+        every { errorResponse.code() } returns 400
         
         viewModel = AuthViewModel(authManager)
         viewModel.updateQuoraProfileUrl(url)
@@ -235,9 +244,10 @@ class AuthViewModelTest {
 
     @Test
     fun `isLoading should be true during API call`() = runTest(testDispatcher) {
+        var isLoadingDuringCall = false
         coEvery { apiService.getCurrentUser() } coAnswers {
             // Check that loading is true during the call
-            assertTrue(viewModel.isLoading.value)
+            isLoadingDuringCall = viewModel.isLoading.value
             Response.success(mockk())
         }
         
@@ -245,8 +255,11 @@ class AuthViewModelTest {
         advanceUntilIdle()
         
         viewModel.loadUser()
+        // Advance just enough to start the coroutine and set loading to true
+        testDispatcher.scheduler.advanceTimeBy(1)
         advanceUntilIdle()
         
+        assertTrue("isLoading should be true during API call", isLoadingDuringCall)
         assertFalse(viewModel.isLoading.value)
     }
 }

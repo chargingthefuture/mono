@@ -75,7 +75,10 @@ class CreateRoomViewModelTest {
             updatedAt = "2024-01-01T00:00:00Z"
         )
         
-        coEvery { apiService.createRoom(any()) } returns Response.success(mockRoom)
+        val successResponse = mockk<retrofit2.Response<Room>>(relaxed = true)
+        coEvery { apiService.createRoom(any()) } returns successResponse
+        every { successResponse.isSuccessful } returns true
+        every { successResponse.body() } returns mockRoom
         
         viewModel = CreateRoomViewModel()
         viewModel.createRoom(roomName, roomDescription, roomType, maxParticipants)
@@ -111,7 +114,10 @@ class CreateRoomViewModelTest {
         )
         
         val capturedRequest = slot<CreateRoomRequest>()
-        coEvery { apiService.createRoom(capture(capturedRequest)) } returns Response.success(mockRoom)
+        val successResponse = mockk<retrofit2.Response<Room>>(relaxed = true)
+        coEvery { apiService.createRoom(capture(capturedRequest)) } returns successResponse
+        every { successResponse.isSuccessful } returns true
+        every { successResponse.body() } returns mockRoom
         
         viewModel = CreateRoomViewModel()
         viewModel.createRoom(roomName, roomDescription, roomType, maxParticipants)
@@ -141,7 +147,10 @@ class CreateRoomViewModelTest {
             updatedAt = "2024-01-01T00:00:00Z"
         )
         
-        coEvery { apiService.createRoom(any()) } returns Response.success(mockRoom)
+        val successResponse = mockk<retrofit2.Response<Room>>(relaxed = true)
+        coEvery { apiService.createRoom(any()) } returns successResponse
+        every { successResponse.isSuccessful } returns true
+        every { successResponse.body() } returns mockRoom
         
         viewModel = CreateRoomViewModel()
         viewModel.createRoom(roomName, null, roomType, null)
@@ -170,7 +179,10 @@ class CreateRoomViewModelTest {
         )
         
         val capturedRequest = slot<CreateRoomRequest>()
-        coEvery { apiService.createRoom(capture(capturedRequest)) } returns Response.success(mockRoom)
+        val successResponse = mockk<retrofit2.Response<Room>>(relaxed = true)
+        coEvery { apiService.createRoom(capture(capturedRequest)) } returns successResponse
+        every { successResponse.isSuccessful } returns true
+        every { successResponse.body() } returns mockRoom
         
         viewModel = CreateRoomViewModel()
         viewModel.createRoom(roomName, null, roomType, null)
@@ -184,7 +196,10 @@ class CreateRoomViewModelTest {
         val roomName = "Test Room"
         val roomType = "public"
         
-        coEvery { apiService.createRoom(any()) } returns Response.error(400, mockk())
+        val errorResponse = mockk<retrofit2.Response<Room>>(relaxed = true)
+        coEvery { apiService.createRoom(any()) } returns errorResponse
+        every { errorResponse.isSuccessful } returns false
+        every { errorResponse.code() } returns 400
         
         viewModel = CreateRoomViewModel()
         viewModel.createRoom(roomName, null, roomType, null)
@@ -217,15 +232,21 @@ class CreateRoomViewModelTest {
         val roomName = "Test Room"
         val roomType = "public"
         
+        var isLoadingDuringCall = false
+        val successResponse = mockk<retrofit2.Response<Room>>(relaxed = true)
         coEvery { apiService.createRoom(any()) } coAnswers {
-            assertTrue(viewModel.isLoading.value)
-            Response.success(mockk())
+            isLoadingDuringCall = viewModel.isLoading.value
+            successResponse
         }
+        every { successResponse.isSuccessful } returns true
         
         viewModel = CreateRoomViewModel()
         viewModel.createRoom(roomName, null, roomType, null)
+        // Advance just enough to start the coroutine and set loading to true
+        testDispatcher.scheduler.advanceTimeBy(1)
         advanceUntilIdle()
         
+        assertTrue("isLoading should be true during API call", isLoadingDuringCall)
         assertFalse(viewModel.isLoading.value)
     }
 
@@ -234,7 +255,10 @@ class CreateRoomViewModelTest {
         val roomName = "Test Room"
         val roomType = "public"
         
-        coEvery { apiService.createRoom(any()) } returns Response.error(400, mockk())
+        val errorResponse = mockk<retrofit2.Response<Room>>(relaxed = true)
+        coEvery { apiService.createRoom(any()) } returns errorResponse
+        every { errorResponse.isSuccessful } returns false
+        every { errorResponse.code() } returns 400
         
         viewModel = CreateRoomViewModel()
         viewModel.createRoom(roomName, null, roomType, null)
@@ -266,7 +290,10 @@ class CreateRoomViewModelTest {
             updatedAt = "2024-01-01T00:00:00Z"
         )
         
-        coEvery { apiService.createRoom(any()) } returns Response.success(mockRoom)
+        val successResponse = mockk<retrofit2.Response<Room>>(relaxed = true)
+        coEvery { apiService.createRoom(any()) } returns successResponse
+        every { successResponse.isSuccessful } returns true
+        every { successResponse.body() } returns mockRoom
         
         viewModel = CreateRoomViewModel()
         viewModel.createRoom(roomName, null, roomType, null)

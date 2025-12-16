@@ -64,8 +64,14 @@ class RoomDetailViewModelTest {
         )
         val mockMessages = emptyList<Message>()
         
-        coEvery { apiService.getRoom(roomId) } returns Response.success(mockRoom)
-        coEvery { apiService.getMessages(roomId) } returns Response.success(mockMessages)
+        val roomResponse = mockk<retrofit2.Response<Room>>(relaxed = true)
+        val messagesResponse = mockk<retrofit2.Response<List<Message>>>(relaxed = true)
+        coEvery { apiService.getRoom(roomId) } returns roomResponse
+        coEvery { apiService.getMessages(roomId) } returns messagesResponse
+        every { roomResponse.isSuccessful } returns true
+        every { roomResponse.body() } returns mockRoom
+        every { messagesResponse.isSuccessful } returns true
+        every { messagesResponse.body() } returns mockMessages
         
         viewModel = RoomDetailViewModel(roomId)
         advanceUntilIdle()
@@ -91,8 +97,14 @@ class RoomDetailViewModelTest {
             updatedAt = "2024-01-01T00:00:00Z"
         )
         
-        coEvery { apiService.getRoom(roomId) } returns Response.success(mockRoom)
-        coEvery { apiService.getMessages(roomId) } returns Response.success(emptyList())
+        val roomResponse = mockk<retrofit2.Response<Room>>(relaxed = true)
+        val messagesResponse = mockk<retrofit2.Response<List<Message>>>(relaxed = true)
+        coEvery { apiService.getRoom(roomId) } returns roomResponse
+        coEvery { apiService.getMessages(roomId) } returns messagesResponse
+        every { roomResponse.isSuccessful } returns true
+        every { roomResponse.body() } returns mockRoom
+        every { messagesResponse.isSuccessful } returns true
+        every { messagesResponse.body() } returns emptyList()
         
         viewModel = RoomDetailViewModel(roomId)
         advanceUntilIdle()
@@ -104,8 +116,14 @@ class RoomDetailViewModelTest {
 
     @Test
     fun `loadRoom should set error on failed response`() = runTest(testDispatcher) {
-        coEvery { apiService.getRoom(roomId) } returns Response.error(404, mockk())
-        coEvery { apiService.getMessages(roomId) } returns Response.success(emptyList())
+        val errorResponse = mockk<retrofit2.Response<Room>>(relaxed = true)
+        val successResponse = mockk<retrofit2.Response<List<Message>>>(relaxed = true)
+        coEvery { apiService.getRoom(roomId) } returns errorResponse
+        coEvery { apiService.getMessages(roomId) } returns successResponse
+        every { errorResponse.isSuccessful } returns false
+        every { errorResponse.code() } returns 404
+        every { successResponse.isSuccessful } returns true
+        every { successResponse.body() } returns emptyList()
         
         viewModel = RoomDetailViewModel(roomId)
         advanceUntilIdle()
@@ -135,8 +153,13 @@ class RoomDetailViewModelTest {
             )
         )
         
-        coEvery { apiService.getRoom(roomId) } returns Response.success(mockk())
-        coEvery { apiService.getMessages(roomId) } returns Response.success(mockMessages)
+        val roomResponse = mockk<retrofit2.Response<Room>>(relaxed = true)
+        val messagesResponse = mockk<retrofit2.Response<List<Message>>>(relaxed = true)
+        coEvery { apiService.getRoom(roomId) } returns roomResponse
+        coEvery { apiService.getMessages(roomId) } returns messagesResponse
+        every { roomResponse.isSuccessful } returns true
+        every { messagesResponse.isSuccessful } returns true
+        every { messagesResponse.body() } returns mockMessages
         
         viewModel = RoomDetailViewModel(roomId)
         advanceUntilIdle()
@@ -158,12 +181,19 @@ class RoomDetailViewModelTest {
         )
         val updatedMessages = listOf(mockMessage)
         
-        coEvery { apiService.getRoom(roomId) } returns Response.success(mockk())
-        coEvery { apiService.getMessages(roomId) } returnsMany listOf(
-            Response.success(emptyList()),
-            Response.success(updatedMessages)
-        )
-        coEvery { apiService.sendMessage(roomId, any()) } returns Response.success(mockMessage)
+        val roomResponse = mockk<retrofit2.Response<Room>>(relaxed = true)
+        val messagesResponse1 = mockk<retrofit2.Response<List<Message>>>(relaxed = true)
+        val messagesResponse2 = mockk<retrofit2.Response<List<Message>>>(relaxed = true)
+        val sendMessageResponse = mockk<retrofit2.Response<Message>>(relaxed = true)
+        coEvery { apiService.getRoom(roomId) } returns roomResponse
+        coEvery { apiService.getMessages(roomId) } returnsMany listOf(messagesResponse1, messagesResponse2)
+        coEvery { apiService.sendMessage(roomId, any()) } returns sendMessageResponse
+        every { roomResponse.isSuccessful } returns true
+        every { messagesResponse1.isSuccessful } returns true
+        every { messagesResponse1.body() } returns emptyList()
+        every { messagesResponse2.isSuccessful } returns true
+        every { messagesResponse2.body() } returns updatedMessages
+        every { sendMessageResponse.isSuccessful } returns true
         
         viewModel = RoomDetailViewModel(roomId)
         advanceUntilIdle()
@@ -180,9 +210,17 @@ class RoomDetailViewModelTest {
     fun `sendMessage should set error on failure`() = runTest(testDispatcher) {
         val messageContent = "Test message"
         
-        coEvery { apiService.getRoom(roomId) } returns Response.success(mockk())
-        coEvery { apiService.getMessages(roomId) } returns Response.success(emptyList())
-        coEvery { apiService.sendMessage(roomId, any()) } returns Response.error(400, mockk())
+        val roomResponse = mockk<retrofit2.Response<Room>>(relaxed = true)
+        val messagesResponse = mockk<retrofit2.Response<List<Message>>>(relaxed = true)
+        val errorResponse = mockk<retrofit2.Response<Message>>(relaxed = true)
+        coEvery { apiService.getRoom(roomId) } returns roomResponse
+        coEvery { apiService.getMessages(roomId) } returns messagesResponse
+        coEvery { apiService.sendMessage(roomId, any()) } returns errorResponse
+        every { roomResponse.isSuccessful } returns true
+        every { messagesResponse.isSuccessful } returns true
+        every { messagesResponse.body() } returns emptyList()
+        every { errorResponse.isSuccessful } returns false
+        every { errorResponse.code() } returns 400
         
         viewModel = RoomDetailViewModel(roomId)
         advanceUntilIdle()
@@ -207,10 +245,20 @@ class RoomDetailViewModelTest {
             )
         )
         
-        coEvery { apiService.getRoom(roomId) } returns Response.success(mockk())
-        coEvery { apiService.getMessages(roomId) } returns Response.success(emptyList())
-        coEvery { apiService.joinRoom(roomId) } returns Response.success(mapOf("status" to "joined"))
-        coEvery { apiService.getParticipants(roomId) } returns Response.success(mockParticipants)
+        val roomResponse = mockk<retrofit2.Response<Room>>(relaxed = true)
+        val messagesResponse = mockk<retrofit2.Response<List<Message>>>(relaxed = true)
+        val joinResponse = mockk<retrofit2.Response<Map<String, String>>>(relaxed = true)
+        val participantsResponse = mockk<retrofit2.Response<List<RoomParticipant>>>(relaxed = true)
+        coEvery { apiService.getRoom(roomId) } returns roomResponse
+        coEvery { apiService.getMessages(roomId) } returns messagesResponse
+        coEvery { apiService.joinRoom(roomId) } returns joinResponse
+        coEvery { apiService.getParticipants(roomId) } returns participantsResponse
+        every { roomResponse.isSuccessful } returns true
+        every { messagesResponse.isSuccessful } returns true
+        every { messagesResponse.body() } returns emptyList()
+        every { joinResponse.isSuccessful } returns true
+        every { participantsResponse.isSuccessful } returns true
+        every { participantsResponse.body() } returns mockParticipants
         
         viewModel = RoomDetailViewModel(roomId)
         advanceUntilIdle()
@@ -226,9 +274,17 @@ class RoomDetailViewModelTest {
 
     @Test
     fun `joinRoom should set error on failure`() = runTest(testDispatcher) {
-        coEvery { apiService.getRoom(roomId) } returns Response.success(mockk())
-        coEvery { apiService.getMessages(roomId) } returns Response.success(emptyList())
-        coEvery { apiService.joinRoom(roomId) } returns Response.error(403, mockk())
+        val roomResponse = mockk<retrofit2.Response<Room>>(relaxed = true)
+        val messagesResponse = mockk<retrofit2.Response<List<Message>>>(relaxed = true)
+        val errorResponse = mockk<retrofit2.Response<Map<String, String>>>(relaxed = true)
+        coEvery { apiService.getRoom(roomId) } returns roomResponse
+        coEvery { apiService.getMessages(roomId) } returns messagesResponse
+        coEvery { apiService.joinRoom(roomId) } returns errorResponse
+        every { roomResponse.isSuccessful } returns true
+        every { messagesResponse.isSuccessful } returns true
+        every { messagesResponse.body() } returns emptyList()
+        every { errorResponse.isSuccessful } returns false
+        every { errorResponse.code() } returns 403
         
         viewModel = RoomDetailViewModel(roomId)
         advanceUntilIdle()
@@ -242,9 +298,19 @@ class RoomDetailViewModelTest {
 
     @Test
     fun `leaveRoom should update isJoined and isSpeaking on success`() = runTest(testDispatcher) {
-        coEvery { apiService.getRoom(roomId) } returns Response.success(mockk())
-        coEvery { apiService.getMessages(roomId) } returns Response.success(emptyList())
-        coEvery { apiService.leaveRoom(roomId) } returns Response.success(mapOf("status" to "left"))
+        val roomResponse = mockk<retrofit2.Response<Room>>(relaxed = true)
+        val messagesResponse = mockk<retrofit2.Response<List<Message>>>(relaxed = true)
+        val joinResponse = mockk<retrofit2.Response<Map<String, String>>>(relaxed = true)
+        val leaveResponse = mockk<retrofit2.Response<Map<String, String>>>(relaxed = true)
+        coEvery { apiService.getRoom(roomId) } returns roomResponse
+        coEvery { apiService.getMessages(roomId) } returns messagesResponse
+        coEvery { apiService.joinRoom(roomId) } returns joinResponse
+        coEvery { apiService.leaveRoom(roomId) } returns leaveResponse
+        every { roomResponse.isSuccessful } returns true
+        every { messagesResponse.isSuccessful } returns true
+        every { messagesResponse.body() } returns emptyList()
+        every { joinResponse.isSuccessful } returns true
+        every { leaveResponse.isSuccessful } returns true
         
         viewModel = RoomDetailViewModel(roomId)
         advanceUntilIdle()
@@ -265,9 +331,17 @@ class RoomDetailViewModelTest {
 
     @Test
     fun `leaveRoom should set error on failure`() = runTest(testDispatcher) {
-        coEvery { apiService.getRoom(roomId) } returns Response.success(mockk())
-        coEvery { apiService.getMessages(roomId) } returns Response.success(emptyList())
-        coEvery { apiService.leaveRoom(roomId) } returns Response.error(500, mockk())
+        val roomResponse = mockk<retrofit2.Response<Room>>(relaxed = true)
+        val messagesResponse = mockk<retrofit2.Response<List<Message>>>(relaxed = true)
+        val errorResponse = mockk<retrofit2.Response<Map<String, String>>>(relaxed = true)
+        coEvery { apiService.getRoom(roomId) } returns roomResponse
+        coEvery { apiService.getMessages(roomId) } returns messagesResponse
+        coEvery { apiService.leaveRoom(roomId) } returns errorResponse
+        every { roomResponse.isSuccessful } returns true
+        every { messagesResponse.isSuccessful } returns true
+        every { messagesResponse.body() } returns emptyList()
+        every { errorResponse.isSuccessful } returns false
+        every { errorResponse.code() } returns 500
         
         viewModel = RoomDetailViewModel(roomId)
         advanceUntilIdle()
@@ -301,9 +375,17 @@ class RoomDetailViewModelTest {
             )
         )
         
-        coEvery { apiService.getRoom(roomId) } returns Response.success(mockk())
-        coEvery { apiService.getMessages(roomId) } returns Response.success(emptyList())
-        coEvery { apiService.getParticipants(roomId) } returns Response.success(mockParticipants)
+        val roomResponse = mockk<retrofit2.Response<Room>>(relaxed = true)
+        val messagesResponse = mockk<retrofit2.Response<List<Message>>>(relaxed = true)
+        val participantsResponse = mockk<retrofit2.Response<List<RoomParticipant>>>(relaxed = true)
+        coEvery { apiService.getRoom(roomId) } returns roomResponse
+        coEvery { apiService.getMessages(roomId) } returns messagesResponse
+        coEvery { apiService.getParticipants(roomId) } returns participantsResponse
+        every { roomResponse.isSuccessful } returns true
+        every { messagesResponse.isSuccessful } returns true
+        every { messagesResponse.body() } returns emptyList()
+        every { participantsResponse.isSuccessful } returns true
+        every { participantsResponse.body() } returns mockParticipants
         
         viewModel = RoomDetailViewModel(roomId)
         advanceUntilIdle()
@@ -317,9 +399,14 @@ class RoomDetailViewModelTest {
 
     @Test
     fun `loadParticipants should handle exception silently`() = runTest(testDispatcher) {
-        coEvery { apiService.getRoom(roomId) } returns Response.success(mockk())
-        coEvery { apiService.getMessages(roomId) } returns Response.success(emptyList())
+        val roomResponse = mockk<retrofit2.Response<Room>>(relaxed = true)
+        val messagesResponse = mockk<retrofit2.Response<List<Message>>>(relaxed = true)
+        coEvery { apiService.getRoom(roomId) } returns roomResponse
+        coEvery { apiService.getMessages(roomId) } returns messagesResponse
         coEvery { apiService.getParticipants(roomId) } throws Exception("Network error")
+        every { roomResponse.isSuccessful } returns true
+        every { messagesResponse.isSuccessful } returns true
+        every { messagesResponse.body() } returns emptyList()
         
         viewModel = RoomDetailViewModel(roomId)
         advanceUntilIdle()
@@ -333,8 +420,13 @@ class RoomDetailViewModelTest {
 
     @Test
     fun `toggleSpeaking should toggle isSpeaking state`() = runTest(testDispatcher) {
-        coEvery { apiService.getRoom(roomId) } returns Response.success(mockk())
-        coEvery { apiService.getMessages(roomId) } returns Response.success(emptyList())
+        val roomResponse = mockk<retrofit2.Response<Room>>(relaxed = true)
+        val messagesResponse = mockk<retrofit2.Response<List<Message>>>(relaxed = true)
+        coEvery { apiService.getRoom(roomId) } returns roomResponse
+        coEvery { apiService.getMessages(roomId) } returns messagesResponse
+        every { roomResponse.isSuccessful } returns true
+        every { messagesResponse.isSuccessful } returns true
+        every { messagesResponse.body() } returns emptyList()
         
         viewModel = RoomDetailViewModel(roomId)
         advanceUntilIdle()
@@ -366,8 +458,20 @@ class RoomDetailViewModelTest {
         )
         val mockMessages = emptyList<Message>()
         
-        coEvery { apiService.getRoom(roomId) } returns Response.success(mockRoom)
-        coEvery { apiService.getMessages(roomId) } returns Response.success(mockMessages)
+        val roomResponse1 = mockk<retrofit2.Response<Room>>(relaxed = true)
+        val roomResponse2 = mockk<retrofit2.Response<Room>>(relaxed = true)
+        val messagesResponse1 = mockk<retrofit2.Response<List<Message>>>(relaxed = true)
+        val messagesResponse2 = mockk<retrofit2.Response<List<Message>>>(relaxed = true)
+        coEvery { apiService.getRoom(roomId) } returnsMany listOf(roomResponse1, roomResponse2)
+        coEvery { apiService.getMessages(roomId) } returnsMany listOf(messagesResponse1, messagesResponse2)
+        every { roomResponse1.isSuccessful } returns true
+        every { roomResponse1.body() } returns mockRoom
+        every { roomResponse2.isSuccessful } returns true
+        every { roomResponse2.body() } returns mockRoom
+        every { messagesResponse1.isSuccessful } returns true
+        every { messagesResponse1.body() } returns mockMessages
+        every { messagesResponse2.isSuccessful } returns true
+        every { messagesResponse2.body() } returns mockMessages
         
         viewModel = RoomDetailViewModel(roomId)
         advanceUntilIdle()

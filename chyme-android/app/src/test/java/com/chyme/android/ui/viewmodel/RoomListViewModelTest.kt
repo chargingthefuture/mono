@@ -84,7 +84,10 @@ class RoomListViewModelTest {
             )
         )
         
-        coEvery { apiService.getRooms(null) } returns Response.success(mockRooms)
+        val successResponse = mockk<retrofit2.Response<List<Room>>>(relaxed = true)
+        coEvery { apiService.getRooms(null) } returns successResponse
+        every { successResponse.isSuccessful } returns true
+        every { successResponse.body() } returns mockRooms
         
         viewModel = RoomListViewModel()
         viewModel.loadRooms()
@@ -113,7 +116,10 @@ class RoomListViewModelTest {
             )
         )
         
-        coEvery { apiService.getRooms("public") } returns Response.success(publicRooms)
+        val successResponse = mockk<retrofit2.Response<List<Room>>>(relaxed = true)
+        coEvery { apiService.getRooms("public") } returns successResponse
+        every { successResponse.isSuccessful } returns true
+        every { successResponse.body() } returns publicRooms
         
         viewModel = RoomListViewModel()
         viewModel.loadRooms("public")
@@ -126,7 +132,10 @@ class RoomListViewModelTest {
 
     @Test
     fun `loadRooms should set error on failed response`() = runTest(testDispatcher) {
-        coEvery { apiService.getRooms(null) } returns Response.error(500, mockk())
+        val errorResponse = mockk<retrofit2.Response<List<Room>>>(relaxed = true)
+        coEvery { apiService.getRooms(null) } returns errorResponse
+        every { errorResponse.isSuccessful } returns false
+        every { errorResponse.code() } returns 500
         
         viewModel = RoomListViewModel()
         viewModel.loadRooms()
@@ -168,7 +177,10 @@ class RoomListViewModelTest {
             )
         )
         
-        coEvery { apiService.getRooms("private") } returns Response.success(privateRooms)
+        val successResponse = mockk<retrofit2.Response<List<Room>>>(relaxed = true)
+        coEvery { apiService.getRooms("private") } returns successResponse
+        every { successResponse.isSuccessful } returns true
+        every { successResponse.body() } returns privateRooms
         
         viewModel = RoomListViewModel()
         viewModel.setFilter("private")
@@ -182,7 +194,14 @@ class RoomListViewModelTest {
     @Test
     fun `setFilter with null should clear filter`() = runTest(testDispatcher) {
         val allRooms = listOf<Room>()
-        coEvery { apiService.getRooms(null) } returns Response.success(allRooms)
+        val successResponse1 = mockk<retrofit2.Response<List<Room>>>(relaxed = true)
+        val successResponse2 = mockk<retrofit2.Response<List<Room>>>(relaxed = true)
+        coEvery { apiService.getRooms("public") } returns successResponse1
+        coEvery { apiService.getRooms(null) } returns successResponse2
+        every { successResponse1.isSuccessful } returns true
+        every { successResponse1.body() } returns allRooms
+        every { successResponse2.isSuccessful } returns true
+        every { successResponse2.body() } returns allRooms
         
         viewModel = RoomListViewModel()
         viewModel.setFilter("public")
@@ -198,8 +217,13 @@ class RoomListViewModelTest {
     @Test
     fun `refresh should reload rooms with current filter`() = runTest(testDispatcher) {
         val mockRooms = listOf<Room>()
-        coEvery { apiService.getRooms(null) } returns Response.success(mockRooms)
-        coEvery { apiService.getRooms("public") } returns Response.success(mockRooms)
+        val successResponse1 = mockk<retrofit2.Response<List<Room>>>(relaxed = true)
+        val successResponse2 = mockk<retrofit2.Response<List<Room>>>(relaxed = true)
+        coEvery { apiService.getRooms("public") } returnsMany listOf(successResponse1, successResponse2)
+        every { successResponse1.isSuccessful } returns true
+        every { successResponse1.body() } returns mockRooms
+        every { successResponse2.isSuccessful } returns true
+        every { successResponse2.body() } returns mockRooms
         
         viewModel = RoomListViewModel()
         viewModel.setFilter("public")
@@ -213,21 +237,31 @@ class RoomListViewModelTest {
 
     @Test
     fun `isLoading should be true during API call`() = runTest(testDispatcher) {
+        var isLoadingDuringCall = false
+        val successResponse = mockk<retrofit2.Response<List<Room>>>(relaxed = true)
         coEvery { apiService.getRooms(null) } coAnswers {
-            assertTrue(viewModel.isLoading.value)
-            Response.success(emptyList())
+            isLoadingDuringCall = viewModel.isLoading.value
+            successResponse
         }
+        every { successResponse.isSuccessful } returns true
+        every { successResponse.body() } returns emptyList()
         
         viewModel = RoomListViewModel()
         viewModel.loadRooms()
+        // Advance just enough to start the coroutine and set loading to true
+        testDispatcher.scheduler.advanceTimeBy(1)
         advanceUntilIdle()
         
+        assertTrue("isLoading should be true during API call", isLoadingDuringCall)
         assertFalse(viewModel.isLoading.value)
     }
 
     @Test
     fun `loadRooms should handle empty response`() = runTest(testDispatcher) {
-        coEvery { apiService.getRooms(null) } returns Response.success(null)
+        val successResponse = mockk<retrofit2.Response<List<Room>>>(relaxed = true)
+        coEvery { apiService.getRooms(null) } returns successResponse
+        every { successResponse.isSuccessful } returns true
+        every { successResponse.body() } returns null
         
         viewModel = RoomListViewModel()
         viewModel.loadRooms()
