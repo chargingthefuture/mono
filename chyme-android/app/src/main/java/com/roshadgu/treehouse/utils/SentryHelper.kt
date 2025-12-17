@@ -4,7 +4,9 @@ import android.content.Context
 import android.util.Log
 import io.sentry.Breadcrumb
 import io.sentry.Sentry
+import io.sentry.SentryEvent
 import io.sentry.SentryLevel
+import io.sentry.SentryOptions
 import io.sentry.android.core.SentryAndroid
 
 object SentryHelper {
@@ -29,30 +31,18 @@ object SentryHelper {
                 options.environment = "android"
                 options.tracesSampleRate = 1.0 // 100% of transactions for verbose logging
                 options.profilesSampleRate = 1.0 // 100% profiling
-                options.enableAutoSessionTracking = true
-                options.sessionTrackingIntervalMillis = 30000 // 30 seconds
                 
                 // Enable all integrations for verbose logging
                 options.isEnableUserInteractionTracing = true
                 options.isEnableAutoActivityLifecycleTracing = true
-                options.isEnableAppStartTracking = true
-                options.isEnableNetworkBreadcrumbs = true
-                options.isEnableNetworkEventBreadcrumbs = true
-                options.isEnableSystemEventBreadcrumbs = true
-                options.isEnableAppLifecycleBreadcrumbs = true
-                
-                // Capture all console logs as breadcrumbs
                 options.isAttachScreenshot = false // Disable for privacy
                 options.isAttachViewHierarchy = true
                 
                 // Set beforeSend to add extra context
-                options.beforeSend = { event, hint ->
+                options.beforeSend = SentryOptions.BeforeSendCallback { event, hint ->
                     addVerboseContext(event)
                     event
                 }
-                
-                // Ignore specific errors if needed
-                options.ignoredExceptionTypes = setOf()
             }
             
             isInitialized = true
@@ -66,11 +56,9 @@ object SentryHelper {
     /**
      * Add verbose context to Sentry events
      */
-    private fun addVerboseContext(event: io.sentry.protocol.SentryEvent) {
-        event.tags = event.tags?.apply {
-            put("platform", "android")
-            put("verbose_logging", "enabled")
-        } ?: mutableMapOf("platform" to "android", "verbose_logging" to "enabled")
+    private fun addVerboseContext(event: SentryEvent) {
+        event.setTag("platform", "android")
+        event.setTag("verbose_logging", "enabled")
     }
     
     /**
