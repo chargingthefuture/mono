@@ -80,6 +80,15 @@ jobs:
       #     1. Go to https://console.cloud.google.com/storage
       #     2. Look for bucket named "test-lab-*" or create one
       #     3. Format: gs://your-bucket-name (or just bucket name without gs://)
+      #
+      # Required IAM role for service account:
+      #   The service account MUST have one of these roles:
+      #   - roles/cloudtestservice.testAdmin (recommended)
+      #   - roles/firebase.testLabAdmin
+      #   To grant: https://console.cloud.google.com/iam-admin/iam?project=YOUR_PROJECT_ID
+      #   Or use: gcloud projects add-iam-policy-binding PROJECT_ID \
+      #            --member='serviceAccount:ACCOUNT@PROJECT.iam.gserviceaccount.com' \
+      #            --role='roles/cloudtestservice.testAdmin'
       - name: Install Google Cloud SDK
         continue-on-error: true
         run: |
@@ -92,6 +101,40 @@ jobs:
         uses: google-github-actions/auth@v2
         with:
           credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+
+      - name: Verify Firebase Test Lab access
+        continue-on-error: true
+        run: |
+          PROJECT_ID="${{ secrets.FIREBASE_PROJECT_ID }}"
+          
+          if [ -z "$PROJECT_ID" ]; then
+            echo "FIREBASE_PROJECT_ID secret not set, skipping Firebase Test Lab"
+            exit 0
+          fi
+          
+          echo "Verifying Firebase Test Lab access for project: $PROJECT_ID"
+          
+          # Check if we can access the test environment catalog
+          if gcloud firebase test android models list --project "$PROJECT_ID" >/dev/null 2>&1; then
+            echo "✓ Firebase Test Lab access verified"
+          else
+            echo "✗ ERROR: Cannot access Firebase Test Lab"
+            echo ""
+            echo "This is likely a permissions issue. The service account needs one of these IAM roles:"
+            echo "  - roles/cloudtestservice.testAdmin (recommended)"
+            echo "  - roles/firebase.testLabAdmin"
+            echo "  - roles/owner (not recommended for security)"
+            echo ""
+            echo "To fix this:"
+            echo "1. Go to: https://console.cloud.google.com/iam-admin/iam?project=$PROJECT_ID"
+            echo "2. Find your service account (from FIREBASE_SERVICE_ACCOUNT secret)"
+            echo "3. Click 'Edit' and add the 'Cloud Test Service Admin' role"
+            echo "4. Or run: gcloud projects add-iam-policy-binding $PROJECT_ID \\"
+            echo "     --member='serviceAccount:YOUR_SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com' \\"
+            echo "     --role='roles/cloudtestservice.testAdmin'"
+            echo ""
+            exit 1
+          fi
 
       - name: Run on Firebase Test Lab
         continue-on-error: true
@@ -120,14 +163,30 @@ jobs:
           echo "APK: $APK_PATH"
           
           RESULTS_DIR="test-results-$(date +%s)"
-          gcloud firebase test android run \
+          
+          # Run the test and capture the exit code
+          if gcloud firebase test android run \
             --type instrumentation \
             --app "$APK_PATH" \
             --device model=Pixel2,version=30,locale=en,orientation=portrait \
             --timeout 5m \
             --project "$PROJECT_ID" \
             $BUCKET_ARG \
-            --results-dir "$RESULTS_DIR" || echo "Firebase Test Lab run completed with errors"
+            --results-dir "$RESULTS_DIR"; then
+            echo ""
+            echo "✓ Firebase Test Lab run completed successfully"
+          else
+            EXIT_CODE=$?
+            echo ""
+            echo "✗ Firebase Test Lab run completed with errors (exit code: $EXIT_CODE)"
+            echo ""
+            if [ $EXIT_CODE -eq 1 ]; then
+              echo "Common issues:"
+              echo "  - 403 Not authorized: Service account needs IAM role 'roles/cloudtestservice.testAdmin'"
+              echo "  - 404 Not found: Project ID may be incorrect or Firebase Test Lab not enabled"
+              echo "  - APK issues: APK may be corrupted or incompatible with test device"
+            fi
+          fi
           
           echo ""
           echo "=== Firebase Test Lab Results ==="
@@ -184,8 +243,8 @@ jobs:
           
           echo "Installing APK: $APK_PATH"
           
-          # Clear logcat first
-          adb logcat -c
+          # Clear logcat first (ignore errors - may not have permission to clear system logs)
+          adb logcat -c 2>/dev/null || true
           
           # Start logcat capture in background
           adb logcat -v time *:E AndroidRuntime:E SentryHelper:D TreehouseApp:D MainActivity:D > logcat-full.txt &
