@@ -119,6 +119,7 @@ jobs:
           echo "Project: $PROJECT_ID"
           echo "APK: $APK_PATH"
           
+          RESULTS_DIR="test-results-$(date +%s)"
           gcloud firebase test android run \
             --type instrumentation \
             --app "$APK_PATH" \
@@ -126,11 +127,18 @@ jobs:
             --timeout 5m \
             --project "$PROJECT_ID" \
             $BUCKET_ARG \
-            --results-dir "test-results-$(date +%s)" || echo "Firebase Test Lab run completed with errors"
+            --results-dir "$RESULTS_DIR" || echo "Firebase Test Lab run completed with errors"
           
           echo ""
-          echo "Note: Test results will be available in Google Cloud Console"
-          echo "Visit: https://console.cloud.google.com/test-lab/histories"
+          echo "=== Firebase Test Lab Results ==="
+          echo "View test results and video/screenshots in:"
+          echo "1. Firebase Console: https://console.firebase.google.com/project/$PROJECT_ID/testlab"
+          echo "2. Google Cloud Console: https://console.cloud.google.com/test-lab/histories?project=$PROJECT_ID"
+          echo ""
+          echo "To see the app running:"
+          echo "- Go to Firebase Console > Test Lab > Test Results"
+          echo "- Click on your test run to see video recording and screenshots"
+          echo "- The video shows the app running on the device in real-time"
 
       # Option 2: Try emulator with different approach (fallback if Firebase not available)
       - name: Create and start emulator (for logcat capture)

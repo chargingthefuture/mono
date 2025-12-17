@@ -12,6 +12,10 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Treehouse">
+        <!-- Disable Sentry auto-initialization since we initialize manually in TreehouseApp -->
+        <meta-data
+            android:name="io.sentry.auto-init"
+            android:value="false" />
         <activity
             android:name=".MainActivity"
             android:exported="true"
