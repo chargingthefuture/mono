@@ -85,9 +85,7 @@ fun MainScreen(authManager: OTPAuthManager) {
             // Sync ViewModel state if authManager says we're authenticated
             if (authenticated && !uiState.isAuthenticated) {
                 Log.d("MainScreen", "Syncing ViewModel state from authManager")
-                authViewModel.uiState.value = authViewModel.uiState.value.copy(
-                    isAuthenticated = true
-                )
+                authViewModel.setAuthenticated(true)
             }
         }
     }

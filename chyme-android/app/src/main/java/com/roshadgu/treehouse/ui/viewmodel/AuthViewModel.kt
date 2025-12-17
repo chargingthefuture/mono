@@ -188,6 +188,10 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
         _uiState.value = _uiState.value.copy(errorMessage = null)
     }
     
+    fun setAuthenticated(isAuthenticated: Boolean) {
+        _uiState.value = _uiState.value.copy(isAuthenticated = isAuthenticated)
+    }
+    
     fun signOut() {
         viewModelScope.launch {
             authManager.signOut()
