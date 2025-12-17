@@ -24,7 +24,7 @@ object SentryHelper {
         }
         
         try {
-            val sentryDsn = dsn ?: "https://cb4b56fb7ca8bdfa89e4880a46555ee9@o4510455625482240.ingest.us.sentry.io/4510455626596352"
+            val sentryDsn = dsn ?: "https://c4cabee62513c0173e0b2f0bf250e47c@o4510455625482240.ingest.us.sentry.io/4510548956151808"
             
             SentryAndroid.init(context) { options ->
                 options.dsn = sentryDsn

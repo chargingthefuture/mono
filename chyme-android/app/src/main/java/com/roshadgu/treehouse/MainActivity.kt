@@ -1,7 +1,6 @@
 package com.roshadgu.treehouse
 
 import android.os.Bundle
-import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.material.MaterialTheme
@@ -13,8 +12,6 @@ import com.roshadgu.treehouse.components.homeScreen
 import com.roshadgu.treehouse.ui.screen.SignInScreen
 import com.roshadgu.treehouse.ui.theme.TreehouseTheme
 import com.roshadgu.treehouse.ui.viewmodel.AuthViewModel
-import com.roshadgu.treehouse.utils.SentryHelper
-import io.sentry.SentryLevel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -22,19 +19,6 @@ import kotlinx.coroutines.launch
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        
-        // Initialize Sentry first for error tracking
-        try {
-            SentryHelper.init(this)
-            SentryHelper.captureMessage(
-                message = "MainActivity created",
-                level = SentryLevel.INFO,
-                tags = mapOf("activity" to "main")
-            )
-            Log.d("MainActivity", "Sentry initialized")
-        } catch (e: Exception) {
-            Log.e("MainActivity", "Failed to initialize Sentry", e)
-        }
         
         val authManager = OTPAuthManager(this)
         
