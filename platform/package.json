@@ -13,6 +13,7 @@
     "check": "tsc",
     "db:push": "drizzle-kit push",
     "db:push:prod": "drizzle-kit push",
+    "migrate:otp": "tsx scripts/migrate-otp-tables.ts",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:coverage": "vitest --coverage",

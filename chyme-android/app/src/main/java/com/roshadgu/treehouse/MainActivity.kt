@@ -70,14 +70,33 @@ class MainActivity : AppCompatActivity() {
 @Composable
 fun MainScreen(authManager: OTPAuthManager) {
     val authViewModel: AuthViewModel = viewModel()
-    var isAuthenticated by remember { mutableStateOf(false) }
     
-    // Observe authentication status from authManager (source of truth)
+    // Observe authentication status from ViewModel (primary source - updated when OTP succeeds)
+    val uiState by authViewModel.uiState.collectAsState()
+    
+    // Also observe authManager Flow for initial state and persistence checks
+    var authManagerAuthenticated by remember { mutableStateOf(false) }
+    
     LaunchedEffect(Unit) {
+        // Check initial auth state from DataStore
         authManager.isAuthenticated.collect { authenticated ->
-            isAuthenticated = authenticated
+            Log.d("MainScreen", "authManager.isAuthenticated changed: $authenticated")
+            authManagerAuthenticated = authenticated
+            // Sync ViewModel state if authManager says we're authenticated
+            if (authenticated && !uiState.isAuthenticated) {
+                Log.d("MainScreen", "Syncing ViewModel state from authManager")
+                authViewModel.uiState.value = authViewModel.uiState.value.copy(
+                    isAuthenticated = true
+                )
+            }
         }
     }
+    
+    // Use ViewModel state as primary (updated immediately on OTP success)
+    // Fall back to authManager state for initial load
+    val isAuthenticated = uiState.isAuthenticated || authManagerAuthenticated
+    
+    Log.d("MainScreen", "isAuthenticated: $isAuthenticated (ViewModel: ${uiState.isAuthenticated}, authManager: $authManagerAuthenticated)")
     
     Surface(color = MaterialTheme.colors.background) {
         if (isAuthenticated) {
@@ -86,8 +105,9 @@ fun MainScreen(authManager: OTPAuthManager) {
             SignInScreen(
                 viewModel = authViewModel,
                 onSignInSuccess = {
-                    // Token is already stored in DataStore by validateOTP,
-                    // so the Flow will automatically update isAuthenticated
+                    // ViewModel state is already updated by validateOTP success handler
+                    // The MainScreen will automatically re-compose when uiState.isAuthenticated changes
+                    Log.d("MainScreen", "onSignInSuccess called")
                 }
             )
         }
