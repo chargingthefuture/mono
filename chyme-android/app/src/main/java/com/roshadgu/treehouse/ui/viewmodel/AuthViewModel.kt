@@ -116,6 +116,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                 
                 result.fold(
                     onSuccess = { tokenResponse ->
+                        // Only update UI state and log success after we confirm the Result is successful
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
                             isAuthenticated = true,
@@ -123,11 +124,12 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                             otpCode = ""
                         )
                         
-                        SentryHelper.captureMessage(
-                            message = "OTP validation successful in ViewModel",
+                        // Log success only after UI state is updated and we're certain of success
+                        SentryHelper.addBreadcrumb(
+                            message = "OTP validation completed successfully in ViewModel",
+                            category = "viewmodel",
                             level = SentryLevel.INFO,
-                            tags = mapOf("otp_validation" to "success"),
-                            extra = mapOf("user_id" to tokenResponse.user.id)
+                            data = mapOf("user_id" to tokenResponse.user.id)
                         )
                         
                         Log.i("AuthViewModel", "OTP validation successful")

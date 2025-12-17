@@ -86,9 +86,9 @@ class OTPAuthManager(private val context: Context) {
                 val tokenResponse = response.body()!!
                 
                 SentryHelper.addBreadcrumb(
-                    message = "OTP validation successful, storing token",
+                    message = "OTP validated by server, received token response",
                     category = "otp",
-                    level = SentryLevel.INFO,
+                    level = SentryLevel.DEBUG,
                     data = mapOf(
                         "user_id" to tokenResponse.user.id,
                         "token_length" to tokenResponse.token.length.toString(),
@@ -119,15 +119,17 @@ class OTPAuthManager(private val context: Context) {
                         email = tokenResponse.user.email
                     )
                     
-                    SentryHelper.captureMessage(
-                        message = "OTP validation successful",
+                    // Only log success AFTER all operations complete successfully
+                    SentryHelper.addBreadcrumb(
+                        message = "All OTP validation steps completed successfully",
+                        category = "otp",
                         level = SentryLevel.INFO,
-                        tags = mapOf("otp_validation" to "success"),
-                        extra = mapOf("user_id" to tokenResponse.user.id)
+                        data = mapOf("user_id" to tokenResponse.user.id)
                     )
                     
                     Log.i("OTPAuthManager", "OTP validation successful for user: ${tokenResponse.user.id}")
                     
+                    // Return success only after everything is complete
                     Result.success(tokenResponse)
                 } catch (e: Exception) {
                     val error = Exception("Failed to store token: ${e.message}", e)
@@ -139,7 +141,7 @@ class OTPAuthManager(private val context: Context) {
                             "user_id" to tokenResponse.user.id,
                             "error_type" to e.javaClass.simpleName
                         ),
-                        message = "Failed to store auth token after successful OTP validation"
+                        message = "Failed to store auth token after OTP validation"
                     )
                     Log.e("OTPAuthManager", "Failed to store token", e)
                     Result.failure(error)
