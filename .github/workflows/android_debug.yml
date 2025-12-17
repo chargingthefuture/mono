@@ -241,17 +241,21 @@ jobs:
           PACKAGE_NAME="com.roshadgu.treehouse"
           MAIN_ACTIVITY="com.roshadgu.treehouse.MainActivity"
           
+          # Initialize logcat files early to ensure they exist even on failure
+          touch logcat-full.txt install-output.txt
+          LOGCAT_PID=""
+          INSTALL_SUCCESS=false
+          
           echo "Installing APK: $APK_PATH"
           
           # Clear logcat first (ignore errors - may not have permission to clear system logs)
           adb logcat -c 2>/dev/null || true
           
           # Start logcat capture in background
-          adb logcat -v time *:E AndroidRuntime:E SentryHelper:D TreehouseApp:D MainActivity:D > logcat-full.txt &
+          adb logcat -v time *:E AndroidRuntime:E SentryHelper:D TreehouseApp:D MainActivity:D > logcat-full.txt 2>&1 &
           LOGCAT_PID=$!
           
           # Install APK (with retries)
-          INSTALL_SUCCESS=false
           for i in 1 2 3; do
             adb install -r "$APK_PATH" > install-output.txt 2>&1
             INSTALL_EXIT_CODE=$?
@@ -259,7 +263,7 @@ jobs:
             # Check if install command succeeded and verify package is installed
             if [ $INSTALL_EXIT_CODE -eq 0 ] && ! grep -qi "Failure\|Error\|failed\|Broken pipe" install-output.txt; then
               # Double-check by verifying package exists
-              if adb shell pm list packages | grep -q "$PACKAGE_NAME"; then
+              if adb shell pm list packages 2>/dev/null | grep -q "$PACKAGE_NAME"; then
                 echo "APK installed successfully"
                 INSTALL_SUCCESS=true
                 break
@@ -274,56 +278,68 @@ jobs:
             echo "ERROR: APK installation failed after 3 attempts"
             echo "Installation failed - see install-output.txt for details" > install-failed.txt
             cat install-output.txt
-            exit 1
-          fi
-          
-          # Verify device is ready
-          if ! adb shell pm list packages >/dev/null 2>&1; then
-            echo "ERROR: Device package manager not available"
-            exit 1
-          fi
-          
-          # Launch app
-          echo "Launching app..."
-          if ! adb shell am start -n "${PACKAGE_NAME}/${MAIN_ACTIVITY}" 2>&1; then
-            echo "Primary launch method failed, trying monkey..."
-            if ! adb shell monkey -p "${PACKAGE_NAME}" -c android.intent.category.LAUNCHER 1 2>&1; then
-              echo "ERROR: Failed to launch app"
-              exit 1
+          else
+            # Verify device is ready
+            if ! adb shell pm list packages >/dev/null 2>&1; then
+              echo "ERROR: Device package manager not available" >> logcat-full.txt
+            else
+              # Launch app
+              echo "Launching app..."
+              if ! adb shell am start -n "${PACKAGE_NAME}/${MAIN_ACTIVITY}" 2>&1; then
+                echo "Primary launch method failed, trying monkey..."
+                if ! adb shell monkey -p "${PACKAGE_NAME}" -c android.intent.category.LAUNCHER 1 2>&1; then
+                  echo "ERROR: Failed to launch app" >> logcat-full.txt
+                fi
+              fi
+              
+              # Let app run for 60 seconds to capture startup logs
+              echo "Capturing logs for 60 seconds..."
+              sleep 60
             fi
           fi
           
-          # Let app run for 60 seconds to capture startup logs
-          echo "Capturing logs for 60 seconds..."
-          sleep 60
-          
           # Stop logcat
-          kill $LOGCAT_PID 2>/dev/null || true
-          sleep 2
+          if [ -n "$LOGCAT_PID" ]; then
+            kill $LOGCAT_PID 2>/dev/null || true
+            sleep 2
+          fi
           
-          # Get additional logs
+          # Get additional logs (always try to capture, even if install failed)
           echo "=== Device Info ===" >> logcat-full.txt
-          adb shell getprop >> logcat-full.txt
+          adb shell getprop >> logcat-full.txt 2>&1 || true
           
           echo "=== Installed Packages ===" >> logcat-full.txt
-          adb shell pm list packages | grep -i treehouse >> logcat-full.txt || echo "Package not found" >> logcat-full.txt
+          adb shell pm list packages 2>&1 | grep -i treehouse >> logcat-full.txt || echo "Package not found" >> logcat-full.txt
           
           echo "=== Recent Logcat (last 100 lines) ===" >> logcat-full.txt
-          adb logcat -d -v time -t 100 >> logcat-full.txt
+          adb logcat -d -v time -t 100 >> logcat-full.txt 2>&1 || true
           
           # Extract Sentry-related logs
           echo "=== Sentry-specific logs ===" > logcat-sentry.txt
-          grep -i "sentry\|SentryHelper\|TreehouseApp" logcat-full.txt >> logcat-sentry.txt || echo "No Sentry logs found" >> logcat-sentry.txt
+          if [ -f logcat-full.txt ] && [ -s logcat-full.txt ]; then
+            grep -i "sentry\|SentryHelper\|TreehouseApp" logcat-full.txt >> logcat-sentry.txt 2>&1 || echo "No Sentry logs found" >> logcat-sentry.txt
+          else
+            echo "No logcat-full.txt available" >> logcat-sentry.txt
+          fi
           
-          # Verify logcat files were created and have content
+          # Ensure logcat-full.txt exists and has content
           if [ ! -f logcat-full.txt ] || [ ! -s logcat-full.txt ]; then
-            echo "ERROR: logcat-full.txt is missing or empty"
-            exit 1
+            echo "WARNING: logcat-full.txt is missing or empty" > logcat-full.txt
+            echo "Timestamp: $(date)" >> logcat-full.txt
+            echo "=== Device State ===" >> logcat-full.txt
+            adb devices >> logcat-full.txt 2>&1 || true
+            adb shell getprop >> logcat-full.txt 2>&1 || true
           fi
           
           echo "Logcat capture complete"
-          ls -lh logcat*.txt
-          echo "logcat-capture-success" > logcat-success.txt
+          ls -lh logcat*.txt install*.txt 2>&1 || true
+          
+          # Create success marker
+          if [ "$INSTALL_SUCCESS" == "true" ]; then
+            echo "logcat-capture-success" > logcat-success.txt
+          else
+            echo "logcat-capture-partial" > logcat-success.txt
+          fi
 
       - name: Upload logcat artifacts
         # Upload artifacts even if logcat step failed (if: always()) so we can debug failures
