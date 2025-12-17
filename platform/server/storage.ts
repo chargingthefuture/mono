@@ -2111,13 +2111,14 @@ export class DatabaseStorage implements IStorage {
     
     try {
       // Get mood checks for current week (using date field, not createdAt)
+      // Use formatDate to avoid timezone issues (toISOString converts to UTC which can shift dates)
       const currentWeekMoodChecks = await db
         .select()
         .from(gentlepulseMoodChecks)
         .where(
           and(
-            gte(gentlepulseMoodChecks.date, currentWeekStart.toISOString().split('T')[0]),
-            lte(gentlepulseMoodChecks.date, currentWeekEnd.toISOString().split('T')[0])
+            gte(gentlepulseMoodChecks.date, this.formatDate(currentWeekStart)),
+            lte(gentlepulseMoodChecks.date, this.formatDate(currentWeekEnd))
           )
         );
       
@@ -2127,8 +2128,8 @@ export class DatabaseStorage implements IStorage {
         .from(gentlepulseMoodChecks)
         .where(
           and(
-            gte(gentlepulseMoodChecks.date, previousWeekStart.toISOString().split('T')[0]),
-            lte(gentlepulseMoodChecks.date, previousWeekEnd.toISOString().split('T')[0])
+            gte(gentlepulseMoodChecks.date, this.formatDate(previousWeekStart)),
+            lte(gentlepulseMoodChecks.date, this.formatDate(previousWeekEnd))
           )
         );
       
