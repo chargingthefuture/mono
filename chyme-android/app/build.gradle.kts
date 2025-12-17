@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace = "com.roshadgu.treehouse"
-    compileSdk = 30
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.roshadgu.treehouse"
         minSdk = 21
-        targetSdk = 30
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
