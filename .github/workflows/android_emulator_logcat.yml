@@ -60,7 +60,14 @@ jobs:
           $ANDROID_HOME/emulator/emulator -avd test_avd -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -netfast -no-snapshot -wipe-data -accel off -no-metrics &
           # Wait for emulator to boot
           adb wait-for-device
+          echo "Waiting for boot to complete..."
           adb shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 1; done;'
+          echo "Boot completed, waiting for package manager to be ready..."
+          # Wait for package manager to be ready (can query packages)
+          timeout 300 bash -c 'until adb shell pm list packages >/dev/null 2>&1; do echo "Waiting for package manager..."; sleep 2; done' || true
+          # Additional wait to ensure services are fully initialized
+          sleep 10
+          echo "Emulator is ready"
 
       - name: Install APK on emulator
         working-directory: chyme-android
@@ -86,18 +93,40 @@ jobs:
             exit 1
           fi
 
+          # Verify package manager is ready by checking if we can query packages
+          echo "Checking package manager readiness..."
+          for i in {1..30}; do
+            if adb shell pm list packages >/dev/null 2>&1; then
+              echo "Package manager is ready"
+              break
+            fi
+            if [ $i -eq 30 ]; then
+              echo "Warning: Package manager check failed, but proceeding anyway"
+            else
+              echo "Waiting for package manager... ($i/30)"
+              sleep 2
+            fi
+          done
+
           # Small sanity check command
           adb shell echo "device is alive"
 
-          # Retry install a few times in case of transient 'Broken pipe'
-          for i in 1 2 3; do
+          # Retry install a few times in case of transient errors
+          for i in 1 2 3 4 5; do
             echo "adb install attempt #$i…"
-            if adb install -r "$APK_PATH"; then
+            if adb install -r "$APK_PATH" 2>&1; then
               echo "APK installed successfully"
               exit 0
             fi
-            echo "Install failed (attempt #$i). Sleeping before retry…"
-            sleep 15
+            echo "Install failed (attempt #$i). Waiting before retry…"
+            # Check if device is still connected
+            if ! adb devices | grep -q "device$"; then
+              echo "Device disconnected, waiting for reconnection..."
+              adb wait-for-device
+              sleep 5
+            else
+              sleep 10
+            fi
           done
 
           echo "Failed to install APK after multiple attempts"
