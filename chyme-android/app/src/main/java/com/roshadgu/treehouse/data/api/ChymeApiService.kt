@@ -10,6 +10,9 @@ interface ChymeApiService {
     @POST("/api/chyme/validate-mobile-code")
     suspend fun validateMobileCode(@Body request: ValidateMobileCodeRequest): Response<ValidateMobileCodeResponse>
     
+    @POST("/api/chyme/validate-otp")
+    suspend fun validateOTP(@Body request: ValidateOTPRequest): Response<ValidateOTPResponse>
+    
     // Room endpoints
     @GET("/api/chyme/rooms")
     suspend fun getRooms(
