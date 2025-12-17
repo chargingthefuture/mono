@@ -8,7 +8,7 @@ import androidx.compose.material.Surface
 import androidx.compose.runtime.*
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.roshadgu.treehouse.auth.OTPAuthManager
-import com.roshadgu.treehouse.components.HomeActivity
+import com.roshadgu.treehouse.components.homeScreen
 import com.roshadgu.treehouse.ui.screen.SignInScreen
 import com.roshadgu.treehouse.ui.theme.TreehouseTheme
 import com.roshadgu.treehouse.ui.viewmodel.AuthViewModel
@@ -40,7 +40,7 @@ fun MainScreen(authManager: OTPAuthManager) {
     val authViewModel: AuthViewModel = viewModel()
     var isAuthenticated by remember { mutableStateOf(false) }
     
-    // Check authentication status
+    // Observe authentication status from authManager (source of truth)
     LaunchedEffect(Unit) {
         authManager.isAuthenticated.collect { authenticated ->
             isAuthenticated = authenticated
@@ -49,12 +49,13 @@ fun MainScreen(authManager: OTPAuthManager) {
     
     Surface(color = MaterialTheme.colors.background) {
         if (isAuthenticated) {
-            HomeActivity()
+            homeScreen()
         } else {
             SignInScreen(
                 viewModel = authViewModel,
                 onSignInSuccess = {
-                    isAuthenticated = true
+                    // Token is already stored in DataStore by validateOTP,
+                    // so the Flow will automatically update isAuthenticated
                 }
             )
         }
