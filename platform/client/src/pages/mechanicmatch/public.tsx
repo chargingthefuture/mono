@@ -100,7 +100,7 @@ export default function PublicMechanicMatchProfile() {
   return (
     <div className="p-4 sm:p-6 md:p-8 space-y-6 sm:space-y-8">
       <div>
-        <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold mb-2">MechanicMatch Profile</h1>
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-semibold mb-2">Public Profile</h1>
         <p className="text-muted-foreground text-sm sm:text-base">Public profile</p>
         <div className="mt-4 space-y-2">
           <label className="text-sm font-medium">Public MechanicMatch Link</label>
