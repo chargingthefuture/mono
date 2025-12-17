@@ -7,8 +7,8 @@ import retrofit2.http.*
 interface ChymeApiService {
     
     // Authentication endpoints
-    @POST("/api/chyme/validate-otp")
-    suspend fun validateOTP(@Body request: ValidateOTPRequest): Response<ValidateOTPResponse>
+    @POST("/api/chyme/validate-mobile-code")
+    suspend fun validateMobileCode(@Body request: ValidateMobileCodeRequest): Response<ValidateMobileCodeResponse>
     
     // Room endpoints
     @GET("/api/chyme/rooms")

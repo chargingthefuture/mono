@@ -90,7 +90,7 @@ dependencies {
     implementation("androidx.compose.ui:ui-tooling:1.5.4")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.3.1")
     implementation("androidx.activity:activity-compose:1.8.2")
-    implementation("androidx.constraintlayout:constraintlayout-compose:1.0.0-alpha03")
+    implementation("androidx.constraintlayout:constraintlayout-compose:1.0.1")
     
     // Networking
     implementation("com.squareup.retrofit2:retrofit:2.9.0")

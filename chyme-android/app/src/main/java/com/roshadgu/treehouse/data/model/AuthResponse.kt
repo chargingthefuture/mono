@@ -25,6 +25,20 @@ data class ValidateOTPResponse(
     val user: ChymeUser
 )
 
+data class ValidateMobileCodeRequest(
+    @SerializedName("code")
+    val code: String
+)
+
+data class ValidateMobileCodeResponse(
+    @SerializedName("token")
+    val token: String,
+    @SerializedName("expiresAt")
+    val expiresAt: String,
+    @SerializedName("user")
+    val user: ChymeUser
+)
+
 data class ApiError(
     @SerializedName("message")
     val message: String

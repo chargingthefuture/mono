@@ -81,9 +81,9 @@ export default function ChymeDashboard() {
         queryKey="/api/chyme/announcements"
       />
 
-      {/* OTP Generation Card for Android App */}
+      {/* Mobile Auth Card for Android App */}
       {user && (user.isApproved || user.isAdmin) && (
-        <OTPGenerationCard />
+        <MobileAuthCard />
       )}
 
       <ExternalLinkDialog />
@@ -91,44 +91,54 @@ export default function ChymeDashboard() {
   );
 }
 
-function OTPGenerationCard() {
+function MobileAuthCard() {
   const { toast } = useToast();
-  const [otp, setOtp] = useState<string | null>(null);
+  const [deepLink, setDeepLink] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [expiresAt, setExpiresAt] = useState<Date | null>(null);
 
-  const generateOTPMutation = useMutation({
+  const generateAuthMutation = useMutation({
     mutationFn: async () => {
-      const response = await apiRequest("POST", "/api/chyme/generate-otp");
-      const data = await response.json() as { otp: string; expiresAt: string };
+      const response = await apiRequest("POST", "/api/chyme/generate-mobile-token");
+      const data = await response.json() as { code: string; deepLink: string; expiresAt: string };
       return data;
     },
-    onSuccess: (data: { otp: string; expiresAt: string }) => {
-      setOtp(data.otp);
+    onSuccess: (data: { code: string; deepLink: string; expiresAt: string }) => {
+      setDeepLink(data.deepLink);
       setExpiresAt(new Date(data.expiresAt));
       toast({
-        title: "OTP Generated",
-        description: "Use this code to sign in to the Android app. It expires in 5 minutes.",
+        title: "Auth Link Generated",
+        description: "Click the button below to open the Android app and sign in. Link expires in 10 minutes.",
       });
     },
     onError: (error: any) => {
       toast({
         title: "Error",
-        description: error.message || "Failed to generate OTP",
+        description: error.message || "Failed to generate auth link",
         variant: "destructive",
       });
     },
   });
 
   const handleCopy = async () => {
-    if (otp) {
-      await navigator.clipboard.writeText(otp);
+    if (deepLink) {
+      await navigator.clipboard.writeText(deepLink);
       setCopied(true);
       toast({
         title: "Copied!",
-        description: "OTP code copied to clipboard",
+        description: "Deep link copied to clipboard",
       });
       setTimeout(() => setCopied(false), 2000);
+    }
+  };
+
+  const handleOpenDeepLink = () => {
+    if (deepLink) {
+      window.location.href = deepLink;
+      toast({
+        title: "Opening app...",
+        description: "If the app doesn't open, make sure it's installed on your device.",
+      });
     }
   };
 
@@ -147,51 +157,63 @@ function OTPGenerationCard() {
       <CardHeader>
         <div className="flex items-center gap-2">
           <Smartphone className="w-5 h-5" />
-          <CardTitle>Android App Access</CardTitle>
+          <CardTitle>Android App Sign In</CardTitle>
         </div>
         <CardDescription>
-          Generate a one-time passcode to sign in to the Chyme Android app
+          Generate a sign-in link to authenticate with the Chyme Android app
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {!otp ? (
+        {!deepLink ? (
           <Button
-            onClick={() => generateOTPMutation.mutate()}
-            disabled={generateOTPMutation.isPending}
+            onClick={() => generateAuthMutation.mutate()}
+            disabled={generateAuthMutation.isPending}
             className="w-full"
           >
-            {generateOTPMutation.isPending ? "Generating..." : "Generate OTP Code"}
+            {generateAuthMutation.isPending ? "Generating..." : "Generate Sign-In Link"}
           </Button>
         ) : (
           <div className="space-y-4">
-            <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+            <div className="p-4 bg-muted rounded-lg space-y-3">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Your OTP Code</p>
-                <p className="text-2xl font-mono font-bold tracking-wider">{otp}</p>
+                <p className="text-sm text-muted-foreground mb-2">Sign-In Link</p>
+                <div className="flex items-center gap-2">
+                  <code className="flex-1 font-mono text-xs bg-background px-2 py-1.5 rounded break-all">
+                    {deepLink}
+                  </code>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={handleCopy}
+                    className="flex-shrink-0"
+                  >
+                    {copied ? (
+                      <Check className="w-4 h-4" />
+                    ) : (
+                      <Copy className="w-4 h-4" />
+                    )}
+                  </Button>
+                </div>
                 {expiresAt && (
                   <p className="text-xs text-muted-foreground mt-2">
                     Expires in: {getTimeRemaining()}
                   </p>
                 )}
               </div>
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={handleCopy}
-                className="ml-4"
-              >
-                {copied ? (
-                  <Check className="w-4 h-4" />
-                ) : (
-                  <Copy className="w-4 h-4" />
-                )}
-              </Button>
             </div>
+            <Button
+              onClick={handleOpenDeepLink}
+              className="w-full"
+              size="lg"
+            >
+              <Smartphone className="w-4 h-4 mr-2" />
+              Open in Android App
+            </Button>
             <div className="flex gap-2">
               <Button
                 variant="outline"
                 onClick={() => {
-                  setOtp(null);
+                  setDeepLink(null);
                   setExpiresAt(null);
                 }}
                 className="flex-1"
@@ -199,15 +221,15 @@ function OTPGenerationCard() {
                 Clear
               </Button>
               <Button
-                onClick={() => generateOTPMutation.mutate()}
-                disabled={generateOTPMutation.isPending}
+                onClick={() => generateAuthMutation.mutate()}
+                disabled={generateAuthMutation.isPending}
                 className="flex-1"
               >
                 Generate New
               </Button>
             </div>
             <p className="text-xs text-muted-foreground text-center">
-              Enter this 6-digit code in the Android app to sign in. Only approved users can access the app.
+              Click "Open in Android App" to automatically sign in. Make sure the Chyme app is installed on your Android device.
             </p>
           </div>
         )}

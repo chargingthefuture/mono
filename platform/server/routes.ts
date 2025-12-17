@@ -5947,6 +5947,156 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   }));
 
+  // Generate mobile auth code for deep link authentication
+  app.post('/api/chyme/generate-mobile-token', isAuthenticated, asyncHandler(async (req: any, res) => {
+    const userId = req.auth?.userId;
+    
+    if (!userId) {
+      return res.status(401).json({ message: "Unauthorized" });
+    }
+    
+    // Verify user is approved
+    const user = await withDatabaseErrorHandling(
+      () => storage.getUser(userId),
+      'getUserForMobileAuth'
+    );
+    
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    if (!user.isApproved && !user.isAdmin) {
+      return res.status(403).json({ message: "User is not approved" });
+    }
+    
+    // Generate a secure 8-character alphanumeric code
+    const code = randomBytes(4).toString('hex').toUpperCase(); // 8 characters
+    const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+    
+    // Store code in database (reuse OTP code storage)
+    await withDatabaseErrorHandling(
+      () => storage.createOTPCode(userId, code, expiresAt),
+      'createMobileAuthCode'
+    );
+    
+    // Clean up expired codes
+    await withDatabaseErrorHandling(
+      () => storage.deleteExpiredOTPCodes(),
+      'deleteExpiredMobileAuthCodes'
+    );
+    
+    // Generate deep link
+    const deepLink = `chyme://auth?code=${code}`;
+    
+    console.log(`[Mobile Auth] Generated code for user ${userId}, expires at ${expiresAt.toISOString()}`);
+    
+    res.json({
+      code,
+      deepLink,
+      expiresAt: expiresAt.toISOString(),
+      expiresIn: 600 // seconds
+    });
+  }));
+
+  // Validate mobile auth code and return auth token
+  app.post('/api/chyme/validate-mobile-code', asyncHandler(async (req: any, res) => {
+    let { code } = req.body;
+    
+    // Normalize code: convert to string, trim whitespace, uppercase
+    if (code != null) {
+      code = String(code).trim().toUpperCase();
+    }
+    
+    if (!code || code.length !== 8 || !/^[A-F0-9]{8}$/.test(code)) {
+      return res.status(400).json({ message: "Invalid code format" });
+    }
+    
+    // Find code in database
+    const codeRecord = await withDatabaseErrorHandling(
+      () => storage.findOTPCodeByCode(code),
+      'findMobileAuthCodeByCode'
+    );
+    
+    if (!codeRecord) {
+      console.log(`[Mobile Auth] No matching code found. Received: "${code}"`);
+      return res.status(400).json({ message: "Invalid or expired code" });
+    }
+    
+    // Check if code has expired
+    const now = Date.now();
+    const expiresAt = codeRecord.expiresAt.getTime();
+    if (expiresAt < now) {
+      // Delete expired code
+      await withDatabaseErrorHandling(
+        () => storage.deleteOTPCode(codeRecord.userId),
+        'deleteExpiredMobileAuthCode'
+      );
+      console.log(`[Mobile Auth] Code matched but expired for user ${codeRecord.userId}`);
+      return res.status(400).json({ message: "Code has expired" });
+    }
+    
+    const userId = codeRecord.userId;
+    console.log(`[Mobile Auth] Code matched successfully for user ${userId}`);
+    
+    // Verify user is still approved
+    const user = await withDatabaseErrorHandling(
+      () => storage.getUser(userId!),
+      'getUserForMobileAuthValidation'
+    );
+    
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    
+    if (!user.isApproved && !user.isAdmin) {
+      // Delete code if user is not approved
+      await withDatabaseErrorHandling(
+        () => storage.deleteOTPCode(userId),
+        'deleteMobileAuthCodeForUnapprovedUser'
+      );
+      return res.status(403).json({ message: "User is not approved" });
+    }
+    
+    // Generate auth token (30 days)
+    const token = randomBytes(32).toString('hex');
+    const tokenExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+    
+    // Store token in database
+    await withDatabaseErrorHandling(
+      () => storage.createAuthToken(token, userId, tokenExpiresAt),
+      'createAuthTokenFromMobileCode'
+    );
+    
+    // Clean up expired tokens
+    await withDatabaseErrorHandling(
+      () => storage.deleteExpiredAuthTokens(),
+      'deleteExpiredAuthTokens'
+    );
+    
+    // Remove used code
+    await withDatabaseErrorHandling(
+      () => storage.deleteOTPCode(userId),
+      'deleteUsedMobileAuthCode'
+    );
+    
+    // Return token and user info
+    res.json({
+      token,
+      expiresAt: tokenExpiresAt.toISOString(),
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        profileImageUrl: user.profileImageUrl,
+        quoraProfileUrl: user.quoraProfileUrl,
+        isAdmin: user.isAdmin,
+        isVerified: user.isVerified,
+        isApproved: user.isApproved
+      }
+    });
+  }));
+
   // ========================================
   // CHYME ROOMS ROUTES (Database-backed)
   // ========================================
