@@ -101,7 +101,8 @@ jobs:
               break
             fi
             if [ $i -eq 30 ]; then
-              echo "Warning: Package manager check failed, but proceeding anyway"
+              echo "Package manager still not ready after $i checks"
+              exit 1
             else
               echo "Waiting for package manager... ($i/30)"
               sleep 2
@@ -111,25 +112,37 @@ jobs:
           # Small sanity check command
           adb shell echo "device is alive"
 
-          # Retry install a few times in case of transient errors
+          REMOTE_APK="/data/local/tmp/app-debug.apk"
+
+          # Retry push + pm install a few times in case of transient errors
           for i in 1 2 3 4 5; do
-            echo "adb install attempt #$i…"
-            if adb install -r "$APK_PATH" 2>&1; then
-              echo "APK installed successfully"
-              exit 0
-            fi
-            echo "Install failed (attempt #$i). Waiting before retry…"
-            # Check if device is still connected
-            if ! adb devices | grep -q "device$"; then
-              echo "Device disconnected, waiting for reconnection..."
+            echo "Install attempt #$i (push + pm install)…"
+
+            # Re-check that device is present before each attempt
+            if ! adb devices | awk '$1 ~ /^emulator-/ && $2 == "device"' | grep -q .; then
+              echo "Emulator not listed as 'device' before attempt #$i, waiting for device..."
               adb wait-for-device
               sleep 5
-            else
-              sleep 10
             fi
+
+            echo "Pushing APK to device..."
+            if ! adb push "$APK_PATH" "$REMOTE_APK"; then
+              echo "adb push failed on attempt #$i"
+              sleep 10
+              continue
+            fi
+
+            echo "Running pm install..."
+            if adb shell pm install -r "$REMOTE_APK"; then
+              echo "APK installed successfully via pm install"
+              exit 0
+            fi
+
+            echo "Install failed (attempt #$i). Waiting before retry…"
+            sleep 10
           done
 
-          echo "Failed to install APK after multiple attempts"
+          echo "Failed to install APK after multiple push + pm install attempts"
           exit 1
 
       - name: Clear previous logcat
