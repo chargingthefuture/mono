@@ -1,6 +1,7 @@
 package com.roshadgu.treehouse
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.compose.setContent
 import androidx.appcompat.app.AppCompatActivity
 import androidx.compose.material.MaterialTheme
@@ -12,6 +13,8 @@ import com.roshadgu.treehouse.components.homeScreen
 import com.roshadgu.treehouse.ui.screen.SignInScreen
 import com.roshadgu.treehouse.ui.theme.TreehouseTheme
 import com.roshadgu.treehouse.ui.viewmodel.AuthViewModel
+import com.roshadgu.treehouse.utils.SentryHelper
+import io.sentry.SentryLevel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -20,11 +23,35 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         
+        // Initialize Sentry first for error tracking
+        try {
+            SentryHelper.init(this)
+            SentryHelper.captureMessage(
+                message = "MainActivity created",
+                level = SentryLevel.INFO,
+                tags = mapOf("activity" to "main")
+            )
+            Log.d("MainActivity", "Sentry initialized")
+        } catch (e: Exception) {
+            Log.e("MainActivity", "Failed to initialize Sentry", e)
+        }
+        
         val authManager = OTPAuthManager(this)
         
         // Load stored auth token in background
         CoroutineScope(Dispatchers.IO).launch {
-            authManager.loadStoredToken()
+            try {
+                authManager.loadStoredToken()
+            } catch (e: Exception) {
+                SentryHelper.captureException(
+                    throwable = e,
+                    level = SentryLevel.ERROR,
+                    tags = mapOf("activity" to "main_init"),
+                    extra = mapOf("error_type" to e.javaClass.simpleName),
+                    message = "Failed to load stored token in MainActivity onCreate"
+                )
+                Log.e("MainActivity", "Failed to load stored token", e)
+            }
         }
         
         setContent {
@@ -32,6 +59,24 @@ class MainActivity : AppCompatActivity() {
                 MainScreen(authManager)
             }
         }
+    }
+    
+    override fun onResume() {
+        super.onResume()
+        SentryHelper.addBreadcrumb(
+            message = "MainActivity resumed",
+            category = "activity",
+            level = SentryLevel.DEBUG
+        )
+    }
+    
+    override fun onPause() {
+        super.onPause()
+        SentryHelper.addBreadcrumb(
+            message = "MainActivity paused",
+            category = "activity",
+            level = SentryLevel.DEBUG
+        )
     }
 }
 

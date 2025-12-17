@@ -1,5 +1,8 @@
 package com.roshadgu.treehouse.data.api
 
+import android.util.Log
+import com.roshadgu.treehouse.utils.SentryHelper
+import io.sentry.SentryLevel
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
@@ -14,19 +17,76 @@ object ApiClient {
     private var authToken: String? = null
     
     fun setAuthToken(token: String?) {
+        val hadToken = authToken != null
         authToken = token
+        
+        SentryHelper.addBreadcrumb(
+            message = "Auth token updated in ApiClient",
+            category = "api",
+            level = SentryLevel.DEBUG,
+            data = mapOf(
+                "had_token" to hadToken.toString(),
+                "has_token" to (token != null).toString(),
+                "token_length" to (token?.length?.toString() ?: "0")
+            )
+        )
+        
+        Log.d("ApiClient", "Auth token ${if (token != null) "set" else "cleared"}")
     }
     
     private val authInterceptor = Interceptor { chain ->
         val originalRequest = chain.request()
         val newRequest = if (authToken != null) {
+            SentryHelper.addBreadcrumb(
+                message = "Adding auth token to request",
+                category = "api",
+                level = SentryLevel.DEBUG,
+                data = mapOf(
+                    "url" to originalRequest.url.toString(),
+                    "method" to originalRequest.method
+                )
+            )
+            
             originalRequest.newBuilder()
                 .header("Authorization", "Bearer $authToken")
                 .build()
         } else {
             originalRequest
         }
-        chain.proceed(newRequest)
+        
+        try {
+            val response = chain.proceed(newRequest)
+            
+            // Log response for debugging
+            if (!response.isSuccessful) {
+                SentryHelper.addBreadcrumb(
+                    message = "API request failed",
+                    category = "api",
+                    level = SentryLevel.WARNING,
+                    data = mapOf(
+                        "url" to newRequest.url.toString(),
+                        "method" to newRequest.method,
+                        "status_code" to response.code.toString(),
+                        "message" to (response.message ?: "null")
+                    )
+                )
+            }
+            
+            response
+        } catch (e: Exception) {
+            SentryHelper.captureException(
+                throwable = e,
+                level = SentryLevel.ERROR,
+                tags = mapOf("api" to "request_error"),
+                extra = mapOf(
+                    "url" to newRequest.url.toString(),
+                    "method" to newRequest.method,
+                    "error_type" to e.javaClass.simpleName
+                ),
+                message = "Network request failed in auth interceptor"
+            )
+            throw e
+        }
     }
     
     private val loggingInterceptor = HttpLoggingInterceptor().apply {

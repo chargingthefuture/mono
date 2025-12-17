@@ -1,9 +1,12 @@
 package com.roshadgu.treehouse.ui.viewmodel
 
 import android.app.Application
+import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.roshadgu.treehouse.auth.OTPAuthManager
+import com.roshadgu.treehouse.utils.SentryHelper
+import io.sentry.SentryLevel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -23,47 +26,146 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
     
     init {
+        SentryHelper.addBreadcrumb(
+            message = "AuthViewModel initialized",
+            category = "viewmodel",
+            level = SentryLevel.DEBUG
+        )
+        
         // Load stored token on init
         viewModelScope.launch {
-            authManager.loadStoredToken()
-            val token = authManager.getAuthToken()
-            _uiState.value = _uiState.value.copy(isAuthenticated = token != null)
+            try {
+                SentryHelper.addBreadcrumb(
+                    message = "Loading stored token on ViewModel init",
+                    category = "viewmodel",
+                    level = SentryLevel.DEBUG
+                )
+                
+                authManager.loadStoredToken()
+                val token = authManager.getAuthToken()
+                val isAuthenticated = token != null
+                
+                _uiState.value = _uiState.value.copy(isAuthenticated = isAuthenticated)
+                
+                SentryHelper.addBreadcrumb(
+                    message = "Initial auth state determined",
+                    category = "viewmodel",
+                    level = SentryLevel.INFO,
+                    data = mapOf("is_authenticated" to isAuthenticated.toString())
+                )
+                
+                Log.d("AuthViewModel", "Initialized with authenticated state: $isAuthenticated")
+            } catch (e: Exception) {
+                SentryHelper.captureException(
+                    throwable = e,
+                    level = SentryLevel.ERROR,
+                    tags = mapOf("viewmodel" to "init_error"),
+                    extra = mapOf("error_type" to e.javaClass.simpleName),
+                    message = "Failed to load stored token in AuthViewModel init"
+                )
+                Log.e("AuthViewModel", "Failed to load stored token on init", e)
+            }
         }
     }
     
     fun validateOTP(otp: String) {
+        SentryHelper.addBreadcrumb(
+            message = "validateOTP called from ViewModel",
+            category = "viewmodel",
+            level = SentryLevel.INFO,
+            data = mapOf("otp_length" to otp.length.toString())
+        )
+        
         if (otp.length != 6) {
+            val errorMessage = "OTP must be 6 digits"
             _uiState.value = _uiState.value.copy(
-                errorMessage = "OTP must be 6 digits"
+                errorMessage = errorMessage
             )
+            
+            SentryHelper.captureMessage(
+                message = "OTP validation rejected: invalid length",
+                level = SentryLevel.WARNING,
+                tags = mapOf("otp_validation" to "invalid_length"),
+                extra = mapOf("otp_length" to otp.length)
+            )
+            
+            Log.w("AuthViewModel", "OTP validation rejected: length=${otp.length}")
             return
         }
         
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(
-                isLoading = true,
-                errorMessage = null
-            )
-            
-            val result = authManager.validateOTP(otp)
-            
-            result.fold(
-                onSuccess = {
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        isAuthenticated = true,
-                        errorMessage = null,
-                        otpCode = ""
-                    )
-                },
-                onFailure = { error ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        isAuthenticated = false,
-                        errorMessage = error.message ?: "Failed to validate OTP"
-                    )
-                }
-            )
+            try {
+                _uiState.value = _uiState.value.copy(
+                    isLoading = true,
+                    errorMessage = null
+                )
+                
+                SentryHelper.addBreadcrumb(
+                    message = "Starting OTP validation in ViewModel",
+                    category = "viewmodel",
+                    level = SentryLevel.DEBUG
+                )
+                
+                val result = authManager.validateOTP(otp)
+                
+                result.fold(
+                    onSuccess = { tokenResponse ->
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            isAuthenticated = true,
+                            errorMessage = null,
+                            otpCode = ""
+                        )
+                        
+                        SentryHelper.captureMessage(
+                            message = "OTP validation successful in ViewModel",
+                            level = SentryLevel.INFO,
+                            tags = mapOf("otp_validation" to "success"),
+                            extra = mapOf("user_id" to tokenResponse.user.id)
+                        )
+                        
+                        Log.i("AuthViewModel", "OTP validation successful")
+                    },
+                    onFailure = { error ->
+                        val errorMessage = error.message ?: "Failed to validate OTP"
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            isAuthenticated = false,
+                            errorMessage = errorMessage
+                        )
+                        
+                        SentryHelper.captureException(
+                            throwable = error,
+                            level = SentryLevel.ERROR,
+                            tags = mapOf("otp_validation" to "viewmodel_error"),
+                            extra = mapOf(
+                                "error_message" to errorMessage,
+                                "error_type" to error.javaClass.simpleName
+                            ),
+                            message = "OTP validation failed in ViewModel"
+                        )
+                        
+                        Log.e("AuthViewModel", "OTP validation failed: $errorMessage", error)
+                    }
+                )
+            } catch (e: Exception) {
+                val errorMessage = "Unexpected error during OTP validation: ${e.message}"
+                _uiState.value = _uiState.value.copy(
+                    isLoading = false,
+                    isAuthenticated = false,
+                    errorMessage = errorMessage
+                )
+                
+                SentryHelper.captureException(
+                    throwable = e,
+                    level = SentryLevel.ERROR,
+                    tags = mapOf("otp_validation" to "unexpected_error"),
+                    extra = mapOf("error_type" to e.javaClass.simpleName),
+                    message = "Unexpected error in validateOTP ViewModel"
+                )
+                
+                Log.e("AuthViewModel", "Unexpected error during OTP validation", e)
+            }
         }
     }
     
