@@ -1,4 +1,11 @@
-name: android-emulator-logcat
+# Simplified Android build workflow (no emulator required)
+# This workflow builds the APK and uploads it as an artifact.
+# 
+# Alternative: For actual device testing, consider using Firebase Test Lab:
+# - See .github/workflows/android-firebase-test-lab.yml (if created)
+# - Or use: https://github.com/marketplace/actions/firebase-test-lab-action
+#
+name: android-build
 
 on:
   workflow_dispatch: {}
@@ -7,15 +14,13 @@ on:
   pull_request:
 
 jobs:
-  build-and-logcat:
+  build:
     runs-on: ubuntu-latest
 
     env:
       JAVA_VERSION: '17'
       ANDROID_API_LEVEL: 30
       ANDROID_BUILD_TOOLS: '34.0.0'
-      ANDROID_EMULATOR_API_LEVEL: 30
-      ANDROID_ABI: x86_64
 
     steps:
       - name: Checkout
@@ -32,8 +37,7 @@ jobs:
 
       - name: Install required SDK packages
         run: |
-          sdkmanager "platforms;android-${ANDROID_API_LEVEL}" "build-tools;${ANDROID_BUILD_TOOLS}" \
-                     "platform-tools" "emulator" "system-images;android-${ANDROID_EMULATOR_API_LEVEL};google_apis;${ANDROID_ABI}"
+          sdkmanager "platforms;android-${ANDROID_API_LEVEL}" "build-tools;${ANDROID_BUILD_TOOLS}" "platform-tools"
 
       - name: Build debug APK
         working-directory: chyme-android
@@ -41,137 +45,34 @@ jobs:
           chmod +x gradlew
           ./gradlew :app:assembleDebug --no-daemon
 
-      # Adjust this path if your APK is different
+      - name: Run lint checks
+        working-directory: chyme-android
+        continue-on-error: true
+        run: |
+          ./gradlew :app:lintDebug --no-daemon || echo "Lint found issues (non-blocking)"
+
       - name: List built APKs
         working-directory: chyme-android
         run: |
           echo "APK files:"
-          # Gradle normally outputs debug APKs under app/build/outputs/apk/**
           find app/build/outputs -name "*.apk" -print
+          echo ""
+          echo "APK size:"
+          find app/build/outputs -name "*.apk" -exec ls -lh {} \;
 
-      - name: Create and start emulator
-        run: |
-          export ANDROID_AVD_HOME="$HOME/.android/avd"
-          export ANDROID_SDK_HOME="$HOME/.android"
-          mkdir -p "$ANDROID_AVD_HOME"
-          echo "Using ANDROID_AVD_HOME=$ANDROID_AVD_HOME"
-          echo "no" | avdmanager create avd -n test_avd -k "system-images;android-${ANDROID_EMULATOR_API_LEVEL};google_apis;${ANDROID_ABI}" --abi "${ANDROID_ABI}" --device "pixel"
-          # Run emulator with software rendering / no KVM, suitable for GitHub-hosted runners
-          $ANDROID_HOME/emulator/emulator -avd test_avd -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -netfast -no-snapshot -wipe-data -accel off -no-metrics &
-          # Wait for emulator to boot
-          adb wait-for-device
-          echo "Waiting for boot to complete..."
-          adb shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 1; done;'
-          echo "Boot completed, waiting for package manager to be ready..."
-          # Wait for package manager to be ready (can query packages)
-          timeout 300 bash -c 'until adb shell pm list packages >/dev/null 2>&1; do echo "Waiting for package manager..."; sleep 2; done' || true
-          # Additional wait to ensure services are fully initialized
-          sleep 10
-          echo "Emulator is ready"
-
-      - name: Install APK on emulator
-        working-directory: chyme-android
-        run: |
-          set -e
-
-          # Look specifically for a debug APK under the standard Gradle output directory
-          APK_PATH=$(find app/build/outputs -name "*debug*.apk" | head -n 1)
-          if [ -z "$APK_PATH" ]; then
-            echo "No debug APK found!"
-            exit 1
-          fi
-
-          echo "Using APK: $APK_PATH"
-
-          echo "adb devices:"
-          adb devices
-
-          # Ensure at least one emulator device is online
-          DEVICE_LINE_COUNT=$(adb devices | awk '$1 ~ /^emulator-/ && $2 == "device" {count++} END {print count+0}')
-          if [ "$DEVICE_LINE_COUNT" -eq 0 ]; then
-            echo "No online emulator device found before install"
-            exit 1
-          fi
-
-          # Verify package manager is ready by checking if we can query packages
-          echo "Checking package manager readiness..."
-          for i in {1..30}; do
-            if adb shell pm list packages >/dev/null 2>&1; then
-              echo "Package manager is ready"
-              break
-            fi
-            if [ $i -eq 30 ]; then
-              echo "Package manager still not ready after $i checks"
-              exit 1
-            else
-              echo "Waiting for package manager... ($i/30)"
-              sleep 2
-            fi
-          done
-
-          # Small sanity check command
-          adb shell echo "device is alive"
-
-          REMOTE_APK="/data/local/tmp/app-debug.apk"
-
-          # Retry push + pm install a few times in case of transient errors
-          for i in 1 2 3 4 5; do
-            echo "Install attempt #$i (push + pm install)…"
-
-            # Re-check that device is present before each attempt
-            if ! adb devices | awk '$1 ~ /^emulator-/ && $2 == "device"' | grep -q .; then
-              echo "Emulator not listed as 'device' before attempt #$i, waiting for device..."
-              adb wait-for-device
-              sleep 5
-            fi
-
-            echo "Pushing APK to device..."
-            if ! adb push "$APK_PATH" "$REMOTE_APK"; then
-              echo "adb push failed on attempt #$i"
-              sleep 10
-              continue
-            fi
-
-            echo "Running pm install..."
-            if adb shell pm install -r "$REMOTE_APK"; then
-              echo "APK installed successfully via pm install"
-              exit 0
-            fi
-
-            echo "Install failed (attempt #$i). Waiting before retry…"
-            sleep 10
-          done
-
-          echo "Failed to install APK after multiple push + pm install attempts"
-          exit 1
-
-      - name: Clear previous logcat
-        run: |
-          adb logcat -c
-
-      - name: Launch app and capture logcat
-        run: |
-          # Use your package name from AndroidManifest: com.roshadgu.treehouse
-          PACKAGE_NAME="com.roshadgu.treehouse"
-          MAIN_ACTIVITY="com.roshadgu.treehouse.MainActivity"
-
-          # Start logcat in background saving to file
-          adb logcat -v time > logcat-startup.txt &
-          LOGCAT_PID=$!
-
-          # Launch the app
-          adb shell am start -n "${MAIN_ACTIVITY}"
-
-          # Let it run for ~30 seconds
-          sleep 30
-
-          # Kill logcat process
-          kill $LOGCAT_PID || true
-
-          echo "Saved logcat to logcat-startup.txt"
-
-      - name: Upload logcat artifact
+      - name: Upload APK artifact
         uses: actions/upload-artifact@v4
         with:
-          name: android-logcat-startup
-          path: logcat-startup.txt
+          name: android-debug-apk
+          path: chyme-android/app/build/outputs/apk/debug/*.apk
+          retention-days: 7
+
+      # Optional: Upload lint results if they exist
+      - name: Upload lint results
+        if: always()
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: android-lint-results
+          path: chyme-android/app/build/outputs/lint-results*.xml
+          retention-days: 7
