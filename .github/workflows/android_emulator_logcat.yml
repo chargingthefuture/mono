@@ -65,14 +65,43 @@ jobs:
       - name: Install APK on emulator
         working-directory: chyme-android
         run: |
+          set -e
+
           # Look specifically for a debug APK under the standard Gradle output directory
           APK_PATH=$(find app/build/outputs -name "*debug*.apk" | head -n 1)
           if [ -z "$APK_PATH" ]; then
             echo "No debug APK found!"
             exit 1
           fi
-          echo "Installing APK: $APK_PATH"
-          adb install -r "$APK_PATH"
+
+          echo "Using APK: $APK_PATH"
+
+          echo "adb devices:"
+          adb devices
+
+          # Ensure at least one emulator device is online
+          DEVICE_LINE_COUNT=$(adb devices | awk '$1 ~ /^emulator-/ && $2 == "device" {count++} END {print count+0}')
+          if [ "$DEVICE_LINE_COUNT" -eq 0 ]; then
+            echo "No online emulator device found before install"
+            exit 1
+          fi
+
+          # Small sanity check command
+          adb shell echo "device is alive"
+
+          # Retry install a few times in case of transient 'Broken pipe'
+          for i in 1 2 3; do
+            echo "adb install attempt #$i…"
+            if adb install -r "$APK_PATH"; then
+              echo "APK installed successfully"
+              exit 0
+            fi
+            echo "Install failed (attempt #$i). Sleeping before retry…"
+            sleep 15
+          done
+
+          echo "Failed to install APK after multiple attempts"
+          exit 1
 
       - name: Clear previous logcat
         run: |

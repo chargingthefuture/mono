@@ -213,11 +213,8 @@ export default function Home() {
                   data-testid="button-manage-clerk-identity"
                 >
                   <ExternalLink className="w-4 h-4 mr-2" />
-                  Manage your name and login
+                  Manage your name and email
                 </Button>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Opens the sigin User Dashboard in a new tab to update your name and login information.
-                </p>
               </div>
             </div>
           </div>
