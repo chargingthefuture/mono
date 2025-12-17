@@ -1,0 +1,99 @@
+name: android-emulator-logcat
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  build-and-logcat:
+    runs-on: ubuntu-latest
+
+    env:
+      JAVA_VERSION: '17'
+      ANDROID_API_LEVEL: 30
+      ANDROID_BUILD_TOOLS: '34.0.0'
+      ANDROID_EMULATOR_API_LEVEL: 30
+      ANDROID_ABI: x86_64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install required SDK packages
+        run: |
+          sdkmanager "platforms;android-${ANDROID_API_LEVEL}" "build-tools;${ANDROID_BUILD_TOOLS}" \
+                     "platform-tools" "emulator" "system-images;android-${ANDROID_EMULATOR_API_LEVEL};google_apis;${ANDROID_ABI}"
+
+      - name: Build debug APK
+        working-directory: chyme-android
+        run: |
+          chmod +x gradlew
+          ./gradlew :app:assembleDebug --no-daemon
+
+      # Adjust this path if your APK is different
+      - name: List built APKs
+        working-directory: chyme-android
+        run: |
+          echo "APK files:"
+          find . -name "*.apk" -maxdepth 5 -print
+
+      - name: Create and start emulator
+        run: |
+          echo "no" | avdmanager create avd -n test_avd -k "system-images;android-${ANDROID_EMULATOR_API_LEVEL};google_apis;${ANDROID_ABI}" --abi "${ANDROID_ABI}" --device "pixel"
+          $ANDROID_HOME/emulator/emulator -avd test_avd -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -netfast &
+          # Wait for emulator to boot
+          adb wait-for-device
+          adb shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 1; done;'
+
+      - name: Install APK on emulator
+        working-directory: chyme-android
+        run: |
+          APK_PATH=$(find . -name "*debug*.apk" -maxdepth 5 | head -n 1)
+          if [ -z "$APK_PATH" ]; then
+            echo "No debug APK found!"
+            exit 1
+          fi
+          echo "Installing APK: $APK_PATH"
+          adb install -r "$APK_PATH"
+
+      - name: Clear previous logcat
+        run: |
+          adb logcat -c
+
+      - name: Launch app and capture logcat
+        run: |
+          # Use your package name from AndroidManifest: com.roshadgu.treehouse
+          PACKAGE_NAME="com.roshadgu.treehouse"
+          MAIN_ACTIVITY="com.roshadgu.treehouse.MainActivity"
+
+          # Start logcat in background saving to file
+          adb logcat -v time > logcat-startup.txt &
+          LOGCAT_PID=$!
+
+          # Launch the app
+          adb shell am start -n "${MAIN_ACTIVITY}"
+
+          # Let it run for ~30 seconds
+          sleep 30
+
+          # Kill logcat process
+          kill $LOGCAT_PID || true
+
+          echo "Saved logcat to logcat-startup.txt"
+
+      - name: Upload logcat artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-logcat-startup
+          path: logcat-startup.txt
