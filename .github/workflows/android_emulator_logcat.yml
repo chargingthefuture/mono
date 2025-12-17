@@ -46,7 +46,8 @@ jobs:
         working-directory: chyme-android
         run: |
           echo "APK files:"
-          find . -name "*.apk" -maxdepth 5 -print
+          # Gradle normally outputs debug APKs under app/build/outputs/apk/**
+          find app/build/outputs -name "*.apk" -print
 
       - name: Create and start emulator
         run: |
@@ -64,7 +65,8 @@ jobs:
       - name: Install APK on emulator
         working-directory: chyme-android
         run: |
-          APK_PATH=$(find . -name "*debug*.apk" -maxdepth 5 | head -n 1)
+          # Look specifically for a debug APK under the standard Gradle output directory
+          APK_PATH=$(find app/build/outputs -name "*debug*.apk" | head -n 1)
           if [ -z "$APK_PATH" ]; then
             echo "No debug APK found!"
             exit 1
