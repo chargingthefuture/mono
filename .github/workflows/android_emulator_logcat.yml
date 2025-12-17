@@ -49,9 +49,14 @@ jobs:
           find . -name "*.apk" -maxdepth 5 -print
 
       - name: Create and start emulator
+        env:
+          ANDROID_AVD_HOME: ${{ env.HOME }}/.android/avd
+          ANDROID_SDK_HOME: ${{ env.HOME }}/.android
         run: |
+          mkdir -p "$ANDROID_AVD_HOME"
+          echo "Using ANDROID_AVD_HOME=$ANDROID_AVD_HOME"
           echo "no" | avdmanager create avd -n test_avd -k "system-images;android-${ANDROID_EMULATOR_API_LEVEL};google_apis;${ANDROID_ABI}" --abi "${ANDROID_ABI}" --device "pixel"
-          $ANDROID_HOME/emulator/emulator -avd test_avd -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -netfast &
+          $ANDROID_HOME/emulator/emulator -avd test_avd -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -netfast -no-snapshot -wipe-data &
           # Wait for emulator to boot
           adb wait-for-device
           adb shell 'while [[ -z $(getprop sys.boot_completed) ]]; do sleep 1; done;'
