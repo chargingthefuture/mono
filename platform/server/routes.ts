@@ -5969,8 +5969,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(403).json({ message: "User is not approved" });
     }
     
-    // Generate a secure 8-character alphanumeric code
-    const code = randomBytes(4).toString('hex').toUpperCase(); // 8 characters
+    // Generate a secure 6-character alphanumeric code
+    const code = randomBytes(3).toString('hex').toUpperCase(); // 6 characters
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
     
     // Store code in database (reuse OTP code storage)
@@ -6007,7 +6007,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       code = String(code).trim().toUpperCase();
     }
     
-    if (!code || code.length !== 8 || !/^[A-F0-9]{8}$/.test(code)) {
+    if (!code || code.length !== 6 || !/^[A-F0-9]{6}$/.test(code)) {
       return res.status(400).json({ message: "Invalid code format" });
     }
     
