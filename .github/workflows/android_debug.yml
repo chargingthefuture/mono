@@ -1,0 +1,241 @@
+# Android Debug Build with Logcat Capture
+# 
+# Purpose: Build debug APK, test it, and capture logcat to debug Sentry issues
+# 
+# This workflow:
+# 1. Builds a debug APK (unsigned, for testing)
+# 2. Uses Firebase Test Lab to install and run the app on real devices
+# 3. Captures logcat output automatically (to debug why Sentry isn't receiving logs)
+# 4. Provides logs and screenshots as artifacts
+#
+# Difference from android_release.yml:
+# - android_release.yml: Builds SIGNED release APK for production deployment
+# - This workflow: Builds DEBUG APK for testing/debugging (captures logcat)
+#
+name: android_debug
+
+on:
+  workflow_dispatch: {}
+  push:
+    branches: [ main ]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    env:
+      JAVA_VERSION: '17'
+      ANDROID_API_LEVEL: 30
+      ANDROID_BUILD_TOOLS: '34.0.0'
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ env.JAVA_VERSION }}
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install required SDK packages
+        run: |
+          sdkmanager "platforms;android-${ANDROID_API_LEVEL}" "build-tools;${ANDROID_BUILD_TOOLS}" "platform-tools"
+
+      - name: Build debug APK
+        working-directory: chyme-android
+        run: |
+          chmod +x gradlew
+          ./gradlew :app:assembleDebug --no-daemon
+
+      - name: List built APKs
+        working-directory: chyme-android
+        run: |
+          echo "APK files:"
+          find app/build/outputs -name "*.apk" -print
+          echo ""
+          echo "APK size:"
+          find app/build/outputs -name "*.apk" -exec ls -lh {} \;
+
+      - name: Upload APK artifact (for manual testing)
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-debug-apk
+          path: chyme-android/app/build/outputs/apk/debug/*.apk
+          retention-days: 7
+
+      # Option 1: Use Firebase Test Lab (recommended - captures logcat automatically)
+      # Requires Firebase project setup and secrets configured
+      # Set up: https://firebase.google.com/docs/test-lab
+      # 
+      # Required secrets:
+      #   - FIREBASE_SERVICE_ACCOUNT: JSON key from service account (create at https://console.cloud.google.com/iam-admin/serviceaccounts)
+      #   - FIREBASE_PROJECT_ID: Your Firebase project ID (found in Firebase Console > Project Settings)
+      #   - FIREBASE_RESULTS_BUCKET: (Optional) GCS bucket name for results
+      #     If not set, Firebase will use default bucket. To find/create bucket:
+      #     1. Go to https://console.cloud.google.com/storage
+      #     2. Look for bucket named "test-lab-*" or create one
+      #     3. Format: gs://your-bucket-name (or just bucket name without gs://)
+      - name: Install Google Cloud SDK
+        continue-on-error: true
+        run: |
+          echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+          curl https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key --keyring /usr/share/keyrings/cloud.google.gpg add -
+          sudo apt-get update && sudo apt-get install -y google-cloud-sdk
+
+      - name: Authenticate with Google Cloud
+        continue-on-error: true
+        uses: google-github-actions/auth@v2
+        with:
+          credentials_json: ${{ secrets.FIREBASE_SERVICE_ACCOUNT }}
+
+      - name: Run on Firebase Test Lab
+        continue-on-error: true
+        working-directory: chyme-android
+        run: |
+          APK_PATH=$(find app/build/outputs -name "*debug*.apk" | head -n 1)
+          PROJECT_ID="${{ secrets.FIREBASE_PROJECT_ID }}"
+          RESULTS_BUCKET="${{ secrets.FIREBASE_RESULTS_BUCKET }}"
+          
+          if [ -z "$PROJECT_ID" ] || [ -z "$APK_PATH" ]; then
+            echo "Firebase Test Lab not configured (missing PROJECT_ID or APK)"
+            exit 0
+          fi
+          
+          # If bucket not specified, use default or let Firebase create one
+          # Default bucket format: test-lab-<random-id>-<project-number>
+          if [ -z "$RESULTS_BUCKET" ]; then
+            echo "No results bucket specified, Firebase will use default bucket"
+            BUCKET_ARG=""
+          else
+            BUCKET_ARG="--results-bucket $RESULTS_BUCKET"
+          fi
+          
+          echo "Running APK on Firebase Test Lab..."
+          echo "Project: $PROJECT_ID"
+          echo "APK: $APK_PATH"
+          
+          gcloud firebase test android run \
+            --type instrumentation \
+            --app "$APK_PATH" \
+            --device model=Pixel2,version=30,locale=en,orientation=portrait \
+            --timeout 5m \
+            --project "$PROJECT_ID" \
+            $BUCKET_ARG \
+            --results-dir "test-results-$(date +%s)" || echo "Firebase Test Lab run completed with errors"
+          
+          echo ""
+          echo "Note: Test results will be available in Google Cloud Console"
+          echo "Visit: https://console.cloud.google.com/test-lab/histories"
+
+      # Option 2: Try emulator with different approach (fallback if Firebase not available)
+      - name: Create and start emulator (for logcat capture)
+        id: emulator
+        continue-on-error: true
+        run: |
+          export ANDROID_AVD_HOME="$HOME/.android/avd"
+          export ANDROID_SDK_HOME="$HOME/.android"
+          mkdir -p "$ANDROID_AVD_HOME"
+          
+          # Install emulator and system image
+          sdkmanager "emulator" "system-images;android-${ANDROID_API_LEVEL};google_apis;x86_64"
+          
+          echo "no" | avdmanager create avd -n test_avd -k "system-images;android-${ANDROID_API_LEVEL};google_apis;x86_64" --abi "x86_64" --device "pixel" || true
+          
+          # Start emulator in background
+          $ANDROID_HOME/emulator/emulator -avd test_avd -no-window -no-audio -no-boot-anim -gpu swiftshader_indirect -netfast -no-snapshot -wipe-data -accel off -no-metrics &
+          EMULATOR_PID=$!
+          echo "emulator_pid=$EMULATOR_PID" >> $GITHUB_OUTPUT
+          
+          # Wait for device
+          echo "Waiting for emulator..."
+          timeout 300 adb wait-for-device || exit 1
+          
+          # Wait for boot
+          echo "Waiting for boot..."
+          timeout 300 bash -c 'until adb shell getprop sys.boot_completed | grep -q 1; do sleep 2; done' || exit 1
+          
+          # Wait for package manager
+          echo "Waiting for package manager..."
+          timeout 60 bash -c 'until adb shell pm list packages >/dev/null 2>&1; do sleep 2; done' || exit 1
+          
+          echo "Emulator ready"
+
+      - name: Install APK and capture logcat
+        if: steps.emulator.outcome == 'success'
+        working-directory: chyme-android
+        continue-on-error: true
+        run: |
+          APK_PATH=$(find app/build/outputs -name "*debug*.apk" | head -n 1)
+          PACKAGE_NAME="com.roshadgu.treehouse"
+          MAIN_ACTIVITY="com.roshadgu.treehouse.MainActivity"
+          
+          echo "Installing APK: $APK_PATH"
+          
+          # Clear logcat first
+          adb logcat -c
+          
+          # Start logcat capture in background
+          adb logcat -v time *:E AndroidRuntime:E SentryHelper:D TreehouseApp:D MainActivity:D > logcat-full.txt &
+          LOGCAT_PID=$!
+          
+          # Install APK (with retries)
+          for i in 1 2 3; do
+            if adb install -r "$APK_PATH" 2>&1 | tee install-output.txt; then
+              echo "APK installed successfully"
+              break
+            fi
+            echo "Install attempt $i failed, retrying..."
+            sleep 5
+          done
+          
+          # Launch app
+          echo "Launching app..."
+          adb shell am start -n "${PACKAGE_NAME}/${MAIN_ACTIVITY}" || adb shell monkey -p "${PACKAGE_NAME}" -c android.intent.category.LAUNCHER 1
+          
+          # Let app run for 60 seconds to capture startup logs
+          echo "Capturing logs for 60 seconds..."
+          sleep 60
+          
+          # Stop logcat
+          kill $LOGCAT_PID 2>/dev/null || true
+          sleep 2
+          
+          # Get additional logs
+          echo "=== Device Info ===" >> logcat-full.txt
+          adb shell getprop >> logcat-full.txt
+          
+          echo "=== Installed Packages ===" >> logcat-full.txt
+          adb shell pm list packages | grep -i treehouse >> logcat-full.txt || echo "Package not found" >> logcat-full.txt
+          
+          echo "=== Recent Logcat (last 100 lines) ===" >> logcat-full.txt
+          adb logcat -d -v time -t 100 >> logcat-full.txt
+          
+          # Extract Sentry-related logs
+          echo "=== Sentry-specific logs ===" > logcat-sentry.txt
+          grep -i "sentry\|SentryHelper\|TreehouseApp" logcat-full.txt >> logcat-sentry.txt || echo "No Sentry logs found" >> logcat-sentry.txt
+          
+          echo "Logcat capture complete"
+          ls -lh logcat*.txt
+
+      - name: Upload logcat artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        continue-on-error: true
+        with:
+          name: android-logcat
+          path: |
+            chyme-android/logcat-*.txt
+            chyme-android/install-output.txt
+          retention-days: 7
+
+      - name: Cleanup emulator
+        if: always() && steps.emulator.outcome == 'success'
+        run: |
+          # Kill emulator
+          pkill -f emulator || true
+          adb emu kill || true
