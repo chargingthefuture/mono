@@ -502,5 +502,12 @@
     "statusCode": 200,
     "responseTime": 502,
     "error": null
+  },
+  {
+    "timestamp": "2025-12-17T17:41:49.567Z",
+    "status": "up",
+    "statusCode": 200,
+    "responseTime": 412,
+    "error": null
   }
 ]
