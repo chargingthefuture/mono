@@ -45,9 +45,12 @@ object SentryHelper {
                 }
             }
             
+            // Mark as initialized but don't call captureMessage yet - Sentry needs a moment to fully initialize
             isInitialized = true
             Log.d(TAG, "Sentry initialized successfully with DSN: $sentryDsn")
-            captureMessage("Sentry initialized", SentryLevel.INFO)
+            
+            // Use addBreadcrumb instead of captureMessage during init - it's safer
+            // Don't call captureMessage here as Sentry might not be fully ready yet
         } catch (e: Exception) {
             Log.e(TAG, "Failed to initialize Sentry", e)
         }

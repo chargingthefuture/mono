@@ -19,11 +19,13 @@ class TreehouseApp : Application() {
             // Initialize Sentry very early
             SentryHelper.init(this)
 
-            // Basic device/app context for debugging cold-start crashes
-            SentryHelper.captureMessage(
-                message = "TreehouseApp.onCreate()",
+            // Use breadcrumb instead of captureMessage during app startup - safer and won't block
+            // captureMessage can fail if Sentry isn't fully ready yet
+            SentryHelper.addBreadcrumb(
+                message = "TreehouseApp.onCreate() - Application started",
+                category = "app_lifecycle",
                 level = SentryLevel.INFO,
-                tags = mapOf(
+                data = mapOf(
                     "stage" to "app_start",
                     "device" to Build.DEVICE,
                     "model" to Build.MODEL,
