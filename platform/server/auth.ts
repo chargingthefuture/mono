@@ -434,23 +434,30 @@ export const validateOTPToken: RequestHandler = async (req: any, res, next) => {
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.substring(7);
     
-    // Check if token exists in our OTP token store
-    if ((global as any).authTokens) {
-      const tokenData = (global as any).authTokens.get(token);
-      if (tokenData) {
+    // Check if token exists in database
+    try {
+      const { storage } = await import('./storage');
+      const authToken = await storage.findAuthTokenByToken(token);
+      
+      if (authToken) {
         const now = Date.now();
-        if (tokenData.expiresAt > now) {
+        const expiresAt = authToken.expiresAt.getTime();
+        
+        if (expiresAt > now) {
           // Token is valid, attach user info to request
           req.auth = {
-            userId: tokenData.userId
+            userId: authToken.userId
           };
           req.otpAuth = true; // Flag to indicate this is OTP auth, not Clerk
           return next();
         } else {
           // Token expired, remove it
-          (global as any).authTokens.delete(token);
+          await storage.deleteAuthToken(token);
         }
       }
+    } catch (error) {
+      // If database lookup fails, continue to Clerk auth
+      console.error('Error validating OTP token:', error);
     }
   }
   // If no valid OTP token, continue to Clerk auth

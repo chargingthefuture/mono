@@ -1,6 +1,8 @@
 import { 
   users,
   loginEvents,
+  otpCodes,
+  authTokens,
   pricingTiers,
   payments,
   adminActionLogs,
@@ -57,6 +59,10 @@ import {
   type InsertNpsResponse,
   type User,
   type UpsertUser,
+  type OTPCode,
+  type InsertOTPCode,
+  type AuthToken,
+  type InsertAuthToken,
   type PricingTier,
   type InsertPricingTier,
   type Payment,
@@ -230,6 +236,18 @@ export interface IStorage {
   // User operations (IMPORTANT: mandatory for authentication)
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  
+  // OTP code methods
+  createOTPCode(userId: string, code: string, expiresAt: Date): Promise<OTPCode>;
+  findOTPCodeByCode(code: string): Promise<OTPCode | undefined>;
+  deleteOTPCode(userId: string): Promise<void>;
+  deleteExpiredOTPCodes(): Promise<void>;
+  
+  // Auth token methods
+  createAuthToken(token: string, userId: string, expiresAt: Date): Promise<AuthToken>;
+  findAuthTokenByToken(token: string): Promise<AuthToken | undefined>;
+  deleteAuthToken(token: string): Promise<void>;
+  deleteExpiredAuthTokens(): Promise<void>;
   getAllUsers(): Promise<User[]>;
   updateUserVerification(userId: string, isVerified: boolean): Promise<User>;
   updateUserApproval(userId: string, isApproved: boolean): Promise<User>;
@@ -981,6 +999,68 @@ export class DatabaseStorage implements IStorage {
   async getUser(id: string): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
     return user;
+  }
+
+  // OTP code methods
+  async createOTPCode(userId: string, code: string, expiresAt: Date): Promise<OTPCode> {
+    // Delete any existing OTP for this user first
+    await db.delete(otpCodes).where(eq(otpCodes.userId, userId));
+    
+    // Create new OTP
+    const [otp] = await db.insert(otpCodes).values({
+      userId,
+      code,
+      expiresAt,
+    }).returning();
+    
+    return otp;
+  }
+  
+  async findOTPCodeByCode(code: string): Promise<OTPCode | undefined> {
+    const [otp] = await db
+      .select()
+      .from(otpCodes)
+      .where(eq(otpCodes.code, code))
+      .limit(1);
+    return otp;
+  }
+  
+  async deleteOTPCode(userId: string): Promise<void> {
+    await db.delete(otpCodes).where(eq(otpCodes.userId, userId));
+  }
+  
+  async deleteExpiredOTPCodes(): Promise<void> {
+    const now = new Date();
+    await db.delete(otpCodes).where(lt(otpCodes.expiresAt, now));
+  }
+  
+  // Auth token methods
+  async createAuthToken(token: string, userId: string, expiresAt: Date): Promise<AuthToken> {
+    const [authToken] = await db.insert(authTokens).values({
+      token,
+      userId,
+      expiresAt,
+    }).returning();
+    
+    return authToken;
+  }
+  
+  async findAuthTokenByToken(token: string): Promise<AuthToken | undefined> {
+    const [authToken] = await db
+      .select()
+      .from(authTokens)
+      .where(eq(authTokens.token, token))
+      .limit(1);
+    return authToken;
+  }
+  
+  async deleteAuthToken(token: string): Promise<void> {
+    await db.delete(authTokens).where(eq(authTokens.token, token));
+  }
+  
+  async deleteExpiredAuthTokens(): Promise<void> {
+    const now = new Date();
+    await db.delete(authTokens).where(lt(authTokens.expiresAt, now));
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {

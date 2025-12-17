@@ -61,6 +61,44 @@ export const loginEvents = pgTable(
   ],
 );
 
+// OTP codes table - stores OTP codes for Android app authentication
+export const otpCodes = pgTable(
+  "otp_codes",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    userId: varchar("user_id")
+      .notNull()
+      .references(() => users.id),
+    code: varchar("code", { length: 6 }).notNull(),
+    expiresAt: timestamp("expires_at").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("IDX_otp_codes_user_id").on(table.userId),
+    index("IDX_otp_codes_code").on(table.code),
+    index("IDX_otp_codes_expires_at").on(table.expiresAt),
+  ],
+);
+
+// Auth tokens table - stores OTP-based auth tokens for Android app
+export const authTokens = pgTable(
+  "auth_tokens",
+  {
+    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+    token: varchar("token", { length: 64 }).notNull().unique(),
+    userId: varchar("user_id")
+      .notNull()
+      .references(() => users.id),
+    expiresAt: timestamp("expires_at").notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (table) => [
+    index("IDX_auth_tokens_token").on(table.token),
+    index("IDX_auth_tokens_user_id").on(table.userId),
+    index("IDX_auth_tokens_expires_at").on(table.expiresAt),
+  ],
+);
+
 export const usersRelations = relations(users, ({ many }) => ({
   paymentsReceived: many(payments),
   paymentsRecorded: many(payments, { relationName: "recordedBy" }),
@@ -69,6 +107,11 @@ export const usersRelations = relations(users, ({ many }) => ({
 
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
+
+export type OTPCode = typeof otpCodes.$inferSelect;
+export type InsertOTPCode = typeof otpCodes.$inferInsert;
+export type AuthToken = typeof authTokens.$inferSelect;
+export type InsertAuthToken = typeof authTokens.$inferInsert;
 
 // Pricing tiers table - tracks historical pricing levels
 export const pricingTiers = pgTable("pricing_tiers", {

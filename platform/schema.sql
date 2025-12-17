@@ -39,6 +39,32 @@ CREATE TABLE IF NOT EXISTS login_events (
 
 CREATE INDEX IF NOT EXISTS IDX_login_events_user_created_at ON login_events(user_id, created_at);
 
+-- OTP codes table - stores OTP codes for Android app authentication
+CREATE TABLE IF NOT EXISTS otp_codes (
+  id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id VARCHAR NOT NULL REFERENCES users(id),
+  code VARCHAR(6) NOT NULL,
+  expires_at TIMESTAMP NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS IDX_otp_codes_user_id ON otp_codes(user_id);
+CREATE INDEX IF NOT EXISTS IDX_otp_codes_code ON otp_codes(code);
+CREATE INDEX IF NOT EXISTS IDX_otp_codes_expires_at ON otp_codes(expires_at);
+
+-- Auth tokens table - stores OTP-based auth tokens for Android app
+CREATE TABLE IF NOT EXISTS auth_tokens (
+  id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+  token VARCHAR(64) NOT NULL UNIQUE,
+  user_id VARCHAR NOT NULL REFERENCES users(id),
+  expires_at TIMESTAMP NOT NULL,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS IDX_auth_tokens_token ON auth_tokens(token);
+CREATE INDEX IF NOT EXISTS IDX_auth_tokens_user_id ON auth_tokens(user_id);
+CREATE INDEX IF NOT EXISTS IDX_auth_tokens_expires_at ON auth_tokens(expires_at);
+
 -- Pricing tiers table - tracks historical pricing levels
 CREATE TABLE IF NOT EXISTS pricing_tiers (
   id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),

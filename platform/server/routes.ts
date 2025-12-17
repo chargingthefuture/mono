@@ -5829,21 +5829,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const { generateSimpleOTP } = await import('./otp');
     const { code, expiresAt } = generateSimpleOTP();
     
-    // Store OTP in database (we'll need to add this to storage)
-    // For now, we'll use a simple in-memory store (in production, use Redis or database)
-    // Store: userId -> { code, expiresAt }
-    if (!(global as any).otpStore) {
-      (global as any).otpStore = new Map();
-    }
-    (global as any).otpStore.set(userId, { code, expiresAt: expiresAt.getTime() });
+    // Store OTP in database (persistent storage)
+    await withDatabaseErrorHandling(
+      () => storage.createOTPCode(userId, code, expiresAt),
+      'createOTPCode'
+    );
     
-    // Clean up expired OTPs
-    const now = Date.now();
-    for (const [key, value] of (global as any).otpStore.entries()) {
-      if (value.expiresAt < now) {
-        (global as any).otpStore.delete(key);
-      }
-    }
+    // Clean up expired OTPs (background cleanup)
+    await withDatabaseErrorHandling(
+      () => storage.deleteExpiredOTPCodes(),
+      'deleteExpiredOTPCodes'
+    );
     
     res.json({ 
       otp: code,
@@ -5865,39 +5861,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(400).json({ message: "Invalid OTP format" });
     }
     
-    // Find user by OTP code
-    if (!(global as any).otpStore) {
-      return res.status(400).json({ message: "Invalid or expired OTP" });
-    }
+    // Find OTP code in database
+    const otpRecord = await withDatabaseErrorHandling(
+      () => storage.findOTPCodeByCode(otp),
+      'findOTPCodeByCode'
+    );
     
-    let userId: string | null = null;
-    const now = Date.now();
-    
-    // Normalize stored codes for comparison
-    const otpStoreSize = (global as any).otpStore.size;
-    console.log(`[OTP Validation] Received OTP: "${otp}" (length: ${otp.length}), OTP store size: ${otpStoreSize}`);
-    
-    for (const [key, value] of (global as any).otpStore.entries()) {
-      const storedCode = String(value.code).trim();
-      const isExpired = value.expiresAt < now;
-      console.log(`[OTP Validation] Checking stored OTP: "${storedCode}" for user ${key}, expired: ${isExpired}, expiresAt: ${value.expiresAt}, now: ${now}`);
-      
-      if (storedCode === otp) {
-        if (value.expiresAt < now) {
-          (global as any).otpStore.delete(key);
-          console.log(`[OTP Validation] OTP matched but expired for user ${key}`);
-          return res.status(400).json({ message: "OTP has expired" });
-        }
-        console.log(`[OTP Validation] OTP matched successfully for user ${key}`);
-        userId = key;
-        break;
-      }
-    }
-    
-    if (!userId) {
+    if (!otpRecord) {
       console.log(`[OTP Validation] No matching OTP found. Received: "${otp}"`);
       return res.status(400).json({ message: "Invalid OTP code" });
     }
+    
+    // Check if OTP has expired
+    const now = Date.now();
+    const expiresAt = otpRecord.expiresAt.getTime();
+    if (expiresAt < now) {
+      // Delete expired OTP
+      await withDatabaseErrorHandling(
+        () => storage.deleteOTPCode(otpRecord.userId),
+        'deleteExpiredOTP'
+      );
+      console.log(`[OTP Validation] OTP matched but expired for user ${otpRecord.userId}`);
+      return res.status(400).json({ message: "OTP has expired" });
+    }
+    
+    const userId = otpRecord.userId;
+    console.log(`[OTP Validation] OTP matched successfully for user ${userId}`);
     
     // Verify user is still approved
     const user = await withDatabaseErrorHandling(
@@ -5910,7 +5899,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
     
     if (!user.isApproved && !user.isAdmin) {
-      (global as any).otpStore.delete(userId);
+      // Delete OTP if user is not approved
+      await withDatabaseErrorHandling(
+        () => storage.deleteOTPCode(userId),
+        'deleteOTPForUnapprovedUser'
+      );
       return res.status(403).json({ message: "User is not approved" });
     }
     
@@ -5919,24 +5912,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const token = randomBytes(32).toString('hex');
     const tokenExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
     
-    // Store token (in production, use database or Redis)
-    if (!(global as any).authTokens) {
-      (global as any).authTokens = new Map();
-    }
-    (global as any).authTokens.set(token, { 
-      userId, 
-      expiresAt: tokenExpiresAt.getTime() 
-    });
+    // Store token in database (persistent storage)
+    await withDatabaseErrorHandling(
+      () => storage.createAuthToken(token, userId, tokenExpiresAt),
+      'createAuthToken'
+    );
     
-    // Clean up expired tokens
-    for (const [key, value] of (global as any).authTokens.entries()) {
-      if (value.expiresAt < now) {
-        (global as any).authTokens.delete(key);
-      }
-    }
+    // Clean up expired tokens (background cleanup)
+    await withDatabaseErrorHandling(
+      () => storage.deleteExpiredAuthTokens(),
+      'deleteExpiredAuthTokens'
+    );
     
     // Remove used OTP
-    (global as any).otpStore.delete(userId);
+    await withDatabaseErrorHandling(
+      () => storage.deleteOTPCode(userId),
+      'deleteUsedOTP'
+    );
     
     // Return token and user info
     res.json({
