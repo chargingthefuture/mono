@@ -17,6 +17,40 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            // Load local.properties if it exists
+            val localProperties = java.util.Properties()
+            val localPropertiesFile = rootProject.file("local.properties")
+            if (localPropertiesFile.exists()) {
+                localPropertiesFile.inputStream().use { localProperties.load(it) }
+            }
+
+            // Read from environment variables (CI) or local.properties (local)
+            val keystorePath = System.getenv("KEYSTORE_PATH")
+                ?: localProperties.getProperty("KEYSTORE_PATH")
+            val keystorePassword = System.getenv("KEYSTORE_PASSWORD")
+                ?: localProperties.getProperty("KEYSTORE_PASSWORD")
+            val keyAlias = System.getenv("KEY_ALIAS")
+                ?: localProperties.getProperty("KEY_ALIAS")
+            val keyPassword = System.getenv("KEY_PASSWORD")
+                ?: localProperties.getProperty("KEY_PASSWORD")
+
+            if (keystorePath != null && keystorePassword != null && keyAlias != null && keyPassword != null) {
+                // Resolve path relative to project root (chyme-android)
+                val keystoreFile = if (file(keystorePath).isAbsolute) {
+                    file(keystorePath)
+                } else {
+                    rootProject.file(keystorePath)
+                }
+                storeFile = keystoreFile
+                storePassword = keystorePassword
+                this.keyAlias = keyAlias
+                this.keyPassword = keyPassword
+            }
+        }
+    }
+
     buildTypes {
         release {
             isMinifyEnabled = false
@@ -24,6 +58,10 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
+            // Apply signing config if available
+            signingConfig = signingConfigs.getByName("release").takeIf {
+                it.storeFile != null && it.storeFile!!.exists()
+            } ?: signingConfigs.getByName("debug")
         }
     }
     compileOptions {
