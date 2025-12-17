@@ -33,23 +33,32 @@ class OTPAuthManager(private val context: Context) {
      * @return Result containing token info or error message
      */
     suspend fun validateOTP(otp: String): Result<ValidateOTPResponse> {
+        // Normalize OTP: trim whitespace
+        val normalizedOTP = otp.trim()
+        
         SentryHelper.addBreadcrumb(
             message = "Starting OTP validation",
             category = "otp",
             level = SentryLevel.INFO,
-            data = mapOf("otp_length" to otp.length.toString())
+            data = mapOf(
+                "otp_length" to normalizedOTP.length.toString(),
+                "otp_original_length" to otp.length.toString()
+            )
         )
         
         return try {
-            if (otp.length != 6) {
+            if (normalizedOTP.length != 6 || !normalizedOTP.all { it.isDigit() }) {
                 val error = Exception("OTP must be 6 digits")
                 SentryHelper.captureException(
                     throwable = error,
                     level = SentryLevel.WARNING,
                     tags = mapOf("otp_validation" to "invalid_length"),
-                    extra = mapOf("otp_length" to otp.length, "otp_code" to otp.take(2) + "****")
+                    extra = mapOf(
+                        "otp_length" to normalizedOTP.length,
+                        "otp_code" to normalizedOTP.take(2) + "****"
+                    )
                 )
-                Log.w("OTPAuthManager", "OTP validation failed: invalid length ${otp.length}")
+                Log.w("OTPAuthManager", "OTP validation failed: invalid length ${normalizedOTP.length}")
                 return Result.failure(error)
             }
             
@@ -59,7 +68,7 @@ class OTPAuthManager(private val context: Context) {
                 level = SentryLevel.DEBUG
             )
             
-            val request = ValidateOTPRequest(otp = otp)
+            val request = ValidateOTPRequest(otp = normalizedOTP)
             Log.d("OTPAuthManager", "Sending OTP validation request")
             
             SentryHelper.addBreadcrumb(

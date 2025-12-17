@@ -71,36 +71,61 @@ object SentryHelper {
         extra: Map<String, Any> = emptyMap(),
         message: String? = null
     ) {
+        if (!isInitialized) {
+            Log.w(TAG, "Sentry not initialized, skipping exception capture: ${throwable.message}")
+            return
+        }
+        
         try {
             Log.e(TAG, "Capturing exception: ${throwable.message}", throwable)
             
             Sentry.captureException(throwable) { scope ->
-                scope.level = level
-                
-                // Add tags
-                tags.forEach { (key, value) ->
-                    scope.setTag(key, value)
-                }
-                
-                // Add extra context
-                extra.forEach { (key, value) ->
-                    scope.setExtra(key, value.toString())
-                }
-                
-                // Add message if provided
-                message?.let {
-                    scope.setExtra("error_message", it)
-                }
-                
-                // Add breadcrumb
-                scope.addBreadcrumb(
-                    Breadcrumb().apply {
-                        this.message = message ?: throwable.message ?: "Exception occurred"
-                        this.level = level
-                        this.category = "exception"
-                        this.type = "error"
+                try {
+                    scope.level = level
+                    
+                    // Add tags safely
+                    tags.forEach { (key, value) ->
+                        try {
+                            scope.setTag(key, value)
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Failed to set tag $key", e)
+                        }
                     }
-                )
+                    
+                    // Add extra context safely
+                    extra.forEach { (key, value) ->
+                        try {
+                            scope.setExtra(key, value.toString())
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Failed to set extra $key", e)
+                        }
+                    }
+                    
+                    // Add message if provided
+                    message?.let {
+                        try {
+                            scope.setExtra("error_message", it)
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Failed to set error_message", e)
+                        }
+                    }
+                    
+                    // Add breadcrumb safely
+                    try {
+                        scope.addBreadcrumb(
+                            Breadcrumb().apply {
+                                this.message = message ?: throwable.message ?: "Exception occurred"
+                                this.level = level
+                                this.category = "exception"
+                                this.type = "error"
+                            }
+                        )
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Failed to add breadcrumb", e)
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error in Sentry scope callback", e)
+                }
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to capture exception in Sentry", e)
@@ -116,29 +141,50 @@ object SentryHelper {
         tags: Map<String, String> = emptyMap(),
         extra: Map<String, Any> = emptyMap()
     ) {
+        if (!isInitialized) {
+            Log.w(TAG, "Sentry not initialized, skipping message capture: $message")
+            return
+        }
+        
         try {
             Log.d(TAG, "Capturing message [$level]: $message")
             
             Sentry.captureMessage(message, level) { scope ->
-                // Add tags
-                tags.forEach { (key, value) ->
-                    scope.setTag(key, value)
-                }
-                
-                // Add extra context
-                extra.forEach { (key, value) ->
-                    scope.setExtra(key, value.toString())
-                }
-                
-                // Add breadcrumb
-                scope.addBreadcrumb(
-                    Breadcrumb().apply {
-                        this.message = message
-                        this.level = level
-                        this.category = "log"
-                        this.type = "message"
+                try {
+                    // Add tags safely
+                    tags.forEach { (key, value) ->
+                        try {
+                            scope.setTag(key, value)
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Failed to set tag $key", e)
+                        }
                     }
-                )
+                    
+                    // Add extra context safely
+                    extra.forEach { (key, value) ->
+                        try {
+                            scope.setExtra(key, value.toString())
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Failed to set extra $key", e)
+                        }
+                    }
+                    
+                    // Add breadcrumb safely
+                    try {
+                        scope.addBreadcrumb(
+                            Breadcrumb().apply {
+                                this.message = message
+                                this.level = level
+                                this.category = "log"
+                                this.type = "message"
+                            }
+                        )
+                    } catch (e: Exception) {
+                        Log.w(TAG, "Failed to add breadcrumb", e)
+                    }
+                } catch (e: Exception) {
+                    Log.e(TAG, "Error in Sentry scope callback", e)
+                }
             }
         } catch (e: Exception) {
             Log.e(TAG, "Failed to capture message in Sentry", e)
@@ -154,6 +200,11 @@ object SentryHelper {
         level: SentryLevel = SentryLevel.DEBUG,
         data: Map<String, String> = emptyMap()
     ) {
+        if (!isInitialized) {
+            Log.d(TAG, "Sentry not initialized, skipping breadcrumb: [$category] $message")
+            return
+        }
+        
         try {
             Log.d(TAG, "Breadcrumb [$category]: $message")
             
@@ -164,7 +215,11 @@ object SentryHelper {
                     this.level = level
                     this.type = "default"
                     data.forEach { (key, value) ->
-                        this.setData(key, value)
+                        try {
+                            this.setData(key, value)
+                        } catch (e: Exception) {
+                            Log.w(TAG, "Failed to set breadcrumb data $key", e)
+                        }
                     }
                 }
             )
@@ -177,6 +232,11 @@ object SentryHelper {
      * Set user context
      */
     fun setUser(userId: String?, email: String? = null, username: String? = null) {
+        if (!isInitialized) {
+            Log.w(TAG, "Sentry not initialized, skipping setUser")
+            return
+        }
+        
         try {
             if (userId != null) {
                 Sentry.setUser(
@@ -200,6 +260,10 @@ object SentryHelper {
      * Set extra context
      */
     fun setExtra(key: String, value: Any) {
+        if (!isInitialized) {
+            return
+        }
+        
         try {
             Sentry.setExtra(key, value.toString())
         } catch (e: Exception) {
@@ -211,6 +275,10 @@ object SentryHelper {
      * Set tag
      */
     fun setTag(key: String, value: String) {
+        if (!isInitialized) {
+            return
+        }
+        
         try {
             Sentry.setTag(key, value)
         } catch (e: Exception) {

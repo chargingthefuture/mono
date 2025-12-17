@@ -5854,9 +5854,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Validate OTP and return auth token
   app.post('/api/chyme/validate-otp', asyncHandler(async (req: any, res) => {
-    const { otp } = req.body;
+    let { otp } = req.body;
     
-    if (!otp || typeof otp !== 'string' || otp.length !== 6) {
+    // Normalize OTP: convert to string, trim whitespace, ensure it's exactly 6 digits
+    if (otp != null) {
+      otp = String(otp).trim();
+    }
+    
+    if (!otp || otp.length !== 6 || !/^\d{6}$/.test(otp)) {
       return res.status(400).json({ message: "Invalid OTP format" });
     }
     
@@ -5868,18 +5873,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     let userId: string | null = null;
     const now = Date.now();
     
+    // Normalize stored codes for comparison
+    const otpStoreSize = (global as any).otpStore.size;
+    console.log(`[OTP Validation] Received OTP: "${otp}" (length: ${otp.length}), OTP store size: ${otpStoreSize}`);
+    
     for (const [key, value] of (global as any).otpStore.entries()) {
-      if (value.code === otp) {
+      const storedCode = String(value.code).trim();
+      const isExpired = value.expiresAt < now;
+      console.log(`[OTP Validation] Checking stored OTP: "${storedCode}" for user ${key}, expired: ${isExpired}, expiresAt: ${value.expiresAt}, now: ${now}`);
+      
+      if (storedCode === otp) {
         if (value.expiresAt < now) {
           (global as any).otpStore.delete(key);
+          console.log(`[OTP Validation] OTP matched but expired for user ${key}`);
           return res.status(400).json({ message: "OTP has expired" });
         }
+        console.log(`[OTP Validation] OTP matched successfully for user ${key}`);
         userId = key;
         break;
       }
     }
     
     if (!userId) {
+      console.log(`[OTP Validation] No matching OTP found. Received: "${otp}"`);
       return res.status(400).json({ message: "Invalid OTP code" });
     }
     

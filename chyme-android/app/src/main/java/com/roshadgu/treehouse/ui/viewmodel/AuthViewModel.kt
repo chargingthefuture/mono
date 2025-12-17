@@ -69,27 +69,33 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     }
     
     fun validateOTP(otp: String) {
+        // Normalize OTP: trim whitespace and ensure it's exactly 6 digits
+        val normalizedOTP = otp.trim()
+        
         SentryHelper.addBreadcrumb(
             message = "validateOTP called from ViewModel",
             category = "viewmodel",
             level = SentryLevel.INFO,
-            data = mapOf("otp_length" to otp.length.toString())
+            data = mapOf(
+                "otp_length" to normalizedOTP.length.toString(),
+                "otp_original_length" to otp.length.toString()
+            )
         )
         
-        if (otp.length != 6) {
+        if (normalizedOTP.length != 6 || !normalizedOTP.all { it.isDigit() }) {
             val errorMessage = "OTP must be 6 digits"
             _uiState.value = _uiState.value.copy(
                 errorMessage = errorMessage
             )
             
             SentryHelper.captureMessage(
-                message = "OTP validation rejected: invalid length",
+                message = "OTP validation rejected: invalid length or format",
                 level = SentryLevel.WARNING,
                 tags = mapOf("otp_validation" to "invalid_length"),
-                extra = mapOf("otp_length" to otp.length)
+                extra = mapOf("otp_length" to normalizedOTP.length)
             )
             
-            Log.w("AuthViewModel", "OTP validation rejected: length=${otp.length}")
+            Log.w("AuthViewModel", "OTP validation rejected: length=${normalizedOTP.length}")
             return
         }
         
@@ -106,7 +112,7 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
                     level = SentryLevel.DEBUG
                 )
                 
-                val result = authManager.validateOTP(otp)
+                val result = authManager.validateOTP(normalizedOTP)
                 
                 result.fold(
                     onSuccess = { tokenResponse ->
