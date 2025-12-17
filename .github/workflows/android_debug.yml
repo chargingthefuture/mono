@@ -184,18 +184,47 @@ jobs:
           LOGCAT_PID=$!
           
           # Install APK (with retries)
+          INSTALL_SUCCESS=false
           for i in 1 2 3; do
-            if adb install -r "$APK_PATH" 2>&1 | tee install-output.txt; then
-              echo "APK installed successfully"
-              break
+            adb install -r "$APK_PATH" > install-output.txt 2>&1
+            INSTALL_EXIT_CODE=$?
+            
+            # Check if install command succeeded and verify package is installed
+            if [ $INSTALL_EXIT_CODE -eq 0 ] && ! grep -qi "Failure\|Error\|failed\|Broken pipe" install-output.txt; then
+              # Double-check by verifying package exists
+              if adb shell pm list packages | grep -q "$PACKAGE_NAME"; then
+                echo "APK installed successfully"
+                INSTALL_SUCCESS=true
+                break
+              fi
             fi
-            echo "Install attempt $i failed, retrying..."
+            cat install-output.txt
+            echo "Install attempt $i failed (exit code: $INSTALL_EXIT_CODE), retrying..."
             sleep 5
           done
           
+          if [ "$INSTALL_SUCCESS" != "true" ]; then
+            echo "ERROR: APK installation failed after 3 attempts"
+            echo "Installation failed - see install-output.txt for details" > install-failed.txt
+            cat install-output.txt
+            exit 1
+          fi
+          
+          # Verify device is ready
+          if ! adb shell pm list packages >/dev/null 2>&1; then
+            echo "ERROR: Device package manager not available"
+            exit 1
+          fi
+          
           # Launch app
           echo "Launching app..."
-          adb shell am start -n "${PACKAGE_NAME}/${MAIN_ACTIVITY}" || adb shell monkey -p "${PACKAGE_NAME}" -c android.intent.category.LAUNCHER 1
+          if ! adb shell am start -n "${PACKAGE_NAME}/${MAIN_ACTIVITY}" 2>&1; then
+            echo "Primary launch method failed, trying monkey..."
+            if ! adb shell monkey -p "${PACKAGE_NAME}" -c android.intent.category.LAUNCHER 1 2>&1; then
+              echo "ERROR: Failed to launch app"
+              exit 1
+            fi
+          fi
           
           # Let app run for 60 seconds to capture startup logs
           echo "Capturing logs for 60 seconds..."
@@ -219,10 +248,19 @@ jobs:
           echo "=== Sentry-specific logs ===" > logcat-sentry.txt
           grep -i "sentry\|SentryHelper\|TreehouseApp" logcat-full.txt >> logcat-sentry.txt || echo "No Sentry logs found" >> logcat-sentry.txt
           
+          # Verify logcat files were created and have content
+          if [ ! -f logcat-full.txt ] || [ ! -s logcat-full.txt ]; then
+            echo "ERROR: logcat-full.txt is missing or empty"
+            exit 1
+          fi
+          
           echo "Logcat capture complete"
           ls -lh logcat*.txt
+          echo "logcat-capture-success" > logcat-success.txt
 
       - name: Upload logcat artifacts
+        # Upload artifacts even if logcat step failed (if: always()) so we can debug failures
+        # Check for install-failed.txt or absence of logcat-success.txt to see if capture failed
         if: always()
         uses: actions/upload-artifact@v4
         continue-on-error: true
@@ -231,7 +269,10 @@ jobs:
           path: |
             chyme-android/logcat-*.txt
             chyme-android/install-output.txt
+            chyme-android/install-failed.txt
+            chyme-android/logcat-success.txt
           retention-days: 7
+          if-no-files-found: warn
 
       - name: Cleanup emulator
         if: always() && steps.emulator.outcome == 'success'
