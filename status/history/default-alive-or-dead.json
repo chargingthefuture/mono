@@ -369,5 +369,82 @@
     "statusCode": 200,
     "responseTime": 700,
     "error": null
+  },
+  {
+    "timestamp": "2025-12-17T08:28:12.156Z",
+    "status": "up",
+    "statusCode": 200,
+    "responseTime": 346,
+    "error": null
+  },
+  {
+    "timestamp": "2025-12-17T08:57:27.863Z",
+    "status": "up",
+    "statusCode": 200,
+    "responseTime": 142,
+    "error": null
+  },
+  {
+    "timestamp": "2025-12-17T09:36:17.188Z",
+    "status": "up",
+    "statusCode": 200,
+    "responseTime": 202,
+    "error": null
+  },
+  {
+    "timestamp": "2025-12-17T09:54:27.098Z",
+    "status": "up",
+    "statusCode": 200,
+    "responseTime": 219,
+    "error": null
+  },
+  {
+    "timestamp": "2025-12-17T10:30:20.898Z",
+    "status": "up",
+    "statusCode": 200,
+    "responseTime": 357,
+    "error": null
+  },
+  {
+    "timestamp": "2025-12-17T10:53:06.182Z",
+    "status": "up",
+    "statusCode": 200,
+    "responseTime": 205,
+    "error": null
+  },
+  {
+    "timestamp": "2025-12-17T11:21:09.699Z",
+    "status": "up",
+    "statusCode": 200,
+    "responseTime": 602,
+    "error": null
+  },
+  {
+    "timestamp": "2025-12-17T11:39:45.446Z",
+    "status": "up",
+    "statusCode": 200,
+    "responseTime": 345,
+    "error": null
+  },
+  {
+    "timestamp": "2025-12-17T11:53:00.520Z",
+    "status": "up",
+    "statusCode": 200,
+    "responseTime": 490,
+    "error": null
+  },
+  {
+    "timestamp": "2025-12-17T12:46:59.331Z",
+    "status": "up",
+    "statusCode": 200,
+    "responseTime": 322,
+    "error": null
+  },
+  {
+    "timestamp": "2025-12-17T13:26:02.007Z",
+    "status": "up",
+    "statusCode": 200,
+    "responseTime": 377,
+    "error": null
   }
 ]
