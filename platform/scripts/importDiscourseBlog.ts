@@ -218,7 +218,8 @@ async function main() {
   }
 }
 
-if (require.main === module) {
+// ESM-compatible entrypoint (works with tsx)
+if (import.meta.url === `file://${process.argv[1]}`) {
   // eslint-disable-next-line no-void
   void main();
 }
