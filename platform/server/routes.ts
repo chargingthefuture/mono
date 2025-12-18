@@ -6142,6 +6142,74 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   }));
 
+  // Handle Android app deep link redirects for /app/chyme and /apps/chyme
+  // If user is authenticated and on Android, auto-generate mobile auth code and redirect
+  // Note: This route must be registered before the SPA catch-all handler
+  app.get(['/app/chyme', '/apps/chyme'], asyncHandler(async (req: any, res, next) => {
+    const userAgent = req.headers['user-agent'] || '';
+    const isAndroid = /Android/i.test(userAgent);
+    
+    // Only handle Android devices - for others, let SPA handle it
+    if (!isAndroid) {
+      return next(); // Let SPA catch-all handle it
+    }
+    
+    // For Android, check if authenticated
+    // We need to manually check auth since we can't use isAuthenticated middleware
+    // (it would redirect/error for unauthenticated, but we want to let SPA handle it)
+    try {
+      // Try to get auth from request (set by auth middleware if present)
+      const userId = req.auth?.userId;
+      
+      if (!userId) {
+        // Not authenticated - let SPA handle it (will show login)
+        return next();
+      }
+      
+      // Verify user is approved
+      const user = await withDatabaseErrorHandling(
+        () => storage.getUser(userId),
+        'getUserForMobileAuthRedirect'
+      );
+      
+      if (!user) {
+        return next();
+      }
+      
+      if (!user.isApproved && !user.isAdmin) {
+        return next();
+      }
+      
+      // Generate a secure 6-character alphanumeric code
+      const code = randomBytes(3).toString('hex').toUpperCase(); // 6 characters
+      const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
+      
+      // Store code in database
+      await withDatabaseErrorHandling(
+        () => storage.createOTPCode(userId, code, expiresAt),
+        'createMobileAuthCodeForRedirect'
+      );
+      
+      // Clean up expired codes
+      await withDatabaseErrorHandling(
+        () => storage.deleteExpiredOTPCodes(),
+        'deleteExpiredMobileAuthCodesForRedirect'
+      );
+      
+      // Generate deep link and redirect
+      const deepLink = `chyme://auth?code=${code}`;
+      
+      console.log(`[Mobile Auth Redirect] Generated code for user ${userId} from Android device, redirecting to deep link`);
+      
+      // Redirect to deep link
+      return res.redirect(deepLink);
+    } catch (error) {
+      // If anything goes wrong, let SPA handle it
+      console.error('[Mobile Auth Redirect] Error:', error);
+      return next();
+    }
+  }));
+
   // Generate mobile auth code for deep link authentication
   app.post('/api/chyme/generate-mobile-token', isAuthenticated, asyncHandler(async (req: any, res) => {
     const userId = req.auth?.userId;

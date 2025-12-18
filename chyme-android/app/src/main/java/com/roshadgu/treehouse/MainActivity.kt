@@ -64,6 +64,8 @@ class MainActivity : AppCompatActivity() {
     private fun handleDeepLink(intent: Intent?) {
         if (intent?.data != null) {
             val uri: Uri = intent.data!!
+            
+            // Handle chyme://auth deep links
             if (uri.scheme == "chyme" && uri.host == "auth") {
                 val code = uri.getQueryParameter("code")
                 if (code != null) {
@@ -111,6 +113,67 @@ class MainActivity : AppCompatActivity() {
                             )
                         }
                     }
+                }
+            }
+            // Handle HTTPS URLs (web auth links)
+            else if (uri.scheme == "https" && uri.host == "app.chargingthefuture.com" && uri.path?.startsWith("/app/chyme") == true) {
+                Log.d("MainActivity", "Received HTTPS URL: ${uri.toString()}")
+                
+                SentryHelper.addBreadcrumb(
+                    message = "HTTPS URL received for chyme auth",
+                    category = "deep_link",
+                    level = SentryLevel.INFO,
+                    data = mapOf("uri" to uri.toString())
+                )
+                
+                // Check if there's a code parameter in the URL
+                val code = uri.getQueryParameter("code")
+                if (code != null) {
+                    // If there's a code, try to validate it
+                    Log.d("MainActivity", "Found code parameter in HTTPS URL: ${code.take(2)}****")
+                    CoroutineScope(Dispatchers.IO).launch {
+                        try {
+                            val result = authManager.validateMobileCode(code)
+                            result.fold(
+                                onSuccess = {
+                                    Log.i("MainActivity", "Mobile auth successful via HTTPS URL")
+                                    SentryHelper.addBreadcrumb(
+                                        message = "Mobile auth successful via HTTPS URL",
+                                        category = "auth",
+                                        level = SentryLevel.INFO,
+                                        data = mapOf("user_id" to it.user.id)
+                                    )
+                                },
+                                onFailure = { error ->
+                                    Log.e("MainActivity", "Mobile auth failed from HTTPS URL", error)
+                                    SentryHelper.captureException(
+                                        throwable = error,
+                                        level = SentryLevel.ERROR,
+                                        tags = mapOf("auth" to "https_url_failed"),
+                                        message = "Failed to authenticate via HTTPS URL"
+                                    )
+                                }
+                            )
+                        } catch (e: Exception) {
+                            Log.e("MainActivity", "Error processing HTTPS URL", e)
+                            SentryHelper.captureException(
+                                throwable = e,
+                                level = SentryLevel.ERROR,
+                                tags = mapOf("auth" to "https_url_error"),
+                                message = "Error processing HTTPS URL"
+                            )
+                        }
+                    }
+                } else {
+                    // No code parameter - this is a web URL without a mobile auth code
+                    // The app will show the SignInScreen with instructions to use the mobile auth flow
+                    Log.d("MainActivity", "HTTPS URL received but no code parameter - user needs to use mobile auth flow")
+                    SentryHelper.addBreadcrumb(
+                        message = "HTTPS URL received without code parameter",
+                        category = "auth",
+                        level = SentryLevel.INFO,
+                        data = mapOf("uri" to uri.toString())
+                    )
                 }
             }
         }

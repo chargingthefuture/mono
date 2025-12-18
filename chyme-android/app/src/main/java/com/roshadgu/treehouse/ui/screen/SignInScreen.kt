@@ -51,7 +51,7 @@ fun SignInScreen(
             )
             
             Text(
-                text = "Authentication is not yet implemented for the Android app.\n\nPlease use the web app to sign in:\nhttps://app.chargingthefuture.com/apps/chyme",
+                text = "To sign in, please use the mobile authentication flow:\n\n1. Open the web app: https://app.chargingthefuture.com/app/chyme\n2. Generate a mobile auth code from the dashboard\n3. Click the deep link to authenticate in this app",
                 style = MaterialTheme.typography.body1,
                 color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f),
                 modifier = Modifier.padding(bottom = 32.dp),

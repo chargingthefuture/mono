@@ -36,6 +36,16 @@
                     android:scheme="chyme"
                     android:host="auth" />
             </intent-filter>
+            <!-- HTTPS URL handling for web auth links -->
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="https"
+                    android:host="app.chargingthefuture.com"
+                    android:pathPrefix="/app/chyme" />
+            </intent-filter>
         </activity>
     </application>
 
