@@ -2812,6 +2812,35 @@ export const insertBlogPostSchema = createInsertSchema(blogPosts).omit({
 export type InsertBlogPost = z.infer<typeof insertBlogPostSchema>;
 export type BlogPost = typeof blogPosts.$inferSelect;
 
+// Blog comments imported from Discourse (replies to blog posts)
+export const blogComments = pgTable("blog_comments", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  discourseTopicId: integer("discourse_topic_id").notNull(),
+  discoursePostId: integer("discourse_post_id").notNull().unique(),
+  postNumber: integer("post_number").notNull(),
+  source: varchar("source", { length: 50 }).notNull().default("discourse"), // discourse, native, etc.
+  contentMd: text("content_md").notNull(),
+  contentHtml: text("content_html"),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertBlogCommentSchema = createInsertSchema(blogComments).omit({
+  id: true,
+  createdAt: true,
+  updatedAt: true,
+}).extend({
+  discourseTopicId: z.coerce.number().int(),
+  discoursePostId: z.coerce.number().int(),
+  postNumber: z.coerce.number().int(),
+  contentMd: z.string().min(1, "Content is required"),
+  contentHtml: z.string().optional().nullable(),
+  source: z.string().optional(),
+});
+
+export type InsertBlogComment = z.infer<typeof insertBlogCommentSchema>;
+export type BlogComment = typeof blogComments.$inferSelect;
+
 // Blog Announcements (mini-app specific, shown on blog pages)
 export const blogAnnouncements = pgTable("blog_announcements", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),

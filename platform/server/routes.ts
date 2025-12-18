@@ -5347,15 +5347,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(announcements);
   }));
 
-  // Public blog post list (no auth, rate-limited)
+  // Public blog post list (no auth, rate-limited, paginated)
   app.get('/api/blog/posts', publicListingLimiter, asyncHandler(async (req, res) => {
     const limit = parseInt((req.query.limit as string) || "50", 10);
     const offset = parseInt((req.query.offset as string) || "0", 10);
-    const posts = await withDatabaseErrorHandling(
+    const result = await withDatabaseErrorHandling(
       () => storage.getPublishedBlogPosts(limit, offset),
       'getPublishedBlogPosts'
     );
-    res.json(posts);
+    // Must return { items, total } for standardized pagination
+    res.json(result);
   }));
 
   // Public single blog post by slug

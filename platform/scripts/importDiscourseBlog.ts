@@ -2,7 +2,7 @@ import fs from "fs";
 import path from "path";
 import zlib from "zlib";
 import { db } from "../server/db";
-import { blogPosts } from "../shared/schema";
+import { blogPosts, blogComments } from "../shared/schema";
 import { sql } from "drizzle-orm";
 
 type TopicRow = {
@@ -41,6 +41,7 @@ async function importDiscourseDump(dumpPath: string) {
 
   const topics = new Map<number, TopicRow>();
   const firstPosts = new Map<number, PostRow>(); // topic_id -> first post (post_number = 1)
+  const replyPosts = new Map<number, PostRow[]>(); // topic_id -> all reply posts (post_number > 1)
 
   let buffer = "";
   let mode: "none" | "topics" | "posts" = "none";
@@ -78,7 +79,6 @@ async function importDiscourseDump(dumpPath: string) {
     } else if (mode === "posts" && line && !line.startsWith("--")) {
       const row = parseCopyRow(columns, line);
       const postNumber = toInt(row.post_number);
-      if (postNumber !== 1) return; // only need first post of each topic
       const post: PostRow = {
         id: toInt(row.id),
         topic_id: toInt(row.topic_id),
@@ -87,8 +87,17 @@ async function importDiscourseDump(dumpPath: string) {
         cooked: row.cooked,
         created_at: row.created_at,
       };
-      if (!firstPosts.has(post.topic_id)) {
-        firstPosts.set(post.topic_id, post);
+
+      if (postNumber === 1) {
+        // First post becomes the main blog post content
+        if (!firstPosts.has(post.topic_id)) {
+          firstPosts.set(post.topic_id, post);
+        }
+      } else {
+        // All other posts become comments/replies
+        const existing = replyPosts.get(post.topic_id) ?? [];
+        existing.push(post);
+        replyPosts.set(post.topic_id, existing);
       }
     }
   };
@@ -112,9 +121,14 @@ async function importDiscourseDump(dumpPath: string) {
     stream.on("error", (err) => reject(err));
   });
 
-  console.log(`Parsed ${topics.size} topics and ${firstPosts.size} topic bodies`);
+  console.log(
+    `Parsed ${topics.size} topics, ${firstPosts.size} first posts, and ${Array.from(
+      replyPosts.values(),
+    ).reduce((sum, arr) => sum + arr.length, 0)} reply posts`,
+  );
 
   const postsToInsert = [];
+  const commentsToInsert = [];
   for (const [topicId, topic] of topics.entries()) {
     const firstPost = firstPosts.get(topicId);
     if (!firstPost) continue;
@@ -137,12 +151,26 @@ async function importDiscourseDump(dumpPath: string) {
       isPublished: true,
       publishedAt: new Date(publishedAt),
     });
+    const replies = replyPosts.get(topicId) ?? [];
+
+    for (const reply of replies) {
+      commentsToInsert.push({
+        discourseTopicId: topic.id,
+        discoursePostId: reply.id,
+        postNumber: reply.post_number,
+        source: "discourse",
+        contentMd: reply.raw,
+        contentHtml: reply.cooked,
+      });
+    }
   }
 
-  console.log(`Preparing to insert ${postsToInsert.length} blog posts into blog_posts...`);
+  console.log(
+    `Preparing to insert ${postsToInsert.length} blog posts into blog_posts and ${commentsToInsert.length} comments into blog_comments...`,
+  );
 
-  if (postsToInsert.length === 0) {
-    console.log("No posts found to import. Exiting.");
+  if (postsToInsert.length === 0 && commentsToInsert.length === 0) {
+    console.log("No posts or comments found to import. Exiting.");
     return;
   }
 
@@ -152,8 +180,27 @@ async function importDiscourseDump(dumpPath: string) {
       sql`DELETE FROM ${blogPosts} WHERE ${blogPosts.source} = 'discourse'`
     );
 
+    // Optional: clear existing imported Discourse comments
+    await tx.execute(
+      sql`DELETE FROM ${blogComments} WHERE ${blogComments.source} = 'discourse'`
+    );
+
     for (const chunk of chunkArray(postsToInsert, 100)) {
-      await tx.insert(blogPosts).values(chunk as any);
+      await tx
+        .insert(blogPosts)
+        .values(chunk as any)
+        .onConflictDoNothing({
+          target: blogPosts.slug,
+        });
+    }
+
+    for (const chunk of chunkArray(commentsToInsert, 500)) {
+      await tx
+        .insert(blogComments)
+        .values(chunk as any)
+        .onConflictDoNothing({
+          target: blogComments.discoursePostId,
+        });
     }
   });
 

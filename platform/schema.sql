@@ -974,6 +974,32 @@ CREATE TABLE IF NOT EXISTS blog_posts (
   updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
 
+-- Blog comments imported from Discourse (replies to blog posts)
+CREATE TABLE IF NOT EXISTS blog_comments (
+  id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+  discourse_topic_id INTEGER NOT NULL,
+  discourse_post_id INTEGER NOT NULL UNIQUE,
+  post_number INTEGER NOT NULL,
+  source VARCHAR(50) NOT NULL DEFAULT 'discourse',
+  content_md TEXT NOT NULL,
+  content_html TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Blog comments imported from Discourse (replies to blog posts)
+CREATE TABLE IF NOT EXISTS blog_comments (
+  id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+  discourse_topic_id INTEGER NOT NULL,
+  discourse_post_id INTEGER NOT NULL UNIQUE,
+  post_number INTEGER NOT NULL,
+  source VARCHAR(50) NOT NULL DEFAULT 'discourse',
+  content_md TEXT NOT NULL,
+  content_html TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
 -- Blog Announcements
 CREATE TABLE IF NOT EXISTS blog_announcements (
   id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),

@@ -1,15 +1,28 @@
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
 import { format } from "date-fns";
 import type { BlogPost } from "@shared/schema";
 import { AnnouncementBanner } from "@/components/announcement-banner";
+import { PaginationControls } from "@/components/pagination-controls";
+
+type BlogPostsResponse = {
+  items: BlogPost[];
+  total: number;
+};
 
 export default function BlogIndex() {
-  const { data: posts, isLoading } = useQuery<BlogPost[]>({
-    queryKey: ["/api/blog/posts"],
+  const [page, setPage] = useState(0); // 0-indexed
+  const limit = 10;
+
+  const { data, isLoading } = useQuery<BlogPostsResponse>({
+    queryKey: [`/api/blog/posts?limit=${limit}&offset=${page * limit}`],
   });
+
+  const posts = data?.items ?? [];
+  const total = data?.total ?? 0;
 
   if (isLoading) {
     return (
@@ -42,6 +55,7 @@ export default function BlogIndex() {
           </CardContent>
         </Card>
       ) : (
+        <>
         <div className="space-y-4">
           {posts.map((post) => (
             <Link key={post.id} href={`/blog/${post.slug}`}>
@@ -72,6 +86,17 @@ export default function BlogIndex() {
             </Link>
           ))}
         </div>
+
+        {total > limit && (
+          <PaginationControls
+            currentPage={page}
+            totalItems={total}
+            itemsPerPage={limit}
+            onPageChange={setPage}
+            className="pt-2"
+          />
+        )}
+        </>
       )}
     </div>
   );

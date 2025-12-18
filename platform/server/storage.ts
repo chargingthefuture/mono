@@ -929,7 +929,7 @@ export interface IStorage {
   deactivateWorkforceRecruiterAnnouncement(id: string): Promise<WorkforceRecruiterAnnouncement>;
 
   // Blog (content-only) operations
-  getPublishedBlogPosts(limit?: number, offset?: number): Promise<BlogPost[]>;
+  getPublishedBlogPosts(limit?: number, offset?: number): Promise<{ items: BlogPost[]; total: number }>;
   getBlogPostBySlug(slug: string): Promise<BlogPost | undefined>;
   getAllBlogPosts(): Promise<BlogPost[]>;
   createBlogPost(post: InsertBlogPost): Promise<BlogPost>;
@@ -8319,14 +8319,27 @@ export class DatabaseStorage implements IStorage {
   // BLOG (CONTENT-ONLY) IMPLEMENTATIONS
   // ========================================
 
-  async getPublishedBlogPosts(limit = 50, offset = 0): Promise<BlogPost[]> {
-    return await db
+  async getPublishedBlogPosts(
+    limit = 50,
+    offset = 0,
+  ): Promise<{ items: BlogPost[]; total: number }> {
+    // Total count of published posts (for pagination)
+    const totalResult = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(blogPosts)
+      .where(eq(blogPosts.isPublished, true));
+    const total = Number(totalResult[0]?.count || 0);
+
+    // Current page of published posts
+    const items = await db
       .select()
       .from(blogPosts)
       .where(eq(blogPosts.isPublished, true))
       .orderBy(desc(blogPosts.publishedAt))
       .limit(limit)
       .offset(offset);
+
+    return { items, total };
   }
 
   async getBlogPostBySlug(slug: string): Promise<BlogPost | undefined> {
