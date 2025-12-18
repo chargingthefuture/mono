@@ -77,6 +77,8 @@ import {
   insertWorkforceRecruiterAnnouncementSchema,
   insertDefaultAliveOrDeadFinancialEntrySchema,
   insertDefaultAliveOrDeadEbitdaSnapshotSchema,
+  insertBlogPostSchema,
+  insertBlogAnnouncementSchema,
   type User,
 } from "@shared/schema";
 import { z } from "zod";
@@ -5330,6 +5332,170 @@ export async function registerRoutes(app: Express): Promise<Server> {
       'isGentlepulseFavorite'
     );
     res.json({ isFavorite });
+  }));
+
+  // ========================================
+  // BLOG (CONTENT-ONLY) ROUTES
+  // ========================================
+
+  // Public blog announcements
+  app.get('/api/blog/announcements', asyncHandler(async (_req, res) => {
+    const announcements = await withDatabaseErrorHandling(
+      () => storage.getActiveBlogAnnouncements(),
+      'getActiveBlogAnnouncements'
+    );
+    res.json(announcements);
+  }));
+
+  // Public blog post list (no auth, rate-limited)
+  app.get('/api/blog/posts', publicListingLimiter, asyncHandler(async (req, res) => {
+    const limit = parseInt((req.query.limit as string) || "50", 10);
+    const offset = parseInt((req.query.offset as string) || "0", 10);
+    const posts = await withDatabaseErrorHandling(
+      () => storage.getPublishedBlogPosts(limit, offset),
+      'getPublishedBlogPosts'
+    );
+    res.json(posts);
+  }));
+
+  // Public single blog post by slug
+  app.get('/api/blog/posts/:slug', publicItemLimiter, asyncHandler(async (req, res) => {
+    const post = await withDatabaseErrorHandling(
+      () => storage.getBlogPostBySlug(req.params.slug),
+      'getBlogPostBySlug'
+    );
+    if (!post) {
+      throw new NotFoundError('BlogPost', req.params.slug);
+    }
+    res.json(post);
+  }));
+
+  // Admin blog post routes
+  app.get('/api/blog/admin/posts', isAuthenticated, isAdmin, asyncHandler(async (_req: any, res) => {
+    const posts = await withDatabaseErrorHandling(
+      () => storage.getAllBlogPosts(),
+      'getAllBlogPosts'
+    );
+    res.json(posts);
+  }));
+
+  app.post('/api/blog/admin/posts', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
+    const userId = getUserId(req);
+    const validatedData = validateWithZod(insertBlogPostSchema, req.body, 'Invalid blog post data');
+    const post = await withDatabaseErrorHandling(
+      () => storage.createBlogPost(validatedData),
+      'createBlogPost'
+    );
+
+    await logAdminAction(
+      userId,
+      "create_blog_post",
+      "blog_post",
+      post.id,
+      { title: post.title, slug: post.slug }
+    );
+
+    res.json(post);
+  }));
+
+  app.put('/api/blog/admin/posts/:id', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
+    const userId = getUserId(req);
+    const post = await withDatabaseErrorHandling(
+      () => storage.updateBlogPost(req.params.id, req.body),
+      'updateBlogPost'
+    );
+
+    await logAdminAction(
+      userId,
+      "update_blog_post",
+      "blog_post",
+      post.id,
+      { title: post.title, slug: post.slug }
+    );
+
+    res.json(post);
+  }));
+
+  app.delete('/api/blog/admin/posts/:id', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
+    const userId = getUserId(req);
+    await withDatabaseErrorHandling(
+      () => storage.deleteBlogPost(req.params.id),
+      'deleteBlogPost'
+    );
+
+    await logAdminAction(
+      userId,
+      "delete_blog_post",
+      "blog_post",
+      req.params.id,
+      {}
+    );
+
+    res.json({ message: "Blog post deleted" });
+  }));
+
+  // Admin blog announcement routes
+  app.get('/api/blog/admin/announcements', isAuthenticated, isAdmin, asyncHandler(async (_req: any, res) => {
+    const announcements = await withDatabaseErrorHandling(
+      () => storage.getAllBlogAnnouncements(),
+      'getAllBlogAnnouncements'
+    );
+    res.json(announcements);
+  }));
+
+  app.post('/api/blog/admin/announcements', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
+    const userId = getUserId(req);
+    const validatedData = validateWithZod(insertBlogAnnouncementSchema, req.body, 'Invalid blog announcement data');
+    const announcement = await withDatabaseErrorHandling(
+      () => storage.createBlogAnnouncement(validatedData),
+      'createBlogAnnouncement'
+    );
+
+    await logAdminAction(
+      userId,
+      "create_blog_announcement",
+      "blog_announcement",
+      announcement.id,
+      { title: announcement.title, type: announcement.type }
+    );
+
+    res.json(announcement);
+  }));
+
+  app.put('/api/blog/admin/announcements/:id', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
+    const userId = getUserId(req);
+    const announcement = await withDatabaseErrorHandling(
+      () => storage.updateBlogAnnouncement(req.params.id, req.body),
+      'updateBlogAnnouncement'
+    );
+
+    await logAdminAction(
+      userId,
+      "update_blog_announcement",
+      "blog_announcement",
+      announcement.id,
+      { title: announcement.title }
+    );
+
+    res.json(announcement);
+  }));
+
+  app.delete('/api/blog/admin/announcements/:id', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
+    const userId = getUserId(req);
+    const announcement = await withDatabaseErrorHandling(
+      () => storage.deactivateBlogAnnouncement(req.params.id),
+      'deactivateBlogAnnouncement'
+    );
+
+    await logAdminAction(
+      userId,
+      "deactivate_blog_announcement",
+      "blog_announcement",
+      announcement.id,
+      { title: announcement.title }
+    );
+
+    res.json(announcement);
   }));
 
   // GentlePulse Admin routes

@@ -113,6 +113,10 @@ import GentlePulseSupport from "@/pages/gentlepulse/support";
 import GentlePulseSettings from "@/pages/gentlepulse/settings";
 import GentlePulseAdmin from "@/pages/gentlepulse/admin";
 import GentlePulseAdminAnnouncements from "@/pages/gentlepulse/admin-announcements";
+import BlogIndex from "@/pages/blog/index";
+import BlogPostPage from "@/pages/blog/post";
+import BlogAdmin from "@/pages/blog/admin";
+import BlogAdminAnnouncements from "@/pages/blog/admin-announcements";
 import ChymeDashboard from "@/pages/chyme/dashboard";
 import ChymeAdmin from "@/pages/chyme/admin";
 import ChymeAdminAnnouncements from "@/pages/chyme/admin-announcements";
@@ -347,8 +351,10 @@ function Router() {
       {/* Publicly viewable CompareNotes questions */}
       <Route path="/apps/comparenotes/public/:id" component={PublicCompareNotesQuestion} />
       
-      {/* Public Terms page */}
+      {/* Public Terms & Blog pages */}
       <Route path="/terms" component={Terms} />
+      <Route path="/blog" component={BlogIndex} />
+      <Route path="/blog/:slug" component={BlogPostPage} />
       
       {/* Protected routes - always rendered, but wrapped with auth checks */}
       <Route path="/services">
@@ -809,6 +815,16 @@ function Router() {
       <Route path="/apps/gentlepulse/admin/announcements">
         <ProtectedRoute>
           <GentlePulseAdminAnnouncements />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/apps/blog/admin">
+        <ProtectedRoute>
+          <BlogAdmin />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/apps/blog/admin/announcements">
+        <ProtectedRoute>
+          <BlogAdminAnnouncements />
         </ProtectedRoute>
       </Route>
       <Route path="/apps/chyme">

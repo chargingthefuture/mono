@@ -20,7 +20,8 @@ import {
   HeartPulse,
   Video,
   Briefcase,
-  Activity
+  Activity,
+  PenSquare,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useClerk } from "@clerk/clerk-react";
@@ -139,6 +140,12 @@ const baseAdminMenuItems = [
     url: "/apps/gentlepulse/admin",
     icon: HeartPulse,
     testId: "link-gentlepulse-admin",
+  },
+  {
+    title: "Blog Admin",
+    url: "/apps/blog/admin",
+    icon: PenSquare,
+    testId: "link-blog-admin",
   },
   {
     title: "Chyme Admin",
@@ -269,6 +276,12 @@ const miniAppMenuItems = [
     url: "/apps/trusttransport",
     icon: Car,
     testId: "link-trusttransport",
+  },
+  {
+    title: "Blog",
+    url: "/blog",
+    icon: PenSquare,
+    testId: "link-blog",
   },
 ];
 

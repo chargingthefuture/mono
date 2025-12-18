@@ -225,6 +225,12 @@ import {
   chymeMessages,
   type ChymeMessage,
   type InsertChymeMessage,
+  blogPosts,
+  blogAnnouncements,
+  type BlogPost,
+  type InsertBlogPost,
+  type BlogAnnouncement,
+  type InsertBlogAnnouncement,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, asc, sql, or, inArray, gte, lte, lt } from "drizzle-orm";
@@ -921,6 +927,21 @@ export interface IStorage {
   getAllWorkforceRecruiterAnnouncements(): Promise<WorkforceRecruiterAnnouncement[]>;
   updateWorkforceRecruiterAnnouncement(id: string, announcement: Partial<InsertWorkforceRecruiterAnnouncement>): Promise<WorkforceRecruiterAnnouncement>;
   deactivateWorkforceRecruiterAnnouncement(id: string): Promise<WorkforceRecruiterAnnouncement>;
+
+  // Blog (content-only) operations
+  getPublishedBlogPosts(limit?: number, offset?: number): Promise<BlogPost[]>;
+  getBlogPostBySlug(slug: string): Promise<BlogPost | undefined>;
+  getAllBlogPosts(): Promise<BlogPost[]>;
+  createBlogPost(post: InsertBlogPost): Promise<BlogPost>;
+  updateBlogPost(id: string, post: Partial<InsertBlogPost>): Promise<BlogPost>;
+  deleteBlogPost(id: string): Promise<void>;
+
+  // Blog Announcement operations
+  createBlogAnnouncement(announcement: InsertBlogAnnouncement): Promise<BlogAnnouncement>;
+  getActiveBlogAnnouncements(): Promise<BlogAnnouncement[]>;
+  getAllBlogAnnouncements(): Promise<BlogAnnouncement[]>;
+  updateBlogAnnouncement(id: string, announcement: Partial<InsertBlogAnnouncement>): Promise<BlogAnnouncement>;
+  deactivateBlogAnnouncement(id: string): Promise<BlogAnnouncement>;
 
   // ========================================
   // DEFAULT ALIVE OR DEAD OPERATIONS
@@ -2503,6 +2524,7 @@ export class DatabaseStorage implements IStorage {
         id: users.id,
         firstName: users.firstName,
         lastName: users.lastName,
+        email: users.email,
       })
       .from(users)
       .where(inArray(users.id, partnerIds));
@@ -2514,9 +2536,24 @@ export class DatabaseStorage implements IStorage {
     return userPartnerships.map(partnership => {
       const partnerId = partnership.user1Id === userId ? partnership.user2Id : partnership.user1Id;
       const partnerUser = userMap.get(partnerId);
+
+      // Derive a safe, human-friendly first name:
+      // - Prefer the explicit firstName field if present
+      // - Fall back to the email prefix (before "@") if available
+      let derivedFirstName: string | null = null;
+      if (partnerUser?.firstName && partnerUser.firstName.trim()) {
+        derivedFirstName = partnerUser.firstName.trim();
+      } else if (partnerUser?.email) {
+        const emailPrefix = partnerUser.email.split("@")[0] || "";
+        if (emailPrefix) {
+          // Capitalize the first character for nicer display
+          derivedFirstName = emailPrefix.charAt(0).toUpperCase() + emailPrefix.slice(1);
+        }
+      }
+
       return {
         ...partnership,
-        partnerFirstName: partnerUser?.firstName || null,
+        partnerFirstName: derivedFirstName,
         partnerLastName: partnerUser?.lastName || null,
       };
     });
@@ -8274,6 +8311,121 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date(),
       })
       .where(eq(workforceRecruiterAnnouncements.id, id))
+      .returning();
+    return announcement;
+  }
+
+  // ========================================
+  // BLOG (CONTENT-ONLY) IMPLEMENTATIONS
+  // ========================================
+
+  async getPublishedBlogPosts(limit = 50, offset = 0): Promise<BlogPost[]> {
+    return await db
+      .select()
+      .from(blogPosts)
+      .where(eq(blogPosts.isPublished, true))
+      .orderBy(desc(blogPosts.publishedAt))
+      .limit(limit)
+      .offset(offset);
+  }
+
+  async getBlogPostBySlug(slug: string): Promise<BlogPost | undefined> {
+    const [post] = await db
+      .select()
+      .from(blogPosts)
+      .where(eq(blogPosts.slug, slug));
+    return post;
+  }
+
+  async getAllBlogPosts(): Promise<BlogPost[]> {
+    return await db
+      .select()
+      .from(blogPosts)
+      .orderBy(desc(blogPosts.publishedAt));
+  }
+
+  async createBlogPost(postData: InsertBlogPost): Promise<BlogPost> {
+    const [post] = await db
+      .insert(blogPosts)
+      .values({
+        ...postData,
+        // Ensure updatedAt is set explicitly on creation for consistency
+        updatedAt: new Date(),
+      } as any)
+      .returning();
+    return post;
+  }
+
+  async updateBlogPost(id: string, postData: Partial<InsertBlogPost>): Promise<BlogPost> {
+    const [post] = await db
+      .update(blogPosts)
+      .set({
+        ...postData,
+        updatedAt: new Date(),
+      } as any)
+      .where(eq(blogPosts.id, id))
+      .returning();
+    return post;
+  }
+
+  async deleteBlogPost(id: string): Promise<void> {
+    await db
+      .delete(blogPosts)
+      .where(eq(blogPosts.id, id));
+  }
+
+  async createBlogAnnouncement(announcementData: InsertBlogAnnouncement): Promise<BlogAnnouncement> {
+    const [announcement] = await db
+      .insert(blogAnnouncements)
+      .values(announcementData)
+      .returning();
+    return announcement;
+  }
+
+  async getActiveBlogAnnouncements(): Promise<BlogAnnouncement[]> {
+    const now = new Date();
+    return await db
+      .select()
+      .from(blogAnnouncements)
+      .where(
+        and(
+          eq(blogAnnouncements.isActive, true),
+          or(
+            sql`${blogAnnouncements.expiresAt} IS NULL`,
+            gte(blogAnnouncements.expiresAt, now)
+          )
+        )
+      )
+      .orderBy(desc(blogAnnouncements.createdAt));
+  }
+
+  async getAllBlogAnnouncements(): Promise<BlogAnnouncement[]> {
+    return await db
+      .select()
+      .from(blogAnnouncements)
+      .orderBy(desc(blogAnnouncements.createdAt));
+  }
+
+  async updateBlogAnnouncement(id: string, announcementData: Partial<InsertBlogAnnouncement>): Promise<BlogAnnouncement> {
+    const [announcement] = await db
+      .update(blogAnnouncements)
+      .set({
+        ...announcementData,
+        updatedAt: new Date(),
+      })
+      .where(eq(blogAnnouncements.id, id))
+      .returning();
+    return announcement;
+  }
+
+  async deactivateBlogAnnouncement(id: string): Promise<BlogAnnouncement> {
+    const [announcement] = await db
+      .update(blogAnnouncements)
+      .set({
+        isActive: false,
+        updatedAt: new Date(),
+      })
+      .where(eq(blogAnnouncements.id, id))
       .returning();
     return announcement;
   }

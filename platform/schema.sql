@@ -937,7 +937,6 @@ CREATE INDEX IF NOT EXISTS chyme_room_participants_room_id_idx ON chyme_room_par
 CREATE INDEX IF NOT EXISTS chyme_room_participants_user_id_idx ON chyme_room_participants(user_id);
 CREATE INDEX IF NOT EXISTS chyme_room_participants_active_idx ON chyme_room_participants(room_id, left_at);
 
--- Chyme Messages
 CREATE TABLE IF NOT EXISTS chyme_messages (
   id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
   room_id VARCHAR NOT NULL REFERENCES chyme_rooms(id) ON DELETE CASCADE,
@@ -949,6 +948,43 @@ CREATE TABLE IF NOT EXISTS chyme_messages (
 
 CREATE INDEX IF NOT EXISTS chyme_messages_room_id_idx ON chyme_messages(room_id);
 CREATE INDEX IF NOT EXISTS chyme_messages_created_at_idx ON chyme_messages(created_at);
+
+-- ========================================
+-- BLOG (CONTENT-ONLY) APP TABLES
+-- ========================================
+
+-- Blog posts imported from Discourse (and future native posts)
+CREATE TABLE IF NOT EXISTS blog_posts (
+  id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+  title VARCHAR(300) NOT NULL,
+  slug VARCHAR(300) NOT NULL UNIQUE,
+  excerpt TEXT,
+  content_md TEXT NOT NULL,
+  content_html TEXT,
+  author_name VARCHAR(200),
+  source VARCHAR(50) NOT NULL DEFAULT 'discourse',
+  discourse_topic_id INTEGER,
+  discourse_post_id INTEGER,
+  tags TEXT,
+  category VARCHAR(100),
+  is_published BOOLEAN NOT NULL DEFAULT true,
+  published_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  view_count INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Blog Announcements
+CREATE TABLE IF NOT EXISTS blog_announcements (
+  id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+  title VARCHAR(200) NOT NULL,
+  content TEXT NOT NULL,
+  type VARCHAR(50) NOT NULL DEFAULT 'info',
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  expires_at TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
 
 -- ========================================
 -- WORKFORCE RECRUITER TRACKER APP TABLES
