@@ -227,10 +227,12 @@ import {
   type InsertChymeMessage,
   blogPosts,
   blogAnnouncements,
+  blogComments,
   type BlogPost,
   type InsertBlogPost,
   type BlogAnnouncement,
   type InsertBlogAnnouncement,
+  type BlogComment,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, asc, sql, or, inArray, gte, lte, lt } from "drizzle-orm";
@@ -935,6 +937,11 @@ export interface IStorage {
   createBlogPost(post: InsertBlogPost): Promise<BlogPost>;
   updateBlogPost(id: string, post: Partial<InsertBlogPost>): Promise<BlogPost>;
   deleteBlogPost(id: string): Promise<void>;
+  getBlogCommentsForTopic(
+    discourseTopicId: number,
+    limit?: number,
+    offset?: number
+  ): Promise<{ items: BlogComment[]; total: number }>;
 
   // Blog Announcement operations
   createBlogAnnouncement(announcement: InsertBlogAnnouncement): Promise<BlogAnnouncement>;
@@ -8355,6 +8362,30 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(blogPosts)
       .orderBy(desc(blogPosts.publishedAt));
+  }
+
+  async getBlogCommentsForTopic(
+    discourseTopicId: number,
+    limit = 50,
+    offset = 0,
+  ): Promise<{ items: BlogComment[]; total: number }> {
+    // Total comments for this topic
+    const totalResult = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(blogComments)
+      .where(eq(blogComments.discourseTopicId, discourseTopicId));
+    const total = Number(totalResult[0]?.count || 0);
+
+    // Paginated comments ordered by post number (original reply order)
+    const items = await db
+      .select()
+      .from(blogComments)
+      .where(eq(blogComments.discourseTopicId, discourseTopicId))
+      .orderBy(asc(blogComments.postNumber))
+      .limit(limit)
+      .offset(offset);
+
+    return { items, total };
   }
 
   async createBlogPost(postData: InsertBlogPost): Promise<BlogPost> {

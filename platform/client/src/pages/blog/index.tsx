@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
@@ -23,6 +23,22 @@ export default function BlogIndex() {
 
   const posts = data?.items ?? [];
   const total = data?.total ?? 0;
+
+  // If the user lands on a page with no items while there are posts overall
+  // (e.g. after deletions or inconsistent totals), snap back to a page that has content.
+  useEffect(() => {
+    if (!isLoading && total > 0 && posts.length === 0 && page > 0) {
+      const lastPage = Math.max(0, Math.ceil(total / limit) - 1);
+
+      if (page > lastPage) {
+        // If we're beyond the last page, jump to the real last page
+        setPage(lastPage);
+      } else {
+        // Otherwise, step back one page to find content
+        setPage(page - 1);
+      }
+    }
+  }, [isLoading, total, posts.length, page, limit]);
 
   if (isLoading) {
     return (

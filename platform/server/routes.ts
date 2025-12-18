@@ -5371,6 +5371,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(post);
   }));
 
+  // Public blog post comments (replies imported from Discourse), paginated
+  app.get('/api/blog/posts/:slug/comments', publicListingLimiter, asyncHandler(async (req, res) => {
+    const { slug } = req.params;
+    const limit = parseInt((req.query.limit as string) || "50", 10);
+    const offset = parseInt((req.query.offset as string) || "0", 10);
+
+    const post = await withDatabaseErrorHandling(
+      () => storage.getBlogPostBySlug(slug),
+      'getBlogPostBySlug'
+    );
+
+    if (!post) {
+      throw new NotFoundError('BlogPost', slug);
+    }
+
+    // If this post was not imported from Discourse or has no topic ID, return empty comments
+    if (!post.discourseTopicId) {
+      return res.json({ items: [], total: 0 });
+    }
+
+    const comments = await withDatabaseErrorHandling(
+      () => storage.getBlogCommentsForTopic(post.discourseTopicId!, limit, offset),
+      'getBlogCommentsForTopic'
+    );
+
+    res.json(comments);
+  }));
+
   // Admin blog post routes
   app.get('/api/blog/admin/posts', isAuthenticated, isAdmin, asyncHandler(async (_req: any, res) => {
     const posts = await withDatabaseErrorHandling(
