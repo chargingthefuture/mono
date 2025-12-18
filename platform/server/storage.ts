@@ -8337,6 +8337,17 @@ export class DatabaseStorage implements IStorage {
       .where(eq(blogPosts.isPublished, true));
     const total = Number(totalResult[0]?.count || 0);
 
+    // Clamp offset to the last valid page so we never return an empty page
+    // when there are still posts available (defensive against any inconsistencies).
+    let safeOffset = offset;
+    if (total > 0) {
+      const lastPageIndex = Math.max(0, Math.ceil(total / limit) - 1);
+      const maxOffset = lastPageIndex * limit;
+      if (offset > maxOffset) {
+        safeOffset = maxOffset;
+      }
+    }
+
     // Current page of published posts
     const items = await db
       .select()
@@ -8344,7 +8355,7 @@ export class DatabaseStorage implements IStorage {
       .where(eq(blogPosts.isPublished, true))
       .orderBy(desc(blogPosts.publishedAt))
       .limit(limit)
-      .offset(offset);
+      .offset(safeOffset);
 
     return { items, total };
   }
