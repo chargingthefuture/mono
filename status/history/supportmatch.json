@@ -824,5 +824,12 @@
     "statusCode": 200,
     "responseTime": 301,
     "error": null
+  },
+  {
+    "timestamp": "2025-12-18T10:51:26.554Z",
+    "status": "up",
+    "statusCode": 200,
+    "responseTime": 351,
+    "error": null
   }
 ]
