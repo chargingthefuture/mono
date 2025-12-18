@@ -1,4 +1,5 @@
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -20,7 +21,7 @@ import { apiRequest, queryClient } from "@/lib/queryClient";
 import type { BlogPost } from "@shared/schema";
 import { format } from "date-fns";
 import { MiniAppBackButton } from "@/components/mini-app-back-button";
-import { ArrowLeft, Edit2, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Edit2, Plus, Trash2, X } from "lucide-react";
 import { Link } from "wouter";
 
 const blogPostFormSchema = z.object({
@@ -38,6 +39,7 @@ type BlogPostFormValues = z.infer<typeof blogPostFormSchema>;
 
 export default function BlogAdmin() {
   const { toast } = useToast();
+  const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
   const { data: posts } = useQuery<BlogPost[]>({
     queryKey: ["/api/blog/admin/posts"],
   });
@@ -63,13 +65,52 @@ export default function BlogAdmin() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/blog/admin/posts"] });
       queryClient.invalidateQueries({ queryKey: ["/api/blog/posts"] });
-      form.reset({ title: "", slug: "", excerpt: "", contentMd: "", contentHtml: "", authorName: "", category: "", isPublished: true });
+      form.reset({
+        title: "",
+        slug: "",
+        excerpt: "",
+        contentMd: "",
+        contentHtml: "",
+        authorName: "",
+        category: "",
+        isPublished: true,
+      });
+      setEditingPost(null);
       toast({ title: "Success", description: "Blog post created" });
     },
     onError: (error: any) => {
       toast({
         title: "Error",
         description: error.message || "Failed to create blog post",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const updateMutation = useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: BlogPostFormValues }) => {
+      return apiRequest("PUT", `/api/blog/admin/posts/${id}`, data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/blog/admin/posts"] });
+      queryClient.invalidateQueries({ queryKey: ["/api/blog/posts"] });
+      form.reset({
+        title: "",
+        slug: "",
+        excerpt: "",
+        contentMd: "",
+        contentHtml: "",
+        authorName: "",
+        category: "",
+        isPublished: true,
+      });
+      setEditingPost(null);
+      toast({ title: "Success", description: "Blog post updated" });
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update blog post",
         variant: "destructive",
       });
     },
@@ -94,7 +135,39 @@ export default function BlogAdmin() {
   });
 
   const onSubmit = (data: BlogPostFormValues) => {
-    createMutation.mutate(data);
+    if (editingPost) {
+      updateMutation.mutate({ id: editingPost.id, data });
+    } else {
+      createMutation.mutate(data);
+    }
+  };
+
+  const handleEdit = (post: BlogPost) => {
+    setEditingPost(post);
+    form.reset({
+      title: post.title,
+      slug: post.slug,
+      excerpt: post.excerpt ?? "",
+      contentMd: post.contentMd,
+      contentHtml: post.contentHtml ?? "",
+      authorName: post.authorName ?? "",
+      category: post.category ?? "",
+      isPublished: post.isPublished ?? true,
+    });
+  };
+
+  const handleCancelEdit = () => {
+    setEditingPost(null);
+    form.reset({
+      title: "",
+      slug: "",
+      excerpt: "",
+      contentMd: "",
+      contentHtml: "",
+      authorName: "",
+      category: "",
+      isPublished: true,
+    });
   };
 
   return (
@@ -116,7 +189,7 @@ export default function BlogAdmin() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Create New Blog Post</CardTitle>
+          <CardTitle>{editingPost ? "Edit Blog Post" : "Create New Blog Post"}</CardTitle>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -226,10 +299,23 @@ export default function BlogAdmin() {
                 )}
               />
 
-              <Button type="submit" data-testid="button-save-post">
-                <Plus className="w-4 h-4 mr-2" />
-                Create Post
-              </Button>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Button type="submit" data-testid="button-save-post">
+                  <Plus className="w-4 h-4 mr-2" />
+                  {editingPost ? "Update Post" : "Create Post"}
+                </Button>
+                {editingPost && (
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleCancelEdit}
+                    data-testid="button-cancel-edit"
+                  >
+                    <X className="w-4 h-4 mr-2" />
+                    Cancel Edit
+                  </Button>
+                )}
+              </div>
             </form>
           </Form>
         </CardContent>
@@ -264,11 +350,15 @@ export default function BlogAdmin() {
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <Link href={`/blog/${post.slug}`}>
-                    <Button variant="outline" size="icon" data-testid={`button-view-${post.id}`}>
-                      <Edit2 className="w-4 h-4" />
-                    </Button>
-                  </Link>
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    data-testid={`button-edit-${post.id}`}
+                    type="button"
+                    onClick={() => handleEdit(post)}
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </Button>
                   <Button
                     variant="outline"
                     size="icon"
