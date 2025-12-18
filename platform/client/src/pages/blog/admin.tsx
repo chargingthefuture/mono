@@ -156,7 +156,12 @@ export default function BlogAdmin() {
                   <FormItem>
                     <FormLabel>Author</FormLabel>
                     <FormControl>
-                      <Input placeholder="Author name" data-testid="input-author" {...field} />
+                      <Input
+                        placeholder="Author name"
+                        data-testid="input-author"
+                        {...field}
+                        value={field.value ?? ""}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -170,7 +175,12 @@ export default function BlogAdmin() {
                   <FormItem>
                     <FormLabel>Category</FormLabel>
                     <FormControl>
-                      <Input placeholder="Optional category" data-testid="input-category" {...field} />
+                      <Input
+                        placeholder="Optional category"
+                        data-testid="input-category"
+                        {...field}
+                        value={field.value ?? ""}
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -189,6 +199,7 @@ export default function BlogAdmin() {
                         rows={3}
                         data-testid="input-excerpt"
                         {...field}
+                        value={field.value ?? ""}
                       />
                     </FormControl>
                     <FormMessage />
