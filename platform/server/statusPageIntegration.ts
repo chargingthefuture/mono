@@ -31,13 +31,14 @@ export interface IncidentInfo {
 
 /**
  * Update status page via webhook or API
- * Currently supports manual webhook calls - can be extended for automatic updates
+ * PLACEHOLDER: Logs only, no actual webhooks sent
+ * To enable webhooks, call sendStatusPageWebhook() after configuring webhook URLs
  */
 export async function updateStatusPage(
   service: StatusPageService,
   incident: IncidentInfo
 ): Promise<void> {
-  // This is a placeholder for future webhook integrations
+  // PLACEHOLDER: This function only logs status updates
   // For now, Upptime auto-detects issues, but you can extend this
   // to call Statuspage.io, UptimeRobot, or Better Stack APIs
   
@@ -106,7 +107,8 @@ export function getStatusPageWebhookUrl(service: StatusPageService): string | un
 
 /**
  * Send webhook to status page service
- * Currently a placeholder - implement based on your chosen service
+ * PLACEHOLDER: Logs only, no actual webhooks sent
+ * To enable webhooks, uncomment the fetch call and configure webhook URLs
  */
 export async function sendStatusPageWebhook(
   service: StatusPageService,
@@ -114,15 +116,40 @@ export async function sendStatusPageWebhook(
 ): Promise<boolean> {
   const webhookUrl = getStatusPageWebhookUrl(service);
   
+  // Format payload based on service type (for logging purposes)
+  const payload = formatWebhookPayload(service, incident);
+  
+  // Log webhook details
+  console.log(`[Status Page] Webhook placeholder for ${service}:`);
+  console.log(`[Status Page]   URL: ${webhookUrl || '(not configured)'}`);
+  console.log(`[Status Page]   Incident: ${incident.name}`);
+  console.log(`[Status Page]   Status: ${incident.status}`);
+  console.log(`[Status Page]   Message: ${incident.message}`);
+  console.log(`[Status Page]   Payload:`, JSON.stringify(payload, null, 2));
+  
+  // Log to Sentry for tracking
+  Sentry.addBreadcrumb({
+    message: `Status page webhook (placeholder): ${incident.name}`,
+    level: incident.status === 'major_outage' ? 'error' : 'warning',
+    category: 'status-page-webhook',
+    data: {
+      service,
+      status: incident.status,
+      affectedServices: incident.affectedServices,
+      webhookUrl: webhookUrl ? '(configured)' : '(not configured)',
+      payload,
+    },
+  });
+  
+  // PLACEHOLDER: No actual webhook is sent
+  // To enable webhooks, uncomment the code below:
+  /*
   if (!webhookUrl) {
     console.warn(`[Status Page] No webhook URL configured for ${service}`);
     return false;
   }
   
   try {
-    // Format payload based on service type
-    const payload = formatWebhookPayload(service, incident);
-    
     const response = await fetch(webhookUrl, {
       method: 'POST',
       headers: {
@@ -147,6 +174,10 @@ export async function sendStatusPageWebhook(
     });
     return false;
   }
+  */
+  
+  // Placeholder returns true to indicate "success" (logged)
+  return true;
 }
 
 /**
