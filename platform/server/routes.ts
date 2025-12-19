@@ -1272,7 +1272,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   // Admin creates an unclaimed profile
-  app.post('/api/directory/admin/profiles', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
+  app.post('/api/directory/admin/profiles', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const adminId = getUserId(req);
     const validated = validateWithZod(insertDirectoryProfileSchema, {
       ...req.body,
@@ -1290,7 +1290,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Removed admin seed endpoint; use scripts/seedDirectory.ts instead
 
   // Admin assigns an unclaimed profile to a user
-  app.put('/api/directory/admin/profiles/:id/assign', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
+  app.put('/api/directory/admin/profiles/:id/assign', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const adminId = getUserId(req);
     const { userId } = req.body;
     if (!userId) return res.status(400).json({ message: 'userId is required' });
@@ -1303,7 +1303,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   // Admin update Directory profile (for editing unclaimed profiles)
-  app.put('/api/directory/admin/profiles/:id', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
+  app.put('/api/directory/admin/profiles/:id', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const adminId = getUserId(req);
     const validated = validateWithZod(insertDirectoryProfileSchema.partial() as any, req.body, 'Invalid profile update') as Partial<z.infer<typeof insertDirectoryProfileSchema>>;
     const updated = await withDatabaseErrorHandling(
@@ -1318,7 +1318,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // NOTE: Unclaimed profile deletion is EXEMPT from data integrity requirements.
   // Unclaimed profiles have no user account, so no anonymization, cascade handling, or
   // profile deletion logging is required. This is a simple hard delete for admin cleanup.
-  app.delete('/api/directory/admin/profiles/:id', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
+  app.delete('/api/directory/admin/profiles/:id', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const adminId = getUserId(req);
     const profileId = req.params.id;
     
@@ -3126,7 +3126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(fulfillments);
   }));
 
-  app.delete('/api/socketrelay/admin/requests/:id', isAuthenticated, isAdmin, asyncHandler(async (req, res) => {
+  app.delete('/api/socketrelay/admin/requests/:id', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req, res) => {
     await withDatabaseErrorHandling(
       () => storage.deleteSocketrelayRequest(req.params.id),
       'deleteSocketrelayRequest'
@@ -3151,7 +3151,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(announcements);
   }));
 
-  app.post('/api/socketrelay/admin/announcements', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
+  app.post('/api/socketrelay/admin/announcements', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const validatedData = validateWithZod(insertSocketrelayAnnouncementSchema, req.body, 'Invalid announcement data');
 
@@ -3171,7 +3171,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(announcement);
   }));
 
-  app.put('/api/socketrelay/admin/announcements/:id', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
+  app.put('/api/socketrelay/admin/announcements/:id', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const validatedData = validateWithZod(insertSocketrelayAnnouncementSchema.partial() as any, req.body, 'Invalid announcement data') as Partial<z.infer<typeof insertSocketrelayAnnouncementSchema>>;
     const announcement = await withDatabaseErrorHandling(
@@ -3190,7 +3190,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(announcement);
   }));
 
-  app.delete('/api/socketrelay/admin/announcements/:id', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
+  app.delete('/api/socketrelay/admin/announcements/:id', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const announcement = await withDatabaseErrorHandling(
       () => storage.deactivateSocketrelayAnnouncement(req.params.id),
@@ -3225,7 +3225,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(announcements);
   }));
 
-  app.post('/api/directory/admin/announcements', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
+  app.post('/api/directory/admin/announcements', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const validatedData = validateWithZod(insertDirectoryAnnouncementSchema, req.body, 'Invalid announcement data');
 
@@ -3245,7 +3245,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(announcement);
   }));
 
-  app.put('/api/directory/admin/announcements/:id', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
+  app.put('/api/directory/admin/announcements/:id', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const validatedData = validateWithZod(insertDirectoryAnnouncementSchema.partial() as any, req.body, 'Invalid announcement data') as Partial<z.infer<typeof insertDirectoryAnnouncementSchema>>;
     const announcement = await withDatabaseErrorHandling(
@@ -3264,7 +3264,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(announcement);
   }));
 
-  app.delete('/api/directory/admin/announcements/:id', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
+  app.delete('/api/directory/admin/announcements/:id', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const announcement = await withDatabaseErrorHandling(
       () => storage.deactivateDirectoryAnnouncement(req.params.id),
@@ -3491,7 +3491,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(announcements);
   }));
 
-  app.post('/api/trusttransport/admin/announcements', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
+  app.post('/api/trusttransport/admin/announcements', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const validatedData = validateWithZod(insertTrusttransportAnnouncementSchema, req.body, 'Invalid announcement data');
 
@@ -3511,7 +3511,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(announcement);
   }));
 
-  app.put('/api/trusttransport/admin/announcements/:id', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
+  app.put('/api/trusttransport/admin/announcements/:id', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const validatedData = validateWithZod(insertTrusttransportAnnouncementSchema.partial() as any, req.body, 'Invalid announcement data') as Partial<z.infer<typeof insertTrusttransportAnnouncementSchema>>;
     const announcement = await withDatabaseErrorHandling(
@@ -3530,7 +3530,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(announcement);
   }));
 
-  app.delete('/api/trusttransport/admin/announcements/:id', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
+  app.delete('/api/trusttransport/admin/announcements/:id', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const announcement = await withDatabaseErrorHandling(
       () => storage.deactivateTrusttransportAnnouncement(req.params.id),
@@ -4910,7 +4910,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(result);
   }));
 
-  app.put('/api/comparenotes/admin/reports/:id', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
+  app.put('/api/comparenotes/admin/reports/:id', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const updated = await withDatabaseErrorHandling(
       () => storage.updateResearchReport(req.params.id, {
@@ -4941,7 +4941,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(announcements);
   }));
 
-  app.post('/api/comparenotes/admin/announcements', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
+  app.post('/api/comparenotes/admin/announcements', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const validatedData = validateWithZod(insertResearchAnnouncementSchema, req.body, 'Invalid announcement data');
 
@@ -4961,7 +4961,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(announcement);
   }));
 
-  app.put('/api/comparenotes/admin/announcements/:id', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
+  app.put('/api/comparenotes/admin/announcements/:id', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const validatedData = validateWithZod(insertResearchAnnouncementSchema.partial() as any, req.body, 'Invalid announcement data') as Partial<z.infer<typeof insertResearchAnnouncementSchema>>;
     const announcement = await withDatabaseErrorHandling(
@@ -4980,7 +4980,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(announcement);
   }));
 
-  app.delete('/api/comparenotes/admin/announcements/:id', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
+  app.delete('/api/comparenotes/admin/announcements/:id', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const announcement = await withDatabaseErrorHandling(
       () => storage.deactivateResearchAnnouncement(req.params.id),
@@ -5444,7 +5444,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   // GentlePulse Admin routes
-  app.post('/api/gentlepulse/admin/meditations', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
+  app.post('/api/gentlepulse/admin/meditations', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const body = req.body;
     
@@ -5473,7 +5473,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(meditation);
   }));
 
-  app.put('/api/gentlepulse/admin/meditations/:id', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
+  app.put('/api/gentlepulse/admin/meditations/:id', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const body = req.body;
     
@@ -5510,7 +5510,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(announcements);
   }));
 
-  app.post('/api/gentlepulse/admin/announcements', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
+  app.post('/api/gentlepulse/admin/announcements', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const validatedData = validateWithZod(insertGentlepulseAnnouncementSchema, req.body, 'Invalid announcement data');
 
@@ -5530,7 +5530,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(announcement);
   }));
 
-  app.put('/api/gentlepulse/admin/announcements/:id', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
+  app.put('/api/gentlepulse/admin/announcements/:id', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const validatedData = validateWithZod(insertGentlepulseAnnouncementSchema.partial() as any, req.body, 'Invalid announcement data') as Partial<z.infer<typeof insertGentlepulseAnnouncementSchema>>;
     const announcement = await withDatabaseErrorHandling(
@@ -5549,7 +5549,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(announcement);
   }));
 
-  app.delete('/api/gentlepulse/admin/announcements/:id', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
+  app.delete('/api/gentlepulse/admin/announcements/:id', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const announcement = await withDatabaseErrorHandling(
       () => storage.deactivateGentlepulseAnnouncement(req.params.id),
@@ -5805,7 +5805,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(announcements);
   }));
 
-  app.post('/api/lostmail/admin/announcements', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
+  app.post('/api/lostmail/admin/announcements', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const validatedData = validateWithZod(insertLostmailAnnouncementSchema, req.body, 'Invalid announcement data');
 
@@ -5825,7 +5825,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(announcement);
   }));
 
-  app.put('/api/lostmail/admin/announcements/:id', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
+  app.put('/api/lostmail/admin/announcements/:id', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const validatedData = validateWithZod(insertLostmailAnnouncementSchema.partial(), req.body, 'Invalid announcement data') as Partial<z.infer<typeof insertLostmailAnnouncementSchema>>;
     const announcement = await withDatabaseErrorHandling(
@@ -5844,7 +5844,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(announcement);
   }));
 
-  app.delete('/api/lostmail/admin/announcements/:id', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
+  app.delete('/api/lostmail/admin/announcements/:id', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const announcement = await withDatabaseErrorHandling(
       () => storage.deactivateLostmailAnnouncement(req.params.id),
@@ -6370,7 +6370,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   // POST /api/chyme/admin/rooms (admin-only)
-  app.post('/api/chyme/admin/rooms', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
+  app.post('/api/chyme/admin/rooms', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const validatedData = validateWithZod(insertChymeRoomSchema, req.body, 'Invalid room data');
 
