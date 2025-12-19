@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.chargingthefuture.chyme.data.model.ParticipantRole
@@ -221,11 +222,11 @@ fun RoomInfoCard(room: com.chargingthefuture.chyme.data.model.ChymeRoom?) {
                 }
                 if (room.isActive) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            Icons.Default.RadioButtonChecked,
-                            contentDescription = null,
-                            modifier = Modifier.size(12.dp),
-                            tint = MaterialTheme.colors.error
+                        Box(
+                            modifier = Modifier
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colors.error)
                         )
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
@@ -296,12 +297,12 @@ fun ParticipantCard(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (participant.role == com.chargingthefuture.chyme.data.model.ParticipantRole.LISTENER) {
                         IconButton(onClick = onPromoteToSpeaker) {
-                            Icon(Icons.Default.ArrowUpward, contentDescription = "Promote to speaker")
+                            Icon(Icons.Default.ArrowForward, contentDescription = "Promote to speaker")
                         }
                     }
                     IconButton(onClick = onMute) {
                         Icon(
-                            if (participant.isMuted) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            if (participant.isMuted) Icons.Default.VolumeDown else Icons.Default.VolumeDown,
                             contentDescription = if (participant.isMuted) "Unmute" else "Mute"
                         )
                     }
@@ -349,7 +350,7 @@ fun RoomControls(
                     modifier = Modifier.size(56.dp)
                 ) {
                     Icon(
-                        if (isMuted) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                        if (isMuted) Icons.Default.VolumeDown else Icons.Default.VolumeDown,
                         contentDescription = if (isMuted) "Unmute" else "Mute",
                         modifier = Modifier.size(32.dp)
                     )
