@@ -1384,5 +1384,19 @@
     "statusCode": 200,
     "responseTime": 569,
     "error": null
+  },
+  {
+    "timestamp": "2025-12-19T14:52:08.338Z",
+    "status": "down",
+    "statusCode": null,
+    "responseTime": 10214,
+    "error": "Request timeout"
+  },
+  {
+    "timestamp": "2025-12-19T14:59:28.580Z",
+    "status": "down",
+    "statusCode": null,
+    "responseTime": 10102,
+    "error": "Request timeout"
   }
 ]
