@@ -303,7 +303,7 @@ fun ParticipantCard(
                     }
                     IconButton(onClick = onMute) {
                         Icon(
-                            if (participant.isMuted) Icons.Default.Remove else Icons.Default.Add,
+                            if (participant.isMuted) Icons.Default.Close else Icons.Default.Check,
                             contentDescription = if (participant.isMuted) "Unmute" else "Mute"
                         )
                     }
@@ -351,7 +351,7 @@ fun RoomControls(
                     modifier = Modifier.size(56.dp)
                 ) {
                     Icon(
-                        if (isMuted) Icons.Default.Remove else Icons.Default.Add,
+                        if (isMuted) Icons.Default.Close else Icons.Default.Check,
                         contentDescription = if (isMuted) "Unmute" else "Mute",
                         modifier = Modifier.size(32.dp)
                     )
