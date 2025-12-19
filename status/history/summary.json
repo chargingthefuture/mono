@@ -18466,5 +18466,113 @@
       "up": 14,
       "down": 0
     }
+  },
+  {
+    "timestamp": "2025-12-19T05:55:53.021Z",
+    "services": [
+      {
+        "name": "Main Platform",
+        "key": "main",
+        "status": "up",
+        "responseTime": 183,
+        "statusCode": 200
+      },
+      {
+        "name": "ChatGroups",
+        "key": "chatgroups",
+        "status": "up",
+        "responseTime": 153,
+        "statusCode": 200
+      },
+      {
+        "name": "Directory",
+        "key": "directory",
+        "status": "up",
+        "responseTime": 178,
+        "statusCode": 200
+      },
+      {
+        "name": "GentlePulse",
+        "key": "gentlepulse",
+        "status": "up",
+        "responseTime": 155,
+        "statusCode": 200
+      },
+      {
+        "name": "Chyme",
+        "key": "chyme",
+        "status": "up",
+        "responseTime": 188,
+        "statusCode": 200
+      },
+      {
+        "name": "Default Alive or Dead",
+        "key": "default-alive-or-dead",
+        "status": "up",
+        "responseTime": 199,
+        "statusCode": 200
+      },
+      {
+        "name": "Workforce Recruiter",
+        "key": "workforce-recruiter",
+        "status": "up",
+        "responseTime": 226,
+        "statusCode": 200
+      },
+      {
+        "name": "LightHouse",
+        "key": "lighthouse",
+        "status": "up",
+        "responseTime": 206,
+        "statusCode": 200
+      },
+      {
+        "name": "LostMail",
+        "key": "lostmail",
+        "status": "up",
+        "responseTime": 212,
+        "statusCode": 200
+      },
+      {
+        "name": "MechanicMatch",
+        "key": "mechanicmatch",
+        "status": "up",
+        "responseTime": 231,
+        "statusCode": 200
+      },
+      {
+        "name": "CompareNotes",
+        "key": "research",
+        "status": "up",
+        "responseTime": 235,
+        "statusCode": 200
+      },
+      {
+        "name": "SocketRelay",
+        "key": "socketrelay",
+        "status": "up",
+        "responseTime": 211,
+        "statusCode": 200
+      },
+      {
+        "name": "SupportMatch",
+        "key": "supportmatch",
+        "status": "up",
+        "responseTime": 238,
+        "statusCode": 200
+      },
+      {
+        "name": "TrustTransport",
+        "key": "trusttransport",
+        "status": "up",
+        "responseTime": 226,
+        "statusCode": 200
+      }
+    ],
+    "overall": {
+      "total": 14,
+      "up": 14,
+      "down": 0
+    }
   }
 ]
