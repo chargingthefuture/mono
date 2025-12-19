@@ -1224,7 +1224,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       // Ensure we always return displayName, firstName, and lastName (even if null)
-      const result = { ...p, displayName: name || null, userIsVerified, firstName: userFirstName, lastName: userLastName };
+      // Also include coordinates (convert from numeric to number)
+      const result = { 
+        ...p, 
+        displayName: name || null, 
+        userIsVerified, 
+        firstName: userFirstName, 
+        lastName: userLastName,
+        latitude: p.latitude ? parseFloat(p.latitude.toString()) : null,
+        longitude: p.longitude ? parseFloat(p.longitude.toString()) : null,
+      };
       // Debug: Log if firstName exists but displayName doesn't
       if (userFirstName && !name) {
         console.log(`[DEBUG] Profile ${p.id}: firstName=${userFirstName}, lastName=${userLastName}, displayName=${name}, userId=${p.userId}`);

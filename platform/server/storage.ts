@@ -3763,6 +3763,23 @@ export class DatabaseStorage implements IStorage {
   }
 
   async createDirectoryProfile(profileData: InsertDirectoryProfile): Promise<DirectoryProfile> {
+    // Geocode location if city, state, or country is provided
+    let coordinates: { latitude: number | null; longitude: number | null } | undefined;
+    if (profileData.city || profileData.state || profileData.country) {
+      const { geocodeLocation } = await import("./geocoding");
+      const coords = await geocodeLocation(
+        profileData.city ?? null,
+        profileData.state ?? null,
+        profileData.country ?? null
+      );
+      if (coords) {
+        coordinates = {
+          latitude: coords.latitude,
+          longitude: coords.longitude,
+        };
+      }
+    }
+
     const [profile] = await db
       .insert(directoryProfiles)
       .values({
@@ -3774,18 +3791,65 @@ export class DatabaseStorage implements IStorage {
         // Enforce max 3 sectors and job titles at storage layer as defense-in-depth
         sectors: (profileData.sectors ?? []).slice(0, 3),
         jobTitles: (profileData.jobTitles ?? []).slice(0, 3),
+        // Add geocoded coordinates
+        ...(coordinates && {
+          latitude: coordinates.latitude.toString(),
+          longitude: coordinates.longitude.toString(),
+        }),
       })
       .returning();
     return profile;
   }
 
   async updateDirectoryProfile(id: string, profileData: Partial<InsertDirectoryProfile>): Promise<DirectoryProfile> {
+    // If location data is being updated, geocode it
+    const locationChanged = 
+      profileData.city !== undefined || 
+      profileData.state !== undefined || 
+      profileData.country !== undefined;
+
+    let coordinates: { latitude: number | null; longitude: number | null } | undefined;
+    if (locationChanged) {
+      // Get current profile to merge location data
+      const currentProfile = await db
+        .select()
+        .from(directoryProfiles)
+        .where(eq(directoryProfiles.id, id))
+        .limit(1);
+
+      const city = profileData.city ?? currentProfile[0]?.city ?? null;
+      const state = profileData.state ?? currentProfile[0]?.state ?? null;
+      const country = profileData.country ?? currentProfile[0]?.country ?? null;
+
+      if (city || state || country) {
+        const { geocodeLocation } = await import("./geocoding");
+        const coords = await geocodeLocation(city, state, country);
+        if (coords) {
+          coordinates = {
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+          };
+        } else {
+          // If geocoding fails, clear coordinates
+          coordinates = { latitude: null, longitude: null };
+        }
+      } else {
+        // No location data, clear coordinates
+        coordinates = { latitude: null, longitude: null };
+      }
+    }
+
     const updateData: any = {
       ...profileData,
       skills: profileData.skills ? profileData.skills.slice(0, 3) : undefined,
       sectors: profileData.sectors ? profileData.sectors.slice(0, 3) : undefined,
       jobTitles: profileData.jobTitles ? profileData.jobTitles.slice(0, 3) : undefined,
       updatedAt: new Date(),
+      // Add geocoded coordinates if location changed
+      ...(coordinates && {
+        latitude: coordinates.latitude !== null ? coordinates.latitude.toString() : null,
+        longitude: coordinates.longitude !== null ? coordinates.longitude.toString() : null,
+      }),
     };
     // Remove null values that shouldn't be set to null in the DB
     if (updateData.description === null) delete updateData.description;

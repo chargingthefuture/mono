@@ -891,6 +891,10 @@ export const directoryProfiles = pgTable("directory_profiles", {
   state: varchar("state", { length: 100 }),
   country: varchar("country", { length: 100 }),
 
+  // Geocoded coordinates (cached for map display)
+  latitude: numeric("latitude", { precision: 10, scale: 7 }),
+  longitude: numeric("longitude", { precision: 10, scale: 7 }),
+
   // Verification and visibility
   isVerified: boolean("is_verified").notNull().default(false),
   isPublic: boolean("is_public").notNull().default(false),

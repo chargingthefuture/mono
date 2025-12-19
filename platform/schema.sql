@@ -354,6 +354,9 @@ CREATE TABLE IF NOT EXISTS directory_profiles (
   city VARCHAR(100),
   state VARCHAR(100),
   country VARCHAR(100),
+  -- Geocoded coordinates (cached for map display)
+  latitude NUMERIC(10, 7),
+  longitude NUMERIC(10, 7),
   is_verified BOOLEAN NOT NULL DEFAULT false,
   is_public BOOLEAN NOT NULL DEFAULT false,
   is_claimed BOOLEAN NOT NULL DEFAULT false,

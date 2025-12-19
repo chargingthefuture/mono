@@ -17,6 +17,8 @@ type PublicDirectoryProfile = {
   city: string | null;
   state: string | null;
   country: string | null;
+  latitude: number | null;
+  longitude: number | null;
   quoraUrl: string | null;
   displayName: string | null;
   firstName: string | null;
@@ -143,6 +145,8 @@ export default function PublicDirectoryList() {
                     city: profile.city,
                     state: profile.state,
                     country: profile.country,
+                    latitude: profile.latitude,
+                    longitude: profile.longitude,
                     description: profile.description,
                     skills: profile.skills || [],
                     profileUrl: `${window.location.origin}/apps/directory/public/${profile.id}`,
