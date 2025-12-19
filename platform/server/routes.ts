@@ -100,33 +100,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // AUTH ROUTES
   // ========================================
 
-  // Get current authenticated user
-  // This endpoint handles user sync failures gracefully with retry logic
-  app.get("/api/auth/user", isAuthenticated, asyncHandler(async (req: any, res) => {
-    const userId = getUserId(req);
-    
-    // Try to get user from database first
-    let user = await storage.getUser(userId);
-    
-    // If user not found, try to sync from Clerk
-    // This handles cases where the user exists in Clerk but hasn't been synced to our DB yet
-    if (!user && req.auth?.userId) {
-      try {
-        const sessionClaims = (req.auth as any)?.sessionClaims;
-        user = await syncClerkUserToDatabase(userId, sessionClaims);
-      } catch (syncError: any) {
-        // If sync fails, return null instead of throwing an error
-        // The client has retry logic to handle this gracefully
-        // Log the error for debugging but don't block the request
-        console.warn(`Failed to sync user ${userId} in /api/auth/user endpoint:`, syncError.message);
-        return res.json(null);
-      }
-    }
-    
-    // Return user or null if still not found
-    res.json(user || null);
-  }));
-
   // =====================================================
   // Public health check endpoints (used by status page)
   // =====================================================

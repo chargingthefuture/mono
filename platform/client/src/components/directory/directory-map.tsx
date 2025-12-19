@@ -49,17 +49,23 @@ const LeafletMapComponent = lazy(async () => {
     });
   }
 
-  // Extract react-leaflet components - handle both named exports and default exports
-  // In react-leaflet v5, these are named exports from the module namespace
-  const MapContainer = reactLeafletModule.MapContainer || (reactLeafletModule as any).default?.MapContainer;
-  const TileLayer = reactLeafletModule.TileLayer || (reactLeafletModule as any).default?.TileLayer;
-  const Marker = reactLeafletModule.Marker || (reactLeafletModule as any).default?.Marker;
-  const Popup = reactLeafletModule.Popup || (reactLeafletModule as any).default?.Popup;
-  const useMap = reactLeafletModule.useMap || (reactLeafletModule as any).default?.useMap;
+  // Extract react-leaflet components - react-leaflet v5 exports these as named exports
+  // The module might have a default export or named exports, handle both cases
+  const MapContainer = (reactLeafletModule as any).MapContainer || 
+                       ((reactLeafletModule as any).default?.MapContainer);
+  const TileLayer = (reactLeafletModule as any).TileLayer || 
+                   ((reactLeafletModule as any).default?.TileLayer);
+  const Marker = (reactLeafletModule as any).Marker || 
+                ((reactLeafletModule as any).default?.Marker);
+  const Popup = (reactLeafletModule as any).Popup || 
+               ((reactLeafletModule as any).default?.Popup);
+  const useMap = (reactLeafletModule as any).useMap || 
+                ((reactLeafletModule as any).default?.useMap);
 
   // Validate that all required components are available and are functions
   if (!MapContainer || typeof MapContainer !== "function") {
-    throw new Error("MapContainer is not a valid component");
+    const availableExports = Object.keys(reactLeafletModule).join(", ");
+    throw new Error(`MapContainer is not a valid component. Available exports: ${availableExports}`);
   }
   if (!TileLayer || typeof TileLayer !== "function") {
     throw new Error("TileLayer is not a valid component");
