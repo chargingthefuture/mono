@@ -1,4 +1,4 @@
-package com.roshadgu.treehouse
+package com.chargingthefuture.chyme
 
 import org.junit.Test
 
