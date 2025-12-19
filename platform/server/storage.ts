@@ -3466,17 +3466,17 @@ export class DatabaseStorage implements IStorage {
 
     // Verify ownership
     if (request.userId !== userId) {
-      throw new Error("You can only edit your own requests");
+      throw new ForbiddenError("You can only edit your own requests");
     }
 
     // Only allow editing active requests that haven't expired
     if (request.status !== 'active') {
-      throw new Error("You can only edit active requests");
+      throw new ValidationError("You can only edit active requests");
     }
 
     const now = new Date();
     if (new Date(request.expiresAt) < now) {
-      throw new Error("You cannot edit expired requests");
+      throw new ValidationError("You cannot edit expired requests");
     }
 
     // Update the request
@@ -3502,13 +3502,13 @@ export class DatabaseStorage implements IStorage {
 
     // Verify ownership
     if (request.userId !== userId) {
-      throw new Error("You can only repost your own requests");
+      throw new ForbiddenError("You can only repost your own requests");
     }
 
     // Check if request is expired
     const now = new Date();
     if (new Date(request.expiresAt) >= now) {
-      throw new Error("Request is not expired yet");
+      throw new ValidationError("Request is not expired yet");
     }
 
     // Set new expiration date (14 days from now)
@@ -4293,7 +4293,7 @@ export class DatabaseStorage implements IStorage {
   // TrustTransport Ride Request operations (simplified model)
   async createTrusttransportRideRequest(requestData: InsertTrusttransportRideRequest & { riderId?: string }): Promise<TrusttransportRideRequest> {
     if (!requestData.riderId) {
-      throw new Error("riderId is required to create a ride request");
+      throw new ValidationError("riderId is required to create a ride request");
     }
     
     // Explicitly build values object to ensure riderId is included
@@ -4402,12 +4402,12 @@ export class DatabaseStorage implements IStorage {
     }
     if (request.status !== 'open') {
       if (request.status === 'expired') {
-        throw new Error("This ride request has expired and can no longer be claimed");
+        throw new ValidationError("This ride request has expired and can no longer be claimed");
       }
-      throw new Error("Ride request is not available to claim");
+      throw new ValidationError("Ride request is not available to claim");
     }
     if (request.driverId) {
-      throw new Error("Ride request has already been claimed");
+      throw new ValidationError("Ride request has already been claimed");
     }
 
     // Get driver profile to verify they meet criteria
@@ -4419,7 +4419,7 @@ export class DatabaseStorage implements IStorage {
       .limit(1);
     
     if (driverProfile.length === 0 || !driverProfile[0].isDriver) {
-      throw new Error("You must be a driver to claim ride requests");
+      throw new ForbiddenError("You must be a driver to claim ride requests");
     }
 
     const [updated] = await db
@@ -4457,7 +4457,7 @@ export class DatabaseStorage implements IStorage {
     // Get user's profile to check if they're the rider or driver
     const profile = await this.getTrusttransportProfile(userId);
     if (!profile) {
-      throw new Error("Profile not found");
+      throw new NotFoundError("Profile");
     }
 
     // Check if user is the rider or the driver who claimed it
@@ -4465,7 +4465,7 @@ export class DatabaseStorage implements IStorage {
     const isDriver = request.driverId === profile.id && profile.isDriver;
 
     if (!isRider && !isDriver) {
-      throw new Error("You are not authorized to cancel this ride request");
+      throw new ForbiddenError("You are not authorized to cancel this ride request");
     }
 
     // If claimed, unclaim it (set driverId to null and status to open)
@@ -4675,7 +4675,7 @@ export class DatabaseStorage implements IStorage {
     } catch (error: any) {
       console.error("Error in deleteSupportMatchProfile:", error);
       // Re-throw with more context
-      throw new Error(`Failed to delete SupportMatch profile: ${error.message || "Unknown error"}`);
+      throw new AppError(`Failed to delete SupportMatch profile: ${error.message || "Unknown error"}`, "INTERNAL_SERVER_ERROR" as any, 500);
     }
   }
 
@@ -4729,7 +4729,7 @@ export class DatabaseStorage implements IStorage {
       const verifyProfile = await this.getLighthouseProfileByUserId(userId);
       if (verifyProfile) {
         console.error(`[deleteLighthouseProfile] ERROR: Profile still exists after deletion! Profile id: ${verifyProfile.id}`);
-        throw new Error("Profile deletion failed - profile still exists after delete operation");
+        throw new AppError("Profile deletion failed - profile still exists after delete operation", "INTERNAL_SERVER_ERROR" as any, 500);
       }
       console.log(`[deleteLighthouseProfile] Verified profile deletion successful`);
 
@@ -4743,7 +4743,7 @@ export class DatabaseStorage implements IStorage {
     } catch (error: any) {
       console.error("Error in deleteLighthouseProfile:", error);
       // Re-throw with more context
-      throw new Error(`Failed to delete LightHouse profile: ${error.message || "Unknown error"}`);
+      throw new AppError(`Failed to delete LightHouse profile: ${error.message || "Unknown error"}`, "INTERNAL_SERVER_ERROR" as any, 500);
     }
   }
 
@@ -4816,7 +4816,7 @@ export class DatabaseStorage implements IStorage {
     } catch (error: any) {
       console.error("Error in deleteSocketrelayProfile:", error);
       // Re-throw with more context
-      throw new Error(`Failed to delete SocketRelay profile: ${error.message || "Unknown error"}`);
+      throw new AppError(`Failed to delete SocketRelay profile: ${error.message || "Unknown error"}`, "INTERNAL_SERVER_ERROR" as any, 500);
     }
   }
 
@@ -4965,7 +4965,7 @@ export class DatabaseStorage implements IStorage {
   async deleteMechanicmatchProfile(userId: string, reason?: string): Promise<void> {
     const profile = await this.getMechanicmatchProfile(userId);
     if (!profile) {
-      throw new Error("MechanicMatch profile not found");
+      throw new NotFoundError("MechanicMatch profile");
     }
 
     const anonymizedUserId = this.generateAnonymizedUserId();
@@ -5008,7 +5008,7 @@ export class DatabaseStorage implements IStorage {
 
   async createMechanicmatchVehicle(vehicleData: InsertMechanicmatchVehicle & { ownerId?: string }): Promise<MechanicmatchVehicle> {
     if (!vehicleData.ownerId) {
-      throw new Error("ownerId is required to create a vehicle");
+      throw new ValidationError("ownerId is required to create a vehicle");
     }
     const [vehicle] = await db
       .insert(mechanicmatchVehicles)
@@ -5032,10 +5032,10 @@ export class DatabaseStorage implements IStorage {
   async deleteMechanicmatchVehicle(id: string, ownerId: string): Promise<void> {
     const vehicle = await this.getMechanicmatchVehicleById(id);
     if (!vehicle) {
-      throw new Error("Vehicle not found");
+      throw new NotFoundError("Vehicle");
     }
     if (vehicle.ownerId !== ownerId) {
-      throw new Error("You are not authorized to delete this vehicle");
+      throw new ForbiddenError("You are not authorized to delete this vehicle");
     }
     await db.delete(mechanicmatchVehicles).where(eq(mechanicmatchVehicles.id, id));
   }
@@ -5043,7 +5043,7 @@ export class DatabaseStorage implements IStorage {
   // MechanicMatch Service Request operations
   async createMechanicmatchServiceRequest(requestData: InsertMechanicmatchServiceRequest & { ownerId?: string }): Promise<MechanicmatchServiceRequest> {
     if (!requestData.ownerId) {
-      throw new Error("ownerId is required to create a service request");
+      throw new ValidationError("ownerId is required to create a service request");
     }
     const [request] = await db
       .insert(mechanicmatchServiceRequests)
@@ -5120,7 +5120,7 @@ export class DatabaseStorage implements IStorage {
   // MechanicMatch Job operations
   async createMechanicmatchJob(jobData: InsertMechanicmatchJob & { ownerId?: string }): Promise<MechanicmatchJob> {
     if (!jobData.ownerId) {
-      throw new Error("ownerId is required to create a job");
+      throw new ValidationError("ownerId is required to create a job");
     }
     // Convert number fields to strings for decimal columns
     const dataToInsert: any = {
@@ -5179,13 +5179,13 @@ export class DatabaseStorage implements IStorage {
   async acceptMechanicmatchJob(jobId: string, mechanicId: string): Promise<MechanicmatchJob> {
     const job = await this.getMechanicmatchJobById(jobId);
     if (!job) {
-      throw new Error("Job not found");
+      throw new NotFoundError("Job");
     }
     if (job.mechanicId !== mechanicId) {
-      throw new Error("You are not authorized to accept this job");
+      throw new ForbiddenError("You are not authorized to accept this job");
     }
     if (job.status !== 'requested') {
-      throw new Error("Job is not in requested status");
+      throw new ValidationError("Job is not in requested status");
     }
     const [updated] = await db
       .update(mechanicmatchJobs)
@@ -5239,7 +5239,7 @@ export class DatabaseStorage implements IStorage {
         eq(mechanicmatchAvailability.mechanicId, mechanicId)
       ));
     if (!availability.length) {
-      throw new Error("Availability not found or unauthorized");
+      throw new NotFoundError("Availability");
     }
     await db.delete(mechanicmatchAvailability).where(eq(mechanicmatchAvailability.id, id));
   }
@@ -5247,7 +5247,7 @@ export class DatabaseStorage implements IStorage {
   // MechanicMatch Review operations
   async createMechanicmatchReview(reviewData: InsertMechanicmatchReview & { reviewerId?: string }): Promise<MechanicmatchReview> {
     if (!reviewData.reviewerId) {
-      throw new Error("reviewerId is required to create a review");
+      throw new ValidationError("reviewerId is required to create a review");
     }
     const [review] = await db
       .insert(mechanicmatchReviews)
@@ -5303,7 +5303,7 @@ export class DatabaseStorage implements IStorage {
   // MechanicMatch Message operations
   async createMechanicmatchMessage(messageData: InsertMechanicmatchMessage & { senderId?: string }): Promise<MechanicmatchMessage> {
     if (!messageData.senderId) {
-      throw new Error("senderId is required to create a message");
+      throw new ValidationError("senderId is required to create a message");
     }
     const [message] = await db
       .insert(mechanicmatchMessages)
@@ -5348,7 +5348,7 @@ export class DatabaseStorage implements IStorage {
       .from(mechanicmatchMessages)
       .where(eq(mechanicmatchMessages.id, messageId));
     if (!message.length || message[0].recipientId !== userId) {
-      throw new Error("Message not found or unauthorized");
+      throw new NotFoundError("Message");
     }
     const [updated] = await db
       .update(mechanicmatchMessages)
@@ -6906,7 +6906,7 @@ export class DatabaseStorage implements IStorage {
       )
       .returning();
     if (!participant) {
-      throw new Error("Participant not found");
+      throw new NotFoundError("Participant");
     }
     return participant;
   }
@@ -7060,7 +7060,7 @@ export class DatabaseStorage implements IStorage {
 
   async createWorkforceRecruiterProfile(profileData: InsertWorkforceRecruiterProfile): Promise<WorkforceRecruiterProfile> {
     if (!profileData.userId) {
-      throw new Error('userId is required for WorkforceRecruiterProfile');
+      throw new ValidationError('userId is required for WorkforceRecruiterProfile');
     }
     const [profile] = await db
       .insert(workforceRecruiterProfiles)
@@ -7081,7 +7081,7 @@ export class DatabaseStorage implements IStorage {
   async deleteWorkforceRecruiterProfile(userId: string, reason?: string): Promise<void> {
     const profile = await this.getWorkforceRecruiterProfile(userId);
     if (!profile) {
-      throw new Error("Workforce Recruiter profile not found");
+      throw new NotFoundError("Workforce Recruiter profile");
     }
 
     const anonymizedUserId = this.generateAnonymizedUserId();
@@ -7192,7 +7192,7 @@ export class DatabaseStorage implements IStorage {
   async createWorkforceRecruiterOccupation(occupationData: InsertWorkforceRecruiterOccupation): Promise<WorkforceRecruiterOccupation> {
     // Validate sector is provided and not empty/whitespace
     if (!occupationData.sector || occupationData.sector.trim().length === 0) {
-      throw new Error("Sector is required and cannot be empty");
+      throw new ValidationError("Sector is required and cannot be empty");
     }
     
     const [occupation] = await db
@@ -7206,7 +7206,7 @@ export class DatabaseStorage implements IStorage {
     // Prevent clearing or setting empty sector
     if (occupationData.sector !== undefined) {
       if (!occupationData.sector || occupationData.sector.trim().length === 0) {
-        throw new Error("Sector cannot be empty. All occupations must have a valid sector.");
+        throw new ValidationError("Sector cannot be empty. All occupations must have a valid sector.");
       }
     }
     
@@ -7214,7 +7214,7 @@ export class DatabaseStorage implements IStorage {
     // Also check existing occupation to ensure we don't lose the sector
     const existing = await this.getWorkforceRecruiterOccupation(id);
     if (!existing) {
-      throw new Error("Occupation not found");
+      throw new NotFoundError("Occupation");
     }
     
     // If sector is being updated, validate it

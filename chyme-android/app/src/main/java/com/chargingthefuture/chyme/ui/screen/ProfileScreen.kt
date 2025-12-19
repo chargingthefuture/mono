@@ -131,7 +131,7 @@ fun ProfileScreen(
                         )
                     ) {
                         Icon(
-                            Icons.Default.SwapHoriz,
+                            Icons.Default.AccountCircle,
                             contentDescription = null,
                             modifier = Modifier.size(20.dp)
                         )
