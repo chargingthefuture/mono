@@ -174,7 +174,7 @@ class WebRTCManager(
                     PeerConnection.IceConnectionState.FAILED -> {
                         peerConnectionStates[userId] = PeerConnection.PeerConnectionState.FAILED
                     }
-                    PeerConnection.IceConnectionState.CONNECTING -> {
+                    PeerConnection.IceConnectionState.CHECKING -> {
                         peerConnectionStates[userId] = PeerConnection.PeerConnectionState.CONNECTING
                     }
                     else -> {}
