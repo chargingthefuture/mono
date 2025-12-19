@@ -1,22 +1,4 @@
 import { useEffect, useState, useMemo } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
-
-// Fix for default marker icons in React-Leaflet
-import icon from "leaflet/dist/images/marker-icon.png";
-import iconShadow from "leaflet/dist/images/marker-shadow.png";
-
-const DefaultIcon = L.icon({
-  iconUrl: icon,
-  shadowUrl: iconShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
-
-L.Marker.prototype.options.icon = DefaultIcon;
 
 type ProfileLocation = {
   id: string;
@@ -39,18 +21,38 @@ type LocationWithCoords = {
 
 // Component to adjust map view when markers change
 function MapBounds({ locations }: { locations: LocationWithCoords[] }) {
-  const map = useMap();
+  const [useMapHook, setUseMapHook] = useState<any>(null);
+  const [Leaflet, setLeaflet] = useState<any>(null);
 
   useEffect(() => {
-    if (locations.length === 0) return;
+    // Dynamically import useMap and Leaflet only on client
+    Promise.all([
+      import("react-leaflet").then((mod) => mod.useMap),
+      import("leaflet").then((mod) => mod.default),
+    ]).then(([useMap, L]) => {
+      setUseMapHook(() => useMap);
+      setLeaflet(L);
+    });
+  }, []);
 
-    const bounds = L.latLngBounds(
-      locations.map((loc) => [loc.lat, loc.lng])
-    );
-    map.fitBounds(bounds, { padding: [50, 50], maxZoom: 10 });
-  }, [locations, map]);
+  if (!useMapHook || !Leaflet) return null;
 
-  return null;
+  const MapBoundsInner = () => {
+    const map = useMapHook();
+    
+    useEffect(() => {
+      if (locations.length === 0 || !map) return;
+
+      const bounds = Leaflet.latLngBounds(
+        locations.map((loc) => [loc.lat, loc.lng])
+      );
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 10 });
+    }, [locations, map, Leaflet]);
+
+    return null;
+  };
+
+  return <MapBoundsInner />;
 }
 
 type DirectoryMapProps = {
@@ -59,10 +61,33 @@ type DirectoryMapProps = {
 
 export function DirectoryMap({ profiles }: DirectoryMapProps) {
   const [isMounted, setIsMounted] = useState(false);
+  const [MapComponents, setMapComponents] = useState<any>(null);
 
-  // Ensure component only renders on client side
+  // Ensure component only renders on client side and load Leaflet
   useEffect(() => {
     setIsMounted(true);
+    
+    // Dynamically import all Leaflet components and CSS
+    Promise.all([
+      import("leaflet/dist/leaflet.css"),
+      import("react-leaflet"),
+      import("leaflet"),
+    ]).then(([_, reactLeaflet, L]) => {
+      // Fix default marker icons
+      delete (L.default.Icon.Default.prototype as any)._getIconUrl;
+      L.default.Icon.Default.mergeOptions({
+        iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+        iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+      });
+      
+      setMapComponents({
+        MapContainer: reactLeaflet.MapContainer,
+        TileLayer: reactLeaflet.TileLayer,
+        Marker: reactLeaflet.Marker,
+        Popup: reactLeaflet.Popup,
+      });
+    });
   }, []);
 
   // Filter profiles that have coordinates (already geocoded and stored in DB)
@@ -76,7 +101,7 @@ export function DirectoryMap({ profiles }: DirectoryMapProps) {
       }));
   }, [profiles]);
 
-  if (!isMounted) {
+  if (!isMounted || !MapComponents) {
     return (
       <div className="w-full h-[500px] bg-muted rounded-lg flex items-center justify-center">
         <p className="text-muted-foreground">Loading map...</p>
@@ -91,6 +116,8 @@ export function DirectoryMap({ profiles }: DirectoryMapProps) {
       </div>
     );
   }
+
+  const { MapContainer, TileLayer, Marker, Popup } = MapComponents;
 
   // Default center (world center) - will be adjusted by MapBounds
   const defaultCenter: [number, number] = [20, 0];
