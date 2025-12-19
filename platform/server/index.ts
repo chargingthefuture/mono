@@ -129,10 +129,21 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // 404 handler - must be after all routes (including static file serving)
-  // In Express, app.use() middleware executes BEFORE route matching, so we can't use it here
-  // Instead, we register a catch-all route that only executes if no other route matched
-  // This is the correct way to handle 404s in Express
+  // ========================================
+  // 404 NOT FOUND HANDLER
+  // ========================================
+  // CRITICAL: This MUST be registered AFTER all route handlers (app.get, app.post, etc.)
+  // 
+  // In Express, middleware registered with app.use() executes BEFORE route matching,
+  // which means it would intercept ALL requests before they reach route handlers.
+  // This would cause valid API routes to return 404 errors incorrectly.
+  //
+  // SOLUTION: Use app.all("*", ...) instead of app.use() for 404 handling.
+  // app.all() is a route handler that only executes if NO other route matched,
+  // ensuring that valid routes are processed first.
+  //
+  // DO NOT use app.use() for API 404 handling - it will break route matching!
+  // ========================================
   app.all("*", async (req, res, next) => {
     // Only handle API routes that weren't matched by any route handler
     // Express will only reach this route if no other route matched
