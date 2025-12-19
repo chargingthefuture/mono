@@ -8,6 +8,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.unit.size
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -70,18 +71,21 @@ fun HomeScreen(
                     .padding(horizontal = 16.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp)
             ) {
+                @OptIn(ExperimentalMaterialApi::class)
                 FilterChip(
                     selected = uiState.selectedRoomType == null,
                     onClick = { viewModel.loadRooms(null) }
                 ) {
                     Text("All")
                 }
+                @OptIn(ExperimentalMaterialApi::class)
                 FilterChip(
                     selected = uiState.selectedRoomType == "public",
                     onClick = { viewModel.loadRooms("public") }
                 ) {
                     Text("Public")
                 }
+                @OptIn(ExperimentalMaterialApi::class)
                 FilterChip(
                     selected = uiState.selectedRoomType == "private",
                     onClick = { viewModel.loadRooms("private") }
@@ -184,6 +188,7 @@ fun RoomCard(
                     style = MaterialTheme.typography.h6,
                     fontWeight = FontWeight.Bold
                 )
+                @OptIn(ExperimentalMaterialApi::class)
                 Chip(
                     onClick = { },
                     colors = ChipDefaults.chipColors(
@@ -235,7 +240,7 @@ fun RoomCard(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        Icons.Default.Group,
+                        Icons.Default.Person,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp)
                     )
@@ -248,7 +253,7 @@ fun RoomCard(
                 if (room.isActive) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            Icons.Default.Circle,
+                            Icons.Default.RadioButtonChecked,
                             contentDescription = null,
                             modifier = Modifier.size(12.dp),
                             tint = MaterialTheme.colors.error

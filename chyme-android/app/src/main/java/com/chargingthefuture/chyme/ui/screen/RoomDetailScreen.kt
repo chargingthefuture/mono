@@ -212,7 +212,7 @@ fun RoomInfoCard(room: com.chargingthefuture.chyme.data.model.ChymeRoom?) {
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.Group, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Icon(Icons.Default.Person, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "${room.currentParticipants}${room.maxParticipants?.let { "/$it" } ?: ""}",
@@ -222,7 +222,7 @@ fun RoomInfoCard(room: com.chargingthefuture.chyme.data.model.ChymeRoom?) {
                 if (room.isActive) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            Icons.Default.Circle,
+                            Icons.Default.RadioButtonChecked,
                             contentDescription = null,
                             modifier = Modifier.size(12.dp),
                             tint = MaterialTheme.colors.error
@@ -296,12 +296,12 @@ fun ParticipantCard(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (participant.role == com.chargingthefuture.chyme.data.model.ParticipantRole.LISTENER) {
                         IconButton(onClick = onPromoteToSpeaker) {
-                            Icon(Icons.Default.VolumeUp, contentDescription = "Promote to speaker")
+                            Icon(Icons.Default.ArrowUpward, contentDescription = "Promote to speaker")
                         }
                     }
                     IconButton(onClick = onMute) {
                         Icon(
-                            if (participant.isMuted) Icons.Default.VolumeMute else Icons.Default.VolumeUp,
+                            if (participant.isMuted) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                             contentDescription = if (participant.isMuted) "Unmute" else "Mute"
                         )
                     }
@@ -337,7 +337,7 @@ fun RoomControls(
         ) {
             if (currentRole == ParticipantRole.LISTENER && !hasRaisedHand) {
                 Button(onClick = onRaiseHand) {
-                    Icon(Icons.Default.TouchApp, contentDescription = null)
+                    Icon(Icons.Default.Add, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Raise Hand")
                 }
@@ -349,7 +349,7 @@ fun RoomControls(
                     modifier = Modifier.size(56.dp)
                 ) {
                     Icon(
-                        if (isMuted) Icons.Default.VolumeMute else Icons.Default.VolumeUp,
+                        if (isMuted) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                         contentDescription = if (isMuted) "Unmute" else "Mute",
                         modifier = Modifier.size(32.dp)
                     )
