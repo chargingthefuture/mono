@@ -7388,3 +7388,4 @@ export class DatabaseStorage implements IStorage {
       total,
     };
   }
+}
