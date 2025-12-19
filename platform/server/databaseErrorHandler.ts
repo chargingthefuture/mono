@@ -6,7 +6,6 @@
  */
 
 import { DatabaseError, ValidationError, ConflictError, NotFoundError, ExternalServiceError } from './errors';
-import { logError } from './errorLogger';
 
 /**
  * PostgreSQL error interface
@@ -116,12 +115,8 @@ export function isPostgresError(error: any): error is PostgresError {
  * Convert database error to application error
  */
 export function handleDatabaseError(error: any, context?: string): DatabaseError | ValidationError | ConflictError | NotFoundError | ExternalServiceError {
-  // Normalize and log the error using the structured logging system
-  const normalized = error instanceof Error ? error : new Error(String(error));
-  logError(normalized, { 
-    userId: undefined, 
-    path: context 
-  } as any);
+  // Note: Error logging is handled by the error handler middleware which has access to the proper request object
+  // We don't log here to avoid passing incomplete request objects to the logging system
   
   // Check if it's a connection/timeout error first (before checking if it's a PostgreSQL error)
   // This handles Neon serverless connection errors that might not have PostgreSQL error codes
@@ -268,7 +263,8 @@ export async function withDatabaseErrorHandling<T>(
   try {
     return await operation();
   } catch (error) {
-    // handleDatabaseError will log the error, so we just need to throw the converted error
+    // Convert database error to application error
+    // Error logging will be handled by the error handler middleware which has access to the proper request object
     throw handleDatabaseError(error, context);
   }
 }
