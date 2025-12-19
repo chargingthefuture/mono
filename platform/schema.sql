@@ -921,6 +921,7 @@ CREATE TABLE IF NOT EXISTS chyme_rooms (
   room_type VARCHAR(20) NOT NULL DEFAULT 'public',
   is_active BOOLEAN NOT NULL DEFAULT true,
   max_participants INTEGER,
+  pinned_link TEXT,
   created_by VARCHAR NOT NULL REFERENCES users(id),
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP NOT NULL DEFAULT NOW()

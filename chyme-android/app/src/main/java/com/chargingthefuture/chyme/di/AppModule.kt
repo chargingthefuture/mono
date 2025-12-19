@@ -1,6 +1,7 @@
 package com.chargingthefuture.chyme.di
 
 import android.content.Context
+import com.chargingthefuture.chyme.auth.MobileAuthManager
 import com.chargingthefuture.chyme.data.repository.RoomRepository
 import com.chargingthefuture.chyme.data.repository.UserRepository
 import com.chargingthefuture.chyme.data.repository.WebRTCRepository
@@ -33,6 +34,14 @@ object AppModule {
         @ApplicationContext context: Context
     ): WebRTCRepository {
         return WebRTCRepository(context)
+    }
+    
+    @Provides
+    @Singleton
+    fun provideMobileAuthManager(
+        @ApplicationContext context: Context
+    ): MobileAuthManager {
+        return MobileAuthManager(context)
     }
 }
 

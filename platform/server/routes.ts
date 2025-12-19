@@ -6429,6 +6429,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   }));
 
+  // PUT /api/chyme/rooms/:roomId/pinned-link
+  app.put('/api/chyme/rooms/:roomId/pinned-link', isAuthenticated, asyncHandler(async (req: any, res) => {
+    const currentUserId = getUserId(req);
+    const roomId = req.params.roomId;
+    const { pinnedLink } = req.body as { pinnedLink?: string | null };
+
+    const room = await withDatabaseErrorHandling(
+      () => storage.getChymeRoom(roomId),
+      'getChymeRoom'
+    );
+
+    if (!room || !room.isActive) {
+      return res.status(404).json({ message: "Room not found" });
+    }
+
+    // Only the room creator or an admin can change the pinned link
+    const isCreator = room.createdBy === currentUserId;
+    const currentUser = await withDatabaseErrorHandling(
+      () => storage.getUser(currentUserId),
+      'getUser'
+    );
+    const isAdmin = currentUser?.isAdmin || false;
+
+    if (!isCreator && !isAdmin) {
+      return res.status(403).json({ message: "Only room creator or admin can update pinned link" });
+    }
+
+    const updatedRoom = await withDatabaseErrorHandling(
+      () => storage.updateChymeRoomPinnedLink(roomId, pinnedLink ?? null),
+      'updateChymeRoomPinnedLink'
+    );
+
+    res.json(updatedRoom);
+  }));
+
   // POST /api/chyme/admin/rooms (admin-only)
   app.post('/api/chyme/admin/rooms', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
@@ -6465,6 +6500,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
       ...room,
       currentParticipants: 0,
     });
+  }));
+
+  // DELETE /api/chyme/rooms/:roomId (end/deactivate room)
+  app.delete('/api/chyme/rooms/:roomId', isAuthenticated, asyncHandler(async (req: any, res) => {
+    const currentUserId = getUserId(req);
+    const roomId = req.params.roomId;
+
+    const room = await withDatabaseErrorHandling(
+      () => storage.getChymeRoom(roomId),
+      'getChymeRoom'
+    );
+
+    if (!room) {
+      return res.status(404).json({ message: "Room not found" });
+    }
+
+    // Check if current user is the room creator or admin
+    const isCreator = room.createdBy === currentUserId;
+    const currentUser = await withDatabaseErrorHandling(
+      () => storage.getUser(currentUserId),
+      'getUser'
+    );
+    const isAdmin = currentUser?.isAdmin || false;
+
+    if (!isCreator && !isAdmin) {
+      return res.status(403).json({ message: "Only room creator or admin can end the room" });
+    }
+
+    const deactivatedRoom = await withDatabaseErrorHandling(
+      () => storage.deactivateChymeRoom(roomId),
+      'deactivateChymeRoom'
+    );
+
+    res.json({ message: "Room ended", room: deactivatedRoom });
   }));
 
   // POST /api/chyme/rooms/:roomId/join

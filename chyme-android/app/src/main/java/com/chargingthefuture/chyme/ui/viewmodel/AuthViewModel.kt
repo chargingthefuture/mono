@@ -4,11 +4,15 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.chargingthefuture.chyme.auth.MobileAuthManager
 import com.chargingthefuture.chyme.utils.SentryHelper
 import io.sentry.SentryLevel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import dagger.hilt.android.lifecycle.HiltViewModel
+import javax.inject.Inject
 
 data class AuthUiState(
     val isLoading: Boolean = false,
@@ -16,7 +20,11 @@ data class AuthUiState(
     val errorMessage: String? = null
 )
 
-class AuthViewModel(application: Application) : AndroidViewModel(application) {
+@HiltViewModel
+class AuthViewModel @Inject constructor(
+    application: Application,
+    private val authManager: MobileAuthManager
+) : AndroidViewModel(application) {
     
     private val _uiState = MutableStateFlow(AuthUiState())
     val uiState: StateFlow<AuthUiState> = _uiState.asStateFlow()
@@ -47,10 +55,26 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     }
     
     fun signOut() {
-        _uiState.value = _uiState.value.copy(
-            isAuthenticated = false,
-            errorMessage = null
-        )
+        viewModelScope.launch {
+            try {
+                authManager.signOut()
+                _uiState.value = _uiState.value.copy(
+                    isAuthenticated = false,
+                    errorMessage = null
+                )
+                SentryHelper.addBreadcrumb(
+                    message = "User signed out",
+                    category = "auth",
+                    level = SentryLevel.INFO
+                )
+            } catch (e: Exception) {
+                Log.e("AuthViewModel", "Failed to sign out", e)
+                _uiState.value = _uiState.value.copy(
+                    isAuthenticated = false,
+                    errorMessage = "Failed to sign out: ${e.message}"
+                )
+            }
+        }
     }
 }
 

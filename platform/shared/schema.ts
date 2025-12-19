@@ -2425,6 +2425,7 @@ export const chymeRooms = pgTable("chyme_rooms", {
   roomType: varchar("room_type", { length: 20 }).notNull().default('public'), // 'public' or 'private'
   isActive: boolean("is_active").notNull().default(true),
   maxParticipants: integer("max_participants"),
+  pinnedLink: text("pinned_link"),
   createdBy: varchar("created_by").notNull().references(() => users.id),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),

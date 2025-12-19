@@ -34,6 +34,11 @@ const LeafletMapComponent = lazy(async () => {
   // Handle both default and named exports for leaflet
   const Leaflet = leafletModule.default || leafletModule;
   
+  // Validate Leaflet is available
+  if (!Leaflet || typeof Leaflet !== "object") {
+    throw new Error("Failed to load leaflet");
+  }
+  
   // Fix default marker icons - ensure we're accessing the correct structure
   if (Leaflet.Icon && Leaflet.Icon.Default) {
     delete (Leaflet.Icon.Default.prototype as any)._getIconUrl;
@@ -52,9 +57,26 @@ const LeafletMapComponent = lazy(async () => {
   const Popup = reactLeafletModule.Popup || (reactLeafletModule as any).default?.Popup;
   const useMap = reactLeafletModule.useMap || (reactLeafletModule as any).default?.useMap;
 
-  // Validate that all required components are available
-  if (!MapContainer || !TileLayer || !Marker || !Popup || !useMap) {
-    throw new Error("Failed to load react-leaflet components");
+  // Validate that all required components are available and are functions
+  if (!MapContainer || typeof MapContainer !== "function") {
+    throw new Error("MapContainer is not a valid component");
+  }
+  if (!TileLayer || typeof TileLayer !== "function") {
+    throw new Error("TileLayer is not a valid component");
+  }
+  if (!Marker || typeof Marker !== "function") {
+    throw new Error("Marker is not a valid component");
+  }
+  if (!Popup || typeof Popup !== "function") {
+    throw new Error("Popup is not a valid component");
+  }
+  if (!useMap || typeof useMap !== "function") {
+    throw new Error("useMap is not a valid hook");
+  }
+
+  // Validate Leaflet methods are available
+  if (!Leaflet.latLngBounds || typeof Leaflet.latLngBounds !== "function") {
+    throw new Error("Leaflet.latLngBounds is not available");
   }
 
   // Return a component that uses the loaded modules
@@ -67,12 +89,22 @@ const LeafletMapComponent = lazy(async () => {
 
         useEffect(() => {
           if (locations.length === 0 || !map) return;
+          
+          // Ensure map has fitBounds method
+          if (!map || typeof map.fitBounds !== "function") {
+            console.warn("map.fitBounds is not available");
+            return;
+          }
 
-          const bounds = Leaflet.latLngBounds(
-            locations.map((loc) => [loc.lat, loc.lng])
-          );
-          map.fitBounds(bounds, { padding: [50, 50], maxZoom: 10 });
-        }, [locations, map, Leaflet]);
+          try {
+            const bounds = Leaflet.latLngBounds(
+              locations.map((loc) => [loc.lat, loc.lng])
+            );
+            map.fitBounds(bounds, { padding: [50, 50], maxZoom: 10 });
+          } catch (error) {
+            console.error("Error setting map bounds:", error);
+          }
+        }, [locations, map]);
 
         return null;
       }

@@ -120,10 +120,8 @@ dependencies {
     implementation("com.google.dagger:hilt-android:2.48")
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
     
-    // WebRTC for audio streaming
-    // Note: WebRTC requires custom repository setup or local AAR file
-    // For now, commented out - will need proper WebRTC setup for production
-    // implementation("org.webrtc:google-webrtc:1.0.32006")
+    // WebRTC for audio streaming (local mic control)
+    implementation("org.webrtc:google-webrtc:1.0.32006")
     
     // Image loading
     implementation("io.coil-kt:coil-compose:2.5.0")

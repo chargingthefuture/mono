@@ -108,6 +108,14 @@ app.use((req, res, next) => {
 (async () => {
   const server = await registerRoutes(app);
 
+  // Attach Chyme WebRTC signaling WebSocket server
+  try {
+    const { attachChymeSignaling } = await import("./chymeSignaling");
+    attachChymeSignaling(server);
+  } catch (err) {
+    console.error("Failed to attach Chyme signaling WebSocket server:", err);
+  }
+
   // Block security probe paths before serving static files
   // This prevents requests to /.git/*, /.env, etc. from being served
   app.use(blockSecurityProbes);

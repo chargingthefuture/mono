@@ -21,11 +21,13 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.chargingthefuture.chyme.data.model.ChymeRoom
 import com.chargingthefuture.chyme.ui.viewmodel.HomeViewModel
+import com.chargingthefuture.chyme.ui.viewmodel.AuthViewModel
 
 @Composable
 fun HomeScreen(
     navController: NavController,
-    viewModel: HomeViewModel = hiltViewModel()
+    viewModel: HomeViewModel = hiltViewModel(),
+    authViewModel: AuthViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
     var showCreateRoom by remember { mutableStateOf(false) }
@@ -37,6 +39,11 @@ fun HomeScreen(
                 actions = {
                     IconButton(onClick = { showCreateRoom = true }) {
                         Icon(Icons.Default.Add, contentDescription = "Create Room")
+                    }
+                    IconButton(onClick = { 
+                        authViewModel.signOut()
+                    }) {
+                        Icon(Icons.Default.ExitToApp, contentDescription = "Sign Out")
                     }
                 }
             )
@@ -133,7 +140,13 @@ fun HomeScreen(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
                     ) {
-                        Text("No rooms found")
+                        Text(
+                            text = if (uiState.hasStaleData) {
+                                "No rooms match your filters (showing last known data)."
+                            } else {
+                                "No rooms found"
+                            }
+                        )
                     }
                 }
                 else -> {
@@ -216,7 +229,26 @@ fun RoomCard(
                     color = MaterialTheme.colors.onSurface.copy(alpha = 0.7f)
                 )
             }
-            
+
+            if (!room.pinnedLink.isNullOrBlank()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        Icons.Default.Link,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colors.primary
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = room.pinnedLink,
+                        style = MaterialTheme.typography.caption,
+                        maxLines = 1,
+                        color = MaterialTheme.colors.primary
+                    )
+                }
+            }
+
             if (!room.topic.isNullOrBlank()) {
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {

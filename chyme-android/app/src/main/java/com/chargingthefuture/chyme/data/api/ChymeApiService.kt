@@ -26,6 +26,9 @@ interface ChymeApiService {
     @POST("/api/chyme/rooms")
     suspend fun createRoom(@Body request: CreateRoomRequest): Response<ChymeRoom>
     
+    @DELETE("/api/chyme/rooms/{roomId}")
+    suspend fun endRoom(@Path("roomId") roomId: String): Response<ApiError>
+    
     @POST("/api/chyme/rooms/{roomId}/join")
     suspend fun joinRoom(@Path("roomId") roomId: String): Response<ApiError>
     
@@ -53,6 +56,18 @@ interface ChymeApiService {
     
     @GET("/api/chyme/rooms/{roomId}/messages")
     suspend fun getRoomMessages(@Path("roomId") roomId: String): Response<List<ChymeMessage>>
+
+    @POST("/api/chyme/rooms/{roomId}/messages")
+    suspend fun sendRoomMessage(
+        @Path("roomId") roomId: String,
+        @Body request: SendMessageRequest
+    ): Response<ChymeMessage>
+
+    @PUT("/api/chyme/rooms/{roomId}/pinned-link")
+    suspend fun updatePinnedLink(
+        @Path("roomId") roomId: String,
+        @Body body: UpdatePinnedLinkRequest
+    ): Response<ChymeRoom>
     
     // User endpoints
     @POST("/api/chyme/users/{userId}/follow")

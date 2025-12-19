@@ -283,6 +283,16 @@ class MobileAuthManager(private val context: Context) {
             false
         }
     }
+
+    /**
+     * Get current user ID
+     *
+     * This mirrors the behaviour in OTPAuthManager so shared code like RoomViewModel
+     * can depend on a common auth interface regardless of how the user logged in.
+     */
+    val userId: Flow<String?> = context.dataStore.data.map { preferences ->
+        preferences[AuthToken.USER_ID_KEY]
+    }
     
     /**
      * Sign out - clear stored token

@@ -18,7 +18,8 @@ data class HomeUiState(
     val filteredRooms: List<ChymeRoom> = emptyList(),
     val searchQuery: String = "",
     val selectedRoomType: String? = null,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val hasStaleData: Boolean = false
 )
 
 @HiltViewModel
@@ -48,14 +49,25 @@ class HomeViewModel @Inject constructor(
                         isLoading = false,
                         rooms = rooms,
                         filteredRooms = filterRooms(rooms, _uiState.value.searchQuery),
-                        errorMessage = null
+                        errorMessage = null,
+                        hasStaleData = false
                     )
                 },
                 onFailure = { error ->
-                    _uiState.value = _uiState.value.copy(
-                        isLoading = false,
-                        errorMessage = error.message ?: "Failed to load rooms"
-                    )
+                    val hasExisting = _uiState.value.rooms.isNotEmpty()
+                    _uiState.value = if (hasExisting) {
+                        _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = error.message ?: "Failed to refresh rooms (showing last known list)",
+                            hasStaleData = true
+                        )
+                    } else {
+                        _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = error.message ?: "Failed to load rooms",
+                            hasStaleData = false
+                        )
+                    }
                 }
             )
         }

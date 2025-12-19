@@ -821,6 +821,7 @@ export interface IStorage {
   getChymeRooms(roomType?: "public" | "private"): Promise<ChymeRoom[]>;
   updateChymeRoom(id: string, room: Partial<InsertChymeRoom>): Promise<ChymeRoom>;
   deactivateChymeRoom(id: string): Promise<ChymeRoom>;
+  updateChymeRoomPinnedLink(id: string, pinnedLink: string | null): Promise<ChymeRoom>;
   getChymeRoomParticipantCount(roomId: string): Promise<number>;
 
   // Chyme Room Participant operations
@@ -6756,6 +6757,18 @@ export class DatabaseStorage implements IStorage {
       .update(chymeRooms)
       .set({
         isActive: false,
+        updatedAt: new Date(),
+      })
+      .where(eq(chymeRooms.id, id))
+      .returning();
+    return room;
+  }
+
+  async updateChymeRoomPinnedLink(id: string, pinnedLink: string | null): Promise<ChymeRoom> {
+    const [room] = await db
+      .update(chymeRooms)
+      .set({
+        pinnedLink,
         updatedAt: new Date(),
       })
       .where(eq(chymeRooms.id, id))
