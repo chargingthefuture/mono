@@ -80,9 +80,9 @@ fun CreateRoomScreen(
                     singleLine = true
                 )
                 
-                if (uiState.errorMessage != null) {
+                uiState.errorMessage?.let { errorMessage ->
                     Text(
-                        text = uiState.errorMessage,
+                        text = errorMessage,
                         color = MaterialTheme.colors.error,
                         style = MaterialTheme.typography.caption
                     )

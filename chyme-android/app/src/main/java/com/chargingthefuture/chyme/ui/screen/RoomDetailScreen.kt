@@ -72,6 +72,7 @@ fun RoomDetailScreen(
                 }
             }
             uiState.errorMessage != null -> {
+                val errorMessage = uiState.errorMessage
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -81,7 +82,7 @@ fun RoomDetailScreen(
                     verticalArrangement = Arrangement.Center
                 ) {
                     Text(
-                        text = uiState.errorMessage,
+                        text = errorMessage ?: "Unknown error",
                         color = MaterialTheme.colors.error,
                         modifier = Modifier.padding(bottom = 16.dp)
                     )
@@ -193,7 +194,7 @@ fun RoomInfoCard(room: com.chargingthefuture.chyme.data.model.ChymeRoom?) {
                 Spacer(modifier = Modifier.height(8.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        Icons.Default.Label,
+                        Icons.Default.Info,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp),
                         tint = MaterialTheme.colors.primary
@@ -211,7 +212,7 @@ fun RoomInfoCard(room: com.chargingthefuture.chyme.data.model.ChymeRoom?) {
                 horizontalArrangement = Arrangement.spacedBy(16.dp)
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
-                    Icon(Icons.Default.People, contentDescription = null, modifier = Modifier.size(16.dp))
+                    Icon(Icons.Default.Group, contentDescription = null, modifier = Modifier.size(16.dp))
                     Spacer(modifier = Modifier.width(4.dp))
                     Text(
                         text = "${room.currentParticipants}${room.maxParticipants?.let { "/$it" } ?: ""}",
@@ -221,7 +222,7 @@ fun RoomInfoCard(room: com.chargingthefuture.chyme.data.model.ChymeRoom?) {
                 if (room.isActive) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            Icons.Default.FiberManualRecord,
+                            Icons.Default.Circle,
                             contentDescription = null,
                             modifier = Modifier.size(12.dp),
                             tint = MaterialTheme.colors.error
@@ -295,12 +296,12 @@ fun ParticipantCard(
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     if (participant.role == com.chargingthefuture.chyme.data.model.ParticipantRole.LISTENER) {
                         IconButton(onClick = onPromoteToSpeaker) {
-                            Icon(Icons.Default.Mic, contentDescription = "Promote to speaker")
+                            Icon(Icons.Default.VolumeUp, contentDescription = "Promote to speaker")
                         }
                     }
                     IconButton(onClick = onMute) {
                         Icon(
-                            if (participant.isMuted) Icons.Default.VolumeOff else Icons.Default.VolumeUp,
+                            if (participant.isMuted) Icons.Default.VolumeMute else Icons.Default.VolumeUp,
                             contentDescription = if (participant.isMuted) "Unmute" else "Mute"
                         )
                     }
@@ -336,7 +337,7 @@ fun RoomControls(
         ) {
             if (currentRole == ParticipantRole.LISTENER && !hasRaisedHand) {
                 Button(onClick = onRaiseHand) {
-                    Icon(Icons.Default.PanTool, contentDescription = null)
+                    Icon(Icons.Default.TouchApp, contentDescription = null)
                     Spacer(modifier = Modifier.width(8.dp))
                     Text("Raise Hand")
                 }
@@ -348,7 +349,7 @@ fun RoomControls(
                     modifier = Modifier.size(56.dp)
                 ) {
                     Icon(
-                        if (isMuted) Icons.Default.MicOff else Icons.Default.Mic,
+                        if (isMuted) Icons.Default.VolumeMute else Icons.Default.VolumeUp,
                         contentDescription = if (isMuted) "Unmute" else "Mute",
                         modifier = Modifier.size(32.dp)
                     )

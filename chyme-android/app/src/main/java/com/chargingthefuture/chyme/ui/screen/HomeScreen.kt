@@ -12,6 +12,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.chargingthefuture.chyme.data.model.ChymeRoom
@@ -71,19 +72,22 @@ fun HomeScreen(
             ) {
                 FilterChip(
                     selected = uiState.selectedRoomType == null,
-                    onClick = { viewModel.loadRooms(null) },
-                    label = { Text("All") }
-                )
+                    onClick = { viewModel.loadRooms(null) }
+                ) {
+                    Text("All")
+                }
                 FilterChip(
                     selected = uiState.selectedRoomType == "public",
-                    onClick = { viewModel.loadRooms("public") },
-                    label = { Text("Public") }
-                )
+                    onClick = { viewModel.loadRooms("public") }
+                ) {
+                    Text("Public")
+                }
                 FilterChip(
                     selected = uiState.selectedRoomType == "private",
-                    onClick = { viewModel.loadRooms("private") },
-                    label = { Text("Private") }
-                )
+                    onClick = { viewModel.loadRooms("private") }
+                ) {
+                    Text("Private")
+                }
             }
             
             Spacer(modifier = Modifier.height(8.dp))
@@ -99,6 +103,7 @@ fun HomeScreen(
                     }
                 }
                 uiState.errorMessage != null -> {
+                    val errorMessage = uiState.errorMessage
                     Column(
                         modifier = Modifier
                             .fillMaxSize()
@@ -107,7 +112,7 @@ fun HomeScreen(
                         verticalArrangement = Arrangement.Center
                     ) {
                         Text(
-                            text = uiState.errorMessage,
+                            text = errorMessage ?: "Unknown error",
                             color = MaterialTheme.colors.error,
                             modifier = Modifier.padding(bottom = 16.dp)
                         )
@@ -180,6 +185,7 @@ fun RoomCard(
                     fontWeight = FontWeight.Bold
                 )
                 Chip(
+                    onClick = { },
                     colors = ChipDefaults.chipColors(
                         backgroundColor = if (room.roomType == "public") 
                             MaterialTheme.colors.primary 
@@ -207,7 +213,7 @@ fun RoomCard(
                 Spacer(modifier = Modifier.height(4.dp))
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        Icons.Default.Label,
+                        Icons.Default.Info,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp),
                         tint = MaterialTheme.colors.primary
@@ -229,7 +235,7 @@ fun RoomCard(
             ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Icon(
-                        Icons.Default.People,
+                        Icons.Default.Group,
                         contentDescription = null,
                         modifier = Modifier.size(16.dp)
                     )
@@ -242,7 +248,7 @@ fun RoomCard(
                 if (room.isActive) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            Icons.Default.FiberManualRecord,
+                            Icons.Default.Circle,
                             contentDescription = null,
                             modifier = Modifier.size(12.dp),
                             tint = MaterialTheme.colors.error
