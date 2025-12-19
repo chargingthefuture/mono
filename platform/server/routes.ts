@@ -6232,8 +6232,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(403).json({ message: "User is not approved" });
     }
     
-    // Generate a secure 6-character alphanumeric code
-    const code = randomBytes(3).toString('hex').toUpperCase(); // 6 characters
+    // Generate a secure 8-character alphanumeric code
+    const code = randomBytes(4).toString('hex').toUpperCase(); // 8 characters
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
     
     // Store code in database (reuse OTP code storage)

@@ -39,12 +39,17 @@ class AuthViewModel(application: Application) : AndroidViewModel(application) {
     }
     
     fun setAuthenticated(isAuthenticated: Boolean) {
-        _uiState.value = _uiState.value.copy(isAuthenticated = isAuthenticated)
+        _uiState.value = _uiState.value.copy(isAuthenticated = isAuthenticated, errorMessage = null)
+    }
+    
+    fun setError(message: String) {
+        _uiState.value = _uiState.value.copy(errorMessage = message)
     }
     
     fun signOut() {
         _uiState.value = _uiState.value.copy(
-            isAuthenticated = false
+            isAuthenticated = false,
+            errorMessage = null
         )
     }
 }

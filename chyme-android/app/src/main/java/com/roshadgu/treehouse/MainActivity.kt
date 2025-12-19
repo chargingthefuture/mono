@@ -23,6 +23,7 @@ import kotlinx.coroutines.launch
 
 class MainActivity : AppCompatActivity() {
     private lateinit var authManager: MobileAuthManager
+    private var authViewModel: AuthViewModel? = null
     
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -49,8 +50,11 @@ class MainActivity : AppCompatActivity() {
         handleDeepLink(intent)
         
         setContent {
+            val viewModel: AuthViewModel = viewModel()
+            authViewModel = viewModel
+            
             TreehouseTheme {
-                MainScreen(authManager)
+                MainScreen(authManager, viewModel)
             }
         }
     }
@@ -69,14 +73,21 @@ class MainActivity : AppCompatActivity() {
             if (uri.scheme == "chyme" && uri.host == "auth") {
                 val code = uri.getQueryParameter("code")
                 if (code != null) {
-                    Log.d("MainActivity", "Received deep link with code: ${code.take(2)}****")
+                    Log.d("MainActivity", "Received deep link with code: ${code.take(2)}**** (length: ${code.length})")
                     
                     SentryHelper.addBreadcrumb(
                         message = "Deep link received for mobile auth",
                         category = "deep_link",
                         level = SentryLevel.INFO,
-                        data = mapOf("has_code" to "true")
+                        data = mapOf(
+                            "has_code" to "true",
+                            "code_length" to code.length.toString(),
+                            "code_preview" to code.take(2)
+                        )
                     )
+                    
+                    // Clear any previous errors
+                    authViewModel?.clearError()
                     
                     // Validate code in background
                     CoroutineScope(Dispatchers.IO).launch {
@@ -100,7 +111,28 @@ class MainActivity : AppCompatActivity() {
                                     // Update UI will happen automatically via auth state flow
                                 },
                                 onFailure = { error ->
-                                    Log.e("MainActivity", "Mobile auth failed", error)
+                                    val errorMessage = when {
+                                        error.message?.contains("Invalid code format") == true -> {
+                                            "Invalid authentication code format. Please generate a new code from the web app."
+                                        }
+                                        error.message?.contains("expired") == true -> {
+                                            "Authentication code has expired. Please generate a new code."
+                                        }
+                                        error.message?.contains("not approved") == true -> {
+                                            "Your account is not approved yet. Please contact support."
+                                        }
+                                        else -> {
+                                            "Authentication failed: ${error.message ?: "Unknown error"}. Please try again."
+                                        }
+                                    }
+                                    
+                                    Log.e("MainActivity", "Mobile auth failed: $errorMessage", error)
+                                    
+                                    // Update UI on main thread
+                                    CoroutineScope(Dispatchers.Main).launch {
+                                        authViewModel?.setError(errorMessage)
+                                    }
+                                    
                                     SentryHelper.captureException(
                                         throwable = error,
                                         level = SentryLevel.ERROR,
@@ -110,7 +142,14 @@ class MainActivity : AppCompatActivity() {
                                 }
                             )
                         } catch (e: Exception) {
+                            val errorMessage = "Error processing authentication: ${e.message ?: "Unknown error"}"
                             Log.e("MainActivity", "Error processing deep link", e)
+                            
+                            // Update UI on main thread
+                            CoroutineScope(Dispatchers.Main).launch {
+                                authViewModel?.setError(errorMessage)
+                            }
+                            
                             SentryHelper.captureException(
                                 throwable = e,
                                 level = SentryLevel.ERROR,
@@ -136,7 +175,11 @@ class MainActivity : AppCompatActivity() {
                 val code = uri.getQueryParameter("code")
                 if (code != null) {
                     // If there's a code, try to validate it
-                    Log.d("MainActivity", "Found code parameter in HTTPS URL: ${code.take(2)}****")
+                    Log.d("MainActivity", "Found code parameter in HTTPS URL: ${code.take(2)}**** (length: ${code.length})")
+                    
+                    // Clear any previous errors
+                    authViewModel?.clearError()
+                    
                     CoroutineScope(Dispatchers.IO).launch {
                         try {
                             val result = authManager.validateMobileCode(code)
@@ -157,7 +200,28 @@ class MainActivity : AppCompatActivity() {
                                     }
                                 },
                                 onFailure = { error ->
-                                    Log.e("MainActivity", "Mobile auth failed from HTTPS URL", error)
+                                    val errorMessage = when {
+                                        error.message?.contains("Invalid code format") == true -> {
+                                            "Invalid authentication code format. Please generate a new code from the web app."
+                                        }
+                                        error.message?.contains("expired") == true -> {
+                                            "Authentication code has expired. Please generate a new code."
+                                        }
+                                        error.message?.contains("not approved") == true -> {
+                                            "Your account is not approved yet. Please contact support."
+                                        }
+                                        else -> {
+                                            "Authentication failed: ${error.message ?: "Unknown error"}. Please try again."
+                                        }
+                                    }
+                                    
+                                    Log.e("MainActivity", "Mobile auth failed from HTTPS URL: $errorMessage", error)
+                                    
+                                    // Update UI on main thread
+                                    CoroutineScope(Dispatchers.Main).launch {
+                                        authViewModel?.setError(errorMessage)
+                                    }
+                                    
                                     SentryHelper.captureException(
                                         throwable = error,
                                         level = SentryLevel.ERROR,
@@ -167,7 +231,14 @@ class MainActivity : AppCompatActivity() {
                                 }
                             )
                         } catch (e: Exception) {
+                            val errorMessage = "Error processing authentication: ${e.message ?: "Unknown error"}"
                             Log.e("MainActivity", "Error processing HTTPS URL", e)
+                            
+                            // Update UI on main thread
+                            CoroutineScope(Dispatchers.Main).launch {
+                                authViewModel?.setError(errorMessage)
+                            }
+                            
                             SentryHelper.captureException(
                                 throwable = e,
                                 level = SentryLevel.ERROR,
@@ -211,8 +282,7 @@ class MainActivity : AppCompatActivity() {
 }
 
 @Composable
-fun MainScreen(authManager: MobileAuthManager) {
-    val authViewModel: AuthViewModel = viewModel()
+fun MainScreen(authManager: MobileAuthManager, authViewModel: AuthViewModel) {
     val uiState by authViewModel.uiState.collectAsState()
     
     // Observe auth state from MobileAuthManager
