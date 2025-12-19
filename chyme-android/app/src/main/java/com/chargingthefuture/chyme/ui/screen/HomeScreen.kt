@@ -155,7 +155,8 @@ fun HomeScreen(
             
             // Room list
             when {
-                uiState.isLoading -> {
+                uiState.isLoading && uiState.rooms.isEmpty() -> {
+                    // Only show loading spinner if we have no rooms
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -163,26 +164,7 @@ fun HomeScreen(
                         CircularProgressIndicator()
                     }
                 }
-                uiState.errorMessage != null -> {
-                    val errorMessage = uiState.errorMessage
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Text(
-                            text = errorMessage ?: "Unknown error",
-                            color = MaterialTheme.colors.error,
-                            modifier = Modifier.padding(bottom = 16.dp)
-                        )
-                        Button(onClick = { viewModel.refresh() }) {
-                            Text("Retry")
-                        }
-                    }
-                }
-                uiState.filteredRooms.isEmpty() -> {
+                uiState.filteredRooms.isEmpty() && !uiState.isLoading -> {
                     Box(
                         modifier = Modifier.fillMaxSize(),
                         contentAlignment = Alignment.Center
@@ -202,6 +184,37 @@ fun HomeScreen(
                         contentPadding = PaddingValues(16.dp),
                         verticalArrangement = Arrangement.spacedBy(12.dp)
                     ) {
+                        // Show error banner at top if there's an error but we have rooms to show
+                        uiState.errorMessage?.let { error ->
+                            item {
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    backgroundColor = MaterialTheme.colors.error.copy(alpha = 0.1f)
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(12.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = error,
+                                            color = MaterialTheme.colors.error,
+                                            style = MaterialTheme.typography.caption,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        TextButton(onClick = { 
+                                            viewModel.clearError()
+                                            viewModel.refresh()
+                                        }) {
+                                            Text("Retry", style = MaterialTheme.typography.caption)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
                         items(uiState.filteredRooms) { room ->
                             RoomCard(
                                 room = room,

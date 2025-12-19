@@ -47,6 +47,27 @@ fun RoomDetailScreen(
             viewModel.joinRoom(roomId)
         }
     }
+    
+    // Show snackbars for action errors
+    LaunchedEffect(uiState.participantActionError) {
+        uiState.participantActionError?.let { error ->
+            scaffoldState.snackbarHostState.showSnackbar(
+                message = error,
+                duration = SnackbarDuration.Short
+            )
+            viewModel.clearParticipantActionError()
+        }
+    }
+    
+    LaunchedEffect(uiState.roomActionError) {
+        uiState.roomActionError?.let { error ->
+            scaffoldState.snackbarHostState.showSnackbar(
+                message = error,
+                duration = SnackbarDuration.Short
+            )
+            viewModel.clearRoomActionError()
+        }
+    }
 
     // Load initial messages and participants, then rely on WebSocket for updates
     LaunchedEffect(roomId, uiState.isJoined) {
@@ -194,8 +215,9 @@ fun RoomDetailScreen(
                     CircularProgressIndicator()
                 }
             }
-            uiState.errorMessage != null -> {
-                val errorMessage = uiState.errorMessage
+            uiState.roomLoadError != null -> {
+                // Critical error: can't show room without room data
+                val errorMessage = uiState.roomLoadError
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -233,6 +255,7 @@ fun RoomDetailScreen(
                             RoomInfoCard(
                                 room = uiState.room,
                                 isCreator = isCreator,
+                                pinnedLinkError = uiState.pinnedLinkError,
                                 onPinnedLinkClick = { link ->
                                     runCatching {
                                         val intent = Intent(Intent.ACTION_VIEW, Uri.parse(link))
@@ -246,6 +269,9 @@ fun RoomDetailScreen(
                                 },
                                 onClearPinnedLink = {
                                     viewModel.updatePinnedLink(roomId, null)
+                                },
+                                onClearPinnedLinkError = {
+                                    viewModel.clearPinnedLinkError()
                                 }
                             )
                         }
@@ -288,6 +314,60 @@ fun RoomDetailScreen(
                             }
                         }
 
+                        // Participants section header
+                        item {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = "Participants",
+                                    style = MaterialTheme.typography.h6,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                if (uiState.participantsLoadError != null) {
+                                    TextButton(onClick = { 
+                                        viewModel.clearParticipantsLoadError()
+                                        viewModel.loadParticipants(roomId)
+                                    }) {
+                                        Text("Retry", style = MaterialTheme.typography.caption)
+                                    }
+                                }
+                            }
+                        }
+                        
+                        // Participants load error (inline)
+                        uiState.participantsLoadError?.let { error ->
+                            item {
+                                Card(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    backgroundColor = MaterialTheme.colors.error.copy(alpha = 0.1f)
+                                ) {
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(12.dp),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = error,
+                                            color = MaterialTheme.colors.error,
+                                            style = MaterialTheme.typography.caption,
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                        TextButton(onClick = { 
+                                            viewModel.clearParticipantsLoadError()
+                                            viewModel.loadParticipants(roomId)
+                                        }) {
+                                            Text("Retry", style = MaterialTheme.typography.caption)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        
                         // Speakers section
                         if (uiState.speakers.isNotEmpty()) {
                             item {
@@ -496,9 +576,11 @@ private fun ChatInput(
 fun RoomInfoCard(
     room: com.chargingthefuture.chyme.data.model.ChymeRoom?,
     isCreator: Boolean,
+    pinnedLinkError: String? = null,
     onPinnedLinkClick: (String) -> Unit,
     onUpdatePinnedLink: () -> Unit,
-    onClearPinnedLink: () -> Unit
+    onClearPinnedLink: () -> Unit,
+    onClearPinnedLinkError: () -> Unit = {}
 ) {
     if (room == null) return
 
@@ -557,6 +639,38 @@ fun RoomInfoCard(
                 Spacer(modifier = Modifier.height(8.dp))
                 TextButton(onClick = onUpdatePinnedLink) {
                     Text("Pin a link to this room")
+                }
+            }
+            
+            // Pinned link error (inline)
+            pinnedLinkError?.let { error ->
+                Spacer(modifier = Modifier.height(8.dp))
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    backgroundColor = MaterialTheme.colors.error.copy(alpha = 0.1f)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = error,
+                            color = MaterialTheme.colors.error,
+                            style = MaterialTheme.typography.caption,
+                            modifier = Modifier.weight(1f)
+                        )
+                        IconButton(onClick = onClearPinnedLinkError) {
+                            Icon(
+                                Icons.Default.Close,
+                                contentDescription = "Dismiss",
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colors.error
+                            )
+                        }
+                    }
                 }
             }
 

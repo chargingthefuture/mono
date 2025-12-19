@@ -50,8 +50,13 @@ data class RoomUiState(
     val hasRaisedHand: Boolean = false,
     val currentUserRole: ParticipantRole? = null,
     val currentUserId: String? = null,
-    val errorMessage: String? = null,
-    val chatErrorMessage: String? = null,
+    // Granular error states per concern
+    val roomLoadError: String? = null, // Critical: blocks room display
+    val participantsLoadError: String? = null, // Non-critical: show inline
+    val chatErrorMessage: String? = null, // Non-critical: show inline
+    val pinnedLinkError: String? = null, // Non-critical: show inline
+    val participantActionError: String? = null, // Non-critical: show as snackbar
+    val roomActionError: String? = null, // Non-critical: show as snackbar
     val webRTCConnectionState: WebRTCConnectionState = WebRTCConnectionState.DISCONNECTED,
     val webRTCConnectionError: String? = null,
     val isOnline: Boolean = true,
@@ -177,14 +182,14 @@ class RoomViewModel @Inject constructor(
     
     fun loadRoom(roomId: String) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+            _uiState.value = _uiState.value.copy(isLoading = true, roomLoadError = null)
             
             roomRepository.getRoom(roomId).fold(
                 onSuccess = { room ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         room = room,
-                        errorMessage = null
+                        roomLoadError = null
                     )
                     loadParticipants(roomId)
                     loadMessages(roomId)
@@ -192,7 +197,7 @@ class RoomViewModel @Inject constructor(
                 onFailure = { error ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        errorMessage = error.message ?: "Failed to load room"
+                        roomLoadError = error.message ?: "Failed to load room"
                     )
                 }
             )
@@ -216,6 +221,7 @@ class RoomViewModel @Inject constructor(
                         speakers = speakers,
                         listeners = listeners,
                         currentUserRole = currentRole,
+                        participantsLoadError = null,
                         // Keep local state (mute/hand) in sync with server-side participant flags
                         hasRaisedHand = currentUserParticipant?.hasRaisedHand ?: _uiState.value.hasRaisedHand,
                         isMuted = currentUserParticipant?.isMuted ?: _uiState.value.isMuted
@@ -224,7 +230,7 @@ class RoomViewModel @Inject constructor(
                 },
                 onFailure = { error ->
                     _uiState.value = _uiState.value.copy(
-                        errorMessage = error.message ?: "Failed to load participants"
+                        participantsLoadError = error.message ?: "Failed to load participants"
                     )
                 }
             )
@@ -274,7 +280,7 @@ class RoomViewModel @Inject constructor(
         viewModelScope.launch {
             roomRepository.joinRoom(roomId).fold(
                 onSuccess = {
-                    _uiState.value = _uiState.value.copy(isJoined = true)
+                    _uiState.value = _uiState.value.copy(isJoined = true, roomActionError = null)
                     currentRoomId = roomId
                     loadParticipants(roomId)
                     maybeUpdateWebRTC(roomId)
@@ -282,7 +288,7 @@ class RoomViewModel @Inject constructor(
                 },
                 onFailure = { error ->
                     _uiState.value = _uiState.value.copy(
-                        errorMessage = error.message ?: "Failed to join room"
+                        roomActionError = error.message ?: "Failed to join room"
                     )
                 }
             )
@@ -335,7 +341,7 @@ class RoomViewModel @Inject constructor(
         viewModelScope.launch {
             roomRepository.leaveRoom(roomId).fold(
                 onSuccess = {
-                    _uiState.value = _uiState.value.copy(isJoined = false)
+                    _uiState.value = _uiState.value.copy(isJoined = false, roomActionError = null)
                     currentRoomId = null
                     webRTCManager?.stop()
                     webRTCManager = null
@@ -344,7 +350,7 @@ class RoomViewModel @Inject constructor(
                 },
                 onFailure = { error ->
                     _uiState.value = _uiState.value.copy(
-                        errorMessage = error.message ?: "Failed to leave room"
+                        roomActionError = error.message ?: "Failed to leave room"
                     )
                 }
             )
@@ -357,14 +363,15 @@ class RoomViewModel @Inject constructor(
                 onSuccess = {
                     _uiState.value = _uiState.value.copy(
                         room = _uiState.value.room?.copy(isActive = false),
-                        isJoined = false
+                        isJoined = false,
+                        roomActionError = null
                     )
                     webRTCManager?.stop()
                     webRTCManager = null
                 },
                 onFailure = { error ->
                     _uiState.value = _uiState.value.copy(
-                        errorMessage = error.message ?: "Failed to end room"
+                        roomActionError = error.message ?: "Failed to end room"
                     )
                 }
             )
@@ -375,12 +382,12 @@ class RoomViewModel @Inject constructor(
         viewModelScope.launch {
             roomRepository.raiseHand(roomId).fold(
                 onSuccess = {
-                    _uiState.value = _uiState.value.copy(hasRaisedHand = true)
+                    _uiState.value = _uiState.value.copy(hasRaisedHand = true, roomActionError = null)
                     loadParticipants(roomId)
                 },
                 onFailure = { error ->
                     _uiState.value = _uiState.value.copy(
-                        errorMessage = error.message ?: "Failed to raise hand"
+                        roomActionError = error.message ?: "Failed to raise hand"
                     )
                 }
             )
@@ -472,12 +479,12 @@ class RoomViewModel @Inject constructor(
                 onSuccess = { updatedRoom ->
                     _uiState.value = _uiState.value.copy(
                         room = updatedRoom,
-                        errorMessage = null
+                        pinnedLinkError = null
                     )
                 },
                 onFailure = { error ->
                     _uiState.value = _uiState.value.copy(
-                        errorMessage = error.message ?: "Failed to update pinned link"
+                        pinnedLinkError = error.message ?: "Failed to update pinned link"
                     )
                 }
             )
@@ -571,12 +578,13 @@ class RoomViewModel @Inject constructor(
             val request = UpdateParticipantRequest(userId = userId, role = "speaker")
             roomRepository.updateParticipant(roomId, userId, request).fold(
                 onSuccess = {
+                    _uiState.value = _uiState.value.copy(participantActionError = null)
                     loadParticipants(roomId)
                     maybeUpdateWebRTC(roomId)
                 },
                 onFailure = { error ->
                     _uiState.value = _uiState.value.copy(
-                        errorMessage = error.message ?: "Failed to promote user"
+                        participantActionError = error.message ?: "Failed to promote user"
                     )
                 }
             )
@@ -588,12 +596,13 @@ class RoomViewModel @Inject constructor(
             val request = UpdateParticipantRequest(userId = userId, isMuted = muted)
             roomRepository.updateParticipant(roomId, userId, request).fold(
                 onSuccess = {
+                    _uiState.value = _uiState.value.copy(participantActionError = null)
                     loadParticipants(roomId)
                     maybeUpdateWebRTC(roomId)
                 },
                 onFailure = { error ->
                     _uiState.value = _uiState.value.copy(
-                        errorMessage = error.message ?: "Failed to mute participant"
+                        participantActionError = error.message ?: "Failed to mute participant"
                     )
                 }
             )
@@ -604,12 +613,13 @@ class RoomViewModel @Inject constructor(
         viewModelScope.launch {
             roomRepository.kickParticipant(roomId, userId).fold(
                 onSuccess = {
+                    _uiState.value = _uiState.value.copy(participantActionError = null)
                     loadParticipants(roomId)
                     maybeUpdateWebRTC(roomId)
                 },
                 onFailure = { error ->
                     _uiState.value = _uiState.value.copy(
-                        errorMessage = error.message ?: "Failed to kick participant"
+                        participantActionError = error.message ?: "Failed to kick participant"
                     )
                 }
             )
@@ -617,7 +627,30 @@ class RoomViewModel @Inject constructor(
     }
     
     fun clearError() {
-        _uiState.value = _uiState.value.copy(errorMessage = null)
+        _uiState.value = _uiState.value.copy(
+            roomLoadError = null,
+            participantsLoadError = null,
+            chatErrorMessage = null,
+            pinnedLinkError = null,
+            participantActionError = null,
+            roomActionError = null
+        )
+    }
+    
+    fun clearParticipantActionError() {
+        _uiState.value = _uiState.value.copy(participantActionError = null)
+    }
+    
+    fun clearRoomActionError() {
+        _uiState.value = _uiState.value.copy(roomActionError = null)
+    }
+    
+    fun clearPinnedLinkError() {
+        _uiState.value = _uiState.value.copy(pinnedLinkError = null)
+    }
+    
+    fun clearParticipantsLoadError() {
+        _uiState.value = _uiState.value.copy(participantsLoadError = null)
     }
     
     override fun onCleared() {
