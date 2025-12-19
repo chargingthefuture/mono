@@ -121,7 +121,9 @@ dependencies {
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
     
     // WebRTC for audio streaming
-    implementation("org.webrtc:google-webrtc:1.0.32006")
+    // Note: WebRTC requires custom repository setup or local AAR file
+    // For now, commented out - will need proper WebRTC setup for production
+    // implementation("org.webrtc:google-webrtc:1.0.32006")
     
     // Image loading
     implementation("io.coil-kt:coil-compose:2.5.0")

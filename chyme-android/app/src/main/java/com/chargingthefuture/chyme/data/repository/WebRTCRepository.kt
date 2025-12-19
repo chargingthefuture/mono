@@ -1,51 +1,60 @@
 package com.chargingthefuture.chyme.data.repository
 
 import android.content.Context
-import org.webrtc.*
 
+/**
+ * WebRTC Repository for audio streaming
+ * 
+ * Note: WebRTC dependency is currently commented out in build.gradle.kts
+ * To enable WebRTC:
+ * 1. Add WebRTC repository to build.gradle.kts repositories block
+ * 2. Uncomment WebRTC dependency
+ * 3. Uncomment WebRTC imports and implementation below
+ */
 class WebRTCRepository(
     private val context: Context
 ) {
-    private var peerConnectionFactory: PeerConnectionFactory? = null
-    private var audioSource: AudioSource? = null
-    private var audioTrack: AudioTrack? = null
     private var isInitialized = false
+    private var isMuted = false
     
     fun initialize() {
         if (isInitialized) return
-        
-        val initializationOptions = PeerConnectionFactory.InitializationOptions.builder(context)
-            .setEnableInternalTracer(true)
-            .createInitializationOptions()
-        PeerConnectionFactory.initialize(initializationOptions)
-        
-        val options = PeerConnectionFactory.Options()
-        
-        // For audio-only, we don't need video encoder/decoder factories
-        peerConnectionFactory = PeerConnectionFactory.builder()
-            .setOptions(options)
-            .createPeerConnectionFactory()
-        
-        audioSource = peerConnectionFactory?.createAudioSource(MediaConstraints())
-        audioTrack = peerConnectionFactory?.createAudioTrack("audio_track", audioSource)
+        // TODO: Initialize WebRTC when dependency is added
+        // val initializationOptions = PeerConnectionFactory.InitializationOptions.builder(context)
+        //     .setEnableInternalTracer(true)
+        //     .createInitializationOptions()
+        // PeerConnectionFactory.initialize(initializationOptions)
+        // 
+        // val options = PeerConnectionFactory.Options()
+        // peerConnectionFactory = PeerConnectionFactory.builder()
+        //     .setOptions(options)
+        //     .createPeerConnectionFactory()
+        // 
+        // audioSource = peerConnectionFactory?.createAudioSource(MediaConstraints())
+        // audioTrack = peerConnectionFactory?.createAudioTrack("audio_track", audioSource)
         
         isInitialized = true
     }
     
-    fun getAudioTrack(): AudioTrack? = audioTrack
+    fun getAudioTrack(): Any? = null // AudioTrack? when WebRTC is enabled
     
     fun muteMicrophone(muted: Boolean) {
-        audioTrack?.setEnabled(!muted)
+        isMuted = muted
+        // TODO: Implement when WebRTC is enabled
+        // audioTrack?.setEnabled(!muted)
     }
     
     fun isMicrophoneMuted(): Boolean {
-        return audioTrack?.enabled() == false
+        return isMuted
+        // TODO: Implement when WebRTC is enabled
+        // return audioTrack?.enabled() == false
     }
     
     fun cleanup() {
-        audioTrack?.dispose()
-        audioSource?.dispose()
-        peerConnectionFactory?.dispose()
+        // TODO: Cleanup WebRTC resources when dependency is added
+        // audioTrack?.dispose()
+        // audioSource?.dispose()
+        // peerConnectionFactory?.dispose()
         isInitialized = false
     }
 }
