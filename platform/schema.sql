@@ -43,7 +43,7 @@ CREATE INDEX IF NOT EXISTS IDX_login_events_user_created_at ON login_events(user
 CREATE TABLE IF NOT EXISTS otp_codes (
   id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id VARCHAR NOT NULL REFERENCES users(id),
-  code VARCHAR(6) NOT NULL,
+  code VARCHAR(8) NOT NULL,
   expires_at TIMESTAMP NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );

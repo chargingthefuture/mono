@@ -69,7 +69,7 @@ export const otpCodes = pgTable(
     userId: varchar("user_id")
       .notNull()
       .references(() => users.id),
-    code: varchar("code", { length: 6 }).notNull(),
+    code: varchar("code", { length: 8 }).notNull(),
     expiresAt: timestamp("expires_at").notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
