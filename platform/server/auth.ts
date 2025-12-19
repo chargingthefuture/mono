@@ -9,17 +9,8 @@ import { loginEvents } from "@shared/schema";
 import { db } from "./db";
 
 // Clerk Configuration
-// In production we require a valid Clerk secret key.
-// In non-production environments (tests, local dev, CI) we only log a warning so
-// that environments without real Clerk credentials can still boot the server.
 if (!process.env.CLERK_SECRET_KEY) {
-  if (process.env.NODE_ENV === "production") {
-    throw new Error("Environment variable CLERK_SECRET_KEY not provided");
-  } else {
-    console.warn(
-      "[Auth] Environment variable CLERK_SECRET_KEY not provided; Clerk-dependent features may be disabled."
-    );
-  }
+  throw new Error("Environment variable CLERK_SECRET_KEY not provided");
 }
 
 /**
