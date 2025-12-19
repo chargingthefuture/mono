@@ -155,7 +155,16 @@ function ErrorFallback({ error, onReset }: ErrorFallbackProps) {
           </div>
 
           <p className="text-sm text-muted-foreground">
-            If this problem persists, please contact support.
+            If this problem persists,{' '}
+            <a 
+              href="https://signal.group/#CjQKILHj7074l2Kl-oYy0qGSFdydXbtu0Pf66Z_88K9IlSCtEhDDdqV_BFAW2qm2EiTGEaNs"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary hover:underline"
+            >
+              please contact support
+            </a>
+            .
           </p>
         </CardContent>
       </Card>

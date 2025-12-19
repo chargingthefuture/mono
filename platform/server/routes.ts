@@ -424,6 +424,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
           if (user) {
             return res.json(user);
           }
+          // If sync returns null, treat it as a sync failure
+          // This should not happen normally, but we handle it explicitly to avoid returning null
+          console.error(`Sync returned null for user ${userId}. This indicates a sync failure.`, {
+            userId,
+            environment: process.env.NODE_ENV,
+            timestamp: new Date().toISOString(),
+          });
+          throw new Error("User sync failed: Unable to retrieve or create user. Please try refreshing the page.");
         } catch (syncError: any) {
           console.error("Both database and Clerk sync failed:", {
             userId,
