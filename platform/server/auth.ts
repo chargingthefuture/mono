@@ -4,7 +4,8 @@ import type { Express, RequestHandler } from "express";
 import { storage } from "./storage";
 import { validateCsrfToken } from "./csrf";
 import { withDatabaseErrorHandling } from "./databaseErrorHandler";
-import { ExternalServiceError, UnauthorizedError, ForbiddenError } from "./errors";
+import { ExternalServiceError, UnauthorizedError, ForbiddenError, normalizeError, AppError } from "./errors";
+import { logError, logWarning } from "./errorLogger";
 import { loginEvents } from "@shared/schema";
 import { db } from "./db";
 
@@ -91,14 +92,14 @@ export async function syncClerkUserToDatabase(userId: string, sessionClaims?: an
         'getUserForSync'
       );
     } catch (dbError: any) {
-      // If it's a connection error, log but continue - we'll try to create user from Clerk data
-      if (dbError instanceof ExternalServiceError && dbError.statusCode === 503) {
-        console.warn(`Database unavailable when checking existing user ${userId}, will attempt to create from Clerk data`);
-        existingUser = undefined;
-      } else {
-        // For other database errors (like deleted user check), re-throw
-        throw dbError;
-      }
+        // If it's a connection error, log but continue - we'll try to create user from Clerk data
+        if (dbError instanceof ExternalServiceError && dbError.statusCode === 503) {
+          logWarning(`Database unavailable when checking existing user ${userId}, will attempt to create from Clerk data`);
+          existingUser = undefined;
+        } else {
+          // For other database errors (like deleted user check), re-throw
+          throw dbError;
+        }
     }
     
     if (existingUser && isUserDeleted(existingUser)) {
@@ -114,27 +115,22 @@ export async function syncClerkUserToDatabase(userId: string, sessionClaims?: an
         1000 // 1 second base delay
       );
     } catch (clerkError: any) {
-      // Log detailed error for debugging
-      console.error("Error fetching user from Clerk API (after retries):", {
+      // Log error using structured logging
+      const normalizedError = normalizeError(clerkError);
+      logError(normalizedError, {
         userId,
-        error: clerkError.message,
-        statusCode: clerkError.statusCode,
-        status: clerkError.status,
-        stack: clerkError.stack,
-        hasSecretKey: !!process.env.CLERK_SECRET_KEY,
-        secretKeyPrefix: process.env.CLERK_SECRET_KEY?.substring(0, 10),
-        environment: process.env.NODE_ENV,
-      });
+        path: 'syncClerkUserToDatabase',
+      } as any);
       
       // If we have an existing user in DB, return it instead of failing
       if (existingUser) {
-        console.log(`Clerk API call failed, but user exists in DB. Returning existing user: ${userId}`);
+        logWarning(`Clerk API call failed, but user exists in DB. Returning existing user: ${userId}`);
         return existingUser;
       }
       
       // If we have session claims from JWT, try to create a minimal user
       if (sessionClaims && sessionClaims.email) {
-        console.log(`Clerk API unavailable, creating minimal user from JWT claims for: ${userId}`);
+        logWarning(`Clerk API unavailable, creating minimal user from JWT claims for: ${userId}`);
         try {
           const minimalUser = {
             id: userId,
@@ -230,25 +226,25 @@ export async function syncClerkUserToDatabase(userId: string, sessionClaims?: an
         500 // 500ms base delay
       );
     } catch (upsertError: any) {
-      console.error(`Failed to upsert user ${userId}:`, {
-        error: upsertError.message,
-        stack: upsertError.stack,
-        code: upsertError.code,
-        errno: upsertError.errno,
-        sqlState: upsertError.sqlState,
-        constraint: upsertError.constraint,
-        detail: upsertError.detail,
-        name: upsertError.name,
-      });
-      throw new Error(`Failed to sync user to database: ${upsertError.message || 'Unknown error'}`);
+      const normalized = normalizeError(upsertError);
+      logError(normalized, {
+        userId,
+        path: 'syncClerkUserToDatabase',
+      } as any);
+      throw normalized;
     }
     
     // Verify the upserted user exists and has required fields
     if (!upsertedUser || !upsertedUser.id) {
-      console.error(`Upsert returned invalid user for ${userId}:`, {
-        upsertedUser,
-        hasId: !!upsertedUser?.id,
-      });
+      const error = new AppError(
+        `Upsert returned invalid user for ${userId}`,
+        'INTERNAL_SERVER_ERROR' as any,
+        500
+      );
+      logError(error, {
+        userId,
+        path: 'syncClerkUserToDatabase',
+      } as any);
       // Try to get user from database as fallback
       const fallbackUser = await retryWithBackoff(
         () => withDatabaseErrorHandling(
@@ -267,16 +263,12 @@ export async function syncClerkUserToDatabase(userId: string, sessionClaims?: an
     // Return the upserted user directly (more reliable than calling getUser again)
     return upsertedUser;
   } catch (error: any) {
-    console.error("Error syncing Clerk user to database:", {
+    const normalized = normalizeError(error);
+    logError(normalized, {
       userId,
-      error: error.message,
-      stack: error.stack,
-      name: error.name,
-      code: error.code,
-      environment: process.env.NODE_ENV,
-      timestamp: new Date().toISOString(),
-    });
-    throw error;
+      path: 'syncClerkUserToDatabase',
+    } as any);
+    throw normalized;
   }
 }
 
@@ -299,7 +291,7 @@ async function upsertUser(clerkUser: any) {
     // If it's a connection error, we can't check if user exists
     // But we should still try to upsert - if user exists, it will update; if not, it will create
     if (dbError instanceof ExternalServiceError && dbError.statusCode === 503) {
-      console.warn(`Database unavailable when checking existing user for upsert ${mappedUser.sub}, will attempt upsert anyway`);
+      logWarning(`Database unavailable when checking existing user for upsert ${mappedUser.sub}, will attempt upsert anyway`);
       existingUser = undefined;
     } else {
       throw dbError;
@@ -389,16 +381,15 @@ export async function setupAuth(app: Express) {
               userId: req.auth.userId,
               source: "webapp",
             });
-          } catch (logError: any) {
-            console.error("Error recording login event:", {
-              userId: req.auth.userId,
-              error: logError?.message,
-            });
+          } catch (loginEventError: any) {
+            const normalized = normalizeError(loginEventError);
+            logError(normalized, req);
           }
         }
       } catch (error: any) {
-        // Log sync failures with detailed context for debugging
-        console.error("Error syncing Clerk user to database in middleware:", {
+        // Log sync failures with structured logging
+        const normalized = normalizeError(error);
+        logError(normalized, req);("Error syncing Clerk user to database in middleware:", {
           userId: req.auth.userId,
           error: error.message,
           stack: error.stack,
@@ -419,9 +410,10 @@ export async function setupAuth(app: Express) {
         // This prevents empty responses that cause JSON parsing errors
         // The /api/auth/user endpoint will handle sync failures gracefully with retry logic
         // However, we should still log prominently so admins can see sync issues
-        if (process.env.NODE_ENV === 'production') {
-          console.error(`[SYNC FAILURE] User ${req.auth.userId} sync failed in middleware. Route handlers will attempt fallback sync.`);
-        }
+        logWarning(
+          `User ${req.auth.userId} sync failed in middleware. Route handlers will attempt fallback sync.`,
+          req
+        );
       }
     }
     next();

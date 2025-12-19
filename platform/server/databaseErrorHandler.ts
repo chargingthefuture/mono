@@ -6,6 +6,7 @@
  */
 
 import { DatabaseError, ValidationError, ConflictError, NotFoundError, ExternalServiceError } from './errors';
+import { logError } from './errorLogger';
 
 /**
  * PostgreSQL error interface
@@ -115,23 +116,16 @@ export function isPostgresError(error: any): error is PostgresError {
  * Convert database error to application error
  */
 export function handleDatabaseError(error: any, context?: string): DatabaseError | ValidationError | ConflictError | NotFoundError | ExternalServiceError {
-  // Log detailed error information for production debugging
-  console.error("Database error occurred:", {
-    context,
-    error: error?.message,
-    code: error?.code,
-    errno: error?.errno,
-    name: error?.name,
-    stack: error?.stack,
-    // Include environment info
-    nodeEnv: process.env.NODE_ENV,
-    hasDatabaseUrl: !!process.env.DATABASE_URL,
-  });
+  // Normalize and log the error using the structured logging system
+  const normalized = error instanceof Error ? error : new Error(String(error));
+  logError(normalized, { 
+    userId: undefined, 
+    path: context 
+  } as any);
   
   // Check if it's a connection/timeout error first (before checking if it's a PostgreSQL error)
   // This handles Neon serverless connection errors that might not have PostgreSQL error codes
   if (isConnectionError(error)) {
-    console.error("Database connection error detected - returning 503 Service Unavailable");
     return new ExternalServiceError(
       'Database',
       'Database temporarily unavailable. Please try again in a moment.',
@@ -274,16 +268,7 @@ export async function withDatabaseErrorHandling<T>(
   try {
     return await operation();
   } catch (error) {
-    // Log the raw error before converting it
-    const rawError = error as any;
-    console.error(`Database operation failed in ${context || 'unknown context'}:`, {
-      message: rawError?.message,
-      code: rawError?.code,
-      errno: rawError?.errno,
-      name: rawError?.name,
-      stack: rawError?.stack,
-    });
-    
+    // handleDatabaseError will log the error, so we just need to throw the converted error
     throw handleDatabaseError(error, context);
   }
 }

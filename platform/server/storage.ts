@@ -244,7 +244,8 @@ import { db } from "./db";
 import { eq, and, desc, asc, sql, or, inArray, gte, lte, lt } from "drizzle-orm";
 import { startOfWeek, endOfWeek } from "date-fns";
 import { randomBytes } from "crypto";
-import { NotFoundError, ForbiddenError, ValidationError, AppError } from "./errors";
+import { NotFoundError, ForbiddenError, ValidationError, AppError, normalizeError } from "./errors";
+import { logError } from "./errorLogger";
 
 // Interface for storage operations
 export interface IStorage {
@@ -2189,8 +2190,8 @@ export class DatabaseStorage implements IStorage {
       const previousMRR = previousMonthMonthlyPayments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
       mrrGrowth = previousMRR === 0 ? (mrr > 0 ? 100 : 0) : ((mrr - previousMRR) / previousMRR) * 100;
     } catch (error) {
-      console.error("Error calculating metrics:", error);
-      console.error("Error stack:", error instanceof Error ? error.stack : 'No stack trace');
+      const normalized = normalizeError(error);
+      logError(normalized, { path: 'calculateWeeklyPerformanceMetrics' } as any);
       // Metrics will default to 0 values
     }
 
@@ -2229,7 +2230,8 @@ export class DatabaseStorage implements IStorage {
         npsChange = nps;
       }
     } catch (error) {
-      console.error("Error calculating NPS:", error);
+      const normalized = normalizeError(error);
+      logError(normalized, { path: 'calculateWeeklyPerformanceMetrics' } as any);
     }
 
     // Calculate GentlePulse Mood Check statistics
@@ -2275,7 +2277,8 @@ export class DatabaseStorage implements IStorage {
         moodChange = averageMood;
       }
     } catch (error) {
-      console.error("Error calculating mood statistics:", error);
+      const normalized = normalizeError(error);
+      logError(normalized, { path: 'calculateWeeklyPerformanceMetrics' } as any);
     }
 
     // Calculate User Statistics (Total, Verified, Approved)
@@ -2338,7 +2341,8 @@ export class DatabaseStorage implements IStorage {
         ? (verifiedUsersCurrentWeek > 0 ? 100 : 0)
         : ((verifiedUsersCurrentWeek - verifiedUsersPreviousWeek) / verifiedUsersPreviousWeek) * 100;
     } catch (error) {
-      console.error("Error calculating user statistics:", error);
+      const normalized = normalizeError(error);
+      logError(normalized, { path: 'calculateWeeklyPerformanceMetrics' } as any);
     }
 
     // Get EBITDA snapshots for both weeks to determine Default Alive/Dead status
@@ -2352,7 +2356,8 @@ export class DatabaseStorage implements IStorage {
       currentWeekIsDefaultAlive = currentWeekSnapshot?.isDefaultAlive ?? null;
       previousWeekIsDefaultAlive = previousWeekSnapshot?.isDefaultAlive ?? null;
     } catch (error) {
-      console.error("Error fetching EBITDA snapshots for weekly performance:", error);
+      const normalized = normalizeError(error);
+      logError(normalized, { path: 'calculateWeeklyPerformanceMetrics' } as any);
       // Continue with null values if snapshots don't exist
     }
 
@@ -4669,13 +4674,15 @@ export class DatabaseStorage implements IStorage {
       try {
         await this.logProfileDeletion(userId, "supportmatch", reason);
       } catch (error) {
-        console.error("Failed to log profile deletion:", error);
+        const normalized = normalizeError(error);
+        logError(normalized, { path: 'deleteSupportMatchProfile', userId } as any);
         // Continue even if logging fails
       }
     } catch (error: any) {
-      console.error("Error in deleteSupportMatchProfile:", error);
+      const normalized = normalizeError(error);
+      logError(normalized, { path: 'deleteSupportMatchProfile', userId } as any);
       // Re-throw with more context
-      throw new AppError(`Failed to delete SupportMatch profile: ${error.message || "Unknown error"}`, "INTERNAL_SERVER_ERROR" as any, 500);
+      throw normalized;
     }
   }
 
@@ -4728,22 +4735,22 @@ export class DatabaseStorage implements IStorage {
       // Verify deletion
       const verifyProfile = await this.getLighthouseProfileByUserId(userId);
       if (verifyProfile) {
-        console.error(`[deleteLighthouseProfile] ERROR: Profile still exists after deletion! Profile id: ${verifyProfile.id}`);
         throw new AppError("Profile deletion failed - profile still exists after delete operation", "INTERNAL_SERVER_ERROR" as any, 500);
       }
-      console.log(`[deleteLighthouseProfile] Verified profile deletion successful`);
 
       // Log the deletion (don't fail if logging fails)
       try {
         await this.logProfileDeletion(userId, "lighthouse", reason);
       } catch (error) {
-        console.error("Failed to log profile deletion:", error);
+        const normalized = normalizeError(error);
+        logError(normalized, { path: 'deleteLighthouseProfile', userId } as any);
         // Continue even if logging fails
       }
     } catch (error: any) {
-      console.error("Error in deleteLighthouseProfile:", error);
-      // Re-throw with more context
-      throw new AppError(`Failed to delete LightHouse profile: ${error.message || "Unknown error"}`, "INTERNAL_SERVER_ERROR" as any, 500);
+      const normalized = normalizeError(error);
+      logError(normalized, { path: 'deleteLighthouseProfile', userId } as any);
+      // Re-throw normalized error
+      throw normalized;
     }
   }
 
@@ -4810,13 +4817,15 @@ export class DatabaseStorage implements IStorage {
       try {
         await this.logProfileDeletion(userId, "socketrelay", reason);
       } catch (error) {
-        console.error("Failed to log profile deletion:", error);
+        const normalized = normalizeError(error);
+        logError(normalized, { path: 'deleteSocketrelayProfile', userId } as any);
         // Continue even if logging fails
       }
     } catch (error: any) {
-      console.error("Error in deleteSocketrelayProfile:", error);
-      // Re-throw with more context
-      throw new AppError(`Failed to delete SocketRelay profile: ${error.message || "Unknown error"}`, "INTERNAL_SERVER_ERROR" as any, 500);
+      const normalized = normalizeError(error);
+      logError(normalized, { path: 'deleteSocketrelayProfile', userId } as any);
+      // Re-throw normalized error
+      throw normalized;
     }
   }
 
