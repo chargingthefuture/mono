@@ -1433,5 +1433,19 @@
     "statusCode": 404,
     "responseTime": 394,
     "error": "HTTP 404"
+  },
+  {
+    "timestamp": "2025-12-19T16:58:46.177Z",
+    "status": "down",
+    "statusCode": 404,
+    "responseTime": 498,
+    "error": "HTTP 404"
+  },
+  {
+    "timestamp": "2025-12-19T17:20:22.565Z",
+    "status": "down",
+    "statusCode": 404,
+    "responseTime": 299,
+    "error": "HTTP 404"
   }
 ]
