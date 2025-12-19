@@ -170,7 +170,7 @@ fun UserProfileScreen(
                                     )
                                 } else {
                                     Icon(
-                                        if (uiState.isFollowing) Icons.Default.PersonRemove else Icons.Default.PersonAdd,
+                                        if (uiState.isFollowing) Icons.Default.Person else Icons.Default.Person,
                                         contentDescription = null,
                                         modifier = Modifier.size(18.dp)
                                     )
@@ -195,7 +195,7 @@ fun UserProfileScreen(
                                     )
                                 } else {
                                     Icon(
-                                        if (uiState.isBlocked) Icons.Default.Block else Icons.Default.Report,
+                                        if (uiState.isBlocked) Icons.Default.Close else Icons.Default.Warning,
                                         contentDescription = null,
                                         modifier = Modifier.size(18.dp)
                                     )

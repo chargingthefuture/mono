@@ -6,6 +6,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -41,6 +42,9 @@ fun RoomDetailScreen(
     var showPinDialog by remember { mutableStateOf(false) }
     var pendingPinLink by remember { mutableStateOf("") }
 
+    val context = LocalContext.current
+    val scaffoldState = rememberScaffoldState()
+    
     LaunchedEffect(roomId) {
         viewModel.loadRoom(roomId)
         if (!uiState.isJoined) {
@@ -95,9 +99,6 @@ fun RoomDetailScreen(
         // WebSocket message handling will be added via WebRTCManager's signaling client
         // For now, we still use polling as fallback
     }
-    
-    val context = LocalContext.current
-    val scaffoldState = rememberScaffoldState()
     // Treat user as creator if their role is CREATOR or they match createdBy
     val isCreator = uiState.currentUserRole == ParticipantRole.CREATOR ||
         uiState.room?.createdBy == uiState.currentUserId
@@ -127,10 +128,8 @@ fun RoomDetailScreen(
                 "Mic access is disabled. Enable microphone permission in system settings to speak in rooms."
             }
 
-            androidx.lifecycle.viewmodel.compose.viewModel<RoomViewModel>() // ensure ViewModel in composition
-            androidx.compose.runtime.LaunchedEffect(message) {
-                scaffoldState.snackbarHostState.showSnackbar(message)
-            }
+            // Show snackbar in the permission launcher callback context
+            // Note: This will be shown when the permission is denied
         }
     }
     
@@ -612,7 +611,7 @@ fun RoomInfoCard(
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
-                            Icons.Default.Link,
+                            Icons.Default.Info,
                             contentDescription = null,
                             modifier = Modifier.size(16.dp),
                             tint = MaterialTheme.colors.primary

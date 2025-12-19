@@ -16,7 +16,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import okhttp3.HttpUrl
+import okhttp3.HttpUrl.Companion.toHttpUrlOrNull
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -109,7 +109,7 @@ class SignalingClient(
             SignalingConnectionState.RECONNECTING
         }
 
-        val baseUrl = HttpUrl.parse(endpointUrl) ?: run {
+        val baseUrl = endpointUrl.toHttpUrlOrNull() ?: run {
             val error = SignalingError("Invalid endpoint URL: $endpointUrl")
             handleConnectionFailure(error, null)
             return

@@ -19,16 +19,19 @@ class RoomRepository {
         var lastError: Throwable? = null
 
         while (attempt < maxAttempts) {
-            when (val result = block()) {
-                is Result.Success -> return result
-                is Result.Failure -> {
-                    lastError = result.exceptionOrNull()
+            val result = block()
+            result.fold(
+                onSuccess = { return result },
+                onFailure = { error ->
+                    lastError = error
                     attempt++
-                    if (attempt >= maxAttempts) break
-                    delay(delayMs)
-                    delayMs *= 2
+                    if (attempt < maxAttempts) {
+                        delay(delayMs)
+                        delayMs *= 2
+                    }
                 }
-            }
+            )
+            if (attempt >= maxAttempts) break
         }
         return Result.failure(lastError ?: Exception("Unknown error"))
     }

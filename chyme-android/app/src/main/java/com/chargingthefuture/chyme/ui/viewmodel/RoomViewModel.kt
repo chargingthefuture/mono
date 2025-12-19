@@ -409,7 +409,9 @@ class RoomViewModel @Inject constructor(
             return
         }
         
-        sendMessageWithRetry(roomId, content.trim(), isAnonymous)
+        viewModelScope.launch {
+            sendMessageWithRetry(roomId, content.trim(), isAnonymous)
+        }
     }
     
     private suspend fun sendMessageWithRetry(
@@ -449,7 +451,7 @@ class RoomViewModel @Inject constructor(
                     return
                 },
                 onFailure = { error ->
-                    lastError = error
+                    lastError = error as? Exception ?: Exception(error.message ?: "Unknown error")
                     attempt++
                     
                     if (attempt < maxRetries) {

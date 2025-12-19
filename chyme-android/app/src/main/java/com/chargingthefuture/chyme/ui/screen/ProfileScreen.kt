@@ -78,7 +78,7 @@ fun ProfileScreen(
             }
             
             Text(
-                text = displayText,
+                text = displayText ?: "User",
                 style = MaterialTheme.typography.h5,
                 fontWeight = FontWeight.Bold
             )
@@ -131,7 +131,7 @@ fun ProfileScreen(
                         )
                     ) {
                         Icon(
-                            Icons.Default.SwapHoriz,
+                            Icons.Default.SwapVert,
                             contentDescription = null,
                             modifier = Modifier.size(20.dp)
                         )

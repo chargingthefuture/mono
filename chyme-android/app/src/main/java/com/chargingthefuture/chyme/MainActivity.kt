@@ -19,6 +19,7 @@ import com.chargingthefuture.chyme.ui.screen.HomeScreen
 import com.chargingthefuture.chyme.ui.screen.ProfileScreen
 import com.chargingthefuture.chyme.ui.screen.RoomDetailScreen
 import com.chargingthefuture.chyme.ui.screen.SignInScreen
+import com.chargingthefuture.chyme.ui.screen.UserProfileScreen
 import com.chargingthefuture.chyme.ui.theme.ChymeTheme
 import com.chargingthefuture.chyme.ui.viewmodel.AuthViewModel
 import com.chargingthefuture.chyme.utils.SentryHelper

@@ -181,6 +181,9 @@ class WebRTCManager(
                 }
                 updateOverallConnectionState()
             }
+            override fun onIceConnectionReceivingChange(receiving: Boolean) {
+                // Track ICE connection receiving state changes
+            }
             override fun onIceGatheringChange(newState: PeerConnection.IceGatheringState?) {}
             override fun onIceCandidatesRemoved(candidates: Array<out IceCandidate>?) {}
             override fun onRemoveStream(stream: org.webrtc.MediaStream?) {}
@@ -193,10 +196,10 @@ class WebRTCManager(
 
         // Attach local audio track
         webRtcRepo.getAudioTrack()?.let { track ->
-            pc.addTrack(track)
+            pc?.addTrack(track)
         }
         
-        return pc
+        return pc ?: throw IllegalStateException("Failed to create PeerConnection")
     }
     
     private fun updateOverallConnectionState() {
@@ -310,7 +313,7 @@ class WebRTCManager(
             val newPc = createPeerConnection(factory, fromUserId)
             peerConnections[fromUserId] = newPc
             newPc
-        }
+        } ?: return
 
         val desc = SessionDescription(SessionDescription.Type.OFFER, sdp)
         pc.setRemoteDescription(object : SdpObserver {
@@ -352,7 +355,9 @@ class WebRTCManager(
         val sdp = candidate.optString("candidate", null) ?: return
 
         val ice = IceCandidate(sdpMid, sdpMLineIndex, sdp)
-        peerConnections[fromUserId]?.addIceCandidate(ice)
+        peerConnections[fromUserId]?.addIceCandidate(ice) ?: run {
+            // Peer connection not found, ignore candidate
+        }
     }
 
     private fun sendSdp(type: String, desc: SessionDescription, toUserId: String) {
