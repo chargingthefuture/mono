@@ -4,7 +4,7 @@ import { randomBytes } from "crypto";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin, isAdminWithCsrf, isUserAdmin, getUserId, syncClerkUserToDatabase } from "./auth";
 import { validateCsrfToken, generateCsrfTokenForAdmin } from "./csrf";
-import { publicListingLimiter, publicItemLimiter } from "./rateLimiter";
+import { publicListingLimiter, publicItemLimiter, chatMessageLimiter } from "./rateLimiter";
 import { fingerprintRequests, getSuspiciousPatterns, getSuspiciousPatternsForIP, clearSuspiciousPatterns } from "./antiScraping";
 import { rotateDisplayOrder, addAntiScrapingDelay, isLikelyBot } from "./dataObfuscation";
 import { readSkillsFromFile, addSkillToFile, removeSkillFromFile, getSkillsAsDirectorySkills } from "./skillsFileManager";

@@ -5,6 +5,8 @@ import { log } from "./vite";
 import { storage } from "./storage";
 import { clerkClient } from "@clerk/clerk-sdk-node";
 import { verifyToken } from "@clerk/backend";
+import { validateOTPToken } from "./auth";
+import { requireAuth } from "@clerk/express";
 
 type Client = {
   socket: WebSocket;
@@ -13,71 +15,135 @@ type Client = {
   role: "creator" | "speaker" | "listener";
   lastMessageTime: number;
   messageCount: number;
+  ipAddress: string;
+  connectedAt: number;
 };
 
-// Rate limiting: max messages per window
+// Connection-level rate limiting
+const MAX_CONNECTIONS_PER_IP = 10; // Max 10 concurrent connections per IP
+const MAX_CONNECTIONS_PER_USER = 5; // Max 5 concurrent connections per user
+const CONNECTION_RATE_LIMIT_WINDOW_MS = 60000; // 1 minute
+const MAX_CONNECTIONS_PER_IP_PER_WINDOW = 20; // Max 20 connection attempts per IP per minute
+
+// Message-level rate limiting: max messages per window
 const RATE_LIMIT_WINDOW_MS = 10000; // 10 seconds
-const RATE_LIMIT_MAX_MESSAGES = 50; // Max 50 messages per 10 seconds
+const RATE_LIMIT_MAX_MESSAGES = 50; // Max 50 messages per 10 seconds (general)
+const RATE_LIMIT_MAX_CHAT_MESSAGES = 10; // Max 10 chat messages per 10 seconds
+const RATE_LIMIT_MAX_ICE_MESSAGES = 30; // Max 30 ICE candidates per 10 seconds
 
 // Message types that require speaker/creator role
 const MEDIA_MESSAGE_TYPES = ["offer", "answer", "ice-candidate", "media-offer", "media-answer"];
+const CHAT_MESSAGE_TYPE = "chat-message";
+const ICE_MESSAGE_TYPE = "ice-candidate";
+
+// Track connections and connection attempts for abuse detection
+const connectionAttempts = new Map<string, { count: number; resetTime: number }>();
+const connectionsByIp = new Map<string, Set<Client>>();
+const connectionsByUser = new Map<string, Set<Client>>();
 
 /**
- * Authenticate WebSocket connection using Clerk session or OTP token
+ * Get IP address from request (handles proxies/load balancers)
+ */
+function getIpAddress(req: any): string {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (typeof forwarded === 'string') {
+    return forwarded.split(',')[0].trim();
+  }
+  return req.socket.remoteAddress || 'unknown';
+}
+
+/**
+ * Check connection-level rate limiting (prevent connection abuse)
+ */
+function checkConnectionRateLimit(ipAddress: string): boolean {
+  const now = Date.now();
+  const attempts = connectionAttempts.get(ipAddress);
+  
+  if (attempts) {
+    // Reset if window expired
+    if (now > attempts.resetTime) {
+      connectionAttempts.set(ipAddress, { count: 1, resetTime: now + CONNECTION_RATE_LIMIT_WINDOW_MS });
+      return true;
+    }
+    
+    // Check if limit exceeded
+    if (attempts.count >= MAX_CONNECTIONS_PER_IP_PER_WINDOW) {
+      return false;
+    }
+    
+    attempts.count++;
+  } else {
+    connectionAttempts.set(ipAddress, { count: 1, resetTime: now + CONNECTION_RATE_LIMIT_WINDOW_MS });
+  }
+  
+  return true;
+}
+
+/**
+ * Authenticate WebSocket connection using the same pattern as REST routes
+ * (validateOTPToken + Clerk requireAuth)
  */
 async function authenticateWebSocket(req: any): Promise<{ userId: string; isOTPAuth: boolean } | null> {
   try {
-    // Try OTP token from Authorization header first (for Android app)
-    const authHeader = req.headers.authorization;
-    if (authHeader && authHeader.startsWith("Bearer ")) {
-      const token = authHeader.substring(7);
-      const authToken = await storage.findAuthTokenByToken(token);
-      
-      if (authToken) {
-        const now = Date.now();
-        const expiresAt = authToken.expiresAt.getTime();
-        
-        if (expiresAt > now) {
-          return { userId: authToken.userId, isOTPAuth: true };
-        } else {
-          // Token expired
-          await storage.deleteAuthToken(token);
+    // Create a mock request/response object for validateOTPToken
+    const mockReq: any = {
+      headers: req.headers,
+      auth: null,
+      otpAuth: false,
+    };
+    
+    const mockRes: any = {
+      status: () => mockRes,
+      json: () => mockRes,
+    };
+    
+    let authResolved = false;
+    let authResult: { userId: string; isOTPAuth: boolean } | null = null;
+    
+    // Try OTP token validation first (same as REST routes)
+    await new Promise<void>((resolve) => {
+      validateOTPToken(mockReq, mockRes, () => {
+        if (mockReq.otpAuth && mockReq.auth?.userId) {
+          authResult = { userId: mockReq.auth.userId, isOTPAuth: true };
+          authResolved = true;
         }
-      }
+        resolve();
+      });
+    });
+    
+    if (authResolved && authResult) {
+      return authResult;
     }
     
-    // Try Clerk session from cookies
+    // If OTP auth didn't work, try Clerk authentication
+    // For WebSocket, we need to manually verify the session token
     const cookies = req.headers.cookie || "";
-    // Clerk uses __session cookie for session tokens
     const sessionTokenMatch = cookies.match(/__session=([^;]+)/);
     
     if (sessionTokenMatch) {
       const sessionToken = decodeURIComponent(sessionTokenMatch[1]);
       try {
-        // First try to verify as JWT token
+        // Try to verify as JWT token first
         try {
-          const { userId } = await verifyToken(sessionToken, {
+          const result = await verifyToken(sessionToken, {
             secretKey: process.env.CLERK_SECRET_KEY!,
           });
           
-          if (userId) {
-            return { userId, isOTPAuth: false };
+          if (result && result.userId && typeof result.userId === 'string') {
+            return { userId: result.userId, isOTPAuth: false };
           }
         } catch (jwtError) {
           // If verifyToken fails, try to get session by ID
-          // Clerk session cookies might be session IDs, not JWTs
           try {
             const session = await clerkClient.sessions.getSession(sessionToken);
             if (session && session.userId) {
               return { userId: session.userId, isOTPAuth: false };
             }
           } catch (sessionError) {
-            // Both methods failed
-            log(`WebSocket Clerk authentication failed (JWT and session lookup): ${sessionError}`);
+            log(`WebSocket Clerk authentication failed: ${sessionError}`);
           }
         }
       } catch (error) {
-        // General error handling
         log(`WebSocket Clerk session verification failed: ${error}`);
       }
     }
@@ -103,9 +169,9 @@ function isAuthorizedForMessageType(client: Client, messageType: string): boolea
 }
 
 /**
- * Check rate limiting for a client
+ * Check rate limiting for a client (message-type-specific)
  */
-function checkRateLimit(client: Client): boolean {
+function checkRateLimit(client: Client, messageType: string): boolean {
   const now = Date.now();
   
   // Reset counter if window expired
@@ -114,13 +180,54 @@ function checkRateLimit(client: Client): boolean {
     client.lastMessageTime = now;
   }
   
+  // Different limits for different message types
+  let maxMessages: number;
+  if (messageType === CHAT_MESSAGE_TYPE) {
+    maxMessages = RATE_LIMIT_MAX_CHAT_MESSAGES;
+  } else if (messageType === ICE_MESSAGE_TYPE) {
+    maxMessages = RATE_LIMIT_MAX_ICE_MESSAGES;
+  } else {
+    maxMessages = RATE_LIMIT_MAX_MESSAGES;
+  }
+  
   // Check if limit exceeded
-  if (client.messageCount >= RATE_LIMIT_MAX_MESSAGES) {
+  if (client.messageCount >= maxMessages) {
     return false;
   }
   
   client.messageCount++;
   return true;
+}
+
+/**
+ * Track suspicious patterns for abuse detection
+ */
+function trackSuspiciousActivity(userId: string, ipAddress: string, reason: string) {
+  log(`[SECURITY] Suspicious activity detected: userId=${userId} ip=${ipAddress} reason=${reason}`);
+  // In production, this could send to monitoring/alerting system
+}
+
+/**
+ * Clean up connection tracking when client disconnects
+ */
+function removeConnectionTracking(client: Client) {
+  // Remove from IP tracking
+  const ipConnections = connectionsByIp.get(client.ipAddress);
+  if (ipConnections) {
+    ipConnections.delete(client);
+    if (ipConnections.size === 0) {
+      connectionsByIp.delete(client.ipAddress);
+    }
+  }
+  
+  // Remove from user tracking
+  const userConnections = connectionsByUser.get(client.userId);
+  if (userConnections) {
+    userConnections.delete(client);
+    if (userConnections.size === 0) {
+      connectionsByUser.delete(client.userId);
+    }
+  }
 }
 
 /**
@@ -142,17 +249,26 @@ export function attachChymeSignaling(server: Server) {
   const clients = new Set<Client>();
 
   wss.on("connection", async (socket, req) => {
+    const ipAddress = getIpAddress(req);
     const parsed = parse(req.url || "", true);
     const roomId = (parsed.query.roomId as string | undefined) || null;
+
+    // Check connection-level rate limiting (prevent connection spam)
+    if (!checkConnectionRateLimit(ipAddress)) {
+      log(`[SECURITY] Connection rate limit exceeded for IP: ${ipAddress}`);
+      socket.close(1008, "Too many connection attempts. Please try again later.");
+      return;
+    }
 
     if (!roomId) {
       socket.close(1008, "Missing roomId");
       return;
     }
 
-    // Authenticate the connection
+    // Authenticate the connection using same pattern as REST routes
     const auth = await authenticateWebSocket(req);
     if (!auth) {
+      log(`[SECURITY] WebSocket authentication failed: ip=${ipAddress} roomId=${roomId}`);
       socket.close(1008, "Authentication required");
       return;
     }
@@ -160,16 +276,34 @@ export function attachChymeSignaling(server: Server) {
     const { userId } = auth;
 
     // Verify user is a participant in the room and get their role
+    // This enforces room membership before accepting connection
     let participant;
     try {
       participant = await storage.getChymeRoomParticipant(roomId, userId);
       if (!participant || participant.leftAt) {
+        log(`[SECURITY] WebSocket connection rejected - not a participant: userId=${userId} roomId=${roomId}`);
         socket.close(1008, "Not a participant in this room");
         return;
       }
     } catch (error) {
       log(`Error checking room participation: ${error}`);
       socket.close(1011, "Internal server error");
+      return;
+    }
+
+    // Check connection limits per IP
+    const ipConnections = connectionsByIp.get(ipAddress) || new Set<Client>();
+    if (ipConnections.size >= MAX_CONNECTIONS_PER_IP) {
+      trackSuspiciousActivity(userId, ipAddress, `Too many connections from IP: ${ipConnections.size}`);
+      socket.close(1008, "Too many concurrent connections from this IP");
+      return;
+    }
+
+    // Check connection limits per user
+    const userConnections = connectionsByUser.get(userId) || new Set<Client>();
+    if (userConnections.size >= MAX_CONNECTIONS_PER_USER) {
+      trackSuspiciousActivity(userId, ipAddress, `Too many connections from user: ${userConnections.size}`);
+      socket.close(1008, "Too many concurrent connections");
       return;
     }
 
@@ -180,10 +314,17 @@ export function attachChymeSignaling(server: Server) {
       role: participant.role as "creator" | "speaker" | "listener",
       lastMessageTime: Date.now(),
       messageCount: 0,
+      ipAddress,
+      connectedAt: Date.now(),
     };
 
     clients.add(client);
-    log(`Chyme signaling: client connected userId=${userId} roomId=${roomId} role=${client.role}`);
+    ipConnections.add(client);
+    userConnections.add(client);
+    connectionsByIp.set(ipAddress, ipConnections);
+    connectionsByUser.set(userId, userConnections);
+    
+    log(`Chyme signaling: client connected userId=${userId} roomId=${roomId} role=${client.role} ip=${ipAddress}`);
 
     socket.on("message", (data) => {
       const text = data.toString();
@@ -201,18 +342,20 @@ export function attachChymeSignaling(server: Server) {
         return;
       }
 
-      // Check rate limiting
-      if (!checkRateLimit(client)) {
+      // Check rate limiting (message-type-specific)
+      const messageType = payload.type || "";
+      if (!checkRateLimit(client, messageType)) {
+        trackSuspiciousActivity(userId, client.ipAddress, `Rate limit exceeded: type=${messageType} count=${client.messageCount}`);
         socket.send(JSON.stringify({
           type: "error",
-          message: "Rate limit exceeded. Please slow down.",
+          message: `Rate limit exceeded for ${messageType}. Please slow down.`,
         }));
         return;
       }
 
       // Check authorization for message type
-      const messageType = payload.type || "";
       if (!isAuthorizedForMessageType(client, messageType)) {
+        trackSuspiciousActivity(userId, client.ipAddress, `Unauthorized message type: ${messageType} role=${client.role}`);
         socket.send(JSON.stringify({
           type: "error",
           message: "Unauthorized: Only speakers and creators can send media offers",
@@ -251,11 +394,13 @@ export function attachChymeSignaling(server: Server) {
 
     socket.on("close", () => {
       clients.delete(client);
+      removeConnectionTracking(client);
       log(`Chyme signaling: client disconnected userId=${userId} roomId=${roomId}`);
     });
 
     socket.on("error", (error) => {
       log(`Chyme signaling: socket error userId=${userId} roomId=${roomId} error=${error}`);
+      trackSuspiciousActivity(userId, client.ipAddress, `Socket error: ${error}`);
     });
   });
 }

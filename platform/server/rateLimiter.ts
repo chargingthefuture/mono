@@ -77,3 +77,24 @@ export const publicApiLimiter = rateLimit({
   }
 });
 
+// Rate limiter for authenticated chat message posting
+// Stricter limits to prevent spam/abuse
+export const chatMessageLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 20, // Max 20 messages per minute per user
+  message: "Too many messages. Please slow down.",
+  standardHeaders: true,
+  legacyHeaders: false,
+  // Use userId from request for per-user rate limiting
+  keyGenerator: (req: any) => {
+    // Prefer user-based limiting, fallback to IP
+    return req.auth?.userId || getIpAddress(req);
+  },
+  handler: (req, res) => {
+    res.status(429).json({
+      message: "Too many messages sent. Please wait a moment before sending another.",
+      retryAfter: Math.ceil(req.rateLimit?.resetTime ? (req.rateLimit.resetTime - Date.now()) / 1000 : 60)
+    });
+  }
+});
+
