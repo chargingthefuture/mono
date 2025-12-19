@@ -1,0 +1,212 @@
+--------- beginning of kernel
+--------- beginning of main
+--------- beginning of system
+12-19 07:09:24.330 E/ContentSuggestionsPerUserService(  534): Bad service name: com.google.android.as/com.google.android.apps.miphone.aiai.app.AiAiContentSuggestionsService
+12-19 07:09:33.305 E/AdapterState( 1512): BLE_TURNING_ON : BLE_START_TIMEOUT
+12-19 07:09:33.586 E/bt      (  291): system/bt/vendor_libs/test_vendor_lib/model/devices/device_properties.cc:83 DeviceProperties: Error reading controller properties from file.
+12-19 07:09:34.459 E/AdapterState( 1512): BLE_TURNING_OFF : BLE_STOP_TIMEOUT
+12-19 07:09:34.668 E/Netd    (  282): no such netId 100
+12-19 07:09:34.858 E/ConnectivityService(  534): Exception adding interface: java.lang.IllegalStateException: android.os.ServiceSpecificException: Machine is not on the network (code 64)
+12-19 07:09:35.515 E/Netd    (  282): no such netId 100
+12-19 07:09:35.518 E/Netd    (  282): no such netId 100
+12-19 07:09:35.545 E/ConnectivityService(  534): Exception in networkAddRouteParcel for non-gateway: android.os.ServiceSpecificException: Machine is not on the network (code 64)
+12-19 07:09:35.521 E/Netd    (  282): no such netId 100
+12-19 07:09:35.546 E/Netd    (  282): no such netId 100
+12-19 07:09:40.037 E/BluetoothAdapterService( 1512): Repeated wake lock release; aborting release: bluetooth_timer
+12-19 07:09:40.271 E/bt_btif_storage( 1512): btif_storage_get_adapter_property: Controller ready!
+12-19 07:09:42.321 E/bt_stack( 1512): [ERROR:message_loop_thread.cc(69)] DoInThreadDelayed: message loop is null for thread bt_main_thread(-1), from pc:0x7bb1dbac16d3
+12-19 07:09:42.322 E/bt_stack( 1512): [ERROR:btu_task.cc(94)] do_in_main_thread: failed from pc:0x7bb1dbac16d3
+12-19 07:09:46.134 E/Netd    (  282): Error adding route ::/0 -> fe80::2 wlan0 to table 1012: File exists
+12-19 07:09:48.161 E/tombstoned(  276): Traces for pid 534 written to: /data/anr/trace_00
+12-19 07:09:50.248 E/DnsResolver( 1129): resNetworkResult:android.system.ErrnoException: resNetworkResult failed: ESRCH (No such process)
+12-19 07:09:50.317 E/DnsResolver( 1129): resNetworkResult:android.system.ErrnoException: resNetworkResult failed: ESRCH (No such process)
+12-19 07:09:52.655 E/system_server(  534): libdebuggerd_client: failed to read status response from tombstoned: Try again
+12-19 07:09:52.900 E/tombstoned(  276): Traces for pid 1221 written to: /data/anr/trace_01
+12-19 07:09:53.364 E/WifiVendorHal(  534): stopRssiMonitoring(l.2078) failed {.code = ERROR_NOT_AVAILABLE, .description = }
+12-19 07:09:55.054 E/system_server(  534): libdebuggerd_client: failed to read status response from tombstoned: Try again
+12-19 07:09:55.106 E/ActivityManager(  534): Aborting stack trace dump (current firstPid=1221); deadline exceeded.
+12-19 07:09:56.033 E/ActivityManager(  534): ProcessRecord{38934e3 1601:com.google.android.apps.wellbeing/u0a113} is attached to a previous process
+12-19 07:09:56.824 E/DnsResolver( 1129): resNetworkResult:android.system.ErrnoException: resNetworkResult failed: ESRCH (No such process)
+12-19 07:09:57.014 E/DnsResolver( 1129): resNetworkResult:android.system.ErrnoException: resNetworkResult failed: ESRCH (No such process)
+12-19 07:10:02.876 E/ActivityManager(  534): Already have existing proc ProcessRecord{38934e3 1601:com.google.android.apps.wellbeing/u0a113} when adding ProcessRecord{4787752 0:com.google.android.apps.wellbeing/u0a113}
+12-19 07:10:12.753 E/DnsResolver( 1129): resNetworkResult:android.system.ErrnoException: resNetworkResult failed: ESRCH (No such process)
+12-19 07:10:12.776 E/DnsResolver( 1129): resNetworkResult:android.system.ErrnoException: resNetworkResult failed: ESRCH (No such process)
+12-19 07:10:20.435 E/DnsResolver( 1129): resNetworkResult:android.system.ErrnoException: resNetworkResult failed: ESRCH (No such process)
+12-19 07:10:20.521 E/DnsResolver( 1129): resNetworkResult:android.system.ErrnoException: resNetworkResult failed: ESRCH (No such process)
+12-19 07:10:24.382 E/Netd    (  282): Error adding route 0.0.0.0/0 -> 10.0.2.2 wlan0 to table 1012: Network is unreachable
+12-19 07:10:24.491 E/ConnectivityService(  534): Exception in networkAddRouteParcel for gateway: android.os.ServiceSpecificException: Network is unreachable (code 101)
+12-19 07:10:26.561 E/livelock(  454): sample 78.761s
+12-19 07:10:27.760 E/libprocessgroup(  534): getpgid(1774) failed: Permission denied
+12-19 07:10:30.221 E/bt_btif_storage( 1730): btif_storage_get_adapter_property: Controller not ready! Unable to return Bluetooth Address
+12-19 07:10:30.221 E/BluetoothServiceJni( 1730): adapter_properties_callback: Status 1 is incorrect
+12-19 07:10:30.295 E/libprocessgroup(  534): getpgid(1774) failed: Permission denied
+12-19 07:10:31.508 E/DnsResolver( 1129): resNetworkResult:android.system.ErrnoException: resNetworkResult failed: ECONNREFUSED (Connection refused)
+12-19 07:10:31.560 E/DnsResolver( 1129): resNetworkResult:android.system.ErrnoException: resNetworkResult failed: ECONNREFUSED (Connection refused)
+12-19 07:10:37.715 E/AdapterState( 1730): BLE_TURNING_ON : BLE_START_TIMEOUT
+12-19 07:10:37.966 E/IPCThreadState(  281): attemptIncStrongHandle(80): Not supported
+12-19 07:10:37.971 E/IPCThreadState(  281): attemptIncStrongHandle(82): Not supported
+12-19 07:10:37.973 E/IPCThreadState(  281): attemptIncStrongHandle(81): Not supported
+12-19 07:10:37.985 E/IPCThreadState(  281): attemptIncStrongHandle(79): Not supported
+12-19 07:10:49.301 E/DnsResolver( 1129): resNetworkResult:android.system.ErrnoException: resNetworkResult failed: ECONNREFUSED (Connection refused)
+12-19 07:10:49.366 E/DnsResolver( 1129): resNetworkResult:android.system.ErrnoException: resNetworkResult failed: ECONNREFUSED (Connection refused)
+12-19 07:11:00.132 E/binder  (    0): invalid inc weak node for 92154
+12-19 07:11:00.179 E/binder  (    0): invalid inc weak node for 92156
+12-19 07:11:00.568 E/BluetoothManagerService(  534): MESSAGE_TIMEOUT_BIND
+12-19 07:11:01.268 E/droid.bluetoot( 1730): [1219/071101.267841:ERROR:message_loop_thread.cc(69)] DoInThreadDelayed: message loop is null for thread bt_main_thread(-1), from pc:0x7bb1dbb846d3
+12-19 07:11:01.269 E/droid.bluetoot( 1730): [1219/071101.269599:ERROR:btu_task.cc(94)] do_in_main_thread: failed from pc:0x7bb1dbb846d3
+12-19 07:11:01.910 E/ChimeraCfgMgr( 1547): Failed to read module config: java.io.FileNotFoundException: /data/user_de/0/com.google.android.gms/app_chimera/current_config.fb: open failed: ENOENT (No such file or directory)
+12-19 07:11:02.584 E/system_server(  534): libdebugged_client: failed to get process info: failed to open /proc/1221
+12-19 07:11:02.688 E/system_server(  534): libdebuggerd_client: failed to send signal to pid 1221: No such process
+12-19 07:11:02.720 E/GservicesValue( 1547): Gservices key not whitelisted for directboot access: gms:chimera:dev_module_blacklist
+12-19 07:11:03.385 E/ChimeraCfgMgr( 1547): Failed to read module config: java.io.FileNotFoundException: /data/user_de/0/com.google.android.gms/app_chimera/current_config.fb: open failed: ENOENT (No such file or directory)
+12-19 07:11:04.849 E/system_server(  534): libdebuggerd_client: failed to read status response from tombstoned: Try again
+12-19 07:11:05.189 E/system_server(  534): libdebugged_client: failed to get process info: failed to open /proc/1730
+12-19 07:11:05.294 E/system_server(  534): libdebuggerd_client: failed to send signal to pid 1730: No such process
+12-19 07:11:07.055 E/system_server(  534): libdebuggerd_client: failed to read status response from tombstoned: Try again
+12-19 07:11:08.271 E/system_server(  534): libdebuggerd_client: failed to read status response from tombstoned: Try again
+12-19 07:11:09.514 E/ChimeraCfgMgr( 1547): Failed to read module config: java.io.FileNotFoundException: /data/user_de/0/com.google.android.gms/app_chimera/current_config.fb: open failed: ENOENT (No such file or directory)
+12-19 07:11:09.906 E/SystemCaptionsManagerPerUserService(  534): Bad service name: com.google.android.as/com.google.android.apps.miphone.aiai.captions.SystemCaptionsManagerService
+12-19 07:11:10.934 E/ContentCapturePerUserService(  534): Bad service name: com.google.android.as/com.google.android.apps.miphone.aiai.app.AiAiContentCaptureService
+12-19 07:11:11.080 E/CarrierIdProvider( 1877): read carrier list from ota pb failure: java.io.FileNotFoundException: /data/misc/carrierid/carrier_list.pb: open failed: ENOENT (No such file or directory)
+12-19 07:11:11.785 E/ActivityManager(  534): ANR in com.android.bluetooth
+12-19 07:11:11.785 E/ActivityManager(  534): PID: 1730
+12-19 07:11:11.785 E/ActivityManager(  534): Reason: executing service com.android.bluetooth/.gatt.GattService
+12-19 07:11:11.785 E/ActivityManager(  534): Load: 0.0 / 0.0 / 0.0
+12-19 07:11:11.785 E/ActivityManager(  534): ----- Output from /proc/pressure/memory -----
+12-19 07:11:11.785 E/ActivityManager(  534): some avg10=0.87 avg60=4.50 avg300=2.77 total=12505912
+12-19 07:11:11.785 E/ActivityManager(  534): full avg10=0.00 avg60=0.01 avg300=0.04 total=744717
+12-19 07:11:11.785 E/ActivityManager(  534): ----- End output from /proc/pressure/memory -----
+12-19 07:11:11.785 E/ActivityManager(  534): 
+12-19 07:11:11.785 E/ActivityManager(  534): CPU usage from 0ms to 5751ms later (2025-12-19 07:10:59.683 to 2025-12-19 07:11:05.434):
+12-19 07:11:11.785 E/ActivityManager(  534):   38% 326/surfaceflinger: 12% user + 25% kernel
+12-19 07:11:11.785 E/ActivityManager(  534):   32% 1439/com.android.settings: 6.9% user + 25% kernel
+12-19 07:11:11.785 E/ActivityManager(  534):   24% 534/system_server: 3.4% user + 20% kernel / faults: 129 minor
+12-19 07:11:11.785 E/ActivityManager(  534):   23% 301/android.hardware.graphics.composer@2.3-service: 6.3% user + 17% kernel
+12-19 07:11:11.785 E/ActivityManager(  534):   7% 1877/com.android.phone: 1.3% user + 5.6% kernel / faults: 559 minor 1 major
+12-19 07:11:11.785 E/ActivityManager(  534):   6.9% 847/com.android.systemui: 0.8% user + 6% kernel / faults: 265 minor 2 major
+12-19 07:11:11.785 E/ActivityManager(  534):   6.8% 1547/com.google.android.gms.persistent: 1.2% user + 5.5% kernel / faults: 140 minor 22 major
+12-19 07:11:11.785 E/ActivityManager(  534):   6.2% 417/installd: 0.5% user + 5.6% kernel
+12-19 07:11:11.785 E/ActivityManager(  534):   3.2% 291/android.hardware.bluetooth@1.1-service.sim: 0.7% user + 2.5% kernel / faults: 16 minor
+12-19 07:11:11.785 E/ActivityManager(  534):   1.6% 283/zygote64: 0% user + 1.6% kernel / faults: 178 minor
+12-19 07:11:11.785 E/ActivityManager(  534):   1.5% 310/android.hardware.sensors@2.1-service.multihal: 0.3% user + 1.2% kernel
+12-19 07:11:11.785 E/ActivityManager(  534):   1.3% 1798/com.google.android.apps.wellbeing: 0.1% user + 1.2% kernel / faults: 29 minor
+12-19 07:11:11.785 E/ActivityManager(  534):   1.3% 10/rcu_preempt: 0% user + 1.3% kernel
+12-19 07:11:11.785 E/ActivityManager(  534):   1% 157/logd: 0% user + 1% kernel
+12-19 07:11:11.785 E/ActivityManager(  534):   0.8% 199/jbd2/dm-5-8: 0% user + 0.8% kernel
+12-19 07:11:11.785 E/ActivityManager(  534):   0% 288/android.hardware.audio.service.ranchu: 0% user + 0% kernel / faults: 6 minor
+12-19 07:11:11.785 E/ActivityManager(  534):   0% 448/android.hardware.biometrics.fingerprint@2.1-service: 0% user + 0% kernel / faults: 2 minor
+12-19 07:11:11.785 E/ActivityManager(  534):   0.8% 12/kworker/0:1-mm_percpu_wq: 0% user + 0.8% kernel
+12-19 07:11:11.785 E/ActivityManager(  534):   0.7% 281/statsd: 0% user + 0.7% kernel
+12-19 07:11:11.785 E/ActivityManager(  534):   0.6% 126/kworker/u4:2-kverityd: 0% user + 0.6% kernel
+12-19 07:11:11.785 E/ActivityManager(  534):   0.6% 276/tombstoned: 0% user + 0.6% kernel
+12-19 07:11:11.785 E/ActivityManager(  534):   0.6% 389/adbd: 0% user + 0.6% kernel / faults: 65 minor
+12-19 07:11:11.785 E/ActivityManager(  534):   0.5% 1/init: 0% user + 0.5% kernel
+12-19 07:11:11.785 E/ActivityManager(  534):   0.5% 16/ksoftirqd/1: 0% user + 0.5% kernel
+12-19 07:11:11.785 E/ActivityManager(  534):   0.1% 9/ksoftirqd/0: 0% user + 0.1% kernel
+12-19 07:11:11.785 E/ActivityManager(  534):   0.1% 114/kworker/1:1H-kblockd: 0% user + 0.1% kernel
+12-19 07:11:11.785 E/ActivityManager(  534):   0.1% 158/lmkd: 0% user + 0.1% kernel
+12-19 07:11:11.785 E/ActivityManager(  534):   0.1% 159/servicemanager: 0% user + 0.1% kernel
+12-19 07:11:11.785 E/ActivityManager(  534):   0.1% 313/android.hardware.wifi@1.0-service: 0% user + 0.1% kernel
+12-19 07:11:11.785 E/ActivityManager(  534):   0.1% 348/logcat: 0% user + 0.1% kernel
+12-19 07:11:11.785 E/ActivityManager(  534):   0.1% 407/audioserver: 0% user + 0.1% kernel
+12-19 07:11:11.785 E/ActivityManager(  534):   0.1% 649/kworker/u5:2-blk_crypto_wq: 0% user + 0.1% kernel
+12-19 07:11:11.785 E/ActivityManager(  534):   0.1% 1782/logcat: 0% user + 0.1% kernel
+12-19 07:11:11.785 E/ActivityManager(  534):   0.1% 1837/kworker/1:3-events: 0% user + 0.1% kernel
+12-19 07:11:11.785 E/ActivityManager(  534):  +0% 1935/crash_dump64: 0% user + 0% kernel
+12-19 07:11:11.785 E/ActivityManager(  534): 97% TOTAL: 16% user + 75% kernel + 0.1% iowait + 4.5% irq + 1.7% softirq
+12-19 07:11:11.785 E/ActivityManager(  534): CPU usage from 475564ms to 475564ms ago (1970-01-01 00:00:00.000 to 1970-01-01 00:00:00.000) with 0% awake:
+12-19 07:11:11.785 E/ActivityManager(  534): 0% TOTAL: 0% user + 0% kernel
+12-19 07:11:12.690 E/GmsClient( 1798): unable to connect to service: com.google.android.gms.phenotype.service.START on com.google.android.gms
+12-19 07:11:14.912 E/ContentCapturePerUserService(  534): Bad service name: com.google.android.as/com.google.android.apps.miphone.aiai.app.AiAiContentCaptureService
+12-19 07:11:14.914 E/ContentCapturePerUserService(  534): Bad service name: com.google.android.as/com.google.android.apps.miphone.aiai.app.AiAiContentCaptureService
+12-19 07:11:18.683 E/system_server(  534): libdebuggerd_client: failed to read status response from tombstoned: timeout reached?
+12-19 07:11:18.792 E/ActivityManager(  534): Aborting stack trace dump (current native pid=292); deadline exceeded.
+12-19 07:11:22.196 E/GmsClient( 1798): unable to connect to service: com.google.android.gms.phenotype.service.START on com.google.android.gms
+12-19 07:11:24.842 E/MendelPackageState( 1798): Failed to commit to config
+12-19 07:11:24.842 E/MendelPackageState( 1798): jzr: 17: 17: API: Phenotype.API is not available on this device. Connection failed with: ibt{statusCode=API_UNAVAILABLE, resolution=null, message=null}
+12-19 07:11:24.842 E/MendelPackageState( 1798): 	at jzu.a(Unknown Source:1)
+12-19 07:11:24.842 E/MendelPackageState( 1798): 	at nis.a(PG:3)
+12-19 07:11:24.842 E/MendelPackageState( 1798): 	at niu.run(PG:23)
+12-19 07:11:24.842 E/MendelPackageState( 1798): 	at nla.execute(PG:3)
+12-19 07:11:24.842 E/MendelPackageState( 1798): 	at nji.b(PG:77)
+12-19 07:11:24.842 E/MendelPackageState( 1798): 	at nji.a(PG:76)
+12-19 07:11:24.842 E/MendelPackageState( 1798): 	at nji.a(PG:175)
+12-19 07:11:24.842 E/MendelPackageState( 1798): 	at nmq.a(PG:3)
+12-19 07:11:24.842 E/MendelPackageState( 1798): 	at jjj.a(Unknown Source:6)
+12-19 07:11:24.842 E/MendelPackageState( 1798): 	at iug.run(PG:2)
+12-19 07:11:24.842 E/MendelPackageState( 1798): 	at nla.execute(PG:3)
+12-19 07:11:24.842 E/MendelPackageState( 1798): 	at iuh.a(PG:4)
+12-19 07:11:24.842 E/MendelPackageState( 1798): 	at iuu.a(PG:10)
+12-19 07:11:24.842 E/MendelPackageState( 1798): 	at iuv.b(PG:7)
+12-19 07:11:24.842 E/MendelPackageState( 1798): 	at idy.a(PG:2)
+12-19 07:11:24.842 E/MendelPackageState( 1798): 	at ify.a(PG:106)
+12-19 07:11:24.842 E/MendelPackageState( 1798): 	at ify.a(PG:98)
+12-19 07:11:24.842 E/MendelPackageState( 1798): 	at ify.a(PG:153)
+12-19 07:11:24.842 E/MendelPackageState( 1798): 	at ify.a(PG:127)
+12-19 07:11:24.842 E/MendelPackageState( 1798): 	at iga.run(PG:12)
+12-19 07:11:24.842 E/MendelPackageState( 1798): 	at android.os.Handler.handleCallback(Handler.java:938)
+12-19 07:11:24.842 E/MendelPackageState( 1798): 	at android.os.Handler.dispatchMessage(Handler.java:99)
+12-19 07:11:24.842 E/MendelPackageState( 1798): 	at android.os.Looper.loop(Looper.java:223)
+12-19 07:11:24.842 E/MendelPackageState( 1798): 	at android.os.HandlerThread.run(HandlerThread.java:67)
+12-19 07:11:24.842 E/MendelPackageState( 1798): Caused by: ida: 17: API: Phenotype.API is not available on this device. Connection failed with: ibt{statusCode=API_UNAVAILABLE, resolution=null, message=null}
+12-19 07:11:24.842 E/MendelPackageState( 1798): 	at xy.a(PG:8)
+12-19 07:11:24.842 E/MendelPackageState( 1798): 	at ieb.a(PG:2)
+12-19 07:11:24.842 E/MendelPackageState( 1798): 	... 10 more
+12-19 07:11:25.625 E/bt_btif_storage( 1941): btif_storage_get_adapter_property: Controller not ready! Unable to return Bluetooth Address
+12-19 07:11:25.625 E/BluetoothServiceJni( 1941): adapter_properties_callback: Status 1 is incorrect
+12-19 07:11:27.957 E/ActivityManager(  534): ANR in com.google.android.apps.wellbeing
+12-19 07:11:27.957 E/ActivityManager(  534): PID: 1798
+12-19 07:11:27.957 E/ActivityManager(  534): Reason: Broadcast of Intent { act=android.intent.action.LOCKED_BOOT_COMPLETED flg=0x89000010 cmp=com.google.android.apps.wellbeing/.screen.impl.ScreenLockedBootCompletedBroadcastReceiver_Receiver (has extras) }
+12-19 07:11:27.957 E/ActivityManager(  534): Load: 0.0 / 0.0 / 0.0
+12-19 07:11:27.957 E/ActivityManager(  534): ----- Output from /proc/pressure/memory -----
+12-19 07:11:27.957 E/ActivityManager(  534): some avg10=0.21 avg60=3.56 avg300=2.64 total=12505912
+12-19 07:11:27.957 E/ActivityManager(  534): full avg10=0.00 avg60=0.00 avg300=0.03 total=744717
+12-19 07:11:27.957 E/ActivityManager(  534): ----- End output from /proc/pressure/memory -----
+12-19 07:11:27.957 E/ActivityManager(  534): 
+12-19 07:11:27.957 E/ActivityManager(  534): CPU usage from 0ms to 9984ms later (2025-12-19 07:11:12.420 to 2025-12-19 07:11:22.404):
+12-19 07:11:27.957 E/ActivityManager(  534):   38% 326/surfaceflinger: 13% user + 25% kernel
+12-19 07:11:27.957 E/ActivityManager(  534):   28% 1439/com.android.settings: 6.9% user + 21% kernel
+12-19 07:11:27.957 E/ActivityManager(  534):   26% 301/android.hardware.graphics.composer@2.3-service: 8.5% user + 18% kernel
+12-19 07:11:27.957 E/ActivityManager(  534):   22% 534/system_server: 3.7% user + 18% kernel / faults: 220 minor 1 major
+12-19 07:11:27.957 E/ActivityManager(  534):   11% 1798/com.google.android.apps.wellbeing: 2% user + 9.9% kernel / faults: 1306 minor 2 major
+12-19 07:11:27.957 E/ActivityManager(  534):   6.8% 1547/com.google.android.gms.persistent: 0.9% user + 5.8% kernel / faults: 443 minor 2 major
+12-19 07:11:27.957 E/ActivityManager(  534):   6.6% 1941/com.android.bluetooth: 0.7% user + 5.8% kernel / faults: 783 minor
+12-19 07:11:27.957 E/ActivityManager(  534):   6.2% 1877/com.android.phone: 1% user + 5.2% kernel / faults: 372 minor
+12-19 07:11:27.957 E/ActivityManager(  534):   5.9% 417/installd: 0.2% user + 5.7% kernel
+12-19 07:11:27.957 E/ActivityManager(  534):   5.6% 847/com.android.systemui: 1% user + 4.5% kernel / faults: 120 minor
+12-19 07:11:27.957 E/ActivityManager(  534):   2.8% 291/android.hardware.bluetooth@1.1-service.sim: 0.6% user + 2.2% kernel / faults: 22 minor
+12-19 07:11:27.957 E/ActivityManager(  534):   1.7% 310/android.hardware.sensors@2.1-service.multihal: 0.2% user + 1.4% kernel
+12-19 07:11:27.957 E/ActivityManager(  534):   1.2% 10/rcu_preempt: 0% user + 1.2% kernel
+12-19 07:11:27.957 E/ActivityManager(  534):   1.2% 157/logd: 0.2% user + 1% kernel
+12-19 07:11:27.957 E/ActivityManager(  534):   0.1% 440/libgoldfish-rild: 0% user + 0.1% kernel / faults: 1 minor 4 major
+12-19 07:11:27.957 E/ActivityManager(  534):   0.8% 389/adbd: 0% user + 0.8% kernel / faults: 124 minor
+12-19 07:11:27.957 E/ActivityManager(  534):   0.7% 12/kworker/0:1-mm_percpu_wq: 0% user + 0.7% kernel
+12-19 07:11:27.957 E/ActivityManager(  534):   0.7% 281/statsd: 0.1% user + 0.6% kernel
+12-19 07:11:27.957 E/ActivityManager(  534):   0.6% 126/kworker/u4:2-kverityd: 0% user + 0.6% kernel
+12-19 07:11:27.957 E/ActivityManager(  534):   0.2% 1/init: 0% user + 0.2% kernel
+12-19 07:11:27.957 E/ActivityManager(  534):   0.4% 199/jbd2/dm-5-8: 0% user + 0.4% kernel
+12-19 07:11:27.957 E/ActivityManager(  534):   0.4% 348/logcat: 0% user + 0.4% kernel
+12-19 07:11:27.957 E/ActivityManager(  534):   0.1% 159/servicemanager: 0% user + 0.1% kernel
+12-19 07:11:27.957 E/ActivityManager(  534):   0.2% 16/ksoftirqd/1: 0% user + 0.2% kernel
+12-19 07:11:27.957 E/ActivityManager(  534):   0% 134/ueventd: 0% user + 0% kernel
+12-19 07:11:27.957 E/ActivityManager(  534):   0% 160/hwservicemanager: 0% user + 0% kernel
+12-19 07:11:27.957 E/ActivityManager(  534):   0% 203/android.system.suspend@1.0-service: 0% user + 0% kernel
+12-19 07:11:27.957 E/ActivityManager(  534):   0.2% 276/tombstoned: 0% user + 0.2% kernel / faults: 1 minor
+12-19 07:11:27.957 E/ActivityManager(  534):   0.2% 292/android.hardware.camera.provider@2.4-service: 0% user + 0.2% kernel / faults: 15 minor
+12-19 07:11:27.957 E/ActivityManager(  534):   0% 1129/com.android.networkstack.process: 0% user + 0% kernel
+12-19 07:11:27.957 E/ActivityManager(  534):   0.1% 9/ksoftirqd/0: 0% user + 0.1% kernel
+12-19 07:11:27.957 E/ActivityManager(  534):   0% 74/kworker/u5:0-blk_crypto_wq: 0% user + 0% kernel
+12-19 07:11:27.957 E/ActivityManager(  534):   0% 87/kworker/u4:1-kverityd: 0% user + 0% kernel
+12-19 07:11:27.957 E/ActivityManager(  534):   0.1% 313/android.hardware.wifi@1.0-service: 0% user + 0.1% kernel
+12-19 07:11:27.957 E/ActivityManager(  534):   0% 419/keystore: 0% user + 0% kernel
+12-19 07:11:27.957 E/ActivityManager(  534):   0% 1080/android.hardware.gnss@2.0-service.ranchu: 0% user + 0% kernel
+12-19 07:11:27.957 E/ActivityManager(  534):   0% 1782/logcat: 0% user + 0% kernel
+12-19 07:11:27.957 E/ActivityManager(  534):  +0% 1976/crash_dump64: 0% user + 0% kernel
+12-19 07:11:27.957 E/ActivityManager(  534):  +0% 1982/crash_dump32: 0% user + 0% kernel
+12-19 07:11:27.957 E/ActivityManager(  534):  +0% 1985/android.hardware.camera.provider@2.4-service: 0% user + 0% kernel
+12-19 07:11:27.957 E/ActivityManager(  534): 98% TOTAL: 18% user + 73% kernel + 4.4% irq + 1.8% softirq
+12-19 07:11:27.957 E/ActivityManager(  534): CPU usage from 488301ms to 488301ms ago (1970-01-01 00:00:00.000 to 1970-01-01 00:00:00.000) with 0% awake:
+12-19 07:11:27.957 E/ActivityManager(  534): 0% TOTAL: 0% user + 0% kernel
+12-19 07:11:33.470 E/DnsResolver( 1129): resNetworkResult:android.system.ErrnoException: resNetworkResult failed: ECONNREFUSED (Connection refused)
+12-19 07:11:33.521 E/DnsResolver( 1129): resNetworkResult:android.system.ErrnoException: resNetworkResult failed: ECONNREFUSED (Connection refused)
+

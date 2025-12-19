@@ -251,6 +251,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   };
 
+  // Chyme: schema for room creation payloads coming from clients.
+  // `createdBy` is always derived from the authenticated user on the server,
+  // so we explicitly do NOT require it from clients (Android, web, etc.).
+  const chymeRoomCreateBodySchema = insertChymeRoomSchema.omit({
+    createdBy: true,
+  });
+
   // CSRF Protection for admin endpoints
   // Generate CSRF tokens on GET requests to admin endpoints (runs early)
   app.use('/api/admin', (req, res, next) => {
