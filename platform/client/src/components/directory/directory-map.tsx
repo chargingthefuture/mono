@@ -1,4 +1,6 @@
 import { useEffect, useState, useMemo, lazy, Suspense } from "react";
+// Import CSS at top level to avoid issues with Promise.all and CSS modules
+import "leaflet/dist/leaflet.css";
 
 type ProfileLocation = {
   id: string;
@@ -24,25 +26,28 @@ type DirectoryMapProps = {
 };
 
 // Lazy load the map component to avoid SSR issues
-const LeafletMapComponent = lazy(() => {
-  return Promise.all([
-    import("leaflet/dist/leaflet.css"),
-    import("leaflet"),
-    import("react-leaflet"),
-  ]).then(([_, L, RL]) => {
-    // Fix default marker icons
-    delete (L.default.Icon.Default.prototype as any)._getIconUrl;
-    L.default.Icon.Default.mergeOptions({
+const LeafletMapComponent = lazy(async () => {
+  // Import modules separately to avoid ESM interop issues
+  const leafletModule = await import("leaflet");
+  const reactLeafletModule = await import("react-leaflet");
+  
+  // Handle both default and named exports for leaflet
+  const Leaflet = leafletModule.default || leafletModule;
+  
+  // Fix default marker icons - ensure we're accessing the correct structure
+  if (Leaflet.Icon && Leaflet.Icon.Default) {
+    delete (Leaflet.Icon.Default.prototype as any)._getIconUrl;
+    Leaflet.Icon.Default.mergeOptions({
       iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
       iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
       shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
     });
+  }
 
-    // Return a component that uses the loaded modules
-    return {
-      default: ({ locations }: { locations: LocationWithCoords[] }) => {
-        const { MapContainer, TileLayer, Marker, Popup, useMap } = RL;
-        const Leaflet = L.default;
+  // Return a component that uses the loaded modules
+  return {
+    default: ({ locations }: { locations: LocationWithCoords[] }) => {
+      const { MapContainer, TileLayer, Marker, Popup, useMap } = reactLeafletModule;
 
         // Component to adjust map bounds - must be inside MapContainer
         function MapBounds({ locations }: { locations: LocationWithCoords[] }) {
