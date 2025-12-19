@@ -1017,10 +1017,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(formatted);
     } catch (error: any) {
-      console.error('Error fetching skills:', error);
-      // Return empty array instead of error to prevent frontend breakage
-      // The frontend will show "No skills found" which is better than an error
-      res.json([]);
+      Sentry.captureException(error, {
+        tags: { route: '/api/directory/skills' },
+        extra: { context: 'Error fetching skills from database' }
+      });
+      res.status(500).json({ 
+        message: error.message || 'Failed to fetch skills',
+        error: 'Database error occurred while fetching skills'
+      });
     }
   }));
 
@@ -1041,9 +1045,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(formatted);
     } catch (error: any) {
-      console.error('Error fetching sectors:', error);
-      // Return empty array instead of error to prevent frontend breakage
-      res.json([]);
+      Sentry.captureException(error, {
+        tags: { route: '/api/directory/sectors' },
+        extra: { context: 'Error fetching sectors from database' }
+      });
+      res.status(500).json({ 
+        message: error.message || 'Failed to fetch sectors',
+        error: 'Database error occurred while fetching sectors'
+      });
     }
   }));
 
