@@ -91,6 +91,12 @@ class MainActivity : AppCompatActivity() {
                                         level = SentryLevel.INFO,
                                         data = mapOf("user_id" to it.user.id)
                                     )
+                                    // Reload token to ensure auth state flow updates
+                                    try {
+                                        authManager.loadStoredToken()
+                                    } catch (e: Exception) {
+                                        Log.e("MainActivity", "Failed to reload token after auth", e)
+                                    }
                                     // Update UI will happen automatically via auth state flow
                                 },
                                 onFailure = { error ->
@@ -143,6 +149,12 @@ class MainActivity : AppCompatActivity() {
                                         level = SentryLevel.INFO,
                                         data = mapOf("user_id" to it.user.id)
                                     )
+                                    // Reload token to ensure auth state flow updates
+                                    try {
+                                        authManager.loadStoredToken()
+                                    } catch (e: Exception) {
+                                        Log.e("MainActivity", "Failed to reload token after auth", e)
+                                    }
                                 },
                                 onFailure = { error ->
                                     Log.e("MainActivity", "Mobile auth failed from HTTPS URL", error)
