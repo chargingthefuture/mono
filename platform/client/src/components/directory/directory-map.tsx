@@ -44,10 +44,22 @@ const LeafletMapComponent = lazy(async () => {
     });
   }
 
+  // Extract react-leaflet components - handle both named exports and default exports
+  // In react-leaflet v5, these are named exports from the module namespace
+  const MapContainer = reactLeafletModule.MapContainer || (reactLeafletModule as any).default?.MapContainer;
+  const TileLayer = reactLeafletModule.TileLayer || (reactLeafletModule as any).default?.TileLayer;
+  const Marker = reactLeafletModule.Marker || (reactLeafletModule as any).default?.Marker;
+  const Popup = reactLeafletModule.Popup || (reactLeafletModule as any).default?.Popup;
+  const useMap = reactLeafletModule.useMap || (reactLeafletModule as any).default?.useMap;
+
+  // Validate that all required components are available
+  if (!MapContainer || !TileLayer || !Marker || !Popup || !useMap) {
+    throw new Error("Failed to load react-leaflet components");
+  }
+
   // Return a component that uses the loaded modules
   return {
     default: ({ locations }: { locations: LocationWithCoords[] }) => {
-      const { MapContainer, TileLayer, Marker, Popup, useMap } = reactLeafletModule;
 
       // Component to adjust map bounds - must be inside MapContainer
       function MapBounds({ locations }: { locations: LocationWithCoords[] }) {
