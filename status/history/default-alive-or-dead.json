@@ -1412,5 +1412,12 @@
     "statusCode": null,
     "responseTime": 10463,
     "error": "Request timeout"
+  },
+  {
+    "timestamp": "2025-12-19T15:54:30.604Z",
+    "status": "down",
+    "statusCode": null,
+    "responseTime": 10124,
+    "error": "Request timeout"
   }
 ]
