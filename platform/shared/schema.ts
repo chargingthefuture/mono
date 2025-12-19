@@ -2437,6 +2437,7 @@ export const insertChymeRoomSchema = createInsertSchema(chymeRooms).omit({
 }).extend({
   roomType: z.enum(["public", "private"]),
   maxParticipants: z.coerce.number().int().positive().optional().nullable(),
+  topic: z.string().max(100).optional().nullable(),
 });
 
 export type InsertChymeRoom = z.infer<typeof insertChymeRoomSchema>;
@@ -2447,8 +2448,10 @@ export const chymeRoomParticipants = pgTable("chyme_room_participants", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   roomId: varchar("room_id").notNull().references(() => chymeRooms.id, { onDelete: "cascade" }),
   userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  role: varchar("role", { length: 20 }).notNull().default('listener'), // 'creator', 'speaker', 'listener'
   isMuted: boolean("is_muted").notNull().default(false),
   isSpeaking: boolean("is_speaking").notNull().default(false),
+  hasRaisedHand: boolean("has_raised_hand").notNull().default(false),
   joinedAt: timestamp("joined_at").defaultNow().notNull(),
   leftAt: timestamp("left_at"),
 }, (table) => [
@@ -2460,6 +2463,8 @@ export const chymeRoomParticipants = pgTable("chyme_room_participants", {
 export const insertChymeRoomParticipantSchema = createInsertSchema(chymeRoomParticipants).omit({
   id: true,
   joinedAt: true,
+}).extend({
+  role: z.enum(["creator", "speaker", "listener"]).optional(),
 });
 
 export type InsertChymeRoomParticipant = z.infer<typeof insertChymeRoomParticipantSchema>;
@@ -2485,6 +2490,46 @@ export const insertChymeMessageSchema = createInsertSchema(chymeMessages).omit({
 
 export type InsertChymeMessage = z.infer<typeof insertChymeMessageSchema>;
 export type ChymeMessage = typeof chymeMessages.$inferSelect;
+
+// Chyme User Follows
+export const chymeUserFollows = pgTable("chyme_user_follows", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  followedUserId: varchar("followed_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("chyme_user_follows_user_id_idx").on(table.userId),
+  index("chyme_user_follows_followed_user_id_idx").on(table.followedUserId),
+  index("chyme_user_follows_unique_idx").on(table.userId, table.followedUserId),
+]);
+
+export const insertChymeUserFollowSchema = createInsertSchema(chymeUserFollows).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertChymeUserFollow = z.infer<typeof insertChymeUserFollowSchema>;
+export type ChymeUserFollow = typeof chymeUserFollows.$inferSelect;
+
+// Chyme User Blocks
+export const chymeUserBlocks = pgTable("chyme_user_blocks", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  blockedUserId: varchar("blocked_user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+}, (table) => [
+  index("chyme_user_blocks_user_id_idx").on(table.userId),
+  index("chyme_user_blocks_blocked_user_id_idx").on(table.blockedUserId),
+  index("chyme_user_blocks_unique_idx").on(table.userId, table.blockedUserId),
+]);
+
+export const insertChymeUserBlockSchema = createInsertSchema(chymeUserBlocks).omit({
+  id: true,
+  createdAt: true,
+});
+
+export type InsertChymeUserBlock = z.infer<typeof insertChymeUserBlockSchema>;
+export type ChymeUserBlock = typeof chymeUserBlocks.$inferSelect;
 
 // ========================================
 // WORKFORCE RECRUITER TRACKER APP TABLES

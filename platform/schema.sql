@@ -917,6 +917,7 @@ CREATE TABLE IF NOT EXISTS chyme_rooms (
   id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
   name VARCHAR(200) NOT NULL,
   description TEXT,
+  topic VARCHAR(100),
   room_type VARCHAR(20) NOT NULL DEFAULT 'public',
   is_active BOOLEAN NOT NULL DEFAULT true,
   max_participants INTEGER,
@@ -930,8 +931,10 @@ CREATE TABLE IF NOT EXISTS chyme_room_participants (
   id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
   room_id VARCHAR NOT NULL REFERENCES chyme_rooms(id) ON DELETE CASCADE,
   user_id VARCHAR NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  role VARCHAR(20) NOT NULL DEFAULT 'listener',
   is_muted BOOLEAN NOT NULL DEFAULT false,
   is_speaking BOOLEAN NOT NULL DEFAULT false,
+  has_raised_hand BOOLEAN NOT NULL DEFAULT false,
   joined_at TIMESTAMP NOT NULL DEFAULT NOW(),
   left_at TIMESTAMP
 );
@@ -951,6 +954,32 @@ CREATE TABLE IF NOT EXISTS chyme_messages (
 
 CREATE INDEX IF NOT EXISTS chyme_messages_room_id_idx ON chyme_messages(room_id);
 CREATE INDEX IF NOT EXISTS chyme_messages_created_at_idx ON chyme_messages(created_at);
+
+-- Chyme User Follows
+CREATE TABLE IF NOT EXISTS chyme_user_follows (
+  id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id VARCHAR NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  followed_user_id VARCHAR NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  UNIQUE(user_id, followed_user_id)
+);
+
+CREATE INDEX IF NOT EXISTS chyme_user_follows_user_id_idx ON chyme_user_follows(user_id);
+CREATE INDEX IF NOT EXISTS chyme_user_follows_followed_user_id_idx ON chyme_user_follows(followed_user_id);
+CREATE UNIQUE INDEX IF NOT EXISTS chyme_user_follows_unique_idx ON chyme_user_follows(user_id, followed_user_id);
+
+-- Chyme User Blocks
+CREATE TABLE IF NOT EXISTS chyme_user_blocks (
+  id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id VARCHAR NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  blocked_user_id VARCHAR NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  UNIQUE(user_id, blocked_user_id)
+);
+
+CREATE INDEX IF NOT EXISTS chyme_user_blocks_user_id_idx ON chyme_user_blocks(user_id);
+CREATE INDEX IF NOT EXISTS chyme_user_blocks_blocked_user_id_idx ON chyme_user_blocks(blocked_user_id);
+CREATE UNIQUE INDEX IF NOT EXISTS chyme_user_blocks_unique_idx ON chyme_user_blocks(user_id, blocked_user_id);
 
 -- ========================================
 -- BLOG (CONTENT-ONLY) APP TABLES

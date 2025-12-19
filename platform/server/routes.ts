@@ -6444,9 +6444,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // POST /api/chyme/rooms (user-created rooms)
   app.post('/api/chyme/rooms', isAuthenticated, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
-    // Extract topic from body if present (not in schema yet, will be stored in description for now)
-    const { topic, ...roomData } = req.body;
-    const validatedData = validateWithZod(insertChymeRoomSchema, roomData, 'Invalid room data');
+    const validatedData = validateWithZod(insertChymeRoomSchema, req.body, 'Invalid room data');
 
     const room = await withDatabaseErrorHandling(
       () => storage.createChymeRoom({
@@ -6459,7 +6457,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.status(201).json({
       ...room,
       currentParticipants: 0,
-      topic: topic || null, // Include topic in response even though not in DB yet
     });
   }));
 
@@ -6492,8 +6489,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       () => storage.joinChymeRoom({
         roomId,
         userId,
+        role: 'listener', // Will be set to 'creator' if user is room creator
         isMuted: false,
         isSpeaking: false,
+        hasRaisedHand: false,
       }),
       'joinChymeRoom'
     );
@@ -6607,10 +6606,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(403).json({ message: "You must join the room first" });
     }
 
-    // For now, we'll use isSpeaking as a flag for "hand raised"
-    // TODO: Add hasRaisedHand field to chyme_room_participants table
+    // Update hasRaisedHand flag
     await withDatabaseErrorHandling(
-      () => storage.updateChymeRoomParticipant(roomId, userId, { isSpeaking: true }),
+      () => storage.updateChymeRoomParticipant(roomId, userId, { hasRaisedHand: true }),
       'updateChymeRoomParticipant'
     );
 
@@ -6650,12 +6648,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       updates.isMuted = req.body.isMuted;
     }
     if (req.body.role !== undefined) {
-      // Role is not in DB schema yet, but we can use isSpeaking as a proxy
-      // If role is "speaker", set isSpeaking to true
-      if (req.body.role === "speaker") {
-        updates.isSpeaking = true;
-      } else if (req.body.role === "listener") {
-        updates.isSpeaking = false;
+      // Validate role
+      if (['creator', 'speaker', 'listener'].includes(req.body.role)) {
+        // Only allow changing to speaker/listener, not creator
+        if (req.body.role !== 'creator') {
+          updates.role = req.body.role;
+        }
       }
     }
 
@@ -6726,9 +6724,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // TODO: Implement follow functionality in storage
-    // For now, return success (this needs a chyme_user_follows table)
-    res.json({ message: "User followed" });
+    const follow = await withDatabaseErrorHandling(
+      () => storage.followChymeUser(currentUserId, targetUserId),
+      'followChymeUser'
+    );
+
+    res.json({ message: "User followed", follow });
   }));
 
   // DELETE /api/chyme/users/:userId/follow
@@ -6736,8 +6737,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const currentUserId = getUserId(req);
     const targetUserId = req.params.userId;
 
-    // TODO: Implement unfollow functionality in storage
-    // For now, return success (this needs a chyme_user_follows table)
+    await withDatabaseErrorHandling(
+      () => storage.unfollowChymeUser(currentUserId, targetUserId),
+      'unfollowChymeUser'
+    );
+
     res.json({ message: "User unfollowed" });
   }));
 
@@ -6760,9 +6764,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // TODO: Implement block functionality in storage
-    // For now, return success (this needs a chyme_user_blocks table)
-    res.json({ message: "User blocked" });
+    const block = await withDatabaseErrorHandling(
+      () => storage.blockChymeUser(currentUserId, targetUserId),
+      'blockChymeUser'
+    );
+
+    res.json({ message: "User blocked", block });
   }));
 
   app.delete('/api/chyme/admin/announcements/:id', isAuthenticated, ...isAdminWithCsrf, asyncHandler(async (req: any, res) => {

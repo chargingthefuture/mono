@@ -225,6 +225,12 @@ import {
   chymeMessages,
   type ChymeMessage,
   type InsertChymeMessage,
+  chymeUserFollows,
+  type ChymeUserFollow,
+  type InsertChymeUserFollow,
+  chymeUserBlocks,
+  type ChymeUserBlock,
+  type InsertChymeUserBlock,
   blogPosts,
   blogAnnouncements,
   blogComments,
@@ -823,6 +829,18 @@ export interface IStorage {
   getChymeRoomParticipants(roomId: string): Promise<ChymeRoomParticipant[]>;
   getChymeRoomParticipant(roomId: string, userId: string): Promise<ChymeRoomParticipant | undefined>;
   updateChymeRoomParticipant(roomId: string, userId: string, updates: Partial<InsertChymeRoomParticipant>): Promise<ChymeRoomParticipant>;
+
+  // Chyme User Follow operations
+  followChymeUser(userId: string, followedUserId: string): Promise<ChymeUserFollow>;
+  unfollowChymeUser(userId: string, followedUserId: string): Promise<void>;
+  isFollowingChymeUser(userId: string, followedUserId: string): Promise<boolean>;
+  getChymeUserFollows(userId: string): Promise<ChymeUserFollow[]>;
+
+  // Chyme User Block operations
+  blockChymeUser(userId: string, blockedUserId: string): Promise<ChymeUserBlock>;
+  unblockChymeUser(userId: string, blockedUserId: string): Promise<void>;
+  isBlockingChymeUser(userId: string, blockedUserId: string): Promise<boolean>;
+  getChymeUserBlocks(userId: string): Promise<ChymeUserBlock[]>;
 
   // Chyme Message operations
   createChymeMessage(message: InsertChymeMessage): Promise<ChymeMessage>;
@@ -6760,6 +6778,13 @@ export class DatabaseStorage implements IStorage {
 
   // Chyme Room Participant operations
   async joinChymeRoom(participantData: InsertChymeRoomParticipant): Promise<ChymeRoomParticipant> {
+    // Get room to check if user is creator
+    const room = await this.getChymeRoom(participantData.roomId);
+    const isCreator = room?.createdBy === participantData.userId;
+    
+    // Set role based on whether user is creator
+    const role = isCreator ? 'creator' : (participantData.role || 'listener');
+    
     // Check if participant already exists and has left
     const existing = await this.getChymeRoomParticipant(participantData.roomId, participantData.userId);
     
@@ -6769,8 +6794,10 @@ export class DatabaseStorage implements IStorage {
         .update(chymeRoomParticipants)
         .set({
           leftAt: null,
+          role: role as any,
           isMuted: participantData.isMuted ?? false,
           isSpeaking: participantData.isSpeaking ?? false,
+          hasRaisedHand: participantData.hasRaisedHand ?? false,
         })
         .where(
           and(
@@ -6781,12 +6808,14 @@ export class DatabaseStorage implements IStorage {
         .returning();
       return participant;
     } else if (existing) {
-      // Already in room, just update
+      // Already in room, just update (but preserve role if creator)
       const [participant] = await db
         .update(chymeRoomParticipants)
         .set({
+          role: isCreator ? 'creator' : (participantData.role || existing.role) as any,
           isMuted: participantData.isMuted ?? false,
           isSpeaking: participantData.isSpeaking ?? false,
+          hasRaisedHand: participantData.hasRaisedHand ?? existing.hasRaisedHand ?? false,
         })
         .where(
           and(
@@ -6800,7 +6829,10 @@ export class DatabaseStorage implements IStorage {
       // New participant
       const [participant] = await db
         .insert(chymeRoomParticipants)
-        .values(participantData)
+        .values({
+          ...participantData,
+          role: role as any,
+        })
         .returning();
       return participant;
     }
@@ -6844,9 +6876,14 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateChymeRoomParticipant(roomId: string, userId: string, updates: Partial<InsertChymeRoomParticipant>): Promise<ChymeRoomParticipant> {
+    const updateData: any = { ...updates };
+    // If role is being updated, ensure it's valid
+    if (updateData.role) {
+      updateData.role = updateData.role as any;
+    }
     const [participant] = await db
       .update(chymeRoomParticipants)
-      .set(updates)
+      .set(updateData)
       .where(
         and(
           eq(chymeRoomParticipants.roomId, roomId),
@@ -6858,6 +6895,124 @@ export class DatabaseStorage implements IStorage {
       throw new Error("Participant not found");
     }
     return participant;
+  }
+
+  // Chyme User Follow operations
+  async followChymeUser(userId: string, followedUserId: string): Promise<ChymeUserFollow> {
+    // Check if already following
+    const [existing] = await db
+      .select()
+      .from(chymeUserFollows)
+      .where(
+        and(
+          eq(chymeUserFollows.userId, userId),
+          eq(chymeUserFollows.followedUserId, followedUserId)
+        )
+      );
+    
+    if (existing) {
+      return existing;
+    }
+
+    // Insert new follow
+    const [follow] = await db
+      .insert(chymeUserFollows)
+      .values({
+        userId,
+        followedUserId,
+      })
+      .returning();
+    return follow!;
+  }
+
+  async unfollowChymeUser(userId: string, followedUserId: string): Promise<void> {
+    await db
+      .delete(chymeUserFollows)
+      .where(
+        and(
+          eq(chymeUserFollows.userId, userId),
+          eq(chymeUserFollows.followedUserId, followedUserId)
+        )
+      );
+  }
+
+  async isFollowingChymeUser(userId: string, followedUserId: string): Promise<boolean> {
+    const [follow] = await db
+      .select()
+      .from(chymeUserFollows)
+      .where(
+        and(
+          eq(chymeUserFollows.userId, userId),
+          eq(chymeUserFollows.followedUserId, followedUserId)
+        )
+      );
+    return !!follow;
+  }
+
+  async getChymeUserFollows(userId: string): Promise<ChymeUserFollow[]> {
+    return await db
+      .select()
+      .from(chymeUserFollows)
+      .where(eq(chymeUserFollows.userId, userId));
+  }
+
+  // Chyme User Block operations
+  async blockChymeUser(userId: string, blockedUserId: string): Promise<ChymeUserBlock> {
+    // Check if already blocking
+    const [existing] = await db
+      .select()
+      .from(chymeUserBlocks)
+      .where(
+        and(
+          eq(chymeUserBlocks.userId, userId),
+          eq(chymeUserBlocks.blockedUserId, blockedUserId)
+        )
+      );
+    
+    if (existing) {
+      return existing;
+    }
+
+    // Insert new block
+    const [block] = await db
+      .insert(chymeUserBlocks)
+      .values({
+        userId,
+        blockedUserId,
+      })
+      .returning();
+    return block!;
+  }
+
+  async unblockChymeUser(userId: string, blockedUserId: string): Promise<void> {
+    await db
+      .delete(chymeUserBlocks)
+      .where(
+        and(
+          eq(chymeUserBlocks.userId, userId),
+          eq(chymeUserBlocks.blockedUserId, blockedUserId)
+        )
+      );
+  }
+
+  async isBlockingChymeUser(userId: string, blockedUserId: string): Promise<boolean> {
+    const [block] = await db
+      .select()
+      .from(chymeUserBlocks)
+      .where(
+        and(
+          eq(chymeUserBlocks.userId, userId),
+          eq(chymeUserBlocks.blockedUserId, blockedUserId)
+        )
+      );
+    return !!block;
+  }
+
+  async getChymeUserBlocks(userId: string): Promise<ChymeUserBlock[]> {
+    return await db
+      .select()
+      .from(chymeUserBlocks)
+      .where(eq(chymeUserBlocks.userId, userId));
   }
 
   // Chyme Message operations
