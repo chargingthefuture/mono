@@ -92,6 +92,10 @@ class MobileAuthManager(private val context: Context) {
                         preferences[AuthToken.TOKEN_KEY] = tokenResponse.token
                         preferences[AuthToken.USER_ID_KEY] = tokenResponse.user.id
                         preferences[AuthToken.TOKEN_EXPIRES_AT_KEY] = tokenResponse.expiresAt
+                        tokenResponse.user.email?.let { preferences[AuthToken.USER_EMAIL_KEY] = it }
+                        tokenResponse.user.displayName?.let { preferences[AuthToken.USER_DISPLAY_NAME_KEY] = it }
+                        tokenResponse.user.firstName?.let { preferences[AuthToken.USER_FIRST_NAME_KEY] = it }
+                        tokenResponse.user.lastName?.let { preferences[AuthToken.USER_LAST_NAME_KEY] = it }
                     }
                     
                     SentryHelper.addBreadcrumb(
@@ -295,6 +299,34 @@ class MobileAuthManager(private val context: Context) {
     }
     
     /**
+     * Get current user email
+     */
+    val userEmail: Flow<String?> = context.dataStore.data.map { preferences ->
+        preferences[AuthToken.USER_EMAIL_KEY]
+    }
+    
+    /**
+     * Get current user display name
+     */
+    val userDisplayName: Flow<String?> = context.dataStore.data.map { preferences ->
+        preferences[AuthToken.USER_DISPLAY_NAME_KEY]
+    }
+    
+    /**
+     * Get current user first name
+     */
+    val userFirstName: Flow<String?> = context.dataStore.data.map { preferences ->
+        preferences[AuthToken.USER_FIRST_NAME_KEY]
+    }
+    
+    /**
+     * Get current user last name
+     */
+    val userLastName: Flow<String?> = context.dataStore.data.map { preferences ->
+        preferences[AuthToken.USER_LAST_NAME_KEY]
+    }
+    
+    /**
      * Sign out - clear stored token
      */
     suspend fun signOut() {
@@ -309,6 +341,10 @@ class MobileAuthManager(private val context: Context) {
                 preferences.remove(AuthToken.TOKEN_KEY)
                 preferences.remove(AuthToken.USER_ID_KEY)
                 preferences.remove(AuthToken.TOKEN_EXPIRES_AT_KEY)
+                preferences.remove(AuthToken.USER_EMAIL_KEY)
+                preferences.remove(AuthToken.USER_DISPLAY_NAME_KEY)
+                preferences.remove(AuthToken.USER_FIRST_NAME_KEY)
+                preferences.remove(AuthToken.USER_LAST_NAME_KEY)
             }
             ApiClient.setAuthToken(null)
             SentryHelper.setUser(null)

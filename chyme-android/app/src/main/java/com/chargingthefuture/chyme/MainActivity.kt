@@ -16,6 +16,7 @@ import androidx.navigation.compose.rememberNavController
 import dagger.hilt.android.AndroidEntryPoint
 import com.chargingthefuture.chyme.auth.MobileAuthManager
 import com.chargingthefuture.chyme.ui.screen.HomeScreen
+import com.chargingthefuture.chyme.ui.screen.ProfileScreen
 import com.chargingthefuture.chyme.ui.screen.RoomDetailScreen
 import com.chargingthefuture.chyme.ui.screen.SignInScreen
 import com.chargingthefuture.chyme.ui.theme.ChymeTheme
@@ -317,6 +318,9 @@ fun MainScreen(authManager: MobileAuthManager, authViewModel: AuthViewModel) {
             ) {
                 composable("home") {
                     HomeScreen(navController = navController)
+                }
+                composable("profile") {
+                    ProfileScreen(navController = navController)
                 }
                 composable("room/{roomId}") { backStackEntry ->
                     val roomId = backStackEntry.arguments?.getString("roomId") ?: return@composable

@@ -10,6 +10,7 @@ import io.sentry.SentryLevel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.launch
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -17,7 +18,12 @@ import javax.inject.Inject
 data class AuthUiState(
     val isLoading: Boolean = false,
     val isAuthenticated: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    val userId: String? = null,
+    val userEmail: String? = null,
+    val userDisplayName: String? = null,
+    val userFirstName: String? = null,
+    val userLastName: String? = null
 )
 
 @HiltViewModel
@@ -38,6 +44,25 @@ class AuthViewModel @Inject constructor(
         
         // Auth is not implemented yet - user needs to authenticate via web
         _uiState.value = _uiState.value.copy(isAuthenticated = false)
+        
+        // Observe user info from auth manager
+        viewModelScope.launch {
+            combine(
+                authManager.userId,
+                authManager.userEmail,
+                authManager.userDisplayName,
+                authManager.userFirstName,
+                authManager.userLastName
+            ) { userId, email, displayName, firstName, lastName ->
+                _uiState.value = _uiState.value.copy(
+                    userId = userId,
+                    userEmail = email,
+                    userDisplayName = displayName,
+                    userFirstName = firstName,
+                    userLastName = lastName
+                )
+            }.collect { }
+        }
         
         Log.d("AuthViewModel", "AuthViewModel initialized - authentication not yet implemented")
     }

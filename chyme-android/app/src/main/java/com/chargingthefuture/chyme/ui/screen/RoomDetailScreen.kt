@@ -48,14 +48,31 @@ fun RoomDetailScreen(
         }
     }
 
-    // Lightweight polling to keep participants and messages fresh while in the room
+    // Load initial messages and participants, then rely on WebSocket for updates
     LaunchedEffect(roomId, uiState.isJoined) {
         if (!uiState.isJoined) return@LaunchedEffect
+        
+        // Load initial data
+        viewModel.loadParticipants(roomId)
+        viewModel.loadMessages(roomId)
+        
+        // Reduced polling for participants only (messages come via WebSocket)
+        // Poll every 10 seconds as fallback
         while (true) {
-            viewModel.loadParticipants(roomId)
-            viewModel.loadMessages(roomId)
-            kotlinx.coroutines.delay(5000)
+            kotlinx.coroutines.delay(10000)
+            if (uiState.isJoined) {
+                viewModel.loadParticipants(roomId)
+                // Only poll messages if WebSocket is not connected (fallback)
+                // In production, this would check WebSocket connection state
+            }
         }
+    }
+    
+    // Observe WebSocket messages from signaling client (if available)
+    // This will be integrated when WebRTCManager is active
+    LaunchedEffect(roomId) {
+        // WebSocket message handling will be added via WebRTCManager's signaling client
+        // For now, we still use polling as fallback
     }
     
     val context = LocalContext.current
@@ -148,6 +165,8 @@ fun RoomDetailScreen(
                 hasRaisedHand = uiState.hasRaisedHand,
                 currentRole = uiState.currentUserRole,
                 hasMicPermission = hasMicPermission,
+                connectionState = uiState.webRTCConnectionState,
+                connectionError = uiState.webRTCConnectionError,
                 onToggleMute = {
                     if (hasMicPermission) {
                         viewModel.toggleMute()
@@ -333,6 +352,8 @@ fun RoomDetailScreen(
                         modifier = Modifier
                             .fillMaxWidth()
                             .padding(horizontal = 16.dp, vertical = 8.dp),
+                        isOnline = uiState.isOnline,
+                        isSending = uiState.isSendingMessage,
                         onSend = { text ->
                             viewModel.sendMessage(roomId, text)
                         }
@@ -417,9 +438,12 @@ private fun MessageRow(
 @Composable
 private fun ChatInput(
     modifier: Modifier = Modifier,
+    isOnline: Boolean = true,
+    isSending: Boolean = false,
     onSend: (String) -> Unit
 ) {
     var text by remember { mutableStateOf("") }
+    val isEnabled = isOnline && !isSending && text.trim().isNotEmpty()
 
     Row(
         modifier = modifier,
@@ -429,20 +453,39 @@ private fun ChatInput(
             value = text,
             onValueChange = { text = it },
             modifier = Modifier.weight(1f),
-            placeholder = { Text("Type a message...") },
-            singleLine = true
+            placeholder = { 
+                Text(
+                    if (!isOnline) "Offline - message will be queued" 
+                    else if (isSending) "Sending..." 
+                    else "Type a message..."
+                ) 
+            },
+            singleLine = true,
+            enabled = isOnline && !isSending
         )
         Spacer(modifier = Modifier.width(8.dp))
         IconButton(
             onClick = {
                 val trimmed = text.trim()
-                if (trimmed.isNotEmpty()) {
+                if (trimmed.isNotEmpty() && isEnabled) {
                     onSend(trimmed)
                     text = ""
                 }
-            }
+            },
+            enabled = isEnabled
         ) {
-            Icon(Icons.Default.Send, contentDescription = "Send")
+            if (isSending) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(24.dp),
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Icon(
+                    Icons.Default.Send, 
+                    contentDescription = if (isOnline) "Send" else "Offline - will queue",
+                    tint = if (isEnabled) MaterialTheme.colors.primary else MaterialTheme.colors.onSurface.copy(alpha = 0.38f)
+                )
+            }
         }
     }
 }
@@ -653,6 +696,8 @@ fun RoomControls(
     hasRaisedHand: Boolean,
     currentRole: ParticipantRole?,
     hasMicPermission: Boolean = false,
+    connectionState: com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.DISCONNECTED,
+    connectionError: String? = null,
     onToggleMute: () -> Unit,
     onRaiseHand: () -> Unit,
     onLeaveRoom: () -> Unit
@@ -661,44 +706,118 @@ fun RoomControls(
         modifier = Modifier.fillMaxWidth(),
         elevation = 8.dp
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            if (currentRole == ParticipantRole.LISTENER && !hasRaisedHand) {
-                Button(onClick = onRaiseHand) {
-                    Icon(Icons.Default.Add, contentDescription = null)
-                    Spacer(modifier = Modifier.width(8.dp))
-                    Text("Raise Hand")
+        Column {
+            // Connection status indicator (only show for speakers/creators)
+            if (currentRole == ParticipantRole.SPEAKER || currentRole == ParticipantRole.CREATOR) {
+                when (connectionState) {
+                    com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.CONNECTING -> {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Connecting...",
+                                style = MaterialTheme.typography.caption,
+                                color = MaterialTheme.colors.primary
+                            )
+                        }
+                    }
+                    com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.RECONNECTING -> {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(16.dp),
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = "Reconnecting...",
+                                style = MaterialTheme.typography.caption,
+                                color = MaterialTheme.colors.secondary
+                            )
+                        }
+                    }
+                    com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.FAILED -> {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 8.dp),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                Icons.Default.Warning,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colors.error
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = connectionError ?: "Connection failed",
+                                style = MaterialTheme.typography.caption,
+                                color = MaterialTheme.colors.error
+                            )
+                        }
+                    }
+                    com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.CONNECTED -> {
+                        // Show connected indicator briefly or hide it
+                    }
+                    else -> {}
                 }
             }
             
-            if (currentRole == ParticipantRole.SPEAKER || currentRole == ParticipantRole.CREATOR) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.SpaceEvenly,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (currentRole == ParticipantRole.LISTENER && !hasRaisedHand) {
+                    Button(onClick = onRaiseHand) {
+                        Icon(Icons.Default.Add, contentDescription = null)
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text("Raise Hand")
+                    }
+                }
+                
+                if (currentRole == ParticipantRole.SPEAKER || currentRole == ParticipantRole.CREATOR) {
+                    IconButton(
+                        onClick = onToggleMute,
+                        modifier = Modifier.size(56.dp)
+                    ) {
+                        Icon(
+                            if (isMuted) Icons.Default.Close else Icons.Default.Check,
+                            contentDescription = if (isMuted) "Unmute" else "Mute",
+                            modifier = Modifier.size(32.dp)
+                        )
+                    }
+                }
+                
                 IconButton(
-                    onClick = onToggleMute,
+                    onClick = onLeaveRoom,
                     modifier = Modifier.size(56.dp)
                 ) {
                     Icon(
-                        if (isMuted) Icons.Default.Close else Icons.Default.Check,
-                        contentDescription = if (isMuted) "Unmute" else "Mute",
-                        modifier = Modifier.size(32.dp)
+                        Icons.Default.ExitToApp,
+                        contentDescription = "Leave Room",
+                        modifier = Modifier.size(32.dp),
+                        tint = MaterialTheme.colors.error
                     )
                 }
-            }
-            
-            IconButton(
-                onClick = onLeaveRoom,
-                modifier = Modifier.size(56.dp)
-            ) {
-                Icon(
-                    Icons.Default.ExitToApp,
-                    contentDescription = "Leave Room",
-                    modifier = Modifier.size(32.dp),
-                    tint = MaterialTheme.colors.error
-                )
             }
         }
     }

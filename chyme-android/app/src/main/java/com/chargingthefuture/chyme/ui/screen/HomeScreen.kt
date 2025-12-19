@@ -41,9 +41,9 @@ fun HomeScreen(
                         Icon(Icons.Default.Add, contentDescription = "Create Room")
                     }
                     IconButton(onClick = { 
-                        authViewModel.signOut()
+                        navController.navigate("profile")
                     }) {
-                        Icon(Icons.Default.ExitToApp, contentDescription = "Sign Out")
+                        Icon(Icons.Default.Person, contentDescription = "Profile")
                     }
                 }
             )

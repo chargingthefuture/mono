@@ -2,6 +2,7 @@ package com.chargingthefuture.chyme.webrtc
 
 import com.chargingthefuture.chyme.data.repository.WebRTCRepository
 import com.chargingthefuture.chyme.signaling.SignalingClient
+import com.chargingthefuture.chyme.signaling.SignalingConnectionState
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -13,6 +14,9 @@ import org.webrtc.PeerConnection
 import org.webrtc.PeerConnectionFactory
 import org.webrtc.SdpObserver
 import org.webrtc.SessionDescription
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 
 /**
  * WebRTCManager connects the local WebRTC audio track with the Chyme signaling channel.
@@ -32,15 +36,31 @@ class WebRTCManager(
     private val signalingClient = SignalingClient(
         roomId = roomId,
         authToken = authToken,
+        userId = currentUserId,
         endpointUrl = signalingEndpoint,
         scope = scope
     )
 
     private var peerConnection: PeerConnection? = null
+    
+    private val _connectionState = MutableStateFlow<com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState>(
+        com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.DISCONNECTED
+    )
+    val connectionState: StateFlow<com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState> = _connectionState.asStateFlow()
+    
+    private val _connectionError = MutableStateFlow<String?>(null)
+    val connectionError: StateFlow<String?> = _connectionError.asStateFlow()
 
     fun start() {
+        _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.CONNECTING
+        _connectionError.value = null
+        
         webRtcRepo.initialize()
-        val factory = webRtcRepo.getPeerConnectionFactory() ?: return
+        val factory = webRtcRepo.getPeerConnectionFactory() ?: run {
+            _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.FAILED
+            _connectionError.value = "Failed to initialize WebRTC factory"
+            return
+        }
 
         val iceServers = listOf(
             PeerConnection.IceServer.builder("stun:stun.l.google.com:19302").createIceServer()
@@ -49,6 +69,7 @@ class WebRTCManager(
         setupPeerConnection(factory, iceServers)
         signalingClient.connect()
         observeSignaling()
+        observeConnectionState()
 
         if (isCaller) {
             createAndSendOffer()
@@ -56,7 +77,9 @@ class WebRTCManager(
     }
 
     fun stop() {
-        signalingClient.close()
+        _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.DISCONNECTED
+        _connectionError.value = null
+        signalingClient.dispose()
         peerConnection?.close()
         peerConnection = null
     }
@@ -75,9 +98,47 @@ class WebRTCManager(
             override fun onAddStream(stream: org.webrtc.MediaStream?) {
                 // Audio-only: playback is handled automatically by WebRTC audio APIs.
             }
-            override fun onConnectionChange(newState: PeerConnection.PeerConnectionState?) {}
-            override fun onSignalingChange(newState: PeerConnection.SignalingState?) {}
-            override fun onIceConnectionChange(newState: PeerConnection.IceConnectionState?) {}
+            override fun onConnectionChange(newState: PeerConnection.PeerConnectionState?) {
+                when (newState) {
+                    PeerConnection.PeerConnectionState.CONNECTED -> {
+                        _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.CONNECTED
+                        _connectionError.value = null
+                    }
+                    PeerConnection.PeerConnectionState.DISCONNECTED -> {
+                        _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.DISCONNECTED
+                    }
+                    PeerConnection.PeerConnectionState.FAILED -> {
+                        _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.FAILED
+                        _connectionError.value = "Peer connection failed"
+                    }
+                    PeerConnection.PeerConnectionState.CONNECTING -> {
+                        _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.CONNECTING
+                    }
+                    else -> {}
+                }
+            }
+            override fun onSignalingChange(newState: PeerConnection.SignalingState?) {
+                // Track signaling state changes for debugging
+            }
+            override fun onIceConnectionChange(newState: PeerConnection.IceConnectionState?) {
+                when (newState) {
+                    PeerConnection.IceConnectionState.CONNECTED -> {
+                        _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.CONNECTED
+                        _connectionError.value = null
+                    }
+                    PeerConnection.IceConnectionState.DISCONNECTED -> {
+                        _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.DISCONNECTED
+                    }
+                    PeerConnection.IceConnectionState.FAILED -> {
+                        _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.FAILED
+                        _connectionError.value = "ICE connection failed"
+                    }
+                    PeerConnection.IceConnectionState.CONNECTING -> {
+                        _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.CONNECTING
+                    }
+                    else -> {}
+                }
+            }
             override fun onIceGatheringChange(newState: PeerConnection.IceGatheringState?) {}
             override fun onIceCandidatesRemoved(candidates: Array<out IceCandidate>?) {}
             override fun onRemoveStream(stream: org.webrtc.MediaStream?) {}
@@ -102,6 +163,51 @@ class WebRTCManager(
                     "offer" -> if (!isCaller) handleOffer(json)
                     "answer" -> if (isCaller) handleAnswer(json)
                     "ice-candidate" -> handleRemoteCandidate(json)
+                    "chat-message" -> {
+                        // Handle chat messages from WebSocket
+                        // This will be forwarded to RoomViewModel via callback
+                        onChatMessageReceived?.invoke(json)
+                    }
+                }
+            }
+        }
+    }
+    
+    // Callback for chat messages (set by RoomViewModel)
+    var onChatMessageReceived: ((JSONObject) -> Unit)? = null
+
+    private fun observeConnectionState() {
+        scope.launch {
+            signalingClient.connectionState.collectLatest { state ->
+                when (state) {
+                    SignalingConnectionState.CONNECTED -> {
+                        // Signaling connected - WebRTC peer connection may still be connecting
+                        if (_connectionState.value == com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.DISCONNECTED) {
+                            _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.CONNECTING
+                        }
+                    }
+                    SignalingConnectionState.CONNECTING -> {
+                        _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.CONNECTING
+                    }
+                    SignalingConnectionState.RECONNECTING -> {
+                        _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.RECONNECTING
+                    }
+                    SignalingConnectionState.FAILED -> {
+                        _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.FAILED
+                    }
+                    SignalingConnectionState.DISCONNECTED -> {
+                        _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.DISCONNECTED
+                    }
+                }
+            }
+        }
+        
+        // Also observe errors for additional handling
+        scope.launch {
+            signalingClient.errors.collectLatest { error ->
+                _connectionError.value = error.message
+                if (_connectionState.value != com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.FAILED) {
+                    _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.FAILED
                 }
             }
         }

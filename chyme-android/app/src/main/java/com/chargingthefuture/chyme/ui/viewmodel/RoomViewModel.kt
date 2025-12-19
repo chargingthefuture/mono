@@ -11,13 +11,32 @@ import com.chargingthefuture.chyme.data.model.UpdateParticipantRequest
 import com.chargingthefuture.chyme.data.repository.RoomRepository
 import com.chargingthefuture.chyme.data.repository.WebRTCRepository
 import com.chargingthefuture.chyme.webrtc.WebRTCManager
+import com.chargingthefuture.chyme.signaling.SignalingClient
+import com.chargingthefuture.chyme.signaling.SignalingConnectionState
 import dagger.hilt.android.lifecycle.HiltViewModel
+import android.content.Context
+import android.net.ConnectivityManager
+import android.net.Network
+import android.net.NetworkCapabilities
+import android.net.NetworkRequest
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.collectLatest
+import org.json.JSONObject
+import com.chargingthefuture.chyme.data.model.ChymeMessage
 import javax.inject.Inject
+
+enum class WebRTCConnectionState {
+    DISCONNECTED,
+    CONNECTING,
+    CONNECTED,
+    RECONNECTING,
+    FAILED
+}
 
 data class RoomUiState(
     val isLoading: Boolean = false,
@@ -32,7 +51,12 @@ data class RoomUiState(
     val currentUserRole: ParticipantRole? = null,
     val currentUserId: String? = null,
     val errorMessage: String? = null,
-    val chatErrorMessage: String? = null
+    val chatErrorMessage: String? = null,
+    val webRTCConnectionState: WebRTCConnectionState = WebRTCConnectionState.DISCONNECTED,
+    val webRTCConnectionError: String? = null,
+    val isOnline: Boolean = true,
+    val isSendingMessage: Boolean = false,
+    val pendingMessages: List<String> = emptyList()
 )
 
 @HiltViewModel
@@ -46,6 +70,25 @@ class RoomViewModel @Inject constructor(
     private val _uiState = MutableStateFlow(RoomUiState())
     val uiState: StateFlow<RoomUiState> = _uiState.asStateFlow()
     private var webRTCManager: WebRTCManager? = null
+    private var chatSignalingClient: SignalingClient? = null
+    private var currentRoomId: String? = null
+    private val maxMessages = 500 // Trim to last 500 messages
+    private val messageQueue = mutableListOf<Pair<String, String>>() // roomId to content
+    
+    init {
+        // Observe WebRTC connection state changes
+        viewModelScope.launch {
+            webRTCManager?.connectionState?.collect { state ->
+                _uiState.value = _uiState.value.copy(webRTCConnectionState = state)
+            }
+        }
+        
+        viewModelScope.launch {
+            webRTCManager?.connectionError?.collect { error ->
+                _uiState.value = _uiState.value.copy(webRTCConnectionError = error)
+            }
+        }
+    }
     
     init {
         webRTCRepository.initialize()
@@ -56,6 +99,78 @@ class RoomViewModel @Inject constructor(
                 _uiState.value = _uiState.value.copy(currentUserId = userId)
             } catch (e: Exception) {
                 // User ID not available, that's okay
+            }
+        }
+        
+        // Monitor network connectivity
+        setupNetworkMonitoring()
+    }
+    
+    private fun setupNetworkMonitoring() {
+        val context = getApplication<Application>()
+        val connectivityManager = context.getSystemService(Context.CONNECTIVITY_SERVICE) as ConnectivityManager
+        
+        val networkRequest = NetworkRequest.Builder()
+            .addCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
+            .build()
+        
+        val networkCallback = object : ConnectivityManager.NetworkCallback() {
+            override fun onAvailable(network: Network) {
+                _uiState.value = _uiState.value.copy(isOnline = true)
+                // Process queued messages when back online
+                processMessageQueue()
+            }
+            
+            override fun onLost(network: Network) {
+                _uiState.value = _uiState.value.copy(isOnline = false)
+            }
+            
+            override fun onCapabilitiesChanged(network: Network, networkCapabilities: NetworkCapabilities) {
+                val hasInternet = networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) &&
+                        networkCapabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+                _uiState.value = _uiState.value.copy(isOnline = hasInternet)
+                if (hasInternet) {
+                    processMessageQueue()
+                }
+            }
+        }
+        
+        connectivityManager.registerNetworkCallback(networkRequest, networkCallback)
+        
+        // Check initial state
+        val activeNetwork = connectivityManager.activeNetwork
+        val capabilities = connectivityManager.getNetworkCapabilities(activeNetwork)
+        val isOnline = capabilities?.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET) == true &&
+                capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED)
+        _uiState.value = _uiState.value.copy(isOnline = isOnline)
+    }
+    
+    private fun processMessageQueue() {
+        val roomId = currentRoomId ?: return
+        if (!_uiState.value.isOnline) return
+        
+        viewModelScope.launch {
+            val queue = messageQueue.toList()
+            messageQueue.clear()
+            
+            for ((queuedRoomId, content) in queue) {
+                if (queuedRoomId == roomId) {
+                    sendMessageWithRetry(queuedRoomId, content, isAnonymous = true)
+                }
+            }
+        }
+    }
+    
+    private fun observeWebRTCState(manager: WebRTCManager) {
+        viewModelScope.launch {
+            manager.connectionState.collect { state ->
+                _uiState.value = _uiState.value.copy(webRTCConnectionState = state)
+            }
+        }
+        
+        viewModelScope.launch {
+            manager.connectionError.collect { error ->
+                _uiState.value = _uiState.value.copy(webRTCConnectionError = error)
             }
         }
     }
@@ -120,8 +235,15 @@ class RoomViewModel @Inject constructor(
         viewModelScope.launch {
             roomRepository.getRoomMessages(roomId).fold(
                 onSuccess = { messages ->
+                    // Trim messages to prevent unbounded growth
+                    val trimmedMessages = if (messages.size > maxMessages) {
+                        messages.takeLast(maxMessages)
+                    } else {
+                        messages
+                    }
+                    
                     _uiState.value = _uiState.value.copy(
-                        messages = messages,
+                        messages = trimmedMessages,
                         chatErrorMessage = null
                     )
                 },
@@ -134,13 +256,29 @@ class RoomViewModel @Inject constructor(
         }
     }
     
+    fun addMessageFromWebSocket(message: ChymeMessage) {
+        val currentMessages = _uiState.value.messages
+        // Check if message already exists (avoid duplicates)
+        if (currentMessages.any { it.id == message.id }) {
+            return
+        }
+        
+        val updatedMessages = (currentMessages + message)
+            .sortedBy { it.createdAt }
+            .let { if (it.size > maxMessages) it.takeLast(maxMessages) else it }
+        
+        _uiState.value = _uiState.value.copy(messages = updatedMessages)
+    }
+    
     fun joinRoom(roomId: String) {
         viewModelScope.launch {
             roomRepository.joinRoom(roomId).fold(
                 onSuccess = {
                     _uiState.value = _uiState.value.copy(isJoined = true)
+                    currentRoomId = roomId
                     loadParticipants(roomId)
                     maybeUpdateWebRTC(roomId)
+                    setupChatWebSocket(roomId)
                 },
                 onFailure = { error ->
                     _uiState.value = _uiState.value.copy(
@@ -151,13 +289,58 @@ class RoomViewModel @Inject constructor(
         }
     }
     
+    private fun setupChatWebSocket(roomId: String) {
+        viewModelScope.launch {
+            val token = authManager.getAuthToken() ?: return@launch
+            val userId = _uiState.value.currentUserId
+            
+            // Create signaling client for chat (separate from WebRTC signaling)
+            val client = SignalingClient(
+                roomId = roomId,
+                authToken = token,
+                userId = userId,
+                endpointUrl = "wss://app.chargingthefuture.com/api/chyme/signaling",
+                scope = viewModelScope
+            )
+            
+            chatSignalingClient = client
+            
+            // Observe WebSocket messages for chat
+            viewModelScope.launch {
+                client.events.collectLatest { raw ->
+                    try {
+                        val json = org.json.JSONObject(raw)
+                        if (json.optString("type") == "chat-message" && json.optString("roomId") == roomId) {
+                            val message = com.chargingthefuture.chyme.data.model.ChymeMessage(
+                                id = json.optString("id", ""),
+                                roomId = json.optString("roomId", ""),
+                                userId = json.optString("userId", ""),
+                                content = json.optString("content", ""),
+                                isAnonymous = json.optBoolean("isAnonymous", true),
+                                createdAt = json.optString("createdAt", "")
+                            )
+                            addMessageFromWebSocket(message)
+                        }
+                    } catch (e: Exception) {
+                        // Failed to parse message, ignore
+                    }
+                }
+            }
+            
+            client.connect()
+        }
+    }
+    
     fun leaveRoom(roomId: String) {
         viewModelScope.launch {
             roomRepository.leaveRoom(roomId).fold(
                 onSuccess = {
                     _uiState.value = _uiState.value.copy(isJoined = false)
+                    currentRoomId = null
                     webRTCManager?.stop()
                     webRTCManager = null
+                    chatSignalingClient?.close()
+                    chatSignalingClient = null
                 },
                 onFailure = { error ->
                     _uiState.value = _uiState.value.copy(
@@ -206,21 +389,80 @@ class RoomViewModel @Inject constructor(
 
     fun sendMessage(roomId: String, content: String, isAnonymous: Boolean = true) {
         if (content.isBlank()) return
-
-        viewModelScope.launch {
-            roomRepository.sendMessage(roomId, content.trim(), isAnonymous).fold(
+        
+        currentRoomId = roomId
+        
+        // If offline, queue the message
+        if (!_uiState.value.isOnline) {
+            messageQueue.add(roomId to content.trim())
+            _uiState.value = _uiState.value.copy(
+                chatErrorMessage = "Offline. Message will be sent when connection is restored.",
+                pendingMessages = messageQueue.map { it.second }
+            )
+            return
+        }
+        
+        sendMessageWithRetry(roomId, content.trim(), isAnonymous)
+    }
+    
+    private suspend fun sendMessageWithRetry(
+        roomId: String,
+        content: String,
+        isAnonymous: Boolean = true,
+        maxRetries: Int = 3
+    ) {
+        _uiState.value = _uiState.value.copy(isSendingMessage = true)
+        
+        var attempt = 0
+        var lastError: Exception? = null
+        
+        while (attempt < maxRetries) {
+            val result = roomRepository.sendMessage(roomId, content, isAnonymous)
+            
+            result.fold(
                 onSuccess = { message ->
-                    _uiState.value = _uiState.value.copy(
-                        messages = _uiState.value.messages + message,
-                        chatErrorMessage = null
-                    )
+                    // Optimistically add message to UI (will also come via WebSocket)
+                    val currentMessages = _uiState.value.messages
+                    if (!currentMessages.any { it.id == message.id }) {
+                        val updatedMessages = (currentMessages + message)
+                            .sortedBy { it.createdAt }
+                            .let { if (it.size > maxMessages) it.takeLast(maxMessages) else it }
+                        
+                        _uiState.value = _uiState.value.copy(
+                            messages = updatedMessages,
+                            chatErrorMessage = null,
+                            isSendingMessage = false
+                        )
+                    } else {
+                        _uiState.value = _uiState.value.copy(
+                            chatErrorMessage = null,
+                            isSendingMessage = false
+                        )
+                    }
+                    return
                 },
                 onFailure = { error ->
-                    _uiState.value = _uiState.value.copy(
-                        chatErrorMessage = error.message ?: "Failed to send message"
-                    )
+                    lastError = error
+                    attempt++
+                    
+                    if (attempt < maxRetries) {
+                        // Exponential backoff: 1s, 2s, 4s
+                        val backoffMs = (1 shl (attempt - 1)) * 1000L
+                        delay(backoffMs)
+                    }
                 }
             )
+        }
+        
+        // All retries failed
+        _uiState.value = _uiState.value.copy(
+            chatErrorMessage = lastError?.message ?: "Failed to send message after $maxRetries attempts",
+            isSendingMessage = false
+        )
+        
+        // Queue message for retry when connection is restored
+        if (!_uiState.value.isOnline) {
+            messageQueue.add(roomId to content)
         }
     }
 
@@ -256,29 +498,56 @@ class RoomViewModel @Inject constructor(
 
         // Stop WebRTC when not joined or not a speaker/creator
         if (!joined || role == null || role == ParticipantRole.LISTENER || currentUserId.isNullOrBlank()) {
-            webRTCManager?.stop()
-            webRTCManager = null
+            if (webRTCManager != null) {
+                webRTCManager?.stop()
+                webRTCManager = null
+                _uiState.value = _uiState.value.copy(
+                    webRTCConnectionState = WebRTCConnectionState.DISCONNECTED,
+                    webRTCConnectionError = null
+                )
+            }
             return
         }
 
-        // Already running and role is still active – nothing to change
-        if (webRTCManager != null) return
-
-        // Start WebRTC for creator/speaker
-        viewModelScope.launch {
-            val token = authManager.getAuthToken() ?: return@launch
-            val isCaller = role == ParticipantRole.CREATOR
-            val manager = WebRTCManager(
-                roomId = roomId,
-                currentUserId = currentUserId,
-                webRtcRepo = webRTCRepository,
-                signalingEndpoint = "wss://app.chargingthefuture.com/api/chyme/signaling",
-                authToken = token,
-                isCaller = isCaller
-            )
-            webRTCManager = manager
-            manager.start()
+        // Role changed from listener to speaker/creator - start WebRTC
+        // Or if WebRTC is not running and user is a speaker/creator, start it
+        if (webRTCManager == null) {
+            // Start WebRTC for creator/speaker
+            viewModelScope.launch {
+                val token = authManager.getAuthToken() ?: return@launch
+                val isCaller = role == ParticipantRole.CREATOR
+                val manager = WebRTCManager(
+                    roomId = roomId,
+                    currentUserId = currentUserId,
+                    webRtcRepo = webRTCRepository,
+                    signalingEndpoint = "wss://app.chargingthefuture.com/api/chyme/signaling",
+                    authToken = token,
+                    isCaller = isCaller
+                )
+                webRTCManager = manager
+                observeWebRTCState(manager)
+                
+                // Set up chat message handler from WebSocket
+                manager.onChatMessageReceived = { json ->
+                    try {
+                        val message = com.chargingthefuture.chyme.data.model.ChymeMessage(
+                            id = json.optString("id", ""),
+                            roomId = json.optString("roomId", ""),
+                            userId = json.optString("userId", ""),
+                            content = json.optString("content", ""),
+                            isAnonymous = json.optBoolean("isAnonymous", true),
+                            createdAt = json.optString("createdAt", "")
+                        )
+                        addMessageFromWebSocket(message)
+                    } catch (e: Exception) {
+                        // Failed to parse chat message, ignore
+                    }
+                }
+                
+                manager.start()
+            }
         }
+        // If WebRTC is already running and role is still active, no change needed
     }
     
     fun promoteToSpeaker(roomId: String, userId: String) {

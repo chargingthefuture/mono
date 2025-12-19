@@ -23,6 +23,10 @@ object AuthToken {
     val TOKEN_KEY = stringPreferencesKey("auth_token")
     val USER_ID_KEY = stringPreferencesKey("user_id")
     val TOKEN_EXPIRES_AT_KEY = stringPreferencesKey("token_expires_at")
+    val USER_EMAIL_KEY = stringPreferencesKey("user_email")
+    val USER_DISPLAY_NAME_KEY = stringPreferencesKey("user_display_name")
+    val USER_FIRST_NAME_KEY = stringPreferencesKey("user_first_name")
+    val USER_LAST_NAME_KEY = stringPreferencesKey("user_last_name")
 }
 
 class OTPAuthManager(private val context: Context) {
@@ -102,6 +106,10 @@ class OTPAuthManager(private val context: Context) {
                         preferences[AuthToken.TOKEN_KEY] = tokenResponse.token
                         preferences[AuthToken.USER_ID_KEY] = tokenResponse.user.id
                         preferences[AuthToken.TOKEN_EXPIRES_AT_KEY] = tokenResponse.expiresAt
+                        tokenResponse.user.email?.let { preferences[AuthToken.USER_EMAIL_KEY] = it }
+                        tokenResponse.user.displayName?.let { preferences[AuthToken.USER_DISPLAY_NAME_KEY] = it }
+                        tokenResponse.user.firstName?.let { preferences[AuthToken.USER_FIRST_NAME_KEY] = it }
+                        tokenResponse.user.lastName?.let { preferences[AuthToken.USER_LAST_NAME_KEY] = it }
                     }
                     
                     SentryHelper.addBreadcrumb(
@@ -318,6 +326,10 @@ class OTPAuthManager(private val context: Context) {
                 preferences.remove(AuthToken.TOKEN_KEY)
                 preferences.remove(AuthToken.USER_ID_KEY)
                 preferences.remove(AuthToken.TOKEN_EXPIRES_AT_KEY)
+                preferences.remove(AuthToken.USER_EMAIL_KEY)
+                preferences.remove(AuthToken.USER_DISPLAY_NAME_KEY)
+                preferences.remove(AuthToken.USER_FIRST_NAME_KEY)
+                preferences.remove(AuthToken.USER_LAST_NAME_KEY)
             }
             ApiClient.setAuthToken(null)
             SentryHelper.setUser(null)
