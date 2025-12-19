@@ -49,7 +49,7 @@ function getIpAddress(req: any): string {
   if (typeof forwarded === 'string') {
     return forwarded.split(',')[0].trim();
   }
-  return req.socket.remoteAddress || 'unknown';
+  return req.socket?.remoteAddress || req.ip || 'unknown';
 }
 
 /**

@@ -152,6 +152,41 @@ app.use((req, res, next) => {
       return notFoundHandler(req, res, next);
     }
 
+    // Check for security probe paths before serving index.html
+    // These paths should return 404, not serve the SPA
+    const securityProbePatterns = [
+      /^\/\.git\//,
+      /^\/\.env/,
+      /^\/\.aws\//,
+      /^\/\.ssh\//,
+      /^\/\.docker/,
+      /^\/\.kube/,
+      /^\/\.npmrc/,
+      /^\/\.htaccess/,
+      /^\/\.htpasswd/,
+      /^\/wp-admin\//,
+      /^\/wp-content\//,
+      /^\/wp-includes\//,
+      /^\/phpmyadmin\//,
+      /^\/\.config\//,
+      /^\/\.vscode\//,
+      /^\/\.idea\//,
+      /^\/backup/,
+      /^\/config\//,
+      /^\/database\//,
+      /^\/\.DS_Store/,
+      /^\/composer\.(json|lock)/,
+      /^\/package(-lock)?\.json$/,
+      /^\/yarn\.lock$/,
+    ];
+    
+    for (const pattern of securityProbePatterns) {
+      if (pattern.test(req.path)) {
+        // Return 404 for security probe paths without logging
+        return res.status(404).send('Not Found');
+      }
+    }
+
     // For non-API routes, we want to behave like an SPA:
     // fall back to serving index.html so client-side routing (Wouter) can handle
     // paths like /admin/weekly-performance on hard refresh.
@@ -185,7 +220,13 @@ app.use((req, res, next) => {
           res.setHeader("Expires", "0");
           return res.sendFile(indexPath, (err) => {
             if (err) {
-              // If sending the file fails, use the notFoundHandler
+              // ECONNABORTED errors occur when the client aborts the connection
+              // This is expected behavior and should not be logged as an error
+              if (err.code === 'ECONNABORTED' || err.message?.includes('aborted')) {
+                // Client aborted - silently ignore, don't log or call error handler
+                return;
+              }
+              // For other errors, use the notFoundHandler
               return notFoundHandler(req, res, next);
             }
           });

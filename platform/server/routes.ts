@@ -2239,7 +2239,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     );
     
     if (!profile) {
-      return res.json([]);
+      console.warn(`[Lighthouse] Profile not found for user ${userId} in /api/lighthouse/my-properties`);
+      return res.status(404).json({ message: "Profile not found. Please create a profile first." });
     }
     
     const properties = await withDatabaseErrorHandling(
@@ -2316,7 +2317,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     );
     
     if (!profile) {
-      return res.json([]);
+      console.warn(`[Lighthouse] Profile not found for user ${userId} in /api/lighthouse/matches`);
+      return res.status(404).json({ message: "Profile not found. Please create a profile first." });
     }
     
     const matches = await withDatabaseErrorHandling(
@@ -3432,8 +3434,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       () => storage.getTrusttransportProfile(userId),
       'getTrusttransportProfile'
     );
-    if (!profile || !profile.isDriver) {
-      return res.json([]);
+    if (!profile) {
+      console.warn(`[TrustTransport] Profile not found for user ${userId} in /api/trusttransport/ride-requests/my-claimed`);
+      return res.status(404).json({ message: "Profile not found. Please create a profile first." });
+    }
+    if (!profile.isDriver) {
+      console.warn(`[TrustTransport] User ${userId} is not a driver in /api/trusttransport/ride-requests/my-claimed`);
+      return res.status(404).json({ message: "Driver profile not found. Please set up your driver profile first." });
     }
     const requests = await withDatabaseErrorHandling(
       () => storage.getTrusttransportRideRequestsByDriver(profile.id),
@@ -3933,7 +3940,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'getMechanicmatchJobsByMechanic'
       );
     } else {
-      return res.json([]);
+      console.warn(`[MechanicMatch] Profile ${profile.id} has no role (isCarOwner: ${profile.isCarOwner}, isMechanic: ${profile.isMechanic}) in /api/mechanicmatch/jobs`);
+      return res.status(404).json({ message: "Profile role not set. Please set up your profile as a car owner or mechanic first." });
     }
     
     res.json(jobs);
@@ -5258,6 +5266,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     stripIPAndMetadata(req);
     const clientId = req.query.clientId as string;
     if (!clientId) {
+      console.warn(`[GentlePulse] Missing clientId parameter in /api/gentlepulse/favorites`);
       return res.json([]);
     }
     const favorites = await withDatabaseErrorHandling(

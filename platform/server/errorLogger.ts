@@ -64,7 +64,7 @@ function extractRequestContext(req?: Request): ErrorLogContext | undefined {
     userId: (req as any).user?.id || (req as any).userId,
     path: req.path,
     method: req.method,
-    ip: req.ip || req.socket.remoteAddress,
+    ip: req.ip || req.socket?.remoteAddress || undefined,
     userAgent: req.get('user-agent'),
     query: Object.keys(req.query).length > 0 ? req.query : undefined,
     params: Object.keys(req.params).length > 0 ? req.params : undefined,
