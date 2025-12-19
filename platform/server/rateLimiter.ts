@@ -1,5 +1,6 @@
 import rateLimit, { ipKeyGenerator } from "express-rate-limit";
-import { Request } from "express";
+import { Request, Response, NextFunction } from "express";
+import { RateLimitError } from "./errors";
 
 /**
  * Rate limiting middleware to prevent scraping and abuse of public endpoints
@@ -36,11 +37,9 @@ export const publicListingLimiter = rateLimit({
   // Use IP address from request with proper IPv6 support
   keyGenerator: (req) => getIpAddress(req),
   // Custom handler for rate limit exceeded
-  handler: (req, res) => {
-    res.status(429).json({
-      message: "Too many requests from this IP. Please try again in 15 minutes.",
-      retryAfter: Math.ceil(req.rateLimit?.resetTime ? (req.rateLimit.resetTime - Date.now()) / 1000 : 900)
-    });
+  handler: (req: Request, res: Response, next: NextFunction) => {
+    const retryAfter = Math.ceil(req.rateLimit?.resetTime ? (req.rateLimit.resetTime - Date.now()) / 1000 : 900);
+    next(new RateLimitError("Too many requests from this IP. Please try again in 15 minutes.", retryAfter));
   }
 });
 
@@ -53,11 +52,9 @@ export const publicItemLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => getIpAddress(req),
-  handler: (req, res) => {
-    res.status(429).json({
-      message: "Too many requests from this IP. Please try again in 15 minutes.",
-      retryAfter: Math.ceil(req.rateLimit?.resetTime ? (req.rateLimit.resetTime - Date.now()) / 1000 : 900)
-    });
+  handler: (req: Request, res: Response, next: NextFunction) => {
+    const retryAfter = Math.ceil(req.rateLimit?.resetTime ? (req.rateLimit.resetTime - Date.now()) / 1000 : 900);
+    next(new RateLimitError("Too many requests from this IP. Please try again in 15 minutes.", retryAfter));
   }
 });
 
@@ -69,11 +66,9 @@ export const publicApiLimiter = rateLimit({
   standardHeaders: true,
   legacyHeaders: false,
   keyGenerator: (req) => getIpAddress(req),
-  handler: (req, res) => {
-    res.status(429).json({
-      message: "Too many requests from this IP. Please try again in 15 minutes.",
-      retryAfter: Math.ceil(req.rateLimit?.resetTime ? (req.rateLimit.resetTime - Date.now()) / 1000 : 900)
-    });
+  handler: (req: Request, res: Response, next: NextFunction) => {
+    const retryAfter = Math.ceil(req.rateLimit?.resetTime ? (req.rateLimit.resetTime - Date.now()) / 1000 : 900);
+    next(new RateLimitError("Too many requests from this IP. Please try again in 15 minutes.", retryAfter));
   }
 });
 
@@ -90,11 +85,9 @@ export const chatMessageLimiter = rateLimit({
     // Prefer user-based limiting, fallback to IP
     return req.auth?.userId || getIpAddress(req);
   },
-  handler: (req, res) => {
-    res.status(429).json({
-      message: "Too many messages sent. Please wait a moment before sending another.",
-      retryAfter: Math.ceil(req.rateLimit?.resetTime ? (req.rateLimit.resetTime - Date.now()) / 1000 : 60)
-    });
+  handler: (req: Request, res: Response, next: NextFunction) => {
+    const retryAfter = Math.ceil(req.rateLimit?.resetTime ? (req.rateLimit.resetTime - Date.now()) / 1000 : 60);
+    next(new RateLimitError("Too many messages sent. Please wait a moment before sending another.", retryAfter));
   }
 });
 

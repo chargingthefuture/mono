@@ -4,7 +4,7 @@ import type { Express, RequestHandler } from "express";
 import { storage } from "./storage";
 import { validateCsrfToken } from "./csrf";
 import { withDatabaseErrorHandling } from "./databaseErrorHandler";
-import { ExternalServiceError, UnauthorizedError } from "./errors";
+import { ExternalServiceError, UnauthorizedError, ForbiddenError } from "./errors";
 import { loginEvents } from "@shared/schema";
 import { db } from "./db";
 
@@ -410,9 +410,9 @@ export async function setupAuth(app: Express) {
         
         // If it's a deleted user error, block the request
         if (error.message?.includes("deleted")) {
-          return res.status(403).json({ 
-            message: error.message || "This account has been deleted. Please contact support if you believe this is an error." 
-          });
+          return next(new ForbiddenError(
+            error.message || "This account has been deleted. Please contact support if you believe this is an error."
+          ));
         }
         
         // For other sync failures, log but don't block - let the route handlers deal with it
@@ -520,7 +520,7 @@ export async function isUserAdmin(req: any): Promise<boolean> {
 export const isAdmin: RequestHandler = async (req: any, res, next) => {
   // First ensure user is authenticated
   if (!req.auth?.userId) {
-    return res.status(401).json({ message: "Unauthorized" });
+    return next(new UnauthorizedError("Authentication required"));
   }
 
   const userId = req.auth.userId;
@@ -531,18 +531,16 @@ export const isAdmin: RequestHandler = async (req: any, res, next) => {
       'getUserForAdminCheck'
     );
   } catch (error: any) {
-    // If database is unavailable, deny admin access
+    // If database is unavailable, pass the error to error handler
     if (error instanceof ExternalServiceError && error.statusCode === 503) {
-      return res.status(503).json({ 
-        message: "Database temporarily unavailable. Please try again in a moment." 
-      });
+      return next(error);
     }
     // For other errors, deny access
-    return res.status(403).json({ message: "Forbidden: Admin access required" });
+    return next(new ForbiddenError("Admin access required"));
   }
   
   if (!user || !user.isAdmin) {
-    return res.status(403).json({ message: "Forbidden: Admin access required" });
+    return next(new ForbiddenError("Admin access required"));
   }
 
   next();

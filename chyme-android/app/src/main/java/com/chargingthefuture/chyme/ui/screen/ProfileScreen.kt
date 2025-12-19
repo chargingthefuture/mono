@@ -6,6 +6,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -131,7 +132,7 @@ fun ProfileScreen(
                         )
                     ) {
                         Icon(
-                            Icons.Default.SwapHoriz,
+                            Icons.Outlined.SwapHoriz,
                             contentDescription = null,
                             modifier = Modifier.size(20.dp)
                         )

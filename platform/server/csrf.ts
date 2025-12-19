@@ -1,5 +1,6 @@
 import type { Request, Response, NextFunction } from "express";
 import { randomBytes } from "crypto";
+import { ForbiddenError, ErrorCode } from "./errors";
 
 /**
  * CSRF Protection for Admin Endpoints
@@ -91,18 +92,12 @@ export const validateCsrfToken = (req: Request, res: Response, next: NextFunctio
 
   // Both tokens must exist
   if (!cookieToken || !requestToken) {
-    return res.status(403).json({
-      message: 'CSRF token missing. Please refresh the page and try again.',
-      code: 'CSRF_TOKEN_MISSING',
-    });
+    return next(new ForbiddenError('CSRF token missing. Please refresh the page and try again.'));
   }
 
   // Tokens must match (double-submit cookie validation)
   if (cookieToken !== requestToken) {
-    return res.status(403).json({
-      message: 'CSRF token validation failed. Please refresh the page and try again.',
-      code: 'CSRF_TOKEN_MISMATCH',
-    });
+    return next(new ForbiddenError('CSRF token validation failed. Please refresh the page and try again.'));
   }
 
   // Tokens match - request is valid

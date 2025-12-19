@@ -174,8 +174,8 @@ app.use((req, res, next) => {
           res.setHeader("Expires", "0");
           return res.sendFile(indexPath, (err) => {
             if (err) {
-              // If sending the file fails, fall back to a JSON 404
-              return res.status(404).json({ message: "Not found" });
+              // If sending the file fails, use the notFoundHandler
+              return notFoundHandler(req, res, next);
             }
           });
         }
@@ -185,8 +185,8 @@ app.use((req, res, next) => {
       }
     }
 
-    // Final fallback: JSON 404 for non-API routes where we couldn't serve the SPA shell
-    return res.status(404).json({ message: "Not found" });
+    // Final fallback: use notFoundHandler for consistent error handling
+    return notFoundHandler(req, res, next);
   });
 
   // Error handler - must be last
