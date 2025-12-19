@@ -2434,6 +2434,7 @@ export const insertChymeRoomSchema = createInsertSchema(chymeRooms).omit({
   id: true,
   createdAt: true,
   updatedAt: true,
+  createdBy: true, // Explicitly omit - server will set from authenticated user
 }).extend({
   roomType: z.enum(["public", "private"]),
   maxParticipants: z.coerce.number().int().positive().optional().nullable(),
