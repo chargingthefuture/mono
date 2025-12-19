@@ -303,6 +303,7 @@ fun RoomDetailScreen(
                                     isCreator = uiState.room?.createdBy == participant.userId,
                                     canManage = uiState.room?.createdBy == participant.userId ||
                                               uiState.currentUserRole == ParticipantRole.CREATOR,
+                                    navController = navController,
                                     onPromoteToSpeaker = {
                                         if (participant.role != ParticipantRole.SPEAKER) {
                                             viewModel.promoteToSpeaker(roomId, participant.userId)
@@ -333,6 +334,7 @@ fun RoomDetailScreen(
                                     isCreator = false,
                                     canManage = uiState.room?.createdBy == participant.userId ||
                                               uiState.currentUserRole == ParticipantRole.CREATOR,
+                                    navController = navController,
                                     onPromoteToSpeaker = {
                                         viewModel.promoteToSpeaker(roomId, participant.userId)
                                     },
@@ -620,6 +622,7 @@ fun ParticipantCard(
     participant: com.chargingthefuture.chyme.data.model.ChymeRoomParticipant,
     isCreator: Boolean,
     canManage: Boolean,
+    navController: androidx.navigation.NavController? = null,
     onPromoteToSpeaker: () -> Unit,
     onMute: () -> Unit,
     onKick: () -> Unit
@@ -636,15 +639,18 @@ fun ParticipantCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Row(
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .clickable {
+                        navController?.navigate("user/${participant.userId}")
+                    },
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Avatar placeholder
                 Box(
                     modifier = Modifier
                         .size(40.dp)
-                        .clip(CircleShape)
-                        .clickable { },
+                        .clip(CircleShape),
                     contentAlignment = Alignment.Center
                 ) {
                     Icon(Icons.Default.Person, contentDescription = null)

@@ -329,6 +329,13 @@ fun MainScreen(authManager: MobileAuthManager, authViewModel: AuthViewModel) {
                         navController = navController
                     )
                 }
+                composable("user/{userId}") { backStackEntry ->
+                    val userId = backStackEntry.arguments?.getString("userId") ?: return@composable
+                    UserProfileScreen(
+                        userId = userId,
+                        navController = navController
+                    )
+                }
             }
         } else {
             SignInScreen(

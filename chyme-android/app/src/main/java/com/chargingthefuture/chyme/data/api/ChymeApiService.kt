@@ -70,6 +70,15 @@ interface ChymeApiService {
     ): Response<ChymeRoom>
     
     // User endpoints
+    @GET("/api/chyme/users/{userId}")
+    suspend fun getUser(@Path("userId") userId: String): Response<ChymeUser>
+    
+    @GET("/api/chyme/users/{userId}/follow-status")
+    suspend fun getFollowStatus(@Path("userId") userId: String): Response<FollowStatusResponse>
+    
+    @GET("/api/chyme/users/{userId}/block-status")
+    suspend fun getBlockStatus(@Path("userId") userId: String): Response<BlockStatusResponse>
+    
     @POST("/api/chyme/users/{userId}/follow")
     suspend fun followUser(@Path("userId") userId: String): Response<ApiError>
     

@@ -19,7 +19,7 @@ data class CreateRoomUiState(
     val description: String = "",
     val topic: String = "",
     val roomType: String = "public", // "public" or "private"
-    val maxParticipants: Int? = null,
+    val maxParticipants: Int = 100, // Default to 100 participants
     val createdRoom: ChymeRoom? = null,
     val errorMessage: String? = null
 )
@@ -49,10 +49,6 @@ class CreateRoomViewModel @Inject constructor(
         _uiState.value = _uiState.value.copy(roomType = roomType)
     }
     
-    fun updateMaxParticipants(maxParticipants: Int?) {
-        _uiState.value = _uiState.value.copy(maxParticipants = maxParticipants)
-    }
-    
     fun createRoom(onSuccess: (ChymeRoom) -> Unit) {
         if (_uiState.value.name.isBlank()) {
             _uiState.value = _uiState.value.copy(
@@ -69,7 +65,7 @@ class CreateRoomViewModel @Inject constructor(
                 description = _uiState.value.description.takeIf { it.isNotBlank() },
                 roomType = _uiState.value.roomType,
                 topic = _uiState.value.topic.takeIf { it.isNotBlank() },
-                maxParticipants = _uiState.value.maxParticipants
+                maxParticipants = _uiState.value.maxParticipants // Always 100 by default
             )
             
             roomRepository.createRoom(request).fold(

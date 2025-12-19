@@ -70,14 +70,12 @@ fun CreateRoomScreen(
                     Text("Private", modifier = Modifier.padding(top = 12.dp))
                 }
                 
-                OutlinedTextField(
-                    value = uiState.maxParticipants?.toString() ?: "",
-                    onValueChange = {
-                        viewModel.updateMaxParticipants(it.toIntOrNull())
-                    },
-                    label = { Text("Max Participants (50-100)") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
+                // Max participants is automatically set to 100 - no need for user input
+                Text(
+                    text = "Max participants: ${uiState.maxParticipants}",
+                    style = MaterialTheme.typography.caption,
+                    color = MaterialTheme.colors.onSurface.copy(alpha = 0.6f),
+                    modifier = Modifier.padding(top = 8.dp)
                 )
                 
                 uiState.errorMessage?.let { errorMessage ->

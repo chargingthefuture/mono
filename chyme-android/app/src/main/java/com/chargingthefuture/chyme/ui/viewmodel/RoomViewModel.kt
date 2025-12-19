@@ -515,7 +515,7 @@ class RoomViewModel @Inject constructor(
             // Start WebRTC for creator/speaker
             viewModelScope.launch {
                 val token = authManager.getAuthToken() ?: return@launch
-                val isCaller = role == ParticipantRole.CREATOR
+                val isCaller = role == ParticipantRole.CREATOR || role == ParticipantRole.SPEAKER
                 val manager = WebRTCManager(
                     roomId = roomId,
                     currentUserId = currentUserId,
@@ -545,9 +545,25 @@ class RoomViewModel @Inject constructor(
                 }
                 
                 manager.start()
+                
+                // Update peers with current speakers
+                updateWebRTCPeers()
             }
+        } else {
+            // WebRTC is already running - update peer list based on current participants
+            updateWebRTCPeers()
         }
-        // If WebRTC is already running and role is still active, no change needed
+    }
+    
+    /**
+     * Update WebRTC peer connections based on current speakers in the room.
+     * This should be called whenever the participants list changes.
+     */
+    private fun updateWebRTCPeers() {
+        val manager = webRTCManager ?: return
+        val speakers = _uiState.value.speakers
+        val speakerUserIds = speakers.map { it.userId }
+        manager.updatePeers(speakerUserIds)
     }
     
     fun promoteToSpeaker(roomId: String, userId: String) {

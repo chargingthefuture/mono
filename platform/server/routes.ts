@@ -6870,6 +6870,72 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json({ message: "User blocked", block });
   }));
 
+  // DELETE /api/chyme/users/:userId/block (unblock)
+  app.delete('/api/chyme/users/:userId/block', isAuthenticated, asyncHandler(async (req: any, res) => {
+    const currentUserId = getUserId(req);
+    const targetUserId = req.params.userId;
+
+    await withDatabaseErrorHandling(
+      () => storage.unblockChymeUser(currentUserId, targetUserId),
+      'unblockChymeUser'
+    );
+
+    res.json({ message: "User unblocked" });
+  }));
+
+  // GET /api/chyme/users/:userId (get user profile)
+  app.get('/api/chyme/users/:userId', isAuthenticated, asyncHandler(async (req: any, res) => {
+    const targetUserId = req.params.userId;
+
+    const user = await withDatabaseErrorHandling(
+      () => storage.getUser(targetUserId),
+      'getUser'
+    );
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // Return user profile data
+    res.json({
+      id: user.id,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      displayName: user.firstName && user.lastName 
+        ? `${user.firstName} ${user.lastName}` 
+        : user.firstName || user.lastName || null,
+      profileImageUrl: user.profileImageUrl || null,
+      username: user.username || null
+    });
+  }));
+
+  // GET /api/chyme/users/:userId/follow-status (check if following)
+  app.get('/api/chyme/users/:userId/follow-status', isAuthenticated, asyncHandler(async (req: any, res) => {
+    const currentUserId = getUserId(req);
+    const targetUserId = req.params.userId;
+
+    const isFollowing = await withDatabaseErrorHandling(
+      () => storage.isFollowingChymeUser(currentUserId, targetUserId),
+      'isFollowingChymeUser'
+    );
+
+    res.json({ isFollowing });
+  }));
+
+  // GET /api/chyme/users/:userId/block-status (check if blocked)
+  app.get('/api/chyme/users/:userId/block-status', isAuthenticated, asyncHandler(async (req: any, res) => {
+    const currentUserId = getUserId(req);
+    const targetUserId = req.params.userId;
+
+    const isBlocked = await withDatabaseErrorHandling(
+      () => storage.isBlockingChymeUser(currentUserId, targetUserId),
+      'isBlockingChymeUser'
+    );
+
+    res.json({ isBlocked });
+  }));
+
   app.delete('/api/chyme/admin/announcements/:id', isAuthenticated, ...isAdminWithCsrf, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const announcement = await withDatabaseErrorHandling(
