@@ -1426,5 +1426,12 @@
     "statusCode": null,
     "responseTime": 10629,
     "error": "Request timeout"
+  },
+  {
+    "timestamp": "2025-12-19T16:44:47.660Z",
+    "status": "down",
+    "statusCode": 404,
+    "responseTime": 354,
+    "error": "HTTP 404"
   }
 ]
