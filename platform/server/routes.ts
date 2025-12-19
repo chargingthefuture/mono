@@ -6531,7 +6531,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
       'getChymeRoomParticipants'
     );
 
-    res.json(participants);
+    // Enrich participants with user data
+    const participantsWithUsers = await Promise.all(
+      participants.map(async (participant) => {
+        const user = await withDatabaseErrorHandling(
+          () => storage.getUser(participant.userId),
+          'getUser'
+        );
+        return {
+          ...participant,
+          user: user ? {
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            profileImageUrl: user.profileImageUrl,
+            displayName: user.displayName,
+            username: user.username,
+          } : null,
+        };
+      })
+    );
+
+    res.json(participantsWithUsers);
   }));
 
   // GET /api/chyme/rooms/:roomId/messages
