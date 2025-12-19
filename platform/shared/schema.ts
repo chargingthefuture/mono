@@ -2421,6 +2421,7 @@ export const chymeRooms = pgTable("chyme_rooms", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   name: varchar("name", { length: 200 }).notNull(),
   description: text("description"),
+  topic: varchar("topic", { length: 100 }),
   roomType: varchar("room_type", { length: 20 }).notNull().default('public'), // 'public' or 'private'
   isActive: boolean("is_active").notNull().default(true),
   maxParticipants: integer("max_participants"),

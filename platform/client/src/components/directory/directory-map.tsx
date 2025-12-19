@@ -19,27 +19,49 @@ type LocationWithCoords = {
   lng: number;
 };
 
-// Component to adjust map view when markers change
-function MapBounds({ locations }: { locations: LocationWithCoords[] }) {
-  const [useMapHook, setUseMapHook] = useState<any>(null);
+type DirectoryMapProps = {
+  profiles: ProfileLocation[];
+};
+
+// Separate component that only renders when Leaflet is loaded
+function LeafletMap({ locations }: { locations: LocationWithCoords[] }) {
   const [Leaflet, setLeaflet] = useState<any>(null);
+  const [ReactLeaflet, setReactLeaflet] = useState<any>(null);
 
   useEffect(() => {
-    // Dynamically import useMap and Leaflet only on client
+    // Load Leaflet and React-Leaflet
     Promise.all([
-      import("react-leaflet").then((mod) => mod.useMap),
-      import("leaflet").then((mod) => mod.default),
-    ]).then(([useMap, L]) => {
-      setUseMapHook(() => useMap);
-      setLeaflet(L);
+      import("leaflet/dist/leaflet.css"),
+      import("leaflet"),
+      import("react-leaflet"),
+    ]).then(([_, L, RL]) => {
+      // Fix default marker icons
+      delete (L.default.Icon.Default.prototype as any)._getIconUrl;
+      L.default.Icon.Default.mergeOptions({
+        iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
+        iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
+        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
+      });
+      
+      setLeaflet(L.default);
+      setReactLeaflet(RL);
     });
   }, []);
 
-  if (!useMapHook || !Leaflet) return null;
+  if (!Leaflet || !ReactLeaflet) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-muted">
+        <p className="text-muted-foreground">Loading map...</p>
+      </div>
+    );
+  }
 
-  const MapBoundsInner = () => {
-    const map = useMapHook();
-    
+  const { MapContainer, TileLayer, Marker, Popup, useMap } = ReactLeaflet;
+
+  // Component to adjust map bounds - must be inside MapContainer
+  function MapBounds({ locations }: { locations: LocationWithCoords[] }) {
+    const map = useMap();
+
     useEffect(() => {
       if (locations.length === 0 || !map) return;
 
@@ -50,44 +72,79 @@ function MapBounds({ locations }: { locations: LocationWithCoords[] }) {
     }, [locations, map, Leaflet]);
 
     return null;
-  };
+  }
 
-  return <MapBoundsInner />;
+  const defaultCenter: [number, number] = [20, 0];
+  const defaultZoom = 2;
+
+  return (
+    <MapContainer
+      center={defaultCenter}
+      zoom={defaultZoom}
+      style={{ height: "100%", width: "100%" }}
+      scrollWheelZoom={true}
+    >
+      <TileLayer
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+      <MapBounds locations={locations} />
+      {locations.map((location) => (
+        <Marker
+          key={location.profile.id}
+          position={[location.lat, location.lng]}
+        >
+          <Popup>
+            <div className="p-2 space-y-2 min-w-[200px]">
+              <h3 className="font-semibold text-sm">
+                {location.profile.name}
+              </h3>
+              <p className="text-xs text-muted-foreground line-clamp-2">
+                {location.profile.description}
+              </p>
+              {location.profile.skills.length > 0 && (
+                <div className="flex flex-wrap gap-1">
+                  {location.profile.skills.slice(0, 3).map((skill) => (
+                    <span
+                      key={skill}
+                      className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded"
+                    >
+                      {skill}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground">
+                {[
+                  location.profile.city,
+                  location.profile.state,
+                  location.profile.country,
+                ]
+                  .filter(Boolean)
+                  .join(", ")}
+              </p>
+              <a
+                href={location.profile.profileUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-xs text-primary hover:underline inline-block mt-1"
+              >
+                View Profile →
+              </a>
+            </div>
+          </Popup>
+        </Marker>
+      ))}
+    </MapContainer>
+  );
 }
-
-type DirectoryMapProps = {
-  profiles: ProfileLocation[];
-};
 
 export function DirectoryMap({ profiles }: DirectoryMapProps) {
   const [isMounted, setIsMounted] = useState(false);
-  const [MapComponents, setMapComponents] = useState<any>(null);
 
-  // Ensure component only renders on client side and load Leaflet
+  // Ensure component only renders on client side
   useEffect(() => {
     setIsMounted(true);
-    
-    // Dynamically import all Leaflet components and CSS
-    Promise.all([
-      import("leaflet/dist/leaflet.css"),
-      import("react-leaflet"),
-      import("leaflet"),
-    ]).then(([_, reactLeaflet, L]) => {
-      // Fix default marker icons
-      delete (L.default.Icon.Default.prototype as any)._getIconUrl;
-      L.default.Icon.Default.mergeOptions({
-        iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-        iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-        shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-      });
-      
-      setMapComponents({
-        MapContainer: reactLeaflet.MapContainer,
-        TileLayer: reactLeaflet.TileLayer,
-        Marker: reactLeaflet.Marker,
-        Popup: reactLeaflet.Popup,
-      });
-    });
   }, []);
 
   // Filter profiles that have coordinates (already geocoded and stored in DB)
@@ -101,7 +158,7 @@ export function DirectoryMap({ profiles }: DirectoryMapProps) {
       }));
   }, [profiles]);
 
-  if (!isMounted || !MapComponents) {
+  if (!isMounted) {
     return (
       <div className="w-full h-[500px] bg-muted rounded-lg flex items-center justify-center">
         <p className="text-muted-foreground">Loading map...</p>
@@ -117,74 +174,9 @@ export function DirectoryMap({ profiles }: DirectoryMapProps) {
     );
   }
 
-  const { MapContainer, TileLayer, Marker, Popup } = MapComponents;
-
-  // Default center (world center) - will be adjusted by MapBounds
-  const defaultCenter: [number, number] = [20, 0];
-  const defaultZoom = 2;
-
   return (
     <div className="w-full h-[500px] rounded-lg overflow-hidden border">
-      <MapContainer
-        center={defaultCenter}
-        zoom={defaultZoom}
-        style={{ height: "100%", width: "100%" }}
-        scrollWheelZoom={true}
-      >
-        {/* OpenStreetMap tiles - free, open source, commercial use allowed */}
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        <MapBounds locations={locationsWithCoords} />
-        {locationsWithCoords.map((location) => (
-          <Marker
-            key={location.profile.id}
-            position={[location.lat, location.lng]}
-          >
-            <Popup>
-              <div className="p-2 space-y-2 min-w-[200px]">
-                <h3 className="font-semibold text-sm">
-                  {location.profile.name}
-                </h3>
-                <p className="text-xs text-muted-foreground line-clamp-2">
-                  {location.profile.description}
-                </p>
-                {location.profile.skills.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {location.profile.skills.slice(0, 3).map((skill) => (
-                      <span
-                        key={skill}
-                        className="text-xs bg-primary/10 text-primary px-1.5 py-0.5 rounded"
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  {[
-                    location.profile.city,
-                    location.profile.state,
-                    location.profile.country,
-                  ]
-                    .filter(Boolean)
-                    .join(", ")}
-                </p>
-                <a
-                  href={location.profile.profileUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-xs text-primary hover:underline inline-block mt-1"
-                >
-                  View Profile →
-                </a>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-      </MapContainer>
+      <LeafletMap locations={locationsWithCoords} />
     </div>
   );
 }
-

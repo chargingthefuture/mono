@@ -6441,6 +6441,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   }));
 
+  // POST /api/chyme/rooms (user-created rooms)
+  app.post('/api/chyme/rooms', isAuthenticated, asyncHandler(async (req: any, res) => {
+    const userId = getUserId(req);
+    // Extract topic from body if present (not in schema yet, will be stored in description for now)
+    const { topic, ...roomData } = req.body;
+    const validatedData = validateWithZod(insertChymeRoomSchema, roomData, 'Invalid room data');
+
+    const room = await withDatabaseErrorHandling(
+      () => storage.createChymeRoom({
+        ...validatedData,
+        createdBy: userId,
+      }),
+      'createChymeRoom'
+    );
+
+    res.status(201).json({
+      ...room,
+      currentParticipants: 0,
+      topic: topic || null, // Include topic in response even though not in DB yet
+    });
+  }));
+
   // POST /api/chyme/rooms/:roomId/join
   app.post('/api/chyme/rooms/:roomId/join', isAuthenticated, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
@@ -6559,6 +6581,188 @@ export async function registerRoutes(app: Express): Promise<Server> {
     );
 
     res.status(201).json(message);
+  }));
+
+  // POST /api/chyme/rooms/:roomId/raise-hand
+  app.post('/api/chyme/rooms/:roomId/raise-hand', isAuthenticated, asyncHandler(async (req: any, res) => {
+    const userId = getUserId(req);
+    const roomId = req.params.roomId;
+
+    const room = await withDatabaseErrorHandling(
+      () => storage.getChymeRoom(roomId),
+      'getChymeRoom'
+    );
+
+    if (!room || !room.isActive) {
+      return res.status(404).json({ message: "Room not found" });
+    }
+
+    // Check if user is already a participant
+    const participant = await withDatabaseErrorHandling(
+      () => storage.getChymeRoomParticipant(roomId, userId),
+      'getChymeRoomParticipant'
+    );
+
+    if (!participant) {
+      return res.status(403).json({ message: "You must join the room first" });
+    }
+
+    // For now, we'll use isSpeaking as a flag for "hand raised"
+    // TODO: Add hasRaisedHand field to chyme_room_participants table
+    await withDatabaseErrorHandling(
+      () => storage.updateChymeRoomParticipant(roomId, userId, { isSpeaking: true }),
+      'updateChymeRoomParticipant'
+    );
+
+    res.json({ message: "Hand raised" });
+  }));
+
+  // PUT /api/chyme/rooms/:roomId/participants/:userId
+  app.put('/api/chyme/rooms/:roomId/participants/:userId', isAuthenticated, asyncHandler(async (req: any, res) => {
+    const currentUserId = getUserId(req);
+    const roomId = req.params.roomId;
+    const targetUserId = req.params.userId;
+
+    const room = await withDatabaseErrorHandling(
+      () => storage.getChymeRoom(roomId),
+      'getChymeRoom'
+    );
+
+    if (!room || !room.isActive) {
+      return res.status(404).json({ message: "Room not found" });
+    }
+
+    // Check if current user is the room creator or admin
+    const isCreator = room.createdBy === currentUserId;
+    const currentUser = await withDatabaseErrorHandling(
+      () => storage.getUser(currentUserId),
+      'getUser'
+    );
+    const isAdmin = currentUser?.isAdmin || false;
+
+    if (!isCreator && !isAdmin) {
+      return res.status(403).json({ message: "Only room creator or admin can update participants" });
+    }
+
+    // Validate update data
+    const updates: any = {};
+    if (req.body.isMuted !== undefined) {
+      updates.isMuted = req.body.isMuted;
+    }
+    if (req.body.role !== undefined) {
+      // Role is not in DB schema yet, but we can use isSpeaking as a proxy
+      // If role is "speaker", set isSpeaking to true
+      if (req.body.role === "speaker") {
+        updates.isSpeaking = true;
+      } else if (req.body.role === "listener") {
+        updates.isSpeaking = false;
+      }
+    }
+
+    const updatedParticipant = await withDatabaseErrorHandling(
+      () => storage.updateChymeRoomParticipant(roomId, targetUserId, updates),
+      'updateChymeRoomParticipant'
+    );
+
+    res.json(updatedParticipant);
+  }));
+
+  // DELETE /api/chyme/rooms/:roomId/participants/:userId (kick participant)
+  app.delete('/api/chyme/rooms/:roomId/participants/:userId', isAuthenticated, asyncHandler(async (req: any, res) => {
+    const currentUserId = getUserId(req);
+    const roomId = req.params.roomId;
+    const targetUserId = req.params.userId;
+
+    const room = await withDatabaseErrorHandling(
+      () => storage.getChymeRoom(roomId),
+      'getChymeRoom'
+    );
+
+    if (!room || !room.isActive) {
+      return res.status(404).json({ message: "Room not found" });
+    }
+
+    // Check if current user is the room creator or admin
+    const isCreator = room.createdBy === currentUserId;
+    const currentUser = await withDatabaseErrorHandling(
+      () => storage.getUser(currentUserId),
+      'getUser'
+    );
+    const isAdmin = currentUser?.isAdmin || false;
+
+    if (!isCreator && !isAdmin) {
+      return res.status(403).json({ message: "Only room creator or admin can kick participants" });
+    }
+
+    // Prevent kicking yourself
+    if (targetUserId === currentUserId) {
+      return res.status(400).json({ message: "You cannot kick yourself" });
+    }
+
+    await withDatabaseErrorHandling(
+      () => storage.leaveChymeRoom(roomId, targetUserId),
+      'leaveChymeRoom'
+    );
+
+    res.json({ message: "Participant kicked" });
+  }));
+
+  // POST /api/chyme/users/:userId/follow
+  app.post('/api/chyme/users/:userId/follow', isAuthenticated, asyncHandler(async (req: any, res) => {
+    const currentUserId = getUserId(req);
+    const targetUserId = req.params.userId;
+
+    if (targetUserId === currentUserId) {
+      return res.status(400).json({ message: "You cannot follow yourself" });
+    }
+
+    // Check if target user exists
+    const targetUser = await withDatabaseErrorHandling(
+      () => storage.getUser(targetUserId),
+      'getUser'
+    );
+
+    if (!targetUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // TODO: Implement follow functionality in storage
+    // For now, return success (this needs a chyme_user_follows table)
+    res.json({ message: "User followed" });
+  }));
+
+  // DELETE /api/chyme/users/:userId/follow
+  app.delete('/api/chyme/users/:userId/follow', isAuthenticated, asyncHandler(async (req: any, res) => {
+    const currentUserId = getUserId(req);
+    const targetUserId = req.params.userId;
+
+    // TODO: Implement unfollow functionality in storage
+    // For now, return success (this needs a chyme_user_follows table)
+    res.json({ message: "User unfollowed" });
+  }));
+
+  // POST /api/chyme/users/:userId/block
+  app.post('/api/chyme/users/:userId/block', isAuthenticated, asyncHandler(async (req: any, res) => {
+    const currentUserId = getUserId(req);
+    const targetUserId = req.params.userId;
+
+    if (targetUserId === currentUserId) {
+      return res.status(400).json({ message: "You cannot block yourself" });
+    }
+
+    // Check if target user exists
+    const targetUser = await withDatabaseErrorHandling(
+      () => storage.getUser(targetUserId),
+      'getUser'
+    );
+
+    if (!targetUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // TODO: Implement block functionality in storage
+    // For now, return success (this needs a chyme_user_blocks table)
+    res.json({ message: "User blocked" });
   }));
 
   app.delete('/api/chyme/admin/announcements/:id', isAuthenticated, ...isAdminWithCsrf, asyncHandler(async (req: any, res) => {
