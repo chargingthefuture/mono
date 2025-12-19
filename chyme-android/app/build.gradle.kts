@@ -122,8 +122,9 @@ dependencies {
     
     // WebRTC for audio streaming (local mic control)
     // Note: org.webrtc:google-webrtc was previously on JCenter (now deprecated)
-    // Using a version that should be available from alternative repositories
-    implementation("org.webrtc:google-webrtc:1.0.32006")
+    // Using com.infobip:google-webrtc as a drop-in replacement (same org.webrtc package structure)
+    // Available on Maven Central - compatible with the original library, no code changes needed
+    implementation("com.infobip:google-webrtc:1.0.45036")
     
     // Image loading
     implementation("io.coil-kt:coil-compose:2.5.0")

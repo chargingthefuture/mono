@@ -281,114 +281,115 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Note: This endpoint should be configured in Clerk Dashboard with webhook secret
   // Configure the webhook URL in Clerk Dashboard: https://app.chargingthefuture.com/api/webhooks/clerk
   // Set CLERK_WEBHOOK_SECRET environment variable with the signing secret from Clerk Dashboard
-  app.post('/api/webhooks/clerk', async (req: any, res) => {
+  app.post('/api/webhooks/clerk', asyncHandler(async (req: any, res) => {
+    // Verify webhook signature using svix to prevent unauthorized requests
+    const webhookSecret = process.env.CLERK_WEBHOOK_SECRET || process.env.CLERK_WEBHOOK_SIGNING_SECRET;
+    
+    if (!webhookSecret) {
+      console.error("CLERK_WEBHOOK_SECRET or CLERK_WEBHOOK_SIGNING_SECRET environment variable not set");
+      throw new ValidationError("Webhook secret not configured. Please set CLERK_WEBHOOK_SECRET environment variable.");
+    }
+
+    // Get the raw body (stored by express.json middleware in index.ts)
+    // The raw body is required for signature verification - parsed JSON won't work
+    const rawBody = req.rawBody;
+    if (!rawBody) {
+      console.error("Raw body not available for webhook verification");
+      throw new ValidationError("Invalid request: raw body required for webhook signature verification");
+    }
+
+    // Get svix headers for signature verification
+    // Clerk uses Svix for webhook delivery, which includes these security headers
+    const svixId = req.headers['svix-id'] as string;
+    const svixTimestamp = req.headers['svix-timestamp'] as string;
+    const svixSignature = req.headers['svix-signature'] as string;
+
+    if (!svixId || !svixTimestamp || !svixSignature) {
+      console.error("Missing svix headers for webhook verification", {
+        hasSvixId: !!svixId,
+        hasSvixTimestamp: !!svixTimestamp,
+        hasSvixSignature: !!svixSignature,
+      });
+      throw new ValidationError("Missing webhook signature headers. This request may not be from Clerk.");
+    }
+
+    // Verify webhook signature using svix Webhook class
+    // This ensures the request is authentic and hasn't been tampered with
+    const wh = new Webhook(webhookSecret);
+    let event: any;
     try {
-      // Verify webhook signature using svix
-      const webhookSecret = process.env.CLERK_WEBHOOK_SECRET || process.env.CLERK_WEBHOOK_SIGNING_SECRET;
-      
-      if (!webhookSecret) {
-        console.error("CLERK_WEBHOOK_SECRET or CLERK_WEBHOOK_SIGNING_SECRET environment variable not set");
-        return res.status(500).json({ message: "Webhook secret not configured" });
-      }
+      // wh.verify() throws an error if signature is invalid
+      // It accepts Buffer or string, and returns the parsed event payload
+      event = wh.verify(rawBody, {
+        'svix-id': svixId,
+        'svix-timestamp': svixTimestamp,
+        'svix-signature': svixSignature,
+      }) as any;
+    } catch (verificationError: any) {
+      console.error("Webhook signature verification failed:", {
+        error: verificationError.message,
+        svixId,
+        svixTimestamp,
+        // Don't log the full signature for security reasons
+      });
+      // Return 401 Unauthorized for invalid signatures
+      throw new UnauthorizedError("Invalid webhook signature. Request rejected for security reasons.");
+    }
 
-      // Get the raw body (stored by express.json middleware in index.ts)
-      const rawBody = req.rawBody;
-      if (!rawBody) {
-        console.error("Raw body not available for webhook verification");
-        return res.status(400).json({ message: "Invalid request: raw body required" });
-      }
-
-      // Get svix headers for signature verification
-      const svixId = req.headers['svix-id'] as string;
-      const svixTimestamp = req.headers['svix-timestamp'] as string;
-      const svixSignature = req.headers['svix-signature'] as string;
-
-      if (!svixId || !svixTimestamp || !svixSignature) {
-        console.error("Missing svix headers for webhook verification", {
-          hasSvixId: !!svixId,
-          hasSvixTimestamp: !!svixTimestamp,
-          hasSvixSignature: !!svixSignature,
-        });
-        return res.status(400).json({ message: "Missing webhook signature headers" });
-      }
-
-      // Verify webhook signature
-      const wh = new Webhook(webhookSecret);
-      let event: any;
-      try {
-        event = wh.verify(rawBody, {
-          'svix-id': svixId,
-          'svix-timestamp': svixTimestamp,
-          'svix-signature': svixSignature,
-        }) as any;
-      } catch (verificationError: any) {
-        console.error("Webhook signature verification failed:", {
-          error: verificationError.message,
-          svixId,
-          svixTimestamp,
-        });
-        return res.status(401).json({ message: "Invalid webhook signature" });
-      }
-
-      // For user.created and user.updated events, sync the Clerk user into our database
-      if (event?.type === 'user.created' || event?.type === 'user.updated') {
-        const clerkUserId = event.data?.id;
-        if (clerkUserId) {
-          try {
-            await syncClerkUserToDatabase(clerkUserId);
-          } catch (syncError: any) {
-            console.error("Error syncing Clerk user from webhook:", {
-              eventType: event.type,
-              clerkUserId,
-              error: syncError.message,
-              stack: syncError.stack,
-            });
-            // Do not fail the webhook delivery because of a transient sync error
-            // Clerk will retry if we return a non-2xx status, but we want to acknowledge receipt
-          }
+    // Process verified webhook events
+    // For user.created and user.updated events, sync the Clerk user into our database
+    if (event?.type === 'user.created' || event?.type === 'user.updated') {
+      const clerkUserId = event.data?.id;
+      if (clerkUserId) {
+        try {
+          await syncClerkUserToDatabase(clerkUserId);
+        } catch (syncError: any) {
+          console.error("Error syncing Clerk user from webhook:", {
+            eventType: event.type,
+            clerkUserId,
+            error: syncError.message,
+            stack: syncError.stack,
+          });
+          // Do not fail the webhook delivery because of a transient sync error
+          // Clerk will retry if we return a non-2xx status, but we want to acknowledge receipt
+          // The sync error is logged but doesn't prevent webhook acknowledgment
         }
       }
-      
-      res.json({ received: true });
-    } catch (error: any) {
-      console.error("Error processing Clerk webhook:", error);
-      res.status(500).json({ message: "Failed to process webhook" });
     }
-  });
+    
+    // Acknowledge successful webhook receipt
+    // Clerk expects a 2xx response to mark the webhook as delivered
+    res.json({ received: true, eventType: event?.type || 'unknown' });
+  }));
 
   // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  app.get('/api/auth/user', isAuthenticated, asyncHandler(async (req: any, res) => {
+    // Log request details for debugging
+    const requestInfo = {
+      hasAuth: !!req.auth,
+      authUserId: req.auth?.userId,
+      path: req.path,
+      method: req.method,
+      timestamp: new Date().toISOString(),
+    };
+    
+    let userId: string;
     try {
-      // Log request details for debugging
-      const requestInfo = {
-        hasAuth: !!req.auth,
-        authUserId: req.auth?.userId,
-        path: req.path,
-        method: req.method,
-        timestamp: new Date().toISOString(),
-      };
-      
-      let userId: string;
-      try {
-        userId = getUserId(req);
-      } catch (getUserIdError: any) {
-        console.error("Error getting userId from request:", {
-          ...requestInfo,
-          error: getUserIdError.message,
-          stack: getUserIdError.stack,
-        });
-        return res.status(401).json({ 
-          message: "Authentication failed: Unable to extract user ID. Please try signing in again." 
-        });
-      }
-      
-      // Validate userId is present
-      if (!userId || userId.trim() === "") {
-        console.error("Error: userId is missing or empty", requestInfo);
-        return res.status(401).json({ 
-          message: "Authentication failed: User ID not found. Please try signing in again." 
-        });
-      }
+      userId = getUserId(req);
+    } catch (getUserIdError: any) {
+      console.error("Error getting userId from request:", {
+        ...requestInfo,
+        error: getUserIdError.message,
+        stack: getUserIdError.stack,
+      });
+      throw new UnauthorizedError("Authentication failed: Unable to extract user ID. Please try signing in again.");
+    }
+    
+    // Validate userId is present
+    if (!userId || userId.trim() === "") {
+      console.error("Error: userId is missing or empty", requestInfo);
+      throw new UnauthorizedError("Authentication failed: User ID not found. Please try signing in again.");
+    }
       
       // Try to get user from database with specific error handling
       let user: any;
@@ -436,9 +437,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // If sync fails (e.g., deleted user), return appropriate error
           if (syncError.message?.includes("deleted")) {
-            return res.status(403).json({ 
-              message: syncError.message || "This account has been deleted. Please contact support if you believe this is an error." 
-            });
+            throw new ForbiddenError(syncError.message || "This account has been deleted. Please contact support if you believe this is an error.");
           }
           
           // If both database and Clerk fail, return a more specific error
@@ -456,10 +455,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               environment: process.env.NODE_ENV,
               timestamp: new Date().toISOString(),
             });
-            return res.status(503).json({ 
-              message: "Database temporarily unavailable. Please try again in a moment.",
-              retryAfter: 5, // Suggest retry after 5 seconds
-            });
+            throw new ExternalServiceError("Database temporarily unavailable. Please try again in a moment.", 503);
           }
           
           // For other errors, return 500 error instead of null
@@ -472,10 +468,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
             dbErrorMessage: dbError.message,
             syncErrorMessage: syncError.message,
           });
-          return res.status(500).json({ 
-            message: "Failed to sync user. Please try refreshing the page.",
-            error: process.env.NODE_ENV === 'development' ? `Database error: ${dbError.message}. Sync error: ${syncError.message}` : undefined
-          });
+          const errorMsg = "Failed to sync user. Please try refreshing the page.";
+          const error = new Error(errorMsg);
+          (error as any).statusCode = 500;
+          (error as any).details = process.env.NODE_ENV === 'development' ? `Database error: ${dbError.message}. Sync error: ${syncError.message}` : undefined;
+          throw error;
         }
       }
       
@@ -510,15 +507,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
                 console.log(`User found on retry for ${userId}`);
               } else {
                 console.error(`User still not found after retry for ${userId}. This indicates a sync failure.`);
-                return res.status(500).json({ 
-                  message: "User sync failed. Please try refreshing the page." 
-                });
+                throw new Error("User sync failed. Please try refreshing the page.");
               }
             } catch (retryError: any) {
               console.error(`Retry getUser also failed for ${userId}:`, retryError.message);
-              return res.status(500).json({ 
-                message: "Failed to retrieve user after sync. Please try refreshing the page." 
-              });
+              throw new Error("Failed to retrieve user after sync. Please try refreshing the page.");
             }
           } else {
             console.log(`Successfully synced user ${userId} in ${syncDuration}ms (fallback sync)`);
@@ -541,91 +534,32 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // If sync fails (e.g., deleted user), return appropriate error
           if (syncError.message?.includes("deleted")) {
-            return res.status(403).json({ 
-              message: syncError.message || "This account has been deleted. Please contact support if you believe this is an error." 
-            });
+            throw new ForbiddenError(syncError.message || "This account has been deleted. Please contact support if you believe this is an error.");
           }
           
           // If it's a database connection error, return 503
           if (syncError.message?.includes("Database temporarily unavailable") ||
               syncError instanceof ExternalServiceError && syncError.statusCode === 503) {
-            return res.status(503).json({ 
-              message: "Database temporarily unavailable. Please try again in a moment.",
-              retryAfter: 5,
-            });
+            throw new ExternalServiceError("Database temporarily unavailable. Please try again in a moment.", 503);
           }
           
           // For other sync errors, return 500 with helpful message
           // Don't return null - this causes confusion in the frontend
-          return res.status(500).json({ 
-            message: "Failed to sync user. Please try refreshing the page.",
-            error: process.env.NODE_ENV === 'development' ? syncError.message : undefined
-          });
+          const errorMsg = "Failed to sync user. Please try refreshing the page.";
+          const error = new Error(errorMsg);
+          (error as any).statusCode = 500;
+          (error as any).details = process.env.NODE_ENV === 'development' ? syncError.message : undefined;
+          throw error;
         }
       }
       
-      // Check if user is deleted
-      if (user && user.email === null && user.firstName === "Deleted" && user.lastName === "User") {
-        return res.status(403).json({ 
-          message: "This account has been deleted. Please contact support if you believe this is an error." 
-        });
-      }
-      
-      res.json(user);
-    } catch (error: any) {
-      // Catch any unexpected errors that bypassed inner error handlers
-      const errorDetails = {
-        error: error.message,
-        stack: error.stack,
-        userId: req.auth?.userId,
-        hasAuth: !!req.auth,
-        name: error.name,
-        code: error.code,
-        errno: error.errno,
-        sqlState: error.sqlState,
-        statusCode: error.statusCode,
-        // Environment checks
-        hasDatabaseUrl: !!process.env.DATABASE_URL,
-        hasClerkSecretKey: !!process.env.CLERK_SECRET_KEY,
-        nodeEnv: process.env.NODE_ENV,
-        timestamp: new Date().toISOString(),
-        // Request details
-        path: req.path,
-        method: req.method,
-      };
-      
-      console.error("Unexpected error fetching user (outer catch):", errorDetails);
-      
-      // Send to Sentry
-      if (process.env.SENTRY_DSN) {
-        Sentry.captureException(error, {
-          tags: {
-            endpoint: '/api/auth/user',
-            errorType: 'unexpected',
-          },
-          extra: errorDetails,
-          user: {
-            id: req.auth?.userId,
-          },
-        });
-      }
-      
-      // Provide more helpful error message based on error type
-      let errorMessage = "Failed to fetch user";
-      if (error.message?.includes("DATABASE_URL")) {
-        errorMessage = "Database configuration error. Please contact support.";
-      } else if (error.message?.includes("CLERK_SECRET_KEY")) {
-        errorMessage = "Authentication service configuration error. Please contact support.";
-      } else if (error.code === "ECONNREFUSED" || error.code === "ETIMEDOUT") {
-        errorMessage = "Database connection failed. Please try again in a moment.";
-      }
-      
-      res.status(500).json({ 
-        message: errorMessage,
-        error: process.env.NODE_ENV === 'development' ? error.message : undefined
-      });
+    // Check if user is deleted
+    if (user && user.email === null && user.firstName === "Deleted" && user.lastName === "User") {
+      throw new ForbiddenError("This account has been deleted. Please contact support if you believe this is an error.");
     }
-  });
+    
+    res.json(user);
+  }));
 
   // Account deletion - delete entire user account from all mini-apps
   app.delete('/api/account/delete', isAuthenticated, asyncHandler(async (req: any, res) => {
@@ -673,195 +607,130 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   // Weekly Performance Review
-  app.get('/api/admin/weekly-performance', isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      const weekStartParam = req.query.weekStart;
-      let weekStart: Date;
-      
-      if (weekStartParam) {
-        // Parse date string (YYYY-MM-DD) and interpret as local date, not UTC
-        const [year, month, day] = weekStartParam.split('-').map(Number);
-        weekStart = new Date(year, month - 1, day);
-        if (isNaN(weekStart.getTime())) {
-          return res.status(400).json({ message: "Invalid weekStart date format" });
-        }
-      } else {
-        // Default to current week
-        weekStart = new Date();
+  app.get('/api/admin/weekly-performance', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
+    const weekStartParam = req.query.weekStart;
+    let weekStart: Date;
+    
+    if (weekStartParam) {
+      // Parse date string (YYYY-MM-DD) and interpret as local date, not UTC
+      const [year, month, day] = weekStartParam.split('-').map(Number);
+      weekStart = new Date(year, month - 1, day);
+      if (isNaN(weekStart.getTime())) {
+        throw new ValidationError("Invalid weekStart date format");
       }
-      
-      console.log("Weekly performance request - weekStart input:", weekStartParam || "current date");
-      console.log("Parsed weekStart date:", weekStart.toISOString());
-      
-      const review = await storage.getWeeklyPerformanceReview(weekStart);
-      
-      console.log("=== Weekly Performance Review Result ===");
-      console.log("Review keys:", Object.keys(review));
-      console.log("Has metrics property:", 'metrics' in review);
-      console.log("Metrics value:", review.metrics);
-      console.log("Metrics type:", typeof review.metrics);
-      
-      // ALWAYS ensure metrics is present
-      const defaultMetrics = {
-        weeklyGrowthRate: 0,
-        mrr: 0,
-        arr: 0,
-        mrrGrowth: 0,
-        mau: 0,
-        churnRate: 0,
-        clv: 0,
-        retentionRate: 0,
-        verifiedUsersPercentage: 0,
-        verifiedUsersPercentageChange: 0,
-        averageMood: 0,
-        moodChange: 0,
-        moodResponses: 0,
-      };
-      
-      const response = {
-        currentWeek: review.currentWeek,
-        previousWeek: review.previousWeek,
-        comparison: review.comparison,
-        metrics: review.metrics || defaultMetrics,
-      };
-      
-      console.log("Response keys:", Object.keys(response));
-      console.log("Response has metrics:", 'metrics' in response);
-      console.log("Response metrics:", response.metrics);
-      
-      res.json(response);
-    } catch (error: any) {
-      console.error("Error fetching weekly performance review:", error);
-      res.status(500).json({ message: error.message || "Failed to fetch weekly performance review" });
+    } else {
+      // Default to current week
+      weekStart = new Date();
     }
-  });
+    
+    console.log("Weekly performance request - weekStart input:", weekStartParam || "current date");
+    console.log("Parsed weekStart date:", weekStart.toISOString());
+    
+    const review = await withDatabaseErrorHandling(
+      () => storage.getWeeklyPerformanceReview(weekStart),
+      'getWeeklyPerformanceReview'
+    );
+    
+    console.log("=== Weekly Performance Review Result ===");
+    console.log("Review keys:", Object.keys(review));
+    console.log("Has metrics property:", 'metrics' in review);
+    console.log("Metrics value:", review.metrics);
+    console.log("Metrics type:", typeof review.metrics);
+    
+    // ALWAYS ensure metrics is present
+    const defaultMetrics = {
+      weeklyGrowthRate: 0,
+      mrr: 0,
+      arr: 0,
+      mrrGrowth: 0,
+      mau: 0,
+      churnRate: 0,
+      clv: 0,
+      retentionRate: 0,
+      verifiedUsersPercentage: 0,
+      verifiedUsersPercentageChange: 0,
+      averageMood: 0,
+      moodChange: 0,
+      moodResponses: 0,
+    };
+    
+    const response = {
+      currentWeek: review.currentWeek,
+      previousWeek: review.previousWeek,
+      comparison: review.comparison,
+      metrics: review.metrics || defaultMetrics,
+    };
+    
+    console.log("Response keys:", Object.keys(response));
+    console.log("Response has metrics:", 'metrics' in response);
+    console.log("Response metrics:", response.metrics);
+    
+    res.json(response);
+  }));
 
   // Admin routes - Anti-scraping monitoring
-  app.get('/api/admin/anti-scraping/patterns', isAuthenticated, isAdmin, async (req, res) => {
-    try {
-      const ip = req.query.ip as string | undefined;
-      const patterns = ip 
-        ? getSuspiciousPatternsForIP(ip)
-        : getSuspiciousPatterns();
-      res.json(patterns);
-    } catch (error) {
-      console.error("Error fetching suspicious patterns:", error);
-      res.status(500).json({ message: "Failed to fetch patterns" });
-    }
-  });
+  app.get('/api/admin/anti-scraping/patterns', isAuthenticated, isAdmin, asyncHandler(async (req, res) => {
+    const ip = req.query.ip as string | undefined;
+    const patterns = ip 
+      ? getSuspiciousPatternsForIP(ip)
+      : getSuspiciousPatterns();
+    res.json(patterns);
+  }));
 
-  app.delete('/api/admin/anti-scraping/patterns', isAuthenticated, isAdmin, validateCsrfToken, async (req, res) => {
-    try {
-      const ip = req.query.ip as string | undefined;
-      clearSuspiciousPatterns(ip);
-      res.json({ message: ip ? `Cleared patterns for IP ${ip}` : "Cleared all patterns" });
-    } catch (error) {
-      console.error("Error clearing suspicious patterns:", error);
-      res.status(500).json({ message: "Failed to clear patterns" });
-    }
-  });
+  app.delete('/api/admin/anti-scraping/patterns', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req, res) => {
+    const ip = req.query.ip as string | undefined;
+    clearSuspiciousPatterns(ip);
+    res.json({ message: ip ? `Cleared patterns for IP ${ip}` : "Cleared all patterns" });
+  }));
 
   // Admin routes - Users
-  app.get('/api/admin/users', isAuthenticated, isAdmin, async (req, res) => {
-    try {
-      const users = await storage.getAllUsers();
-      console.log(`[Admin Users API] Fetched ${users.length} users from database`);
-      if (users.length > 0) {
-        console.log(`[Admin Users API] Sample user IDs:`, users.slice(0, 3).map(u => ({ id: u.id, idType: typeof u.id, email: u.email })));
-      }
-      res.json(users);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      res.status(500).json({ message: "Failed to fetch users" });
+  app.get('/api/admin/users', isAuthenticated, isAdmin, asyncHandler(async (req, res) => {
+    const users = await withDatabaseErrorHandling(
+      () => storage.getAllUsers(),
+      'getAllUsers'
+    );
+    console.log(`[Admin Users API] Fetched ${users.length} users from database`);
+    if (users.length > 0) {
+      console.log(`[Admin Users API] Sample user IDs:`, users.slice(0, 3).map(u => ({ id: u.id, idType: typeof u.id, email: u.email })));
     }
-  });
+    res.json(users);
+  }));
 
-  app.put('/api/admin/users/:id/verify', isAuthenticated, isAdmin, validateCsrfToken, async (req: any, res) => {
-    try {
-      const adminId = getUserId(req);
-      const { isVerified } = req.body;
-      const user = await storage.updateUserVerification(req.params.id, !!isVerified);
-      await logAdminAction(adminId, 'verify_user', 'user', user.id, { isVerified: user.isVerified });
-      res.json(user);
-    } catch (error: any) {
-      console.error("Error updating user verification:", error);
-      res.status(400).json({ message: error.message || "Failed to update user verification" });
-    }
-  });
+  app.put('/api/admin/users/:id/verify', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
+    const adminId = getUserId(req);
+    const { isVerified } = req.body;
+    const user = await withDatabaseErrorHandling(
+      () => storage.updateUserVerification(req.params.id, !!isVerified),
+      'updateUserVerification'
+    );
+    await logAdminAction(adminId, 'verify_user', 'user', user.id, { isVerified: user.isVerified });
+    res.json(user);
+  }));
 
-  app.put('/api/admin/users/:id/approve', isAuthenticated, isAdmin, validateCsrfToken, async (req: any, res) => {
-    try {
-      const adminId = getUserId(req);
-      const { isApproved } = req.body;
-      const user = await storage.updateUserApproval(req.params.id, !!isApproved);
-      await logAdminAction(adminId, 'approve_user', 'user', user.id, { isApproved: user.isApproved });
-      res.json(user);
-    } catch (error: any) {
-      console.error("Error updating user approval:", error);
-      // Return 404 for "User not found" errors, 400 for other errors
-      const statusCode = error.message === "User not found" ? 404 : 400;
-      res.status(statusCode).json({ message: error.message || "Failed to update user approval" });
-    }
-  });
+  app.put('/api/admin/users/:id/approve', isAuthenticated, isAdmin, validateCsrfToken, asyncHandler(async (req: any, res) => {
+    const adminId = getUserId(req);
+    const { isApproved } = req.body;
+    const user = await withDatabaseErrorHandling(
+      () => storage.updateUserApproval(req.params.id, !!isApproved),
+      'updateUserApproval'
+    );
+    await logAdminAction(adminId, 'approve_user', 'user', user.id, { isApproved: user.isApproved });
+    res.json(user);
+  }));
 
   // User route - Update own Quora profile URL
-  app.put('/api/user/quora-profile-url', isAuthenticated, async (req: any, res) => {
-    try {
-      // Log request details for debugging
-      const requestInfo = {
-        hasAuth: !!req.auth,
-        authUserId: req.auth?.userId,
-        path: req.path,
-        method: req.method,
-        timestamp: new Date().toISOString(),
-      };
-      
-      let userId: string;
-      try {
-        userId = getUserId(req);
-      } catch (getUserIdError: any) {
-        console.error("Error getting userId from request:", {
-          ...requestInfo,
-          error: getUserIdError.message,
-          stack: getUserIdError.stack,
-        });
-        return res.status(401).json({ 
-          message: "Authentication failed: Unable to extract user ID. Please try signing in again." 
-        });
-      }
-      
-      // Validate userId is present
-      if (!userId || userId.trim() === "") {
-        console.error("Error: userId is missing or empty", requestInfo);
-        return res.status(401).json({ 
-          message: "Authentication failed: User ID not found. Please try signing in again." 
-        });
-      }
-      
-      const { quoraProfileUrl } = req.body;
-      const user = await storage.updateUserQuoraProfileUrl(userId, quoraProfileUrl || null);
-      if (!user) {
-        console.error("Error: User not found after update attempt", {
-          ...requestInfo,
-          userId,
-        });
-        return res.status(404).json({ message: "User not found" });
-      }
-      res.json(user);
-    } catch (error: any) {
-      console.error("Error updating Quora profile URL:", {
-        error: error.message,
-        stack: error.stack,
-        hasAuth: !!req.auth,
-        authUserId: req.auth?.userId,
-        path: req.path,
-        timestamp: new Date().toISOString(),
-      });
-      // Return 404 for "User not found" errors, 400 for other errors
-      const statusCode = error.message === "User not found" ? 404 : 400;
-      res.status(statusCode).json({ message: error.message || "Failed to update Quora profile URL" });
+  app.put('/api/user/quora-profile-url', isAuthenticated, asyncHandler(async (req: any, res) => {
+    const userId = getUserId(req);
+    const { quoraProfileUrl } = req.body;
+    const user = await withDatabaseErrorHandling(
+      () => storage.updateUserQuoraProfileUrl(userId, quoraProfileUrl || null),
+      'updateUserQuoraProfileUrl'
+    );
+    if (!user) {
+      throw new NotFoundError('User', userId);
     }
-  });
+    res.json(user);
+  }));
 
   app.put('/api/user/name', isAuthenticated, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
@@ -1886,40 +1755,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   // SupportMatch Partnership routes
-  app.get('/api/supportmatch/partnership/active', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getUserId(req);
-      const partnership = await storage.getActivePartnershipByUser(userId);
-      res.json(partnership || null);
-    } catch (error) {
-      console.error("Error fetching active partnership:", error);
-      res.status(500).json({ message: "Failed to fetch active partnership" });
-    }
-  });
+  app.get('/api/supportmatch/partnership/active', isAuthenticated, asyncHandler(async (req: any, res) => {
+    const userId = getUserId(req);
+    const partnership = await withDatabaseErrorHandling(
+      () => storage.getActivePartnershipByUser(userId),
+      'getActivePartnershipByUser'
+    );
+    res.json(partnership || null);
+  }));
 
-  app.get('/api/supportmatch/partnership/history', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getUserId(req);
-      const partnerships = await storage.getPartnershipHistory(userId);
-      res.json(partnerships);
-    } catch (error) {
-      console.error("Error fetching partnership history:", error);
-      res.status(500).json({ message: "Failed to fetch partnership history" });
-    }
-  });
+  app.get('/api/supportmatch/partnership/history', isAuthenticated, asyncHandler(async (req: any, res) => {
+    const userId = getUserId(req);
+    const partnerships = await withDatabaseErrorHandling(
+      () => storage.getPartnershipHistory(userId),
+      'getPartnershipHistory'
+    );
+    res.json(partnerships);
+  }));
 
-  app.get('/api/supportmatch/partnership/:id', isAuthenticated, async (req, res) => {
-    try {
-      const partnership = await storage.getPartnershipById(req.params.id);
-      if (!partnership) {
-        return res.status(404).json({ message: "Partnership not found" });
-      }
-      res.json(partnership);
-    } catch (error) {
-      console.error("Error fetching partnership:", error);
-      res.status(500).json({ message: "Failed to fetch partnership" });
+  app.get('/api/supportmatch/partnership/:id', isAuthenticated, asyncHandler(async (req, res) => {
+    const partnership = await withDatabaseErrorHandling(
+      () => storage.getPartnershipById(req.params.id),
+      'getPartnershipById'
+    );
+    if (!partnership) {
+      throw new NotFoundError('Partnership', req.params.id);
     }
-  });
+    res.json(partnership);
+  }));
 
   // SupportMatch Messaging routes
   app.get('/api/supportmatch/messages/:partnershipId', isAuthenticated, asyncHandler(async (req, res) => {
@@ -2001,15 +1864,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   // SupportMatch Admin routes
-  app.get('/api/supportmatch/admin/stats', isAuthenticated, isAdmin, async (req, res) => {
-    try {
-      const stats = await storage.getSupportMatchStats();
-      res.json(stats);
-    } catch (error) {
-      console.error("Error fetching SupportMatch stats:", error);
-      res.status(500).json({ message: "Failed to fetch stats" });
-    }
-  });
+  app.get('/api/supportmatch/admin/stats', isAuthenticated, isAdmin, asyncHandler(async (req, res) => {
+    const stats = await withDatabaseErrorHandling(
+      () => storage.getSupportMatchStats(),
+      'getSupportMatchStats'
+    );
+    res.json(stats);
+  }));
 
   app.get('/api/supportmatch/admin/profiles', isAuthenticated, isAdmin, asyncHandler(async (_req, res) => {
     const profiles = await withDatabaseErrorHandling(
@@ -3692,68 +3553,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ========================================
 
   // Check if user should see the NPS survey
-  app.get('/api/nps/should-show', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getUserId(req);
-      const lastResponse = await storage.getUserLastNpsResponse(userId);
-      
-      // Get current month in YYYY-MM format
-      const now = new Date();
-      const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-      
-      // Check if user has already responded this month
-      const hasRespondedThisMonth = lastResponse?.responseMonth === currentMonth;
-      
-      res.json({
-        shouldShow: !hasRespondedThisMonth,
-        lastResponseMonth: lastResponse?.responseMonth || null,
-      });
-    } catch (error) {
-      console.error("Error checking NPS survey eligibility:", error);
-      res.status(500).json({ message: "Failed to check survey eligibility" });
-    }
-  });
+  app.get('/api/nps/should-show', isAuthenticated, asyncHandler(async (req: any, res) => {
+    const userId = getUserId(req);
+    const lastResponse = await withDatabaseErrorHandling(
+      () => storage.getUserLastNpsResponse(userId),
+      'getUserLastNpsResponse'
+    );
+    
+    // Get current month in YYYY-MM format
+    const now = new Date();
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    
+    // Check if user has already responded this month
+    const hasRespondedThisMonth = lastResponse?.responseMonth === currentMonth;
+    
+    res.json({
+      shouldShow: !hasRespondedThisMonth,
+      lastResponseMonth: lastResponse?.responseMonth || null,
+    });
+  }));
 
   // Submit NPS response
-  app.post('/api/nps/response', isAuthenticated, async (req: any, res) => {
-    try {
-      const userId = getUserId(req);
-      const now = new Date();
-      const responseMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
-      
-      const validatedData = insertNpsResponseSchema.parse({
-        ...req.body,
-        userId,
-        responseMonth,
-      });
-      
-      const response = await storage.createNpsResponse(validatedData);
-      res.json(response);
-    } catch (error: any) {
-      console.error("Error submitting NPS response:", error);
-      res.status(400).json({ message: error.message || "Failed to submit response" });
-    }
-  });
+  app.post('/api/nps/response', isAuthenticated, asyncHandler(async (req: any, res) => {
+    const userId = getUserId(req);
+    const now = new Date();
+    const responseMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+    
+    const validatedData = validateWithZod(insertNpsResponseSchema, {
+      ...req.body,
+      userId,
+      responseMonth,
+    }, 'Invalid NPS response data');
+    
+    const response = await withDatabaseErrorHandling(
+      () => storage.createNpsResponse(validatedData),
+      'createNpsResponse'
+    );
+    res.json(response);
+  }));
 
   // Get NPS responses for admin (Weekly Performance dashboard)
-  app.get('/api/admin/nps-responses', isAuthenticated, isAdmin, async (req: any, res) => {
-    try {
-      const weekStart = req.query.weekStart ? new Date(req.query.weekStart as string) : undefined;
-      const weekEnd = req.query.weekEnd ? new Date(req.query.weekEnd as string) : undefined;
-      
-      let responses;
-      if (weekStart && weekEnd) {
-        responses = await storage.getNpsResponsesForWeek(weekStart, weekEnd);
-      } else {
-        responses = await storage.getAllNpsResponses();
-      }
-      
-      res.json(responses);
-    } catch (error) {
-      console.error("Error fetching NPS responses:", error);
-      res.status(500).json({ message: "Failed to fetch NPS responses" });
+  app.get('/api/admin/nps-responses', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
+    const weekStart = req.query.weekStart ? new Date(req.query.weekStart as string) : undefined;
+    const weekEnd = req.query.weekEnd ? new Date(req.query.weekEnd as string) : undefined;
+    
+    let responses;
+    if (weekStart && weekEnd) {
+      responses = await withDatabaseErrorHandling(
+        () => storage.getNpsResponsesForWeek(weekStart, weekEnd),
+        'getNpsResponsesForWeek'
+      );
+    } else {
+      responses = await withDatabaseErrorHandling(
+        () => storage.getAllNpsResponses(),
+        'getAllNpsResponses'
+      );
     }
-  });
+    
+    res.json(responses);
+  }));
 
   // ========================================
   // MECHANICMATCH ROUTES
@@ -5881,57 +5739,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
 
   // Bulk export endpoint
-  app.get('/api/lostmail/admin/export', isAuthenticated, isAdmin, async (req, res) => {
-    try {
-      const format = req.query.format as string || "json";
-      const ids = req.query.ids as string | string[];
-      
-      let incidents: any[];
-      
-      if (ids) {
-        const idArray = Array.isArray(ids) ? ids : [ids];
-        incidents = await Promise.all(
-          idArray.map(id => storage.getLostmailIncidentById(id))
-        );
-        incidents = incidents.filter(i => i !== undefined);
-      } else {
-        const result = await storage.getLostmailIncidents({ limit: 1000 });
-        incidents = result.incidents;
-      }
-      
-      if (format === "csv") {
-        // CSV export
-        const headers = ["ID", "Reporter Name", "Email", "Type", "Status", "Severity", "Tracking Number", "Carrier", "Created At"];
-        const rows = incidents.map(inc => [
-          inc.id,
-          inc.reporterName,
-          inc.reporterEmail,
-          inc.incidentType,
-          inc.status,
-          inc.severity,
-          inc.trackingNumber,
-          inc.carrier || "",
-          new Date(inc.createdAt).toISOString(),
-        ]);
-        
-        const csv = [headers.join(","), ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))].join("\n");
-        
-        res.setHeader("Content-Type", "text/csv");
-        res.setHeader("Content-Disposition", `attachment; filename="lostmail-incidents-${Date.now()}.csv"`);
-        res.send(csv);
-      } else {
-        // JSON export
-        res.setHeader("Content-Type", "application/json");
-        res.setHeader("Content-Disposition", `attachment; filename="lostmail-incidents-${Date.now()}.json"`);
-        res.json(incidents);
-      }
-      
-      console.log(`LostMail export: ${incidents.length} incidents exported as ${format}`);
-    } catch (error: any) {
-      console.error("Error exporting LostMail incidents:", error);
-      res.status(500).json({ message: error.message || "Failed to export incidents" });
+  app.get('/api/lostmail/admin/export', isAuthenticated, isAdmin, asyncHandler(async (req, res) => {
+    const format = req.query.format as string || "json";
+    const ids = req.query.ids as string | string[];
+    
+    if (format !== "csv" && format !== "json") {
+      throw new ValidationError("Invalid format. Must be 'csv' or 'json'");
     }
-  });
+    
+    let incidents: any[];
+    
+    if (ids) {
+      const idArray = Array.isArray(ids) ? ids : [ids];
+      incidents = await Promise.all(
+        idArray.map(id => withDatabaseErrorHandling(
+          () => storage.getLostmailIncidentById(id),
+          'getLostmailIncidentById'
+        ))
+      );
+      incidents = incidents.filter(i => i !== undefined);
+    } else {
+      const result = await withDatabaseErrorHandling(
+        () => storage.getLostmailIncidents({ limit: 1000 }),
+        'getLostmailIncidents'
+      );
+      incidents = result.incidents;
+    }
+    
+    if (format === "csv") {
+      // CSV export
+      const headers = ["ID", "Reporter Name", "Email", "Type", "Status", "Severity", "Tracking Number", "Carrier", "Created At"];
+      const rows = incidents.map(inc => [
+        inc.id,
+        inc.reporterName,
+        inc.reporterEmail,
+        inc.incidentType,
+        inc.status,
+        inc.severity,
+        inc.trackingNumber,
+        inc.carrier || "",
+        new Date(inc.createdAt).toISOString(),
+      ]);
+      
+      const csv = [headers.join(","), ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(","))].join("\n");
+      
+      res.setHeader("Content-Type", "text/csv");
+      res.setHeader("Content-Disposition", `attachment; filename="lostmail-incidents-${Date.now()}.csv"`);
+      res.send(csv);
+    } else {
+      // JSON export
+      res.setHeader("Content-Type", "application/json");
+      res.setHeader("Content-Disposition", `attachment; filename="lostmail-incidents-${Date.now()}.json"`);
+      res.json(incidents);
+    }
+    
+    console.log(`LostMail export: ${incidents.length} incidents exported as ${format}`);
+  }));
 
   // LostMail Admin Announcement routes
   app.get('/api/lostmail/admin/announcements', isAuthenticated, isAdmin, asyncHandler(async (_req, res) => {
