@@ -21598,5 +21598,113 @@
       "up": 0,
       "down": 14
     }
+  },
+  {
+    "timestamp": "2025-12-19T15:27:46.655Z",
+    "services": [
+      {
+        "name": "Main Platform",
+        "key": "main",
+        "status": "down",
+        "responseTime": 10152,
+        "statusCode": null
+      },
+      {
+        "name": "ChatGroups",
+        "key": "chatgroups",
+        "status": "down",
+        "responseTime": 10078,
+        "statusCode": null
+      },
+      {
+        "name": "Directory",
+        "key": "directory",
+        "status": "down",
+        "responseTime": 10096,
+        "statusCode": null
+      },
+      {
+        "name": "GentlePulse",
+        "key": "gentlepulse",
+        "status": "down",
+        "responseTime": 10096,
+        "statusCode": null
+      },
+      {
+        "name": "Chyme",
+        "key": "chyme",
+        "status": "down",
+        "responseTime": 10097,
+        "statusCode": null
+      },
+      {
+        "name": "Default Alive or Dead",
+        "key": "default-alive-or-dead",
+        "status": "down",
+        "responseTime": 10093,
+        "statusCode": null
+      },
+      {
+        "name": "Workforce Recruiter",
+        "key": "workforce-recruiter",
+        "status": "down",
+        "responseTime": 10110,
+        "statusCode": null
+      },
+      {
+        "name": "LightHouse",
+        "key": "lighthouse",
+        "status": "down",
+        "responseTime": 10168,
+        "statusCode": null
+      },
+      {
+        "name": "LostMail",
+        "key": "lostmail",
+        "status": "down",
+        "responseTime": 10116,
+        "statusCode": null
+      },
+      {
+        "name": "MechanicMatch",
+        "key": "mechanicmatch",
+        "status": "down",
+        "responseTime": 10166,
+        "statusCode": null
+      },
+      {
+        "name": "CompareNotes",
+        "key": "research",
+        "status": "down",
+        "responseTime": 10150,
+        "statusCode": null
+      },
+      {
+        "name": "SocketRelay",
+        "key": "socketrelay",
+        "status": "down",
+        "responseTime": 10147,
+        "statusCode": null
+      },
+      {
+        "name": "SupportMatch",
+        "key": "supportmatch",
+        "status": "down",
+        "responseTime": 10150,
+        "statusCode": null
+      },
+      {
+        "name": "TrustTransport",
+        "key": "trusttransport",
+        "status": "down",
+        "responseTime": 10150,
+        "statusCode": null
+      }
+    ],
+    "overall": {
+      "total": 14,
+      "up": 0,
+      "down": 14
+    }
   }
 ]
