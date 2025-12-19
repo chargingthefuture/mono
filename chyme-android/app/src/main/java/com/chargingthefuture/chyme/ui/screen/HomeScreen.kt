@@ -30,7 +30,22 @@ fun HomeScreen(
     authViewModel: AuthViewModel = hiltViewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val authState by authViewModel.uiState.collectAsState()
     var showCreateRoom by remember { mutableStateOf(false) }
+    
+    // Get user display text
+    val userDisplayText = when {
+        !authState.userDisplayName.isNullOrBlank() -> authState.userDisplayName
+        !authState.userFirstName.isNullOrBlank() -> {
+            if (!authState.userLastName.isNullOrBlank()) {
+                "${authState.userFirstName} ${authState.userLastName}"
+            } else {
+                authState.userFirstName
+            }
+        }
+        !authState.userEmail.isNullOrBlank() -> authState.userEmail?.takeWhile { it != '@' } ?: "User"
+        else -> null
+    }
     
     Scaffold(
         topBar = {
@@ -40,10 +55,42 @@ fun HomeScreen(
                     IconButton(onClick = { showCreateRoom = true }) {
                         Icon(Icons.Default.Add, contentDescription = "Create Room")
                     }
-                    IconButton(onClick = { 
-                        navController.navigate("profile")
-                    }) {
-                        Icon(Icons.Default.Person, contentDescription = "Profile")
+                    // User profile button with name/avatar
+                    if (userDisplayText != null) {
+                        Row(
+                            modifier = Modifier
+                                .clickable { navController.navigate("profile") }
+                                .padding(horizontal = 8.dp, vertical = 4.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            // Avatar
+                            Box(
+                                modifier = Modifier
+                                    .size(32.dp)
+                                    .clip(CircleShape)
+                                    .background(MaterialTheme.colors.primary.copy(alpha = 0.2f)),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    Icons.Default.Person,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp),
+                                    tint = MaterialTheme.colors.primary
+                                )
+                            }
+                            // User name (truncated if too long)
+                            Text(
+                                text = userDisplayText,
+                                style = MaterialTheme.typography.body2,
+                                maxLines = 1,
+                                modifier = Modifier.widthIn(max = 120.dp)
+                            )
+                        }
+                    } else {
+                        IconButton(onClick = { navController.navigate("profile") }) {
+                            Icon(Icons.Default.Person, contentDescription = "Profile")
+                        }
                     }
                 }
             )
