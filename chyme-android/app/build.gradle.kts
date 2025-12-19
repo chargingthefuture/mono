@@ -121,6 +121,8 @@ dependencies {
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
     
     // WebRTC for audio streaming (local mic control)
+    // Note: org.webrtc:google-webrtc was previously on JCenter (now deprecated)
+    // Using a version that should be available from alternative repositories
     implementation("org.webrtc:google-webrtc:1.0.32006")
     
     // Image loading

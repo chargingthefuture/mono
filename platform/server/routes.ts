@@ -1,6 +1,7 @@
 import express, { type Express } from "express";
 import { createServer, type Server } from "http";
 import { randomBytes } from "crypto";
+import { Webhook } from "svix";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin, isAdminWithCsrf, isUserAdmin, getUserId, syncClerkUserToDatabase } from "./auth";
 import { validateCsrfToken, generateCsrfTokenForAdmin } from "./csrf";
@@ -279,15 +280,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Clerk webhook endpoint for user events
   // Note: This endpoint should be configured in Clerk Dashboard with webhook secret
   // Configure the webhook URL in Clerk Dashboard: https://app.chargingthefuture.com/api/webhooks/clerk
+  // Set CLERK_WEBHOOK_SECRET environment variable with the signing secret from Clerk Dashboard
   app.post('/api/webhooks/clerk', async (req: any, res) => {
     try {
-      // TODO: Add webhook signature verification using CLERK_WEBHOOK_SECRET
-      // Install @clerk/backend and use webhook verification:
-      // import { Webhook } from '@clerk/backend';
-      // const webhook = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
-      // const payload = webhook.verify(req.body, req.headers);
+      // Verify webhook signature using svix
+      const webhookSecret = process.env.CLERK_WEBHOOK_SECRET || process.env.CLERK_WEBHOOK_SIGNING_SECRET;
       
-      const event = req.body;
+      if (!webhookSecret) {
+        console.error("CLERK_WEBHOOK_SECRET or CLERK_WEBHOOK_SIGNING_SECRET environment variable not set");
+        return res.status(500).json({ message: "Webhook secret not configured" });
+      }
+
+      // Get the raw body (stored by express.json middleware in index.ts)
+      const rawBody = req.rawBody;
+      if (!rawBody) {
+        console.error("Raw body not available for webhook verification");
+        return res.status(400).json({ message: "Invalid request: raw body required" });
+      }
+
+      // Get svix headers for signature verification
+      const svixId = req.headers['svix-id'] as string;
+      const svixTimestamp = req.headers['svix-timestamp'] as string;
+      const svixSignature = req.headers['svix-signature'] as string;
+
+      if (!svixId || !svixTimestamp || !svixSignature) {
+        console.error("Missing svix headers for webhook verification", {
+          hasSvixId: !!svixId,
+          hasSvixTimestamp: !!svixTimestamp,
+          hasSvixSignature: !!svixSignature,
+        });
+        return res.status(400).json({ message: "Missing webhook signature headers" });
+      }
+
+      // Verify webhook signature
+      const wh = new Webhook(webhookSecret);
+      let event: any;
+      try {
+        event = wh.verify(rawBody, {
+          'svix-id': svixId,
+          'svix-timestamp': svixTimestamp,
+          'svix-signature': svixSignature,
+        }) as any;
+      } catch (verificationError: any) {
+        console.error("Webhook signature verification failed:", {
+          error: verificationError.message,
+          svixId,
+          svixTimestamp,
+        });
+        return res.status(401).json({ message: "Invalid webhook signature" });
+      }
 
       // For user.created and user.updated events, sync the Clerk user into our database
       if (event?.type === 'user.created' || event?.type === 'user.updated') {
@@ -303,6 +344,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
               stack: syncError.stack,
             });
             // Do not fail the webhook delivery because of a transient sync error
+            // Clerk will retry if we return a non-2xx status, but we want to acknowledge receipt
           }
         }
       }
