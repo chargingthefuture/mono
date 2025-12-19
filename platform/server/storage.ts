@@ -7370,4 +7370,12 @@ export class DatabaseStorage implements IStorage {
       user: signup.userFirstName || signup.userLastName || signup.userEmail ? {
         firstName: signup.userFirstName || null,
         lastName: signup.userLastName || null,
-        email: 
+        email: signup.userEmail || null,
+      } : null,
+    }));
+
+    return {
+      signups: transformedSignups,
+      total,
+    };
+  }
