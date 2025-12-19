@@ -1,5 +1,6 @@
 package com.chargingthefuture.chyme.ui.screen
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -302,7 +303,7 @@ fun ParticipantCard(
                     }
                     IconButton(onClick = onMute) {
                         Icon(
-                            if (participant.isMuted) Icons.Default.VolumeDown else Icons.Default.VolumeDown,
+                            if (participant.isMuted) Icons.Default.Remove else Icons.Default.Add,
                             contentDescription = if (participant.isMuted) "Unmute" else "Mute"
                         )
                     }
@@ -350,7 +351,7 @@ fun RoomControls(
                     modifier = Modifier.size(56.dp)
                 ) {
                     Icon(
-                        if (isMuted) Icons.Default.VolumeDown else Icons.Default.VolumeDown,
+                        if (isMuted) Icons.Default.Remove else Icons.Default.Add,
                         contentDescription = if (isMuted) "Unmute" else "Mute",
                         modifier = Modifier.size(32.dp)
                     )
