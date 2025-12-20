@@ -11,7 +11,7 @@ import {
   skillsSkills,
   skillsSectors,
 } from "@shared/schema";
-import { db } from "../../db";
+import { db } from "../../../db";
 import { eq, sql, inArray } from "drizzle-orm";
 import { normalizeString, buildJobTitleSkillsMap, matchProfileToOccupations } from "./utils";
 
@@ -114,21 +114,28 @@ export class WorkforceRecruiterReports {
       }
       
       // Method 3: Match via skills (profile.skills -> job title skills -> job title -> sector)
+      // Only match to sectors that are actually in occupations (from sectorMap)
       if (profile.skills && profile.skills.length > 0) {
         const normalizedProfileSkills = new Set(
           profile.skills.map(skill => normalizeString(skill))
         );
         
-        // Check each job title to see if its skills match profile skills
-        jobTitleToSectorMap.forEach((sector, jobTitleId) => {
-          const jobTitleSkills = jobTitleSkillsMap.get(jobTitleId);
-          if (jobTitleSkills) {
-            // Check if any profile skill matches any job title skill
-            const hasMatchingSkill = Array.from(jobTitleSkills).some(jobSkill => 
-              normalizedProfileSkills.has(jobSkill)
-            );
-            if (hasMatchingSkill) {
-              matchedSectors.add(normalizeString(sector));
+        // Only check job titles that are in occupations (not all job titles)
+        occupations.forEach(occ => {
+          if (occ.jobTitleId) {
+            const jobTitleSkills = jobTitleSkillsMap.get(occ.jobTitleId);
+            if (jobTitleSkills) {
+              // Check if any profile skill matches any job title skill for THIS occupation
+              const hasMatchingSkill = Array.from(jobTitleSkills).some(jobSkill => 
+                normalizedProfileSkills.has(jobSkill)
+              );
+              if (hasMatchingSkill) {
+                // Only add sectors that are in our sectorMap (i.e., from actual occupations)
+                const normalizedSector = normalizeString(occ.sector);
+                if (sectorMap.has(normalizedSector)) {
+                  matchedSectors.add(normalizedSector);
+                }
+              }
             }
           }
         });
@@ -341,7 +348,7 @@ export class WorkforceRecruiterReports {
 
       return {
         profileId: profile.id,
-        displayName: profile.displayName || `${profile.firstName || ''} ${profile.lastName || ''}`.trim() || 'Unknown',
+        displayName: profile.firstName || 'Unknown',
         skills: profile.skills || [],
         sectors: profile.sectors || [],
         jobTitles: profile.jobTitles || [],
@@ -487,15 +494,15 @@ export class WorkforceRecruiterReports {
         ? matchResult.matchReason 
         : 'sector';
 
-      return {
-        profileId: profile.id,
-        displayName: profile.displayName || `${profile.firstName || ''} ${profile.lastName || ''}`.trim() || 'Unknown',
-        skills: profile.skills || [],
-        sectors: profile.sectors || [],
-        jobTitles: profile.jobTitles || [],
-        matchingOccupations: matchResult.matchingOccupations,
-        matchReason,
-      };
+        return {
+          profileId: profile.id,
+          displayName: profile.firstName || 'Unknown',
+          skills: profile.skills || [],
+          sectors: profile.sectors || [],
+          jobTitles: profile.jobTitles || [],
+          matchingOccupations: matchResult.matchingOccupations,
+          matchReason,
+        };
     });
 
     return {

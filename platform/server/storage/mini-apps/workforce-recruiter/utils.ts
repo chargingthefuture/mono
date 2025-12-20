@@ -29,6 +29,7 @@ export function buildJobTitleSkillsMap(
 
 /**
  * Matches a profile to occupations based on sector, job title, or skills
+ * Only matches if there's a REAL connection - skills must match the job title skills for that specific occupation
  */
 export function matchProfileToOccupations(
   profile: {
@@ -52,45 +53,58 @@ export function matchProfileToOccupations(
 
   for (const occ of occupations) {
     let matches = false;
+    let currentMatchReason = 'none';
     
-    // Case-insensitive sector matching
-    if (profile.sectors && profile.sectors.some(s => 
-      normalizeString(s) === normalizeString(occ.sector)
-    )) {
-      matches = true;
-      if (matchReason === 'none') matchReason = 'sector';
+    // Method 1: Case-insensitive sector matching (only if profile explicitly has this sector)
+    if (profile.sectors && profile.sectors.length > 0) {
+      const profileSectorsNormalized = profile.sectors.map(s => normalizeString(s));
+      if (profileSectorsNormalized.includes(normalizeString(occ.sector))) {
+        matches = true;
+        currentMatchReason = 'sector';
+      }
     }
     
-    // Job title matching (exact ID match)
-    if (occ.jobTitleId && profile.jobTitles && profile.jobTitles.includes(occ.jobTitleId)) {
-      matches = true;
-      matchReason = 'jobTitle';
+    // Method 2: Job title matching (exact ID match) - strongest match
+    if (occ.jobTitleId && profile.jobTitles && profile.jobTitles.length > 0) {
+      if (profile.jobTitles.includes(occ.jobTitleId)) {
+        matches = true;
+        currentMatchReason = 'jobTitle'; // Job title match takes precedence
+      }
     }
     
-    // Skill matching (case-insensitive)
-    if (profile.skills && occ.jobTitleId && profile.skills.length > 0) {
+    // Method 3: Skill matching (case-insensitive) - only if profile skills match THIS occupation's job title skills
+    // This is the most precise match - skills must match the job title skills for THIS specific occupation
+    if (!matches && profile.skills && profile.skills.length > 0 && occ.jobTitleId) {
       const jobTitleSkills = jobTitleSkillsMap.get(occ.jobTitleId);
-      if (jobTitleSkills) {
+      if (jobTitleSkills && jobTitleSkills.size > 0) {
         const normalizedProfileSkills = new Set(
           profile.skills.map(skill => normalizeString(skill))
         );
-        // Check if any profile skill matches any job title skill
+        // Check if any profile skill matches any job title skill for THIS occupation's job title
         const hasMatchingSkill = Array.from(jobTitleSkills).some(jobSkill => 
           normalizedProfileSkills.has(jobSkill)
         );
         if (hasMatchingSkill) {
           matches = true;
-          if (matchReason === 'none') matchReason = 'skill';
+          currentMatchReason = 'skill';
         }
       }
     }
 
+    // Only add if there's a real match
     if (matches) {
       matchingOccupations.push({
         id: occ.id,
         title: occ.occupationTitle,
         sector: occ.sector,
       });
+      // Update overall match reason (prioritize: jobTitle > skill > sector)
+      if (matchReason === 'none' || 
+          (currentMatchReason === 'jobTitle') ||
+          (currentMatchReason === 'skill' && matchReason !== 'jobTitle') ||
+          (currentMatchReason === 'sector' && matchReason === 'none')) {
+        matchReason = currentMatchReason;
+      }
     }
   }
 
