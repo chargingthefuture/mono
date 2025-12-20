@@ -12,8 +12,6 @@ import {
   workforceRecruiterMeetupEvents,
   workforceRecruiterMeetupEventSignups,
   workforceRecruiterAnnouncements,
-  directoryProfiles,
-  skillsJobTitles,
   users,
   type WorkforceRecruiterProfile,
   type InsertWorkforceRecruiterProfile,
@@ -32,11 +30,18 @@ import {
   type ProfileDeletionLog,
 } from "@shared/schema";
 import { db } from "../db";
-import { eq, and, desc, or, gte, sql, inArray } from "drizzle-orm";
+import { eq, and, desc, or, gte } from "drizzle-orm";
 import { NotFoundError, ValidationError } from "../errors";
 import { generateAnonymizedUserId } from "../core/utils";
+import { WorkforceRecruiterReports } from "./workforce-recruiter/reports";
 
 export class WorkforceRecruiterStorage {
+  private reports: WorkforceRecruiterReports;
+
+  constructor() {
+    this.reports = new WorkforceRecruiterReports();
+  }
+
   // Helper method for logging profile deletions
   private async logProfileDeletion(userId: string, appName: string, reason?: string): Promise<ProfileDeletionLog> {
     const [log] = await db
@@ -427,378 +432,16 @@ export class WorkforceRecruiterStorage {
   // WORKFORCE RECRUITER REPORT OPERATIONS
   // ========================================
 
-  async getWorkforceRecruiterSummaryReport(): Promise<{
-    totalWorkforceTarget: number;
-    totalCurrentRecruited: number;
-    percentRecruited: number;
-    sectorBreakdown: Array<{ sector: string; target: number; recruited: number; percent: number }>;
-    skillLevelBreakdown: Array<{ skillLevel: string; target: number; recruited: number; percent: number }>;
-    annualTrainingGap: Array<{ occupationId: string; occupationTitle: string; sector: string; target: number; actual: number; gap: number }>;
-  }> {
-    // Get all occupations
-    const occupations = await db.select().from(workforceRecruiterOccupations);
-    
-    // Get all directory profiles (this is the source of truth for "recruited")
-    const allDirectoryProfiles = await db.select().from(directoryProfiles);
-
-    // Calculate totals
-    const totalWorkforceTarget = occupations.reduce((sum, occ) => sum + occ.headcountTarget, 0);
-    // Count directory profiles instead of summing currentRecruited from occupations
-    const totalCurrentRecruited = allDirectoryProfiles.length;
-    const percentRecruited = totalWorkforceTarget > 0 ? (totalCurrentRecruited / totalWorkforceTarget) * 100 : 0;
-
-    // Sector breakdown - count directory profiles that match each sector
-    // Use case-insensitive matching for sectors
-    const sectorMap = new Map<string, { target: number; recruited: number; normalizedKey: string }>();
-    const sectorNormalizedToOriginal = new Map<string, string>(); // normalized -> original
-    
-    occupations.forEach(occ => {
-      const normalizedSector = occ.sector.toLowerCase();
-      if (!sectorNormalizedToOriginal.has(normalizedSector)) {
-        sectorNormalizedToOriginal.set(normalizedSector, occ.sector);
-      }
-      const existing = sectorMap.get(normalizedSector) || { target: 0, recruited: 0, normalizedKey: normalizedSector };
-      sectorMap.set(normalizedSector, {
-        target: existing.target + occ.headcountTarget,
-        recruited: existing.recruited, // Will be updated below
-        normalizedKey: normalizedSector,
-      });
-    });
-    
-    // Count directory profiles per sector (case-insensitive matching)
-    allDirectoryProfiles.forEach(profile => {
-      if (profile.sectors && profile.sectors.length > 0) {
-        profile.sectors.forEach(sector => {
-          const normalizedSector = sector.toLowerCase();
-          const existing = sectorMap.get(normalizedSector);
-          if (existing) {
-            existing.recruited += 1;
-          }
-        });
-      }
-    });
-    
-    const sectorBreakdown = Array.from(sectorMap.entries()).map(([normalizedSector, data]) => ({
-      sector: sectorNormalizedToOriginal.get(normalizedSector) || normalizedSector,
-      target: data.target,
-      recruited: data.recruited,
-      percent: data.target > 0 ? (data.recruited / data.target) * 100 : 0,
-    })).sort((a, b) => b.target - a.target);
-
-    // Skill level breakdown - count directory profiles that match occupations by skill level
-    const skillLevelMap = new Map<string, { target: number; recruited: number }>();
-    occupations.forEach(occ => {
-      const existing = skillLevelMap.get(occ.skillLevel) || { target: 0, recruited: 0 };
-      skillLevelMap.set(occ.skillLevel, {
-        target: existing.target + occ.headcountTarget,
-        recruited: existing.recruited, // Will be updated below
-      });
-    });
-    
-    // Count directory profiles per skill level by matching them to occupations
-    // Use case-insensitive matching for sectors
-    const skillLevelProfileCount = new Map<string, Set<string>>();
-    allDirectoryProfiles.forEach(profile => {
-      // Match profile to occupations based on sector, job title, or skills
-      occupations.forEach(occ => {
-        let matches = false;
-        // Case-insensitive sector matching
-        if (profile.sectors && profile.sectors.some(s => s.toLowerCase() === occ.sector.toLowerCase())) {
-          matches = true;
-        }
-        if (occ.jobTitleId && profile.jobTitles && profile.jobTitles.includes(occ.jobTitleId)) {
-          matches = true;
-        }
-        if (matches) {
-          if (!skillLevelProfileCount.has(occ.skillLevel)) {
-            skillLevelProfileCount.set(occ.skillLevel, new Set());
-          }
-          skillLevelProfileCount.get(occ.skillLevel)!.add(profile.id);
-        }
-      });
-    });
-    
-    // Update recruited counts for each skill level
-    skillLevelProfileCount.forEach((profileIds, skillLevel) => {
-      const existing = skillLevelMap.get(skillLevel);
-      if (existing) {
-        existing.recruited = profileIds.size;
-      }
-    });
-    
-    const skillLevelBreakdown = Array.from(skillLevelMap.entries()).map(([skillLevel, data]) => ({
-      skillLevel,
-      target: data.target,
-      recruited: data.recruited,
-      percent: data.target > 0 ? (data.recruited / data.target) * 100 : 0,
-    })).sort((a, b) => {
-      // Sort by skill level order: Foundational, Intermediate, Advanced
-      const order = { 'Foundational': 0, 'Intermediate': 1, 'Advanced': 2 };
-      return (order[a.skillLevel as keyof typeof order] ?? 99) - (order[b.skillLevel as keyof typeof order] ?? 99);
-    });
-
-    // Annual training gap (target vs actual recruited) - use directory profile count per occupation
-    // Use case-insensitive matching for sectors
-    const occupationProfileCount = new Map<string, number>();
-    allDirectoryProfiles.forEach(profile => {
-      occupations.forEach(occ => {
-        let matches = false;
-        // Case-insensitive sector matching
-        if (profile.sectors && profile.sectors.some(s => s.toLowerCase() === occ.sector.toLowerCase())) {
-          matches = true;
-        }
-        if (occ.jobTitleId && profile.jobTitles && profile.jobTitles.includes(occ.jobTitleId)) {
-          matches = true;
-        }
-        if (matches) {
-          occupationProfileCount.set(occ.id, (occupationProfileCount.get(occ.id) || 0) + 1);
-        }
-      });
-    });
-    
-    const annualTrainingGap = occupations.map(occ => ({
-      occupationId: occ.id,
-      occupationTitle: occ.occupationTitle,
-      sector: occ.sector,
-      target: occ.annualTrainingTarget,
-      actual: occupationProfileCount.get(occ.id) || 0,
-      gap: occ.annualTrainingTarget - (occupationProfileCount.get(occ.id) || 0),
-    })).filter(item => item.gap > 0).sort((a, b) => b.gap - a.gap);
-
-    return {
-      totalWorkforceTarget,
-      totalCurrentRecruited,
-      percentRecruited,
-      sectorBreakdown,
-      skillLevelBreakdown,
-      annualTrainingGap,
-    };
+  async getWorkforceRecruiterSummaryReport() {
+    return this.reports.getSummaryReport();
   }
 
-  async getWorkforceRecruiterSkillLevelDetail(skillLevel: string): Promise<{
-    skillLevel: string;
-    target: number;
-    recruited: number;
-    percent: number;
-    profiles: Array<{
-      profileId: string;
-      displayName: string;
-      skills: string[];
-      sectors: string[];
-      jobTitles: string[];
-      matchingOccupations: Array<{ id: string; title: string; sector: string }>;
-      matchReason: string;
-    }>;
-  }> {
-    // Get occupations for this skill level
-    const occupations = await db
-      .select()
-      .from(workforceRecruiterOccupations)
-      .where(eq(workforceRecruiterOccupations.skillLevel, skillLevel));
-
-    const target = occupations.reduce((sum, occ) => sum + occ.headcountTarget, 0);
-
-    // Get directory profiles and match them to occupations
-    // IMPORTANT: Show ALL directory profiles, not just those matching occupations
-    // This ensures all 23 profiles appear in workforce recruiter
-    const allProfiles = await db.select().from(directoryProfiles);
-    const profiles = allProfiles.map(profile => {
-      const matchingOccupations: Array<{ id: string; title: string; sector: string }> = [];
-      let matchReason = 'none';
-
-      // Match by sector, job title, or skill
-      occupations.forEach(occ => {
-        let matches = false;
-        if (profile.sectors && profile.sectors.includes(occ.sector)) {
-          matches = true;
-          if (matchReason === 'none') matchReason = 'sector';
-        }
-        if (occ.jobTitleId && profile.jobTitles && profile.jobTitles.includes(occ.jobTitleId)) {
-          matches = true;
-          matchReason = 'jobTitle';
-        }
-        if (profile.skills && occ.jobTitleId) {
-          // Check if profile skills match any skills associated with the job title
-          // This is a simplified match - in reality you'd need to check skills_job_titles relationships
-          matches = true;
-          if (matchReason === 'none') matchReason = 'skill';
-        }
-
-        if (matches) {
-          matchingOccupations.push({
-            id: occ.id,
-            title: occ.occupationTitle,
-            sector: occ.sector,
-          });
-        }
-      });
-
-      return {
-        profileId: profile.id,
-        displayName: profile.displayName || `${profile.firstName || ''} ${profile.lastName || ''}`.trim() || 'Unknown',
-        skills: profile.skills || [],
-        sectors: profile.sectors || [],
-        jobTitles: profile.jobTitles || [],
-        matchingOccupations,
-        matchReason: matchReason === 'none' && matchingOccupations.length === 0 ? 'general' : matchReason,
-      };
-    });
-    // REMOVED: .filter(p => p.matchingOccupations.length > 0) - show ALL profiles
-    // This ensures all 23 profiles appear in workforce recruiter detail views
-
-    // Count only profiles that match this skill level's occupations
-    // (But we still show all profiles in the list above)
-    const matchingProfiles = profiles.filter(p => p.matchingOccupations.length > 0);
-    const recruited = matchingProfiles.length;
-    const percent = target > 0 ? (recruited / target) * 100 : 0;
-
-    return {
-      skillLevel,
-      target,
-      recruited,
-      percent,
-      profiles,
-    };
+  async getWorkforceRecruiterSkillLevelDetail(skillLevel: string) {
+    return this.reports.getSkillLevelDetail(skillLevel);
   }
 
-  async getWorkforceRecruiterSectorDetail(sector: string): Promise<{
-    sector: string;
-    target: number;
-    recruited: number;
-    percent: number;
-    jobTitles: Array<{ id: string; name: string; count: number }>;
-    skills: Array<{ name: string; count: number }>;
-    occupations: Array<{ id: string; title: string; jobTitleId: string | null; headcountTarget: number; skillLevel: string }>;
-    profiles: Array<{
-      profileId: string;
-      displayName: string;
-      skills: string[];
-      sectors: string[];
-      jobTitles: string[];
-      matchingOccupations: Array<{ id: string; title: string; sector: string }>;
-      matchReason: string;
-    }>;
-  }> {
-    // Get occupations for this sector (case-insensitive)
-    const occupations = await db
-      .select()
-      .from(workforceRecruiterOccupations)
-      .where(sql`LOWER(${workforceRecruiterOccupations.sector}) = LOWER(${sector})`);
-
-    const target = occupations.reduce((sum, occ) => sum + occ.headcountTarget, 0);
-    
-    // Get directory profiles and count those matching this sector (instead of using currentRecruited)
-    // Use case-insensitive matching to match the occupation query
-    const allProfiles = await db.select().from(directoryProfiles);
-    const sectorLower = sector.toLowerCase();
-    const profilesInSector = allProfiles.filter(profile => 
-      profile.sectors && profile.sectors.some(s => s.toLowerCase() === sectorLower)
-    );
-    const recruited = profilesInSector.length;
-    const percent = target > 0 ? (recruited / target) * 100 : 0;
-
-    // Get job titles from occupations
-    const jobTitleIds = occupations.map(occ => occ.jobTitleId).filter((id): id is string => id !== null);
-    const jobTitles = jobTitleIds.length > 0
-      ? await db.select().from(skillsJobTitles).where(inArray(skillsJobTitles.id, jobTitleIds))
-      : [];
-
-    // Count job titles
-    const jobTitleCounts = new Map<string, number>();
-    occupations.forEach(occ => {
-      if (occ.jobTitleId) {
-        jobTitleCounts.set(occ.jobTitleId, (jobTitleCounts.get(occ.jobTitleId) || 0) + 1);
-      }
-    });
-    const jobTitleBreakdown = Array.from(jobTitleCounts.entries()).map(([id, count]) => {
-      const jobTitle = jobTitles.find(jt => jt.id === id);
-      return {
-        id,
-        name: jobTitle?.name || 'Unknown',
-        count,
-      };
-    });
-
-    // Count skills from directory profiles (skills are stored as text names, not IDs)
-    const skillCounts = new Map<string, number>();
-    // Count skills from profiles in this sector (use case-insensitive matching)
-    profilesInSector.forEach(profile => {
-      if (profile.skills) {
-        // Directory profiles store skills as text names, not IDs
-        profile.skills.forEach(skillName => {
-          if (skillName && skillName.trim()) {
-            // Use lowercase for case-insensitive counting
-            const normalizedName = skillName.trim().toLowerCase();
-            skillCounts.set(normalizedName, (skillCounts.get(normalizedName) || 0) + 1);
-          }
-        });
-      }
-    });
-    // Convert to array with original case preserved (use first occurrence for display)
-    const skillNameMap = new Map<string, string>(); // normalized -> original
-    profilesInSector.forEach(profile => {
-      if (profile.skills) {
-        profile.skills.forEach(skillName => {
-          if (skillName && skillName.trim()) {
-            const normalizedName = skillName.trim().toLowerCase();
-            if (!skillNameMap.has(normalizedName)) {
-              skillNameMap.set(normalizedName, skillName.trim());
-            }
-          }
-        });
-      }
-    });
-    const skillBreakdown = Array.from(skillCounts.entries()).map(([normalizedName, count]) => {
-      return {
-        name: skillNameMap.get(normalizedName) || normalizedName,
-        count,
-      };
-    }).sort((a, b) => b.count - a.count);
-
-    // Get profiles matching this sector (use case-insensitive matching)
-    const profiles = profilesInSector
-      .map(profile => {
-        const matchingOccupations = occupations
-          .filter(occ => {
-            // Match by sector (already filtered), job title, or skill
-            if (occ.jobTitleId && profile.jobTitles && profile.jobTitles.includes(occ.jobTitleId)) {
-              return true;
-            }
-            return false;
-          })
-          .map(occ => ({
-            id: occ.id,
-            title: occ.occupationTitle,
-            sector: occ.sector,
-          }));
-
-        return {
-          profileId: profile.id,
-          displayName: profile.displayName || `${profile.firstName || ''} ${profile.lastName || ''}`.trim() || 'Unknown',
-          skills: profile.skills || [],
-          sectors: profile.sectors || [],
-          jobTitles: profile.jobTitles || [],
-          matchingOccupations,
-          matchReason: matchingOccupations.length > 0 ? 'jobTitle' : 'sector',
-        };
-      });
-
-    return {
-      sector,
-      target,
-      recruited,
-      percent,
-      jobTitles: jobTitleBreakdown,
-      skills: skillBreakdown,
-      occupations: occupations.map(occ => ({
-        id: occ.id,
-        title: occ.occupationTitle,
-        jobTitleId: occ.jobTitleId,
-        headcountTarget: occ.headcountTarget,
-        skillLevel: occ.skillLevel,
-      })),
-      profiles,
-    };
+  async getWorkforceRecruiterSectorDetail(sector: string) {
+    return this.reports.getSectorDetail(sector);
   }
 
   // ========================================
