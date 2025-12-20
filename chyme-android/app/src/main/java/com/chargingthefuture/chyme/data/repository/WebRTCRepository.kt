@@ -26,26 +26,53 @@ class WebRTCRepository(
     fun initialize() {
         if (isInitialized) return
 
-        // Initialize WebRTC global state (safe to call once per process)
-        val initializationOptions = PeerConnectionFactory.InitializationOptions
-            .builder(context)
-            .setEnableInternalTracer(true)
-            .createInitializationOptions()
-        PeerConnectionFactory.initialize(initializationOptions)
+        try {
+            // Initialize WebRTC global state (safe to call once per process)
+            val initializationOptions = PeerConnectionFactory.InitializationOptions
+                .builder(context)
+                .setEnableInternalTracer(true)
+                .createInitializationOptions()
+            PeerConnectionFactory.initialize(initializationOptions)
 
-        val options = PeerConnectionFactory.Options()
-        peerConnectionFactory = PeerConnectionFactory.builder()
-            .setOptions(options)
-            .createPeerConnectionFactory()
+            val options = PeerConnectionFactory.Options()
+            
+            // Check if org.webrtc.Environment class exists using reflection
+            // This class is required by PeerConnectionFactory.builder() in newer WebRTC versions
+            val environmentClassExists = try {
+                Class.forName("org.webrtc.Environment")
+                true
+            } catch (e: ClassNotFoundException) {
+                false
+            }
+            
+            if (environmentClassExists) {
+                // Use the builder pattern (requires org.webrtc.Environment)
+                peerConnectionFactory = PeerConnectionFactory.builder()
+                    .setOptions(options)
+                    .createPeerConnectionFactory()
+            } else {
+                // Environment class is missing - this indicates the WebRTC library version
+                // doesn't include it. The builder() method will fail, so we need to use
+                // a library that includes org.webrtc.Environment or update the library version.
+                throw NoClassDefFoundError(
+                    "org.webrtc.Environment class is missing. " +
+                    "Please use a WebRTC library version that includes this class. " +
+                    "The current library (com.infobip:google-webrtc:1.0.45036) does not include it."
+                )
+            }
 
-        val constraints = MediaConstraints()
-        audioSource = peerConnectionFactory?.createAudioSource(constraints)
-        audioTrack = peerConnectionFactory?.createAudioTrack("audio_track", audioSource)
+            val constraints = MediaConstraints()
+            audioSource = peerConnectionFactory?.createAudioSource(constraints)
+            audioTrack = peerConnectionFactory?.createAudioTrack("audio_track", audioSource)
 
-        // Start with mic enabled; ViewModel will call muteMicrophone() as needed.
-        audioTrack?.setEnabled(true)
-        isMuted = false
-        isInitialized = true
+            // Start with mic enabled; ViewModel will call muteMicrophone() as needed.
+            audioTrack?.setEnabled(true)
+            isMuted = false
+            isInitialized = true
+        } catch (e: Exception) {
+            // Log error and rethrow to let the caller handle it
+            throw RuntimeException("Failed to initialize WebRTC: ${e.message}", e)
+        }
     }
 
     fun getAudioTrack(): AudioTrack? = audioTrack

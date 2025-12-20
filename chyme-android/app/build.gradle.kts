@@ -121,10 +121,11 @@ dependencies {
     implementation("androidx.hilt:hilt-navigation-compose:1.1.0")
     
     // WebRTC for audio streaming (local mic control)
-    // Note: org.webrtc:google-webrtc was previously on JCenter (now deprecated)
-    // Using com.infobip:google-webrtc as a drop-in replacement (same org.webrtc package structure)
-    // Available on Maven Central - compatible with the original library, no code changes needed
-    implementation("com.infobip:google-webrtc:1.0.45036")
+    // The org.webrtc.Environment class is required by PeerConnectionFactory.builder()
+    // Using io.getstream:stream-webrtc-android which is actively maintained and includes
+    // all necessary WebRTC classes including org.webrtc.Environment
+    // This library maintains the standard org.webrtc package structure
+    implementation("io.getstream:stream-webrtc-android:1.0.2")
     
     // Image loading
     implementation("io.coil-kt:coil-compose:2.5.0")

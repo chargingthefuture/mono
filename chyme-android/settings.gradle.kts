@@ -11,8 +11,8 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        // WebRTC is now available via com.infobip:google-webrtc on Maven Central
-        // (drop-in replacement for org.webrtc:google-webrtc from deprecated JCenter)
+        // WebRTC libraries are available on Maven Central
+        // org.webrtc:google-webrtc or com.infobip:google-webrtc can be used
     }
 }
 

@@ -1,6 +1,4 @@
 import { useEffect, useState, useMemo, lazy, Suspense } from "react";
-// Import CSS at top level to avoid issues with Promise.all and CSS modules
-import "leaflet/dist/leaflet.css";
 
 type ProfileLocation = {
   id: string;
@@ -27,7 +25,7 @@ type DirectoryMapProps = {
 
 // Lazy load the map component to avoid SSR issues
 // Use a separate file with static imports to avoid ESM interop issues
-const LeafletMapComponent = lazy(() => import("./leaflet-map-internal"));
+const MapLibreMapComponent = lazy(() => import("./maplibre-map-internal"));
 
 export function DirectoryMap({ profiles }: DirectoryMapProps) {
   const [isMounted, setIsMounted] = useState(false);
@@ -73,7 +71,7 @@ export function DirectoryMap({ profiles }: DirectoryMapProps) {
           </div>
         }
       >
-        <LeafletMapComponent locations={locationsWithCoords} />
+        <MapLibreMapComponent locations={locationsWithCoords} />
       </Suspense>
     </div>
   );

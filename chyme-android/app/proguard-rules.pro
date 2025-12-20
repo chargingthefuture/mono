@@ -19,3 +19,8 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# WebRTC - Keep all classes to prevent ClassNotFoundException
+# The org.webrtc.Environment class and other WebRTC classes are required at runtime
+-keep class org.webrtc.** { *; }
+-dontwarn org.webrtc.**
