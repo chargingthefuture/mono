@@ -1205,26 +1205,46 @@ export class CoreStorage {
     }
 
     // Calculate User Statistics
+    // Count users that existed as of the end of each week (not all users in database)
+    // This ensures consistency with user management counts at the time of each week
     try {
-      const allUsers = await db.select().from(users);
+      // Get users created on or before the current week end (as of Friday of that week)
+      const currentWeekUsersRaw = await db
+        .select()
+        .from(users)
+        .where(lte(users.createdAt, currentWeekEnd));
       
-      const activeUsers = allUsers.filter(user => {
+      // Filter out deleted users (those with IDs starting with "deleted_user_")
+      const currentWeekUsers = currentWeekUsersRaw.filter(user => {
         if (!user || !user.id) return false;
         const id = String(user.id);
         return !id.startsWith("deleted_user_");
       });
       
-      totalUsersCurrentWeek = activeUsers.length;
-      verifiedUsersCurrentWeek = activeUsers.filter(user => user.isVerified === true).length;
-      approvedUsersCurrentWeek = activeUsers.filter(user => user.isApproved === true).length;
+      totalUsersCurrentWeek = currentWeekUsers.length;
+      verifiedUsersCurrentWeek = currentWeekUsers.filter(user => user.isVerified === true).length;
+      approvedUsersCurrentWeek = currentWeekUsers.filter(user => user.isApproved === true).length;
       
       verifiedUsersPercentage = totalUsersCurrentWeek === 0 
         ? 0 
         : parseFloat(((verifiedUsersCurrentWeek / totalUsersCurrentWeek) * 100).toFixed(2));
 
-      totalUsersPreviousWeek = activeUsers.length;
-      verifiedUsersPreviousWeek = activeUsers.filter(user => user.isVerified === true).length;
-      approvedUsersPreviousWeek = activeUsers.filter(user => user.isApproved === true).length;
+      // Get users created on or before the previous week end (as of Friday of that week)
+      const previousWeekUsersRaw = await db
+        .select()
+        .from(users)
+        .where(lte(users.createdAt, previousWeekEnd));
+      
+      // Filter out deleted users
+      const previousWeekUsers = previousWeekUsersRaw.filter(user => {
+        if (!user || !user.id) return false;
+        const id = String(user.id);
+        return !id.startsWith("deleted_user_");
+      });
+      
+      totalUsersPreviousWeek = previousWeekUsers.length;
+      verifiedUsersPreviousWeek = previousWeekUsers.filter(user => user.isVerified === true).length;
+      approvedUsersPreviousWeek = previousWeekUsers.filter(user => user.isApproved === true).length;
       
       const verifiedUsersPercentagePreviousWeek = totalUsersPreviousWeek === 0 
         ? 0 

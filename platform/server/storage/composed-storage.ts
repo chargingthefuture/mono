@@ -186,7 +186,11 @@ export class DatabaseStorage implements IStorage {
 
   // Weekly Performance Review
   async getWeeklyPerformanceReview(weekStart: Date) {
-    return this.coreStorage.getWeeklyPerformanceReview(weekStart);
+    return this.coreStorage.getWeeklyPerformanceReview(
+      weekStart,
+      (weekStart: Date, weekEnd: Date) => this.getNpsResponsesForWeek(weekStart, weekEnd),
+      (weekStart: Date) => this.getDefaultAliveOrDeadEbitdaSnapshot(weekStart)
+    );
   }
 
   // NPS operations
