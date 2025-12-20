@@ -84,9 +84,15 @@ export default function MapLibreMapInternal({ locations }: MapLibreMapInternalPr
         sources: {
           "osm-tiles": {
             type: "raster",
-            tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+            // Use CartoDB Positron tiles as a more reliable alternative to OSM
+            // These tiles are free, don't require API keys, and have better CORS support
+            tiles: [
+              "https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+              "https://b.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+              "https://c.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",
+            ],
             tileSize: 256,
-            attribution: "© OpenStreetMap contributors",
+            attribution: "© OpenStreetMap contributors © CARTO",
           },
         },
         layers: [
@@ -98,7 +104,10 @@ export default function MapLibreMapInternal({ locations }: MapLibreMapInternalPr
         ],
       }}
       scrollZoom={true}
-      onMove={(evt) => {
+      onError={(e: any) => {
+        console.error("Map error:", e);
+      }}
+      onMove={(evt: any) => {
         // Handle map movement if needed
       }}
     >
@@ -108,7 +117,7 @@ export default function MapLibreMapInternal({ locations }: MapLibreMapInternalPr
           longitude={location.lng}
           latitude={location.lat}
           anchor="bottom"
-          onClick={(e) => {
+          onClick={(e: any) => {
             e.originalEvent.stopPropagation();
             setSelectedLocation(location);
           }}
