@@ -23,6 +23,36 @@ export function errorHandler(
   // Normalize error to AppError
   const error = normalizeError(err);
 
+  // For client disconnection errors (499), don't log or send to Sentry
+  // These are expected when clients abort connections
+  if (error.statusCode === 499 && error.code === ErrorCode.CONNECTION_ERROR) {
+    // Silently handle client disconnections - don't log as errors
+    if (!res.headersSent) {
+      res.status(499).end();
+    }
+    return;
+  }
+
+  // Safely extract request properties with defensive checks
+  // Additional validation to ensure req is actually a Request object
+  let safeReq: Request | null = null;
+  try {
+    if (req && typeof req === 'object' && typeof req.method === 'string') {
+      safeReq = req;
+    }
+  } catch (err) {
+    // If req is in an invalid state, set to null
+    safeReq = null;
+  }
+  const path = safeReq?.path || safeReq?.url || 'unknown';
+  const method = safeReq?.method || 'unknown';
+  const query = safeReq?.query || {};
+  const params = safeReq?.params || {};
+  const url = safeReq?.url || safeReq?.originalUrl || 'unknown';
+  const headers = safeReq?.headers || {};
+  const userId = safeReq ? ((safeReq as any).auth?.userId || (safeReq as any).user?.id) : undefined;
+  const userEmail = safeReq ? ((safeReq as any).user?.email) : undefined;
+
   // Send to Sentry (always if DSN is configured)
   if (process.env.SENTRY_DSN) {
     Sentry.captureException(error, {
@@ -33,30 +63,30 @@ export function errorHandler(
       extra: {
         statusCode: error.statusCode,
         details: error.details,
-        path: req.path,
-        method: req.method,
-        query: req.query,
-        params: req.params,
+        path,
+        method,
+        query,
+        params,
       },
       user: {
-        id: (req as any).auth?.userId || (req as any).user?.id,
-        email: (req as any).user?.email,
+        id: userId,
+        email: userEmail,
       },
       contexts: {
         request: {
-          method: req.method,
-          url: req.url,
+          method,
+          url,
           headers: {
-            'user-agent': req.headers['user-agent'],
-            'referer': req.headers['referer'],
+            'user-agent': headers['user-agent'],
+            'referer': headers['referer'],
           },
         },
       },
     });
   }
 
-  // Log error with request context
-  logError(error, req);
+  // Log error with request context (only if req is valid)
+  logError(error, safeReq || undefined);
 
   // Don't send response if headers already sent
   if (res.headersSent) {
@@ -107,8 +137,11 @@ export function asyncHandler(
  * Must be added AFTER all routes but BEFORE error handler
  */
 export function notFoundHandler(req: Request, res: Response, next: NextFunction): void {
+  // Safely extract request properties with defensive checks
+  const method = req?.method || 'unknown';
+  const path = req?.path || req?.url || 'unknown';
   const error = new AppError(
-    `Route ${req.method} ${req.path} not found`,
+    `Route ${method} ${path} not found`,
     ErrorCode.NOT_FOUND,
     404,
     true

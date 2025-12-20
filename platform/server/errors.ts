@@ -273,6 +273,27 @@ export function normalizeError(error: any): AppError {
     return new NetworkError(error.message);
   }
 
+  // Handle client disconnection errors (ECONNABORTED, EPIPE, ECONNRESET)
+  // These are not server errors - they occur when clients abort connections
+  // We should treat them as operational (expected) errors with appropriate status codes
+  const nodeError = error as NodeJS.ErrnoException;
+  if (nodeError?.code === 'ECONNABORTED' || 
+      nodeError?.code === 'EPIPE' || 
+      nodeError?.code === 'ECONNRESET' ||
+      error?.message?.includes('Request aborted') ||
+      error?.message?.includes('socket hang up')) {
+    // Return a non-operational error (false) but with 499 status (client closed request)
+    // 499 is a non-standard status code used by nginx for client closed connection
+    // We use it here to indicate the client aborted, not a server error
+    return new AppError(
+      'Client disconnected',
+      ErrorCode.CONNECTION_ERROR,
+      499, // Client Closed Request
+      false, // Not operational - it's a client-side action
+      process.env.NODE_ENV === 'development' ? { originalError: error } : undefined
+    );
+  }
+
   // Default to internal server error
   return new AppError(
     error?.message || 'An unexpected error occurred',

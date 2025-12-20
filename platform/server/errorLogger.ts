@@ -58,19 +58,54 @@ function formatErrorForLogging(error: Error | AppError): ErrorLogEntry['error'] 
  * Extract context from Express request
  */
 function extractRequestContext(req?: Request): ErrorLogContext | undefined {
-  if (!req) return undefined;
+  if (!req || typeof req !== 'object') return undefined;
 
-  return {
-    userId: (req as any).user?.id || (req as any).userId,
-    path: req.path,
-    method: req.method,
-    ip: req.ip || req.socket?.remoteAddress || undefined,
-    userAgent: req.get('user-agent'),
-    query: Object.keys(req.query).length > 0 ? req.query : undefined,
-    params: Object.keys(req.params).length > 0 ? req.params : undefined,
-    // Only log body for non-sensitive endpoints
-    body: shouldLogBody(req.path) ? sanitizeBody(req.body) : undefined,
-  };
+  // Additional defensive check: ensure req is actually a Request-like object
+  // Check for common Request properties to avoid treating error objects as requests
+  if (!('method' in req || 'url' in req || 'path' in req || 'headers' in req)) {
+    return undefined;
+  }
+
+  try {
+    // Safely extract request properties with defensive checks
+    const path = req.path || req.url || 'unknown';
+    const method = req.method || 'unknown';
+    const query = req.query || {};
+    const params = req.params || {};
+    const ip = req.ip || (req.socket && typeof req.socket === 'object' ? req.socket.remoteAddress : undefined) || undefined;
+    
+    // More defensive check for user-agent: ensure req.get is actually a function before calling
+    let userAgent: string | undefined;
+    try {
+      if (typeof req.get === 'function') {
+        userAgent = req.get('user-agent') || undefined;
+      } else if (req.headers && typeof req.headers === 'object' && 'user-agent' in req.headers) {
+        userAgent = typeof req.headers['user-agent'] === 'string' ? req.headers['user-agent'] : undefined;
+      }
+    } catch (e) {
+      // If accessing req.get or headers fails, just skip user-agent
+      userAgent = undefined;
+    }
+    
+    const body = req.body;
+
+    return {
+      userId: (req as any).user?.id || (req as any).userId || (req as any).auth?.userId,
+      path,
+      method,
+      ip,
+      userAgent: userAgent || undefined,
+      query: Object.keys(query).length > 0 ? query : undefined,
+      params: Object.keys(params).length > 0 ? params : undefined,
+      // Only log body for non-sensitive endpoints
+      body: shouldLogBody(path) ? sanitizeBody(body) : undefined,
+    };
+  } catch (err) {
+    // If extracting context fails, return undefined rather than throwing
+    // This prevents error handling from causing additional errors
+    console.warn('Failed to extract request context:', err);
+    return undefined;
+  }
 }
 
 /**
@@ -123,13 +158,23 @@ export function logError(
   context?: ErrorLogContext | Request,
   level: 'error' | 'warn' = 'error'
 ): void {
+  // Safely extract context - check if it's a Request object
+  let extractedContext: ErrorLogContext | undefined;
+  if (context) {
+    if (context instanceof Object && 'path' in context && typeof (context as any).path === 'string') {
+      // It's likely a Request object
+      extractedContext = extractRequestContext(context as Request);
+    } else if (context instanceof Object && ('userId' in context || 'path' in context || 'method' in context)) {
+      // It's already an ErrorLogContext
+      extractedContext = context as ErrorLogContext;
+    }
+  }
+
   const logEntry: ErrorLogEntry = {
     timestamp: new Date().toISOString(),
     level,
     error: formatErrorForLogging(error),
-    context: context instanceof Object && 'path' in context 
-      ? extractRequestContext(context as Request)
-      : context,
+    context: extractedContext,
     environment: process.env.NODE_ENV || 'development',
   };
 
@@ -178,6 +223,18 @@ export function logWarning(
   context?: ErrorLogContext | Request,
   details?: any
 ): void {
+  // Safely extract context - check if it's a Request object
+  let extractedContext: ErrorLogContext | undefined;
+  if (context) {
+    if (context instanceof Object && 'path' in context && typeof (context as any).path === 'string') {
+      // It's likely a Request object
+      extractedContext = extractRequestContext(context as Request);
+    } else if (context instanceof Object && ('userId' in context || 'path' in context || 'method' in context)) {
+      // It's already an ErrorLogContext
+      extractedContext = context as ErrorLogContext;
+    }
+  }
+
   const logEntry: ErrorLogEntry = {
     timestamp: new Date().toISOString(),
     level: 'warn',
@@ -186,9 +243,7 @@ export function logWarning(
       message,
       details,
     },
-    context: context instanceof Object && 'path' in context
-      ? extractRequestContext(context as Request)
-      : context,
+    context: extractedContext,
     environment: process.env.NODE_ENV || 'development',
   };
 
@@ -207,6 +262,18 @@ export function logInfo(
   context?: ErrorLogContext | Request,
   details?: any
 ): void {
+  // Safely extract context - check if it's a Request object
+  let extractedContext: ErrorLogContext | undefined;
+  if (context) {
+    if (context instanceof Object && 'path' in context && typeof (context as any).path === 'string') {
+      // It's likely a Request object
+      extractedContext = extractRequestContext(context as Request);
+    } else if (context instanceof Object && ('userId' in context || 'path' in context || 'method' in context)) {
+      // It's already an ErrorLogContext
+      extractedContext = context as ErrorLogContext;
+    }
+  }
+
   const logEntry: ErrorLogEntry = {
     timestamp: new Date().toISOString(),
     level: 'info',
@@ -215,9 +282,7 @@ export function logInfo(
       message,
       details,
     },
-    context: context instanceof Object && 'path' in context
-      ? extractRequestContext(context as Request)
-      : context,
+    context: extractedContext,
     environment: process.env.NODE_ENV || 'development',
   };
 

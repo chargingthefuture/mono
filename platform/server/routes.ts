@@ -87,6 +87,7 @@ import { asyncHandler } from "./errorHandler";
 import { validateWithZod } from "./validationErrorFormatter";
 import { withDatabaseErrorHandling } from "./databaseErrorHandler";
 import { NotFoundError, ForbiddenError, ValidationError, UnauthorizedError, ExternalServiceError } from "./errors";
+import { logError } from "./errorLogger";
 import * as Sentry from '@sentry/node';
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -290,16 +291,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const webhookSecret = process.env.CLERK_WEBHOOK_SECRET || process.env.CLERK_WEBHOOK_SIGNING_SECRET;
     
     if (!webhookSecret) {
-      console.error("CLERK_WEBHOOK_SECRET or CLERK_WEBHOOK_SIGNING_SECRET environment variable not set");
-      throw new ValidationError("Webhook secret not configured. Please set CLERK_WEBHOOK_SECRET environment variable.");
+      const error = new ValidationError(
+        "Webhook secret not configured. Please set CLERK_WEBHOOK_SECRET environment variable. " +
+        "To get the webhook secret: 1) Go to Clerk Dashboard > Webhooks, 2) Select your webhook endpoint, " +
+        "3) Copy the 'Signing Secret' from the webhook details, 4) Set it as CLERK_WEBHOOK_SECRET in your deployment environment."
+      );
+      logError(error, req);
+      throw error;
     }
 
     // Get the raw body (stored by express.json middleware in index.ts)
     // The raw body is required for signature verification - parsed JSON won't work
     const rawBody = req.rawBody;
     if (!rawBody) {
-      console.error("Raw body not available for webhook verification");
-      throw new ValidationError("Invalid request: raw body required for webhook signature verification");
+      const error = new ValidationError("Invalid request: raw body required for webhook signature verification");
+      logError(error, req);
+      throw error;
     }
 
     // Get svix headers for signature verification
@@ -309,12 +316,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const svixSignature = req.headers['svix-signature'] as string;
 
     if (!svixId || !svixTimestamp || !svixSignature) {
-      console.error("Missing svix headers for webhook verification", {
-        hasSvixId: !!svixId,
-        hasSvixTimestamp: !!svixTimestamp,
-        hasSvixSignature: !!svixSignature,
-      });
-      throw new ValidationError("Missing webhook signature headers. This request may not be from Clerk.");
+      const error = new ValidationError("Missing webhook signature headers. This request may not be from Clerk.");
+      logError(error, req, 'error');
+      throw error;
     }
 
     // Verify webhook signature using svix Webhook class
@@ -330,14 +334,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         'svix-signature': svixSignature,
       }) as any;
     } catch (verificationError: any) {
-      console.error("Webhook signature verification failed:", {
-        error: verificationError.message,
-        svixId,
-        svixTimestamp,
-        // Don't log the full signature for security reasons
-      });
-      // Return 401 Unauthorized for invalid signatures
-      throw new UnauthorizedError("Invalid webhook signature. Request rejected for security reasons.");
+      const error = new UnauthorizedError("Invalid webhook signature. Request rejected for security reasons.");
+      // Log with additional context about the verification failure
+      // Note: logError will extract request context automatically, but we can't add custom details
+      // The verification error details are logged via console.error as a fallback
+      logError(error, req);
+      throw error;
     }
 
     // Process verified webhook events
@@ -348,15 +350,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         try {
           await syncClerkUserToDatabase(clerkUserId);
         } catch (syncError: any) {
-          console.error("Error syncing Clerk user from webhook:", {
-            eventType: event.type,
-            clerkUserId,
-            error: syncError.message,
-            stack: syncError.stack,
-          });
-          // Do not fail the webhook delivery because of a transient sync error
+          // Log the sync error but don't fail the webhook delivery
           // Clerk will retry if we return a non-2xx status, but we want to acknowledge receipt
           // The sync error is logged but doesn't prevent webhook acknowledgment
+          logError(syncError, req);
         }
       }
     }
@@ -578,25 +575,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const userId = getUserId(req);
     const { reason } = req.body;
 
-    try {
-      await storage.deleteUserAccount(userId, reason);
-      res.json({ message: "Account deleted successfully" });
-    } catch (error: any) {
-      console.error("Error deleting user account:", error);
-      res.status(400).json({ message: error.message || "Failed to delete account" });
-    }
+    await withDatabaseErrorHandling(
+      () => storage.deleteUserAccount(userId, reason),
+      'deleteUserAccount'
+    );
+    
+    res.json({ message: "Account deleted successfully" });
   }));
 
   // Terms acceptance
   app.post('/api/account/accept-terms', isAuthenticated, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
-    try {
-      const user = await storage.updateTermsAcceptance(userId);
-      res.json({ message: "Terms accepted successfully", termsAcceptedAt: user.termsAcceptedAt });
-    } catch (error: any) {
-      console.error("Error accepting terms:", error);
-      res.status(500).json({ message: error.message || "Failed to accept terms" });
-    }
+    
+    const user = await withDatabaseErrorHandling(
+      () => storage.updateTermsAcceptance(userId),
+      'updateTermsAcceptance'
+    );
+    
+    res.json({ message: "Terms accepted successfully", termsAcceptedAt: user.termsAcceptedAt });
   }));
 
   // User routes
@@ -1038,7 +1034,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   // Public job titles endpoint (for authenticated users to view available job titles)
-  app.get('/api/directory/job-titles', isAuthenticated, asyncHandler(async (_req, res) => {
+  app.get('/api/directory/job-titles', isAuthenticated, asyncHandler(async (req, res) => {
     try {
       const jobTitles = await withDatabaseErrorHandling(
         () => storage.getAllSkillsJobTitles(),
@@ -1054,8 +1050,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       res.json(formatted);
     } catch (error: any) {
-      console.error('Error fetching job titles:', error);
-      // Return empty array instead of error to prevent frontend breakage
+      // Log error but return empty array to prevent frontend breakage
+      // This is intentional graceful degradation
+      logError(error, req);
       res.json([]);
     }
   }));
@@ -1139,10 +1136,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
           userFirstName = (u.firstName && u.firstName.trim()) || null;
           userLastName = (u.lastName && u.lastName.trim()) || null;
           userIsVerified = u.isVerified || false;
-          // Debug: Log if we have firstName but it's not being used
-          if (userFirstName && !name) {
-            console.log(`[DEBUG] Profile ${p.id}: Found firstName=${userFirstName}, lastName=${userLastName} but name is still null`);
-          }
           // Build display name from firstName and lastName
           if (userFirstName && userLastName) {
             name = `${userFirstName} ${userLastName}`;
@@ -1151,13 +1144,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
           } else if (userLastName) {
             name = userLastName;
           }
-        } else {
-          console.log(`[DEBUG] Profile ${p.id}: userId=${userId} but getUser returned undefined`);
         }
       } else {
         // For admin-created profiles without userId, use profile's own isVerified field
         userIsVerified = p.isVerified || false;
-        console.log(`[DEBUG] Profile ${p.id}: No userId set`);
         // For unclaimed profiles, fall back to the profile's own firstName field if set
         userFirstName = (p as any).firstName || null;
       }
@@ -1376,19 +1366,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   // Admin routes for Directory Skills (admin only) - Legacy, now uses hierarchical skills database
-  app.get('/api/directory/admin/skills', isAuthenticated, isAdmin, asyncHandler(async (_req, res) => {
-    try {
-      const skills = await withDatabaseErrorHandling(
-        () => storage.getAllSkillsFlattened(),
-        'getAllSkillsFlattened'
-      );
-      // Format as DirectorySkill[] for backward compatibility
-      const formatted = skills.map(s => ({ id: s.id, name: s.name }));
-      res.json(formatted);
-    } catch (error) {
-      console.error('Error fetching skills:', error);
-      res.status(500).json({ message: 'Failed to fetch skills' });
-    }
+  app.get('/api/directory/admin/skills', isAuthenticated, isAdmin, asyncHandler(async (req, res) => {
+    const skills = await withDatabaseErrorHandling(
+      () => storage.getAllSkillsFlattened(),
+      'getAllSkillsFlattened'
+    );
+    // Format as DirectorySkill[] for backward compatibility
+    const formatted = skills.map(s => ({ id: s.id, name: s.name }));
+    res.json(formatted);
   }));
 
   app.post('/api/directory/admin/skills', isAuthenticated, ...isAdminWithCsrf, asyncHandler(async (req: any, res) => {
@@ -7420,18 +7405,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get(
     "/api/workforce-recruiter/sector/:sector",
     isAuthenticated,
-    async (req: any, res) => {
-      try {
-        const sector = decodeURIComponent(req.params.sector);
+    asyncHandler(async (req: any, res) => {
+      const sector = decodeURIComponent(req.params.sector);
 
-        const details = await storage.getWorkforceRecruiterSectorDetail(sector);
+      const details = await withDatabaseErrorHandling(
+        () => storage.getWorkforceRecruiterSectorDetail(sector),
+        'getWorkforceRecruiterSectorDetail'
+      );
 
-        res.json(details);
-      } catch (error: any) {
-        console.error("Error fetching sector details:", error);
-        res.status(500).json({ message: error.message });
-      }
-    }
+      res.json(details);
+    })
   );
 
   // ========================================
