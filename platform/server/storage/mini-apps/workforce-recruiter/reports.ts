@@ -40,8 +40,33 @@ export class WorkforceRecruiterReports {
 
     // Sector breakdown - count directory profiles that match each sector
     // Use case-insensitive matching for sectors
+    // Match by: 1) profile.sectors array, 2) profile.jobTitles that link to sectors, 3) profile.skills that link to job titles that link to sectors
     const sectorMap = new Map<string, { target: number; recruited: number; normalizedKey: string }>();
     const sectorNormalizedToOriginal = new Map<string, string>(); // normalized -> original
+    
+    // Get all job titles with their sectors for matching
+    const allJobTitleIds = occupations
+      .map(occ => occ.jobTitleId)
+      .filter((id): id is string => id !== null);
+    const allJobTitles = allJobTitleIds.length > 0
+      ? await db.select().from(skillsJobTitles).where(inArray(skillsJobTitles.id, allJobTitleIds))
+      : [];
+    const jobTitleToSectorMap = new Map<string, string>(); // jobTitleId -> sector
+    occupations.forEach(occ => {
+      if (occ.jobTitleId) {
+        const jobTitle = allJobTitles.find(jt => jt.id === occ.jobTitleId);
+        if (jobTitle) {
+          // Get the sector from the occupation (more reliable than job title's sectorId)
+          jobTitleToSectorMap.set(occ.jobTitleId, occ.sector);
+        }
+      }
+    });
+    
+    // Pre-load all job title skills for skill-based matching
+    const allJobTitleSkills = allJobTitleIds.length > 0
+      ? await db.select().from(skillsSkills).where(inArray(skillsSkills.jobTitleId, allJobTitleIds))
+      : [];
+    const jobTitleSkillsMap = buildJobTitleSkillsMap(allJobTitleSkills);
     
     occupations.forEach(occ => {
       const normalizedSector = normalizeString(occ.sector);
@@ -57,16 +82,63 @@ export class WorkforceRecruiterReports {
     });
     
     // Count directory profiles per sector (case-insensitive matching)
+    // Match by: 1) profile.sectors, 2) profile.jobTitles, 3) profile.skills
+    const profileSectorMatches = new Map<string, Set<string>>(); // profileId -> Set of normalized sectors
     allDirectoryProfiles.forEach(profile => {
+      const matchedSectors = new Set<string>();
+      
+      // Method 1: Direct sector matching from profile.sectors
       if (profile.sectors && profile.sectors.length > 0) {
         profile.sectors.forEach(sector => {
           const normalizedSector = normalizeString(sector);
-          const existing = sectorMap.get(normalizedSector);
-          if (existing) {
-            existing.recruited += 1;
+          matchedSectors.add(normalizedSector);
+        });
+      }
+      
+      // Method 2: Match via job titles (profile.jobTitles -> job title -> sector)
+      if (profile.jobTitles && profile.jobTitles.length > 0) {
+        profile.jobTitles.forEach(jobTitleId => {
+          const sector = jobTitleToSectorMap.get(jobTitleId);
+          if (sector) {
+            matchedSectors.add(normalizeString(sector));
           }
         });
       }
+      
+      // Method 3: Match via skills (profile.skills -> job title skills -> job title -> sector)
+      if (profile.skills && profile.skills.length > 0) {
+        const normalizedProfileSkills = new Set(
+          profile.skills.map(skill => normalizeString(skill))
+        );
+        
+        // Check each job title to see if its skills match profile skills
+        jobTitleToSectorMap.forEach((sector, jobTitleId) => {
+          const jobTitleSkills = jobTitleSkillsMap.get(jobTitleId);
+          if (jobTitleSkills) {
+            // Check if any profile skill matches any job title skill
+            const hasMatchingSkill = Array.from(jobTitleSkills).some(jobSkill => 
+              normalizedProfileSkills.has(jobSkill)
+            );
+            if (hasMatchingSkill) {
+              matchedSectors.add(normalizeString(sector));
+            }
+          }
+        });
+      }
+      
+      if (matchedSectors.size > 0) {
+        profileSectorMatches.set(profile.id, matchedSectors);
+      }
+    });
+    
+    // Count profiles per sector
+    profileSectorMatches.forEach((matchedSectors, profileId) => {
+      matchedSectors.forEach(normalizedSector => {
+        const existing = sectorMap.get(normalizedSector);
+        if (existing) {
+          existing.recruited += 1;
+        }
+      });
     });
     
     const sectorBreakdown = Array.from(sectorMap.entries()).map(([normalizedSector, data]) => ({
@@ -86,8 +158,19 @@ export class WorkforceRecruiterReports {
       });
     });
     
+    // Pre-load all job title skills for efficient matching
+    const allJobTitleIds = occupations
+      .map(occ => occ.jobTitleId)
+      .filter((id): id is string => id !== null);
+    const allJobTitleSkills = allJobTitleIds.length > 0
+      ? await db.select().from(skillsSkills).where(inArray(skillsSkills.jobTitleId, allJobTitleIds))
+      : [];
+    
+    // Build a map of jobTitleId -> normalized skill names for fast lookup
+    const jobTitleSkillsMap = buildJobTitleSkillsMap(allJobTitleSkills);
+    
     // Count directory profiles per skill level by matching them to occupations
-    // Use case-insensitive matching for sectors
+    // Match by sector, job title, OR skills (case-insensitive)
     const skillLevelProfileCount = new Map<string, Set<string>>();
     allDirectoryProfiles.forEach(profile => {
       // Match profile to occupations based on sector, job title, or skills
@@ -99,8 +182,25 @@ export class WorkforceRecruiterReports {
         )) {
           matches = true;
         }
+        // Job title matching (exact ID match)
         if (occ.jobTitleId && profile.jobTitles && profile.jobTitles.includes(occ.jobTitleId)) {
           matches = true;
+        }
+        // Skill matching (case-insensitive) - check if profile skills match job title skills
+        if (!matches && profile.skills && occ.jobTitleId && profile.skills.length > 0) {
+          const jobTitleSkills = jobTitleSkillsMap.get(occ.jobTitleId);
+          if (jobTitleSkills) {
+            const normalizedProfileSkills = new Set(
+              profile.skills.map(skill => normalizeString(skill))
+            );
+            // Check if any profile skill matches any job title skill
+            const hasMatchingSkill = Array.from(jobTitleSkills).some(jobSkill => 
+              normalizedProfileSkills.has(jobSkill)
+            );
+            if (hasMatchingSkill) {
+              matches = true;
+            }
+          }
         }
         if (matches) {
           if (!skillLevelProfileCount.has(occ.skillLevel)) {
@@ -131,7 +231,7 @@ export class WorkforceRecruiterReports {
     });
 
     // Annual training gap (target vs actual recruited) - use directory profile count per occupation
-    // Use case-insensitive matching for sectors
+    // Match by sector, job title, OR skills (case-insensitive)
     const occupationProfileCount = new Map<string, number>();
     allDirectoryProfiles.forEach(profile => {
       occupations.forEach(occ => {
@@ -142,8 +242,25 @@ export class WorkforceRecruiterReports {
         )) {
           matches = true;
         }
+        // Job title matching (exact ID match)
         if (occ.jobTitleId && profile.jobTitles && profile.jobTitles.includes(occ.jobTitleId)) {
           matches = true;
+        }
+        // Skill matching (case-insensitive) - check if profile skills match job title skills
+        if (!matches && profile.skills && occ.jobTitleId && profile.skills.length > 0) {
+          const jobTitleSkills = jobTitleSkillsMap.get(occ.jobTitleId);
+          if (jobTitleSkills) {
+            const normalizedProfileSkills = new Set(
+              profile.skills.map(skill => normalizeString(skill))
+            );
+            // Check if any profile skill matches any job title skill
+            const hasMatchingSkill = Array.from(jobTitleSkills).some(jobSkill => 
+              normalizedProfileSkills.has(jobSkill)
+            );
+            if (hasMatchingSkill) {
+              matches = true;
+            }
+          }
         }
         if (matches) {
           occupationProfileCount.set(occ.id, (occupationProfileCount.get(occ.id) || 0) + 1);
