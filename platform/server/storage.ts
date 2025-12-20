@@ -1735,7 +1735,10 @@ export class DatabaseStorage implements IStorage {
   private getWeekEnd(date: Date): Date {
     // Weeks start on Saturday and end on Friday
     // Use date-fns endOfWeek with weekStartsOn: 6 (Saturday)
-    return endOfWeek(date, { weekStartsOn: 6 });
+    const weekEnd = endOfWeek(date, { weekStartsOn: 6 });
+    // Explicitly set to end of day to ensure we capture all users created on Friday
+    weekEnd.setHours(23, 59, 59, 999);
+    return weekEnd;
   }
 
   // Helper to format date as YYYY-MM-DD (using local time, not UTC)
@@ -1850,8 +1853,8 @@ export class DatabaseStorage implements IStorage {
     console.log("Sample user dates:", allUsersSample.map(u => ({ id: u.id, createdAt: u.createdAt?.toISOString() })));
     console.log("Sample payment dates:", allPaymentsSample.map(p => ({ id: p.id, paymentDate: p.paymentDate?.toISOString() })));
 
-    // Get new users for current week
-    const currentWeekNewUsers = await db
+    // Get new users for current week (excluding deleted users)
+    const currentWeekNewUsersRaw = await db
       .select()
       .from(users)
       .where(
@@ -1861,6 +1864,13 @@ export class DatabaseStorage implements IStorage {
         )
       );
     
+    // Filter out deleted users (those with IDs starting with "deleted_user_")
+    const currentWeekNewUsers = currentWeekNewUsersRaw.filter(user => {
+      if (!user || !user.id) return false;
+      const id = String(user.id);
+      return !id.startsWith("deleted_user_");
+    });
+    
     console.log(`Found ${currentWeekNewUsers.length} new users for current week (range: ${currentWeekStart.toISOString()} to ${currentWeekEnd.toISOString()})`);
     
     // Debug: Show sample user dates if any exist
@@ -1868,8 +1878,8 @@ export class DatabaseStorage implements IStorage {
       console.log("Sample user created dates:", currentWeekNewUsers.slice(0, 3).map(u => u.createdAt?.toISOString()));
     }
 
-    // Get new users for previous week
-    const previousWeekNewUsers = await db
+    // Get new users for previous week (excluding deleted users)
+    const previousWeekNewUsersRaw = await db
       .select()
       .from(users)
       .where(
@@ -1878,6 +1888,13 @@ export class DatabaseStorage implements IStorage {
           lte(users.createdAt, previousWeekEnd)
         )
       );
+    
+    // Filter out deleted users (those with IDs starting with "deleted_user_")
+    const previousWeekNewUsers = previousWeekNewUsersRaw.filter(user => {
+      if (!user || !user.id) return false;
+      const id = String(user.id);
+      return !id.startsWith("deleted_user_");
+    });
 
     // Get payments for current week (used for revenue metrics)
     const currentWeekPayments = await db

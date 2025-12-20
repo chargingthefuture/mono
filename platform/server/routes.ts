@@ -6481,6 +6481,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     }
 
+    // Ensure user can only be in one room at a time
+    // Leave all other rooms before joining this one
+    const activeRooms = await withDatabaseErrorHandling(
+      () => storage.getActiveRoomsForUser(userId),
+      'getActiveRoomsForUser'
+    );
+
+    // Leave all other rooms (excluding the one we're about to join)
+    for (const otherRoomId of activeRooms) {
+      if (otherRoomId !== roomId) {
+        await withDatabaseErrorHandling(
+          () => storage.leaveChymeRoom(otherRoomId, userId),
+          'leaveChymeRoom'
+        );
+      }
+    }
+
     await withDatabaseErrorHandling(
       () => storage.joinChymeRoom({
         roomId,
@@ -6501,10 +6518,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     const userId = getUserId(req);
     const roomId = req.params.roomId;
 
+    // Get room to check if user is the creator
+    const room = await withDatabaseErrorHandling(
+      () => storage.getChymeRoom(roomId),
+      'getChymeRoom'
+    );
+
+    if (!room) {
+      return res.status(404).json({ message: "Room not found" });
+    }
+
+    const isCreator = room.createdBy === userId;
+
+    // Leave the room
     await withDatabaseErrorHandling(
       () => storage.leaveChymeRoom(roomId, userId),
       'leaveChymeRoom'
     );
+
+    // If the creator left, schedule room closure with a buffer (30 seconds)
+    // This buffer helps handle connection issues - if creator rejoins within 30s, closure is cancelled
+    if (isCreator && room.isActive) {
+      // Cancel any existing scheduled closure for this room
+      const existingTimeout = scheduledRoomClosures.get(roomId);
+      if (existingTimeout) {
+        clearTimeout(existingTimeout);
+      }
+
+      // Schedule room closure after 30 seconds
+      const timeout = setTimeout(async () => {
+        try {
+          // Double-check that creator is still not in the room before closing
+          const currentRoom = await storage.getChymeRoom(roomId);
+          if (!currentRoom || !currentRoom.isActive) {
+            // Room already closed or doesn't exist
+            scheduledRoomClosures.delete(roomId);
+            return;
+          }
+
+          // Check if creator has rejoined
+          const creatorParticipant = await storage.getChymeRoomParticipant(roomId, userId);
+          if (creatorParticipant && !creatorParticipant.leftAt) {
+            // Creator has rejoined, don't close the room
+            scheduledRoomClosures.delete(roomId);
+            return;
+          }
+
+          // Creator is still gone, close the room
+          await storage.deactivateChymeRoom(roomId);
+          scheduledRoomClosures.delete(roomId);
+        } catch (error) {
+          // Log error but don't throw - this is a background operation
+          console.error(`Error closing room ${roomId} after creator left:`, error);
+          scheduledRoomClosures.delete(roomId);
+        }
+      }, 30000); // 30 second buffer
+
+      scheduledRoomClosures.set(roomId, timeout);
+    }
 
     res.json({ message: "Left room" });
   }));
