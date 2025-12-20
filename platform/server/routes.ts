@@ -90,6 +90,9 @@ import { NotFoundError, ForbiddenError, ValidationError, UnauthorizedError, Exte
 import { logError } from "./errorLogger";
 import * as Sentry from '@sentry/node';
 
+// Map to track scheduled room closures (roomId -> timeout)
+const scheduledRoomClosures = new Map<string, NodeJS.Timeout>();
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);

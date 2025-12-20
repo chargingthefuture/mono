@@ -7419,6 +7419,313 @@ export class DatabaseStorage implements IStorage {
       total,
     };
   }
+
+  // Workforce Recruiter Reports
+  async getWorkforceRecruiterSummaryReport(): Promise<{
+    totalWorkforceTarget: number;
+    totalCurrentRecruited: number;
+    percentRecruited: number;
+    sectorBreakdown: Array<{ sector: string; target: number; recruited: number; percent: number }>;
+    skillLevelBreakdown: Array<{ skillLevel: string; target: number; recruited: number; percent: number }>;
+    annualTrainingGap: Array<{ occupationId: string; occupationTitle: string; sector: string; target: number; actual: number; gap: number }>;
+  }> {
+    // Get all occupations
+    const occupations = await db.select().from(workforceRecruiterOccupations);
+
+    // Calculate totals
+    const totalWorkforceTarget = occupations.reduce((sum, occ) => sum + occ.headcountTarget, 0);
+    const totalCurrentRecruited = occupations.reduce((sum, occ) => sum + occ.currentRecruited, 0);
+    const percentRecruited = totalWorkforceTarget > 0 ? (totalCurrentRecruited / totalWorkforceTarget) * 100 : 0;
+
+    // Sector breakdown
+    const sectorMap = new Map<string, { target: number; recruited: number }>();
+    occupations.forEach(occ => {
+      const existing = sectorMap.get(occ.sector) || { target: 0, recruited: 0 };
+      sectorMap.set(occ.sector, {
+        target: existing.target + occ.headcountTarget,
+        recruited: existing.recruited + occ.currentRecruited,
+      });
+    });
+    const sectorBreakdown = Array.from(sectorMap.entries()).map(([sector, data]) => ({
+      sector,
+      target: data.target,
+      recruited: data.recruited,
+      percent: data.target > 0 ? (data.recruited / data.target) * 100 : 0,
+    })).sort((a, b) => b.target - a.target);
+
+    // Skill level breakdown
+    const skillLevelMap = new Map<string, { target: number; recruited: number }>();
+    occupations.forEach(occ => {
+      const existing = skillLevelMap.get(occ.skillLevel) || { target: 0, recruited: 0 };
+      skillLevelMap.set(occ.skillLevel, {
+        target: existing.target + occ.headcountTarget,
+        recruited: existing.recruited + occ.currentRecruited,
+      });
+    });
+    const skillLevelBreakdown = Array.from(skillLevelMap.entries()).map(([skillLevel, data]) => ({
+      skillLevel,
+      target: data.target,
+      recruited: data.recruited,
+      percent: data.target > 0 ? (data.recruited / data.target) * 100 : 0,
+    })).sort((a, b) => {
+      // Sort by skill level order: Foundational, Intermediate, Advanced
+      const order = { 'Foundational': 0, 'Intermediate': 1, 'Advanced': 2 };
+      return (order[a.skillLevel as keyof typeof order] ?? 99) - (order[b.skillLevel as keyof typeof order] ?? 99);
+    });
+
+    // Annual training gap (target vs actual recruited)
+    const annualTrainingGap = occupations.map(occ => ({
+      occupationId: occ.id,
+      occupationTitle: occ.occupationTitle,
+      sector: occ.sector,
+      target: occ.annualTrainingTarget,
+      actual: occ.currentRecruited,
+      gap: occ.annualTrainingTarget - occ.currentRecruited,
+    })).filter(item => item.gap > 0).sort((a, b) => b.gap - a.gap);
+
+    return {
+      totalWorkforceTarget,
+      totalCurrentRecruited,
+      percentRecruited,
+      sectorBreakdown,
+      skillLevelBreakdown,
+      annualTrainingGap,
+    };
+  }
+
+  async getWorkforceRecruiterSkillLevelDetail(skillLevel: string): Promise<{
+    skillLevel: string;
+    target: number;
+    recruited: number;
+    percent: number;
+    profiles: Array<{
+      profileId: string;
+      displayName: string;
+      skills: string[];
+      sectors: string[];
+      jobTitles: string[];
+      matchingOccupations: Array<{ id: string; title: string; sector: string }>;
+      matchReason: string;
+    }>;
+  }> {
+    // Get occupations for this skill level
+    const occupations = await db
+      .select()
+      .from(workforceRecruiterOccupations)
+      .where(eq(workforceRecruiterOccupations.skillLevel, skillLevel));
+
+    const target = occupations.reduce((sum, occ) => sum + occ.headcountTarget, 0);
+    const recruited = occupations.reduce((sum, occ) => sum + occ.currentRecruited, 0);
+    const percent = target > 0 ? (recruited / target) * 100 : 0;
+
+    // Get directory profiles and match them to occupations
+    const allProfiles = await db.select().from(directoryProfiles);
+    const profiles = allProfiles.map(profile => {
+      const matchingOccupations: Array<{ id: string; title: string; sector: string }> = [];
+      let matchReason = 'none';
+
+      // Match by sector, job title, or skill
+      occupations.forEach(occ => {
+        let matches = false;
+        if (profile.sectors && profile.sectors.includes(occ.sector)) {
+          matches = true;
+          if (matchReason === 'none') matchReason = 'sector';
+        }
+        if (occ.jobTitleId && profile.jobTitles && profile.jobTitles.includes(occ.jobTitleId)) {
+          matches = true;
+          matchReason = 'jobTitle';
+        }
+        if (profile.skills && occ.jobTitleId) {
+          // Check if profile skills match any skills associated with the job title
+          // This is a simplified match - in reality you'd need to check skills_job_titles relationships
+          matches = true;
+          if (matchReason === 'none') matchReason = 'skill';
+        }
+
+        if (matches) {
+          matchingOccupations.push({
+            id: occ.id,
+            title: occ.occupationTitle,
+            sector: occ.sector,
+          });
+        }
+      });
+
+      return {
+        profileId: profile.id,
+        displayName: profile.displayName || `${profile.firstName || ''} ${profile.lastName || ''}`.trim() || 'Unknown',
+        skills: profile.skills || [],
+        sectors: profile.sectors || [],
+        jobTitles: profile.jobTitles || [],
+        matchingOccupations,
+        matchReason,
+      };
+    }).filter(p => p.matchingOccupations.length > 0);
+
+    return {
+      skillLevel,
+      target,
+      recruited,
+      percent,
+      profiles,
+    };
+  }
+
+  async getWorkforceRecruiterSectorDetail(sector: string): Promise<{
+    sector: string;
+    target: number;
+    recruited: number;
+    percent: number;
+    jobTitles: Array<{ id: string; name: string; count: number }>;
+    skills: Array<{ name: string; count: number }>;
+    occupations: Array<{ id: string; title: string; jobTitleId: string | null; headcountTarget: number; skillLevel: string }>;
+    profiles: Array<{
+      profileId: string;
+      displayName: string;
+      skills: string[];
+      sectors: string[];
+      jobTitles: string[];
+      matchingOccupations: Array<{ id: string; title: string; sector: string }>;
+      matchReason: string;
+    }>;
+  }> {
+    // Get occupations for this sector (case-insensitive)
+    const occupations = await db
+      .select()
+      .from(workforceRecruiterOccupations)
+      .where(sql`LOWER(${workforceRecruiterOccupations.sector}) = LOWER(${sector})`);
+
+    const target = occupations.reduce((sum, occ) => sum + occ.headcountTarget, 0);
+    const recruited = occupations.reduce((sum, occ) => sum + occ.currentRecruited, 0);
+    const percent = target > 0 ? (recruited / target) * 100 : 0;
+
+    // Get job titles from occupations
+    const jobTitleIds = occupations.map(occ => occ.jobTitleId).filter((id): id is string => id !== null);
+    const jobTitles = jobTitleIds.length > 0
+      ? await db.select().from(skillsJobTitles).where(inArray(skillsJobTitles.id, jobTitleIds))
+      : [];
+
+    // Count job titles
+    const jobTitleCounts = new Map<string, number>();
+    occupations.forEach(occ => {
+      if (occ.jobTitleId) {
+        jobTitleCounts.set(occ.jobTitleId, (jobTitleCounts.get(occ.jobTitleId) || 0) + 1);
+      }
+    });
+    const jobTitleBreakdown = Array.from(jobTitleCounts.entries()).map(([id, count]) => {
+      const jobTitle = jobTitles.find(jt => jt.id === id);
+      return {
+        id,
+        name: jobTitle?.name || 'Unknown',
+        count,
+      };
+    });
+
+    // Get skills (simplified - would need proper relationship queries)
+    const skills = await db.select().from(skillsSkills);
+    const skillCounts = new Map<string, number>();
+    // Count skills from profiles in this sector
+    const allProfiles = await db.select().from(directoryProfiles);
+    allProfiles.forEach(profile => {
+      if (profile.sectors && profile.sectors.includes(sector) && profile.skills) {
+        profile.skills.forEach(skillId => {
+          skillCounts.set(skillId, (skillCounts.get(skillId) || 0) + 1);
+        });
+      }
+    });
+    const skillBreakdown = Array.from(skillCounts.entries()).map(([id, count]) => {
+      const skill = skills.find(s => s.id === id);
+      return {
+        name: skill?.name || 'Unknown',
+        count,
+      };
+    }).sort((a, b) => b.count - a.count);
+
+    // Get profiles matching this sector
+    const profiles = allProfiles
+      .filter(profile => profile.sectors && profile.sectors.includes(sector))
+      .map(profile => {
+        const matchingOccupations = occupations
+          .filter(occ => {
+            // Match by sector (already filtered), job title, or skill
+            if (occ.jobTitleId && profile.jobTitles && profile.jobTitles.includes(occ.jobTitleId)) {
+              return true;
+            }
+            return false;
+          })
+          .map(occ => ({
+            id: occ.id,
+            title: occ.occupationTitle,
+            sector: occ.sector,
+          }));
+
+        return {
+          profileId: profile.id,
+          displayName: profile.displayName || `${profile.firstName || ''} ${profile.lastName || ''}`.trim() || 'Unknown',
+          skills: profile.skills || [],
+          sectors: profile.sectors || [],
+          jobTitles: profile.jobTitles || [],
+          matchingOccupations,
+          matchReason: matchingOccupations.length > 0 ? 'jobTitle' : 'sector',
+        };
+      });
+
+    return {
+      sector,
+      target,
+      recruited,
+      percent,
+      jobTitles: jobTitleBreakdown,
+      skills: skillBreakdown,
+      occupations: occupations.map(occ => ({
+        id: occ.id,
+        title: occ.occupationTitle,
+        jobTitleId: occ.jobTitleId,
+        headcountTarget: occ.headcountTarget,
+        skillLevel: occ.skillLevel,
+      })),
+      profiles,
+    };
+  }
+
+  // NPS (Net Promoter Score) operations
+  async createNpsResponse(response: InsertNpsResponse): Promise<NpsResponse> {
+    const [npsResponse] = await db
+      .insert(npsResponses)
+      .values(response)
+      .returning();
+    return npsResponse;
+  }
+
+  async getUserLastNpsResponse(userId: string): Promise<NpsResponse | undefined> {
+    const [response] = await db
+      .select()
+      .from(npsResponses)
+      .where(eq(npsResponses.userId, userId))
+      .orderBy(desc(npsResponses.createdAt))
+      .limit(1);
+    return response;
+  }
+
+  async getNpsResponsesForWeek(weekStart: Date, weekEnd: Date): Promise<NpsResponse[]> {
+    return await db
+      .select()
+      .from(npsResponses)
+      .where(
+        and(
+          gte(npsResponses.createdAt, weekStart),
+          lte(npsResponses.createdAt, weekEnd)
+        )
+      )
+      .orderBy(desc(npsResponses.createdAt));
+  }
+
+  async getAllNpsResponses(): Promise<NpsResponse[]> {
+    return await db
+      .select()
+      .from(npsResponses)
+      .orderBy(desc(npsResponses.createdAt));
+  }
 }
 
 export const storage = new DatabaseStorage();
