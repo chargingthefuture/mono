@@ -832,6 +832,7 @@ export interface IStorage {
   getChymeRoomParticipants(roomId: string): Promise<ChymeRoomParticipant[]>;
   getChymeRoomParticipant(roomId: string, userId: string): Promise<ChymeRoomParticipant | undefined>;
   updateChymeRoomParticipant(roomId: string, userId: string, updates: Partial<InsertChymeRoomParticipant>): Promise<ChymeRoomParticipant>;
+  getActiveRoomsForUser(userId: string): Promise<string[]>; // Returns room IDs where user is an active participant
 
   // Chyme User Follow operations
   followChymeUser(userId: string, followedUserId: string): Promise<ChymeUserFollow>;
@@ -6896,6 +6897,19 @@ export class DatabaseStorage implements IStorage {
       .orderBy(desc(chymeRoomParticipants.joinedAt))
       .limit(1);
     return participant;
+  }
+
+  async getActiveRoomsForUser(userId: string): Promise<string[]> {
+    const participants = await db
+      .select({ roomId: chymeRoomParticipants.roomId })
+      .from(chymeRoomParticipants)
+      .where(
+        and(
+          eq(chymeRoomParticipants.userId, userId),
+          sql`${chymeRoomParticipants.leftAt} IS NULL`
+        )
+      );
+    return participants.map(p => p.roomId);
   }
 
   async updateChymeRoomParticipant(roomId: string, userId: string, updates: Partial<InsertChymeRoomParticipant>): Promise<ChymeRoomParticipant> {

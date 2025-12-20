@@ -57,7 +57,8 @@ class WebRTCRepository(
                 throw NoClassDefFoundError(
                     "org.webrtc.Environment class is missing. " +
                     "Please use a WebRTC library version that includes this class. " +
-                    "The current library (com.infobip:google-webrtc:1.0.45036) does not include it."
+                    "The current library (io.getstream:stream-webrtc-android:1.0.2) should include it, " +
+                    "but if this error occurs, the library may need to be updated."
                 )
             }
 

@@ -79,7 +79,24 @@ export default function MapLibreMapInternal({ locations }: MapLibreMapInternalPr
     <Map
       {...initialViewState}
       style={{ width: "100%", height: "100%" }}
-      mapStyle="https://tiles.openfreemap.org/styles/liberty"
+      mapStyle={{
+        version: 8,
+        sources: {
+          "osm-tiles": {
+            type: "raster",
+            tiles: ["https://tile.openstreetmap.org/{z}/{x}/{y}.png"],
+            tileSize: 256,
+            attribution: "© OpenStreetMap contributors",
+          },
+        },
+        layers: [
+          {
+            id: "osm-tiles",
+            type: "raster",
+            source: "osm-tiles",
+          },
+        ],
+      }}
       scrollZoom={true}
       onMove={(evt) => {
         // Handle map movement if needed

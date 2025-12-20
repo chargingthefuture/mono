@@ -9,7 +9,7 @@ interface VerifiedBadgeProps {
   testId?: string;
 }
 
-const VERIFICATION_EXPLANATION = "A Verified badge means that the community believes this member is likely a TI. An Unverified badge simply means the community has not done verification yet, but will. Non-TIs or perps are not permitted on the platform. And will be removed upon immediate discovery. All community members require verification. The length of time of verifying community members varies. Please use your best judgement at all times. The platform endorses noone. And this badge is simply to assist in making a determination on who to interact with.";
+const VERIFICATION_EXPLANATION = "A Verified badge means that the community believes this member is likely a TI. An Unverified badge simply means the community has not done verification yet, but will. Non-TIs or perps are not permitted on the platform. And will be removed upon immediate discovery. All community members require verification. The length of time of verifying community members varies. Please use your best judgement at all times. The platform endorses no one. This badge can aid in determining who to interact with.";
 
 export function VerifiedBadge({ isVerified, className = "", testId }: VerifiedBadgeProps) {
   const [isOpen, setIsOpen] = useState(false);
