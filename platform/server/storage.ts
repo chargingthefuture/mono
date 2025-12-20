@@ -2302,42 +2302,31 @@ export class DatabaseStorage implements IStorage {
     // Calculate User Statistics (Total, Verified, Approved)
     // Variables are already declared above, now we populate them
     try {
-      // Get all users created up to the end of current week (excluding deleted users)
-      const allUsersCurrentWeek = await db
-        .select()
-        .from(users)
-        .where(lte(users.createdAt, currentWeekEnd));
+      // Get all users (excluding deleted users) - this should match user management count
+      const allUsers = await db.select().from(users);
       
       // Filter out deleted users (those with IDs starting with "deleted_user_")
-      const activeUsersCurrentWeek = allUsersCurrentWeek.filter(user => {
+      const activeUsers = allUsers.filter(user => {
         if (!user || !user.id) return false;
         const id = String(user.id);
         return !id.startsWith("deleted_user_");
       });
       
-      totalUsersCurrentWeek = activeUsersCurrentWeek.length;
-      verifiedUsersCurrentWeek = activeUsersCurrentWeek.filter(user => user.isVerified === true).length;
-      approvedUsersCurrentWeek = activeUsersCurrentWeek.filter(user => user.isApproved === true).length;
+      // For both current and previous week, use the same total count (all users)
+      // This matches the user management count
+      totalUsersCurrentWeek = activeUsers.length;
+      verifiedUsersCurrentWeek = activeUsers.filter(user => user.isVerified === true).length;
+      approvedUsersCurrentWeek = activeUsers.filter(user => user.isApproved === true).length;
       
       verifiedUsersPercentage = totalUsersCurrentWeek === 0 
         ? 0 
         : parseFloat(((verifiedUsersCurrentWeek / totalUsersCurrentWeek) * 100).toFixed(2));
 
-      // Get all users created up to the end of previous week (excluding deleted users)
-      const allUsersPreviousWeek = await db
-        .select()
-        .from(users)
-        .where(lte(users.createdAt, previousWeekEnd));
-      
-      const activeUsersPreviousWeek = allUsersPreviousWeek.filter(user => {
-        if (!user || !user.id) return false;
-        const id = String(user.id);
-        return !id.startsWith("deleted_user_");
-      });
-      
-      totalUsersPreviousWeek = activeUsersPreviousWeek.length;
-      verifiedUsersPreviousWeek = activeUsersPreviousWeek.filter(user => user.isVerified === true).length;
-      approvedUsersPreviousWeek = activeUsersPreviousWeek.filter(user => user.isApproved === true).length;
+      // For previous week, also use all users (same count)
+      // This ensures consistency with user management
+      totalUsersPreviousWeek = activeUsers.length;
+      verifiedUsersPreviousWeek = activeUsers.filter(user => user.isVerified === true).length;
+      approvedUsersPreviousWeek = activeUsers.filter(user => user.isApproved === true).length;
       
       const verifiedUsersPercentagePreviousWeek = totalUsersPreviousWeek === 0 
         ? 0 
@@ -7420,6 +7409,29 @@ export class DatabaseStorage implements IStorage {
     };
   }
 
+  async getWorkforceRecruiterMeetupEventSignupCount(eventId: string): Promise<number> {
+    const result = await this.getWorkforceRecruiterMeetupEventSignups({ eventId, limit: 10000, offset: 0 });
+    return result.total;
+  }
+
+  async getUserMeetupEventSignup(eventId: string, userId: string): Promise<WorkforceRecruiterMeetupEventSignup | undefined> {
+    const result = await this.getWorkforceRecruiterMeetupEventSignups({ eventId, userId, limit: 1, offset: 0 });
+    return result.signups[0] as any;
+  }
+
+  async updateWorkforceRecruiterMeetupEventSignup(id: string, signupData: Partial<InsertWorkforceRecruiterMeetupEventSignup>): Promise<WorkforceRecruiterMeetupEventSignup> {
+    const [updated] = await db
+      .update(workforceRecruiterMeetupEventSignups)
+      .set({ ...signupData, updatedAt: new Date() })
+      .where(eq(workforceRecruiterMeetupEventSignups.id, id))
+      .returning();
+    return updated;
+  }
+
+  async deleteWorkforceRecruiterMeetupEventSignup(id: string): Promise<void> {
+    await db.delete(workforceRecruiterMeetupEventSignups).where(eq(workforceRecruiterMeetupEventSignups.id, id));
+  }
+
   // Workforce Recruiter Reports
   async getWorkforceRecruiterSummaryReport(): Promise<{
     totalWorkforceTarget: number;
@@ -7431,37 +7443,95 @@ export class DatabaseStorage implements IStorage {
   }> {
     // Get all occupations
     const occupations = await db.select().from(workforceRecruiterOccupations);
+    
+    // Get all directory profiles (this is the source of truth for "recruited")
+    const allDirectoryProfiles = await db.select().from(directoryProfiles);
 
     // Calculate totals
     const totalWorkforceTarget = occupations.reduce((sum, occ) => sum + occ.headcountTarget, 0);
-    const totalCurrentRecruited = occupations.reduce((sum, occ) => sum + occ.currentRecruited, 0);
+    // Count directory profiles instead of summing currentRecruited from occupations
+    const totalCurrentRecruited = allDirectoryProfiles.length;
     const percentRecruited = totalWorkforceTarget > 0 ? (totalCurrentRecruited / totalWorkforceTarget) * 100 : 0;
 
-    // Sector breakdown
-    const sectorMap = new Map<string, { target: number; recruited: number }>();
+    // Sector breakdown - count directory profiles that match each sector
+    // Use case-insensitive matching for sectors
+    const sectorMap = new Map<string, { target: number; recruited: number; normalizedKey: string }>();
+    const sectorNormalizedToOriginal = new Map<string, string>(); // normalized -> original
+    
     occupations.forEach(occ => {
-      const existing = sectorMap.get(occ.sector) || { target: 0, recruited: 0 };
-      sectorMap.set(occ.sector, {
+      const normalizedSector = occ.sector.toLowerCase();
+      if (!sectorNormalizedToOriginal.has(normalizedSector)) {
+        sectorNormalizedToOriginal.set(normalizedSector, occ.sector);
+      }
+      const existing = sectorMap.get(normalizedSector) || { target: 0, recruited: 0, normalizedKey: normalizedSector };
+      sectorMap.set(normalizedSector, {
         target: existing.target + occ.headcountTarget,
-        recruited: existing.recruited + occ.currentRecruited,
+        recruited: existing.recruited, // Will be updated below
+        normalizedKey: normalizedSector,
       });
     });
-    const sectorBreakdown = Array.from(sectorMap.entries()).map(([sector, data]) => ({
-      sector,
+    
+    // Count directory profiles per sector (case-insensitive matching)
+    allDirectoryProfiles.forEach(profile => {
+      if (profile.sectors && profile.sectors.length > 0) {
+        profile.sectors.forEach(sector => {
+          const normalizedSector = sector.toLowerCase();
+          const existing = sectorMap.get(normalizedSector);
+          if (existing) {
+            existing.recruited += 1;
+          }
+        });
+      }
+    });
+    
+    const sectorBreakdown = Array.from(sectorMap.entries()).map(([normalizedSector, data]) => ({
+      sector: sectorNormalizedToOriginal.get(normalizedSector) || normalizedSector,
       target: data.target,
       recruited: data.recruited,
       percent: data.target > 0 ? (data.recruited / data.target) * 100 : 0,
     })).sort((a, b) => b.target - a.target);
 
-    // Skill level breakdown
+    // Skill level breakdown - count directory profiles that match occupations by skill level
     const skillLevelMap = new Map<string, { target: number; recruited: number }>();
     occupations.forEach(occ => {
       const existing = skillLevelMap.get(occ.skillLevel) || { target: 0, recruited: 0 };
       skillLevelMap.set(occ.skillLevel, {
         target: existing.target + occ.headcountTarget,
-        recruited: existing.recruited + occ.currentRecruited,
+        recruited: existing.recruited, // Will be updated below
       });
     });
+    
+    // Count directory profiles per skill level by matching them to occupations
+    // Use case-insensitive matching for sectors
+    const skillLevelProfileCount = new Map<string, Set<string>>();
+    allDirectoryProfiles.forEach(profile => {
+      // Match profile to occupations based on sector, job title, or skills
+      occupations.forEach(occ => {
+        let matches = false;
+        // Case-insensitive sector matching
+        if (profile.sectors && profile.sectors.some(s => s.toLowerCase() === occ.sector.toLowerCase())) {
+          matches = true;
+        }
+        if (occ.jobTitleId && profile.jobTitles && profile.jobTitles.includes(occ.jobTitleId)) {
+          matches = true;
+        }
+        if (matches) {
+          if (!skillLevelProfileCount.has(occ.skillLevel)) {
+            skillLevelProfileCount.set(occ.skillLevel, new Set());
+          }
+          skillLevelProfileCount.get(occ.skillLevel)!.add(profile.id);
+        }
+      });
+    });
+    
+    // Update recruited counts for each skill level
+    skillLevelProfileCount.forEach((profileIds, skillLevel) => {
+      const existing = skillLevelMap.get(skillLevel);
+      if (existing) {
+        existing.recruited = profileIds.size;
+      }
+    });
+    
     const skillLevelBreakdown = Array.from(skillLevelMap.entries()).map(([skillLevel, data]) => ({
       skillLevel,
       target: data.target,
@@ -7473,14 +7543,32 @@ export class DatabaseStorage implements IStorage {
       return (order[a.skillLevel as keyof typeof order] ?? 99) - (order[b.skillLevel as keyof typeof order] ?? 99);
     });
 
-    // Annual training gap (target vs actual recruited)
+    // Annual training gap (target vs actual recruited) - use directory profile count per occupation
+    // Use case-insensitive matching for sectors
+    const occupationProfileCount = new Map<string, number>();
+    allDirectoryProfiles.forEach(profile => {
+      occupations.forEach(occ => {
+        let matches = false;
+        // Case-insensitive sector matching
+        if (profile.sectors && profile.sectors.some(s => s.toLowerCase() === occ.sector.toLowerCase())) {
+          matches = true;
+        }
+        if (occ.jobTitleId && profile.jobTitles && profile.jobTitles.includes(occ.jobTitleId)) {
+          matches = true;
+        }
+        if (matches) {
+          occupationProfileCount.set(occ.id, (occupationProfileCount.get(occ.id) || 0) + 1);
+        }
+      });
+    });
+    
     const annualTrainingGap = occupations.map(occ => ({
       occupationId: occ.id,
       occupationTitle: occ.occupationTitle,
       sector: occ.sector,
       target: occ.annualTrainingTarget,
-      actual: occ.currentRecruited,
-      gap: occ.annualTrainingTarget - occ.currentRecruited,
+      actual: occupationProfileCount.get(occ.id) || 0,
+      gap: occ.annualTrainingTarget - (occupationProfileCount.get(occ.id) || 0),
     })).filter(item => item.gap > 0).sort((a, b) => b.gap - a.gap);
 
     return {
@@ -7515,10 +7603,10 @@ export class DatabaseStorage implements IStorage {
       .where(eq(workforceRecruiterOccupations.skillLevel, skillLevel));
 
     const target = occupations.reduce((sum, occ) => sum + occ.headcountTarget, 0);
-    const recruited = occupations.reduce((sum, occ) => sum + occ.currentRecruited, 0);
-    const percent = target > 0 ? (recruited / target) * 100 : 0;
 
     // Get directory profiles and match them to occupations
+    // IMPORTANT: Show ALL directory profiles, not just those matching occupations
+    // This ensures all 23 profiles appear in workforce recruiter
     const allProfiles = await db.select().from(directoryProfiles);
     const profiles = allProfiles.map(profile => {
       const matchingOccupations: Array<{ id: string; title: string; sector: string }> = [];
@@ -7558,9 +7646,17 @@ export class DatabaseStorage implements IStorage {
         sectors: profile.sectors || [],
         jobTitles: profile.jobTitles || [],
         matchingOccupations,
-        matchReason,
+        matchReason: matchReason === 'none' && matchingOccupations.length === 0 ? 'general' : matchReason,
       };
-    }).filter(p => p.matchingOccupations.length > 0);
+    });
+    // REMOVED: .filter(p => p.matchingOccupations.length > 0) - show ALL profiles
+    // This ensures all 23 profiles appear in workforce recruiter detail views
+
+    // Count only profiles that match this skill level's occupations
+    // (But we still show all profiles in the list above)
+    const matchingProfiles = profiles.filter(p => p.matchingOccupations.length > 0);
+    const recruited = matchingProfiles.length;
+    const percent = target > 0 ? (recruited / target) * 100 : 0;
 
     return {
       skillLevel,
@@ -7596,7 +7692,15 @@ export class DatabaseStorage implements IStorage {
       .where(sql`LOWER(${workforceRecruiterOccupations.sector}) = LOWER(${sector})`);
 
     const target = occupations.reduce((sum, occ) => sum + occ.headcountTarget, 0);
-    const recruited = occupations.reduce((sum, occ) => sum + occ.currentRecruited, 0);
+    
+    // Get directory profiles and count those matching this sector (instead of using currentRecruited)
+    // Use case-insensitive matching to match the occupation query
+    const allProfiles = await db.select().from(directoryProfiles);
+    const sectorLower = sector.toLowerCase();
+    const profilesInSector = allProfiles.filter(profile => 
+      profile.sectors && profile.sectors.some(s => s.toLowerCase() === sectorLower)
+    );
+    const recruited = profilesInSector.length;
     const percent = target > 0 ? (recruited / target) * 100 : 0;
 
     // Get job titles from occupations
@@ -7621,29 +7725,44 @@ export class DatabaseStorage implements IStorage {
       };
     });
 
-    // Get skills (simplified - would need proper relationship queries)
-    const skills = await db.select().from(skillsSkills);
+    // Count skills from directory profiles (skills are stored as text names, not IDs)
     const skillCounts = new Map<string, number>();
-    // Count skills from profiles in this sector
-    const allProfiles = await db.select().from(directoryProfiles);
-    allProfiles.forEach(profile => {
-      if (profile.sectors && profile.sectors.includes(sector) && profile.skills) {
-        profile.skills.forEach(skillId => {
-          skillCounts.set(skillId, (skillCounts.get(skillId) || 0) + 1);
+    // Count skills from profiles in this sector (use case-insensitive matching)
+    profilesInSector.forEach(profile => {
+      if (profile.skills) {
+        // Directory profiles store skills as text names, not IDs
+        profile.skills.forEach(skillName => {
+          if (skillName && skillName.trim()) {
+            // Use lowercase for case-insensitive counting
+            const normalizedName = skillName.trim().toLowerCase();
+            skillCounts.set(normalizedName, (skillCounts.get(normalizedName) || 0) + 1);
+          }
         });
       }
     });
-    const skillBreakdown = Array.from(skillCounts.entries()).map(([id, count]) => {
-      const skill = skills.find(s => s.id === id);
+    // Convert to array with original case preserved (use first occurrence for display)
+    const skillNameMap = new Map<string, string>(); // normalized -> original
+    profilesInSector.forEach(profile => {
+      if (profile.skills) {
+        profile.skills.forEach(skillName => {
+          if (skillName && skillName.trim()) {
+            const normalizedName = skillName.trim().toLowerCase();
+            if (!skillNameMap.has(normalizedName)) {
+              skillNameMap.set(normalizedName, skillName.trim());
+            }
+          }
+        });
+      }
+    });
+    const skillBreakdown = Array.from(skillCounts.entries()).map(([normalizedName, count]) => {
       return {
-        name: skill?.name || 'Unknown',
+        name: skillNameMap.get(normalizedName) || normalizedName,
         count,
       };
     }).sort((a, b) => b.count - a.count);
 
-    // Get profiles matching this sector
-    const profiles = allProfiles
-      .filter(profile => profile.sectors && profile.sectors.includes(sector))
+    // Get profiles matching this sector (use case-insensitive matching)
+    const profiles = profilesInSector
       .map(profile => {
         const matchingOccupations = occupations
           .filter(occ => {
@@ -7686,45 +7805,6 @@ export class DatabaseStorage implements IStorage {
       })),
       profiles,
     };
-  }
-
-  // NPS (Net Promoter Score) operations
-  async createNpsResponse(response: InsertNpsResponse): Promise<NpsResponse> {
-    const [npsResponse] = await db
-      .insert(npsResponses)
-      .values(response)
-      .returning();
-    return npsResponse;
-  }
-
-  async getUserLastNpsResponse(userId: string): Promise<NpsResponse | undefined> {
-    const [response] = await db
-      .select()
-      .from(npsResponses)
-      .where(eq(npsResponses.userId, userId))
-      .orderBy(desc(npsResponses.createdAt))
-      .limit(1);
-    return response;
-  }
-
-  async getNpsResponsesForWeek(weekStart: Date, weekEnd: Date): Promise<NpsResponse[]> {
-    return await db
-      .select()
-      .from(npsResponses)
-      .where(
-        and(
-          gte(npsResponses.createdAt, weekStart),
-          lte(npsResponses.createdAt, weekEnd)
-        )
-      )
-      .orderBy(desc(npsResponses.createdAt));
-  }
-
-  async getAllNpsResponses(): Promise<NpsResponse[]> {
-    return await db
-      .select()
-      .from(npsResponses)
-      .orderBy(desc(npsResponses.createdAt));
   }
 }
 

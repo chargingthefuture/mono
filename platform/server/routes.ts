@@ -6513,6 +6513,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
       'joinChymeRoom'
     );
 
+    // If the creator is rejoining their room, cancel any scheduled closure
+    if (room.createdBy === userId) {
+      const existingTimeout = scheduledRoomClosures.get(roomId);
+      if (existingTimeout) {
+        clearTimeout(existingTimeout);
+        scheduledRoomClosures.delete(roomId);
+      }
+    }
+
     res.json({ message: "Joined room" });
   }));
 

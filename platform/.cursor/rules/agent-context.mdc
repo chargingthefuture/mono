@@ -2302,6 +2302,82 @@ Study these for patterns:
 8. **Accessibility always** - Test keyboard nav and screen readers for every UI component
 9. **Use fuzzy search** - For any search box, use `useFuzzySearch` hook or Command component
 
+## File Size Guidelines for Maintainable Code
+
+### Recommended Line Count Limits
+
+| File Type | <b>Recommended Maximum Lines</b> | Rationale |
+|-----------|----------------------------------|-----------|
+| Component Files | <b>200-250 lines</b> | Promotes readability and single responsibility |
+| Utility/Helper Files | <b>300-350 lines</b> | Allows for comprehensive utility functions |
+| Store/State Management | <b>400-500 lines</b> | Keeps complex logic manageable |
+| Hook Files | <b>150-200 lines</b> | Maintains clear, focused custom hook logic |
+| Service/API Files | <b>250-300 lines</b> | Prevents overly complex data handling |
+| Model/Interface Files | <b>100-150 lines</b> | Keeps type definitions clean |
+
+### Refactoring Triggers
+
+When a file exceeds these guidelines, consider the following refactoring strategies:
+
+#### 1. Separation of Concerns
+<b>Break large files into smaller, more focused modules</b>
+- Extract complex logic into separate functions
+- Create sub-components for large React components
+- Split complex hooks into multiple specialized hooks
+
+#### 2. Composition Over Size
+```typescript
+// Before (too large)
+function MegaComponent() {
+  // 300+ lines of complex logic
+}
+
+// After (refactored)
+function MegaComponent() {
+  return (
+    <>
+      <HeaderSection />
+      <MainContent />
+      <FooterSection />
+    </>
+  );
+}
+```
+
+### Warning Signs to Refactor
+
+<b>Immediate refactoring indicators:</b>
+- File is more than 500 lines long
+- Multiple responsibilities in a single file
+- Difficulty understanding the file's purpose at a glance
+- More than 5-7 function/method definitions
+- Excessive nested conditionals
+- Multiple import groups with many dependencies
+
+### Practical Approach
+
+1. <b>Start with readability</b>
+2. Prioritize logical separation
+3. Use meaningful file and function names
+4. Implement consistent code organization
+
+### Language-Specific Nuances
+
+| Language | Typical Soft Limit | Hard Limit |
+|----------|-------------------|------------|
+| TypeScript/React | <b>250-300 lines</b> | 500 lines |
+| Python | <b>200-250 lines</b> | 400 lines |
+| JavaScript | <b>250-300 lines</b> | 500 lines |
+| Java | <b>200-250 lines</b> | 400 lines |
+
+<hr>
+
+## Pro Tips
+- These are <b>guidelines, not strict rules</b>
+- Context matters more than exact line count
+- Some files legitimately need more complexity
+- Regular refactoring is key to maintainability
+
 ---
 
 **This platform serves vulnerable users. Every line of code should prioritize safety, privacy, and dignity.**
