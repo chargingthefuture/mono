@@ -2000,5 +2000,12 @@
     "statusCode": 200,
     "responseTime": 263,
     "error": null
+  },
+  {
+    "timestamp": "2025-12-20T16:36:13.880Z",
+    "status": "up",
+    "statusCode": 200,
+    "responseTime": 444,
+    "error": null
   }
 ]
