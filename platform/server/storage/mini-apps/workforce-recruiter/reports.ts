@@ -9,6 +9,7 @@ import {
   directoryProfiles,
   skillsJobTitles,
   skillsSkills,
+  skillsSectors,
 } from "@shared/schema";
 import { db } from "../../db";
 import { eq, sql, inArray } from "drizzle-orm";
@@ -44,23 +45,30 @@ export class WorkforceRecruiterReports {
     const sectorMap = new Map<string, { target: number; recruited: number; normalizedKey: string }>();
     const sectorNormalizedToOriginal = new Map<string, string>(); // normalized -> original
     
-    // Get all job titles with their sectors for matching
-    const allJobTitleIds = occupations
-      .map(occ => occ.jobTitleId)
-      .filter((id): id is string => id !== null);
-    const allJobTitles = allJobTitleIds.length > 0
-      ? await db.select().from(skillsJobTitles).where(inArray(skillsJobTitles.id, allJobTitleIds))
-      : [];
-    const jobTitleToSectorMap = new Map<string, string>(); // jobTitleId -> sector
-    occupations.forEach(occ => {
-      if (occ.jobTitleId) {
-        const jobTitle = allJobTitles.find(jt => jt.id === occ.jobTitleId);
-        if (jobTitle) {
-          // Get the sector from the occupation (more reliable than job title's sectorId)
-          jobTitleToSectorMap.set(occ.jobTitleId, occ.sector);
-        }
+    // Get all job titles and their sectors for matching
+    // We need to get ALL job titles (not just those in occupations) to match profiles properly
+    const allJobTitles = await db.select().from(skillsJobTitles);
+    const allSectors = await db.select().from(skillsSectors);
+    
+    // Build map: jobTitleId -> sector name (from skills_sectors table)
+    const jobTitleToSectorMap = new Map<string, string>(); // jobTitleId -> sector name
+    allJobTitles.forEach(jobTitle => {
+      const sector = allSectors.find(s => s.id === jobTitle.sectorId);
+      if (sector) {
+        jobTitleToSectorMap.set(jobTitle.id, sector.name);
       }
     });
+    
+    // Also add sectors from occupations (in case occupation sector differs or job title not in skills table)
+    occupations.forEach(occ => {
+      if (occ.jobTitleId) {
+        // Use occupation sector if available, otherwise keep the one from job title
+        jobTitleToSectorMap.set(occ.jobTitleId, occ.sector);
+      }
+    });
+    
+    // Get all job title IDs for skill matching
+    const allJobTitleIds = Array.from(jobTitleToSectorMap.keys());
     
     // Pre-load all job title skills for skill-based matching
     const allJobTitleSkills = allJobTitleIds.length > 0
@@ -149,6 +157,7 @@ export class WorkforceRecruiterReports {
     })).sort((a, b) => b.target - a.target);
 
     // Skill level breakdown - count directory profiles that match occupations by skill level
+    // Reuse the jobTitleSkillsMap we already built for sector breakdown
     const skillLevelMap = new Map<string, { target: number; recruited: number }>();
     occupations.forEach(occ => {
       const existing = skillLevelMap.get(occ.skillLevel) || { target: 0, recruited: 0 };
@@ -157,17 +166,6 @@ export class WorkforceRecruiterReports {
         recruited: existing.recruited, // Will be updated below
       });
     });
-    
-    // Pre-load all job title skills for efficient matching
-    const allJobTitleIds = occupations
-      .map(occ => occ.jobTitleId)
-      .filter((id): id is string => id !== null);
-    const allJobTitleSkills = allJobTitleIds.length > 0
-      ? await db.select().from(skillsSkills).where(inArray(skillsSkills.jobTitleId, allJobTitleIds))
-      : [];
-    
-    // Build a map of jobTitleId -> normalized skill names for fast lookup
-    const jobTitleSkillsMap = buildJobTitleSkillsMap(allJobTitleSkills);
     
     // Count directory profiles per skill level by matching them to occupations
     // Match by sector, job title, OR skills (case-insensitive)
