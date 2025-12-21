@@ -1,108 +1,109 @@
 {
-  "timestamp": "2025-12-21T16:38:36.181Z",
+  "timestamp": "2025-12-21T16:39:22.151Z",
   "services": [
     {
       "name": "Main Platform",
       "key": "main",
-      "status": "up",
-      "responseTime": 204,
+      "status": "degraded",
+      "responseTime": 347,
       "statusCode": 200
     },
     {
       "name": "ChatGroups",
       "key": "chatgroups",
-      "status": "up",
-      "responseTime": 133,
+      "status": "degraded",
+      "responseTime": 318,
       "statusCode": 200
     },
     {
       "name": "Directory",
       "key": "directory",
-      "status": "up",
-      "responseTime": 105,
+      "status": "degraded",
+      "responseTime": 388,
       "statusCode": 200
     },
     {
       "name": "GentlePulse",
       "key": "gentlepulse",
-      "status": "up",
-      "responseTime": 117,
+      "status": "degraded",
+      "responseTime": 328,
       "statusCode": 200
     },
     {
       "name": "Chyme",
       "key": "chyme",
-      "status": "up",
-      "responseTime": 132,
+      "status": "degraded",
+      "responseTime": 413,
       "statusCode": 200
     },
     {
       "name": "Default Alive or Dead",
       "key": "default-alive-or-dead",
-      "status": "up",
-      "responseTime": 135,
+      "status": "degraded",
+      "responseTime": 411,
       "statusCode": 200
     },
     {
       "name": "Workforce Recruiter",
       "key": "workforce-recruiter",
-      "status": "up",
-      "responseTime": 138,
+      "status": "degraded",
+      "responseTime": 394,
       "statusCode": 200
     },
     {
       "name": "LightHouse",
       "key": "lighthouse",
-      "status": "up",
-      "responseTime": 162,
+      "status": "degraded",
+      "responseTime": 396,
       "statusCode": 200
     },
     {
       "name": "LostMail",
       "key": "lostmail",
-      "status": "up",
-      "responseTime": 118,
+      "status": "degraded",
+      "responseTime": 402,
       "statusCode": 200
     },
     {
       "name": "MechanicMatch",
       "key": "mechanicmatch",
-      "status": "up",
-      "responseTime": 144,
+      "status": "degraded",
+      "responseTime": 549,
       "statusCode": 200
     },
     {
       "name": "CompareNotes",
       "key": "research",
-      "status": "up",
-      "responseTime": 121,
+      "status": "degraded",
+      "responseTime": 455,
       "statusCode": 200
     },
     {
       "name": "SocketRelay",
       "key": "socketrelay",
-      "status": "up",
-      "responseTime": 141,
+      "status": "degraded",
+      "responseTime": 478,
       "statusCode": 200
     },
     {
       "name": "SupportMatch",
       "key": "supportmatch",
-      "status": "up",
-      "responseTime": 157,
+      "status": "degraded",
+      "responseTime": 488,
       "statusCode": 200
     },
     {
       "name": "TrustTransport",
       "key": "trusttransport",
-      "status": "up",
-      "responseTime": 163,
+      "status": "degraded",
+      "responseTime": 422,
       "statusCode": 200
     }
   ],
   "overall": {
     "total": 14,
-    "up": 14,
+    "up": 0,
+    "degraded": 14,
     "down": 0
   }
 }
