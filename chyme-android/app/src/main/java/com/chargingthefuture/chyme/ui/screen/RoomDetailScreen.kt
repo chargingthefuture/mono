@@ -17,6 +17,7 @@ import androidx.compose.material.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -29,6 +30,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import kotlinx.coroutines.launch
 import com.chargingthefuture.chyme.components.Avatar
 import com.chargingthefuture.chyme.data.model.ParticipantRole
 import com.chargingthefuture.chyme.ui.viewmodel.RoomViewModel
@@ -45,6 +47,7 @@ fun RoomDetailScreen(
 
     val context = LocalContext.current
     val scaffoldState = rememberScaffoldState()
+    val scope = rememberCoroutineScope()
     
     LaunchedEffect(roomId) {
         viewModel.loadRoom(roomId)
@@ -126,7 +129,7 @@ fun RoomDetailScreen(
             }
 
             // Show snackbar with error message
-            kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
+            scope.launch {
                 scaffoldState.snackbarHostState.showSnackbar(
                     message = message,
                     duration = SnackbarDuration.Long
@@ -487,9 +490,10 @@ fun RoomDetailScreen(
                     }
                     
                     // Validate scheme and host
+                    val host = uri.host
                     val valid = (uri.scheme == "http" || uri.scheme == "https") && 
-                                !uri.host.isNullOrBlank() &&
-                                uri.host.length <= 253 // Max hostname length
+                                !host.isNullOrBlank() &&
+                                host.length <= 253 // Max hostname length
                     
                     if (valid) {
                         viewModel.updatePinnedLink(roomId, trimmed)

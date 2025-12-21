@@ -4,11 +4,14 @@
  * This class aggregates all storage modules (core and mini-apps) and implements
  * the IStorage interface. It delegates method calls to the appropriate modules.
  * 
+ * REFACTORED: Now uses composed storage classes for better organization.
  * This maintains backward compatibility while allowing for modular code organization.
  */
 
 import { IStorage } from './types';
 import { CoreStorage } from './core';
+import { CoreStorageComposed } from './composed/core-storage-composed';
+import { MiniAppsStorageComposed } from './composed/mini-apps-storage-composed';
 import { SupportMatchStorage } from './mini-apps';
 import { LighthouseStorage } from './mini-apps';
 import { SocketRelayStorage } from './mini-apps';
@@ -26,18 +29,12 @@ import { BlogStorage } from './mini-apps';
 import { DefaultAliveOrDeadStorage } from './mini-apps';
 
 export class DatabaseStorage implements IStorage {
-  // Core storage module
-  private coreStorage: CoreStorage;
+  // Composed storage modules (refactored)
+  private coreStorageComposed: CoreStorageComposed;
+  private miniAppsStorageComposed: MiniAppsStorageComposed;
   
-  // Mini-app storage modules
-  private supportMatchStorage: SupportMatchStorage;
-  private lighthouseStorage: LighthouseStorage;
-  private socketRelayStorage: SocketRelayStorage;
-  private directoryStorage: DirectoryStorage;
-  private skillsStorage: SkillsStorage;
-  private chatGroupsStorage: ChatGroupsStorage;
-  private trustTransportStorage: TrustTransportStorage;
-  private mechanicMatchStorage: MechanicMatchStorage;
+  // Direct storage module references (for methods not yet in composed classes)
+  private coreStorage: CoreStorage;
   private lostMailStorage: LostMailStorage;
   private researchStorage: ResearchStorage;
   private gentlePulseStorage: GentlePulseStorage;
@@ -45,18 +42,16 @@ export class DatabaseStorage implements IStorage {
   private workforceRecruiterStorage: WorkforceRecruiterStorage;
   private blogStorage: BlogStorage;
   private defaultAliveOrDeadStorage: DefaultAliveOrDeadStorage;
+  private trustTransportStorage: TrustTransportStorage;
+  private chatGroupsStorage: ChatGroupsStorage;
 
   constructor() {
-    // Initialize all storage modules
+    // Initialize composed storage modules
+    this.coreStorageComposed = new CoreStorageComposed();
+    this.miniAppsStorageComposed = new MiniAppsStorageComposed();
+    
+    // Initialize remaining storage modules (not yet in composed classes)
     this.coreStorage = new CoreStorage();
-    this.supportMatchStorage = new SupportMatchStorage();
-    this.lighthouseStorage = new LighthouseStorage();
-    this.socketRelayStorage = new SocketRelayStorage();
-    this.directoryStorage = new DirectoryStorage();
-    this.skillsStorage = new SkillsStorage();
-    this.chatGroupsStorage = new ChatGroupsStorage();
-    this.trustTransportStorage = new TrustTransportStorage();
-    this.mechanicMatchStorage = new MechanicMatchStorage();
     this.lostMailStorage = new LostMailStorage();
     this.researchStorage = new ResearchStorage();
     this.gentlePulseStorage = new GentlePulseStorage();
@@ -64,124 +59,126 @@ export class DatabaseStorage implements IStorage {
     this.workforceRecruiterStorage = new WorkforceRecruiterStorage();
     this.blogStorage = new BlogStorage();
     this.defaultAliveOrDeadStorage = new DefaultAliveOrDeadStorage();
+    this.trustTransportStorage = new TrustTransportStorage();
+    this.chatGroupsStorage = new ChatGroupsStorage();
   }
 
   // ========================================
-  // CORE OPERATIONS (delegated to CoreStorage)
+  // CORE OPERATIONS (delegated to CoreStorageComposed)
   // ========================================
 
   // User operations
   async getUser(id: string) {
-    return this.coreStorage.getUser(id);
+    return this.coreStorageComposed.getUser(id);
   }
 
   async upsertUser(user: any) {
-    return this.coreStorage.upsertUser(user);
+    return this.coreStorageComposed.upsertUser(user);
   }
 
   async getAllUsers() {
-    return this.coreStorage.getAllUsers();
+    return this.coreStorageComposed.getAllUsers();
   }
 
   async updateUserVerification(userId: string, isVerified: boolean) {
-    return this.coreStorage.updateUserVerification(userId, isVerified);
+    return this.coreStorageComposed.updateUserVerification(userId, isVerified);
   }
 
   async updateUserApproval(userId: string, isApproved: boolean) {
-    return this.coreStorage.updateUserApproval(userId, isApproved);
+    return this.coreStorageComposed.updateUserApproval(userId, isApproved);
   }
 
   async updateTermsAcceptance(userId: string) {
-    return this.coreStorage.updateTermsAcceptance(userId);
+    return this.coreStorageComposed.updateTermsAcceptance(userId);
   }
 
   async updateUserQuoraProfileUrl(userId: string, quoraProfileUrl: string | null) {
-    return this.coreStorage.updateUserQuoraProfileUrl(userId, quoraProfileUrl);
+    return this.coreStorageComposed.updateUserQuoraProfileUrl(userId, quoraProfileUrl);
   }
 
   async updateUserName(userId: string, firstName: string | null, lastName: string | null) {
-    return this.coreStorage.updateUserName(userId, firstName, lastName);
+    return this.coreStorageComposed.updateUserName(userId, firstName, lastName);
   }
 
   // OTP code methods
   async createOTPCode(userId: string, code: string, expiresAt: Date) {
-    return this.coreStorage.createOTPCode(userId, code, expiresAt);
+    return this.coreStorageComposed.createOTPCode(userId, code, expiresAt);
   }
 
   async findOTPCodeByCode(code: string) {
-    return this.coreStorage.findOTPCodeByCode(code);
+    return this.coreStorageComposed.findOTPCodeByCode(code);
   }
 
   async deleteOTPCode(userId: string) {
-    return this.coreStorage.deleteOTPCode(userId);
+    return this.coreStorageComposed.deleteOTPCode(userId);
   }
 
   async deleteExpiredOTPCodes() {
-    return this.coreStorage.deleteExpiredOTPCodes();
+    return this.coreStorageComposed.deleteExpiredOTPCodes();
   }
 
   // Auth token methods
   async createAuthToken(token: string, userId: string, expiresAt: Date) {
-    return this.coreStorage.createAuthToken(token, userId, expiresAt);
+    return this.coreStorageComposed.createAuthToken(token, userId, expiresAt);
   }
 
   async findAuthTokenByToken(token: string) {
-    return this.coreStorage.findAuthTokenByToken(token);
+    return this.coreStorageComposed.findAuthTokenByToken(token);
   }
 
   async deleteAuthToken(token: string) {
-    return this.coreStorage.deleteAuthToken(token);
+    return this.coreStorageComposed.deleteAuthToken(token);
   }
 
   async deleteExpiredAuthTokens() {
-    return this.coreStorage.deleteExpiredAuthTokens();
+    return this.coreStorageComposed.deleteExpiredAuthTokens();
   }
 
   // Pricing tier operations
   async getCurrentPricingTier() {
-    return this.coreStorage.getCurrentPricingTier();
+    return this.coreStorageComposed.getCurrentPricingTier();
   }
 
   async getAllPricingTiers() {
-    return this.coreStorage.getAllPricingTiers();
+    return this.coreStorageComposed.getAllPricingTiers();
   }
 
   async createPricingTier(tier: any) {
-    return this.coreStorage.createPricingTier(tier);
+    return this.coreStorageComposed.createPricingTier(tier);
   }
 
   async setCurrentPricingTier(id: string) {
-    return this.coreStorage.setCurrentPricingTier(id);
+    return this.coreStorageComposed.setCurrentPricingTier(id);
   }
 
   // Payment operations
   async createPayment(payment: any) {
-    return this.coreStorage.createPayment(payment);
+    return this.coreStorageComposed.createPayment(payment);
   }
 
   async getPaymentsByUser(userId: string) {
-    return this.coreStorage.getPaymentsByUser(userId);
+    return this.coreStorageComposed.getPaymentsByUser(userId);
   }
 
   async getAllPayments() {
-    return this.coreStorage.getAllPayments();
+    return this.coreStorageComposed.getAllPayments();
   }
 
   async getUserPaymentStatus(userId: string) {
-    return this.coreStorage.getUserPaymentStatus(userId);
+    return this.coreStorageComposed.getUserPaymentStatus(userId);
   }
 
   async getDelinquentUsers() {
-    return this.coreStorage.getDelinquentUsers();
+    return this.coreStorageComposed.getDelinquentUsers();
   }
 
   // Admin action log operations
   async createAdminActionLog(log: any) {
-    return this.coreStorage.createAdminActionLog(log);
+    return this.coreStorageComposed.createAdminActionLog(log);
   }
 
   async getAllAdminActionLogs() {
-    return this.coreStorage.getAllAdminActionLogs();
+    return this.coreStorageComposed.getAllAdminActionLogs();
   }
 
   // Weekly Performance Review
@@ -195,527 +192,530 @@ export class DatabaseStorage implements IStorage {
 
   // NPS operations
   async createNpsResponse(response: any) {
-    return this.coreStorage.createNpsResponse(response);
+    return this.coreStorageComposed.createNpsResponse(response);
   }
 
   async getUserLastNpsResponse(userId: string) {
-    return this.coreStorage.getUserLastNpsResponse(userId);
+    return this.coreStorageComposed.getUserLastNpsResponse(userId);
   }
 
   async getNpsResponsesForWeek(weekStart: Date, weekEnd: Date) {
-    return this.coreStorage.getNpsResponsesForWeek(weekStart, weekEnd);
+    return this.coreStorageComposed.getNpsResponsesForWeek(weekStart, weekEnd);
   }
 
   async getAllNpsResponses() {
-    return this.coreStorage.getAllNpsResponses();
+    return this.coreStorageComposed.getAllNpsResponses();
   }
 
   // ========================================
-  // SUPPORTMATCH OPERATIONS
+  // SUPPORTMATCH OPERATIONS (delegated to MiniAppsStorageComposed)
   // ========================================
 
   async getSupportMatchProfile(userId: string) {
-    return this.supportMatchStorage.getSupportMatchProfile(userId);
+    return this.miniAppsStorageComposed.getSupportMatchProfile(userId);
   }
 
   async createSupportMatchProfile(profile: any) {
-    return this.supportMatchStorage.createSupportMatchProfile(profile);
+    return this.miniAppsStorageComposed.createSupportMatchProfile(profile);
   }
 
   async updateSupportMatchProfile(userId: string, profile: any) {
-    return this.supportMatchStorage.updateSupportMatchProfile(userId, profile);
+    return this.miniAppsStorageComposed.updateSupportMatchProfile(userId, profile);
   }
 
   async getAllActiveSupportMatchProfiles() {
-    return this.supportMatchStorage.getAllActiveSupportMatchProfiles();
+    return this.miniAppsStorageComposed.getAllActiveSupportMatchProfiles();
   }
 
   async getAllSupportMatchProfiles() {
-    return this.supportMatchStorage.getAllSupportMatchProfiles();
+    return this.miniAppsStorageComposed.getAllSupportMatchProfiles();
   }
 
   async createPartnership(partnership: any) {
-    return this.supportMatchStorage.createPartnership(partnership);
+    return this.miniAppsStorageComposed.createPartnership(partnership);
   }
 
   async getPartnershipById(id: string) {
-    return this.supportMatchStorage.getPartnershipById(id);
+    return this.miniAppsStorageComposed.getPartnershipById(id);
   }
 
   async getActivePartnershipByUser(userId: string) {
-    return this.supportMatchStorage.getActivePartnershipByUser(userId);
+    return this.miniAppsStorageComposed.getActivePartnershipByUser(userId);
   }
 
   async getAllPartnerships() {
-    return this.supportMatchStorage.getAllPartnerships();
+    return this.miniAppsStorageComposed.getAllPartnerships();
   }
 
   async getPartnershipHistory(userId: string) {
-    return this.supportMatchStorage.getPartnershipHistory(userId);
+    return this.miniAppsStorageComposed.getPartnershipHistory(userId);
   }
 
   async updatePartnershipStatus(id: string, status: string) {
-    return this.supportMatchStorage.updatePartnershipStatus(id, status);
+    return this.miniAppsStorageComposed.updatePartnershipStatus(id, status);
   }
 
   async createAlgorithmicMatches() {
-    return this.supportMatchStorage.createAlgorithmicMatches();
+    return this.miniAppsStorageComposed.createAlgorithmicMatches();
   }
 
   async createMessage(message: any) {
-    return this.supportMatchStorage.createMessage(message);
+    return this.miniAppsStorageComposed.createMessage(message);
   }
 
   async getMessagesByPartnership(partnershipId: string) {
-    return this.supportMatchStorage.getMessagesByPartnership(partnershipId);
+    return this.miniAppsStorageComposed.getMessagesByPartnership(partnershipId);
   }
 
   async createExclusion(exclusion: any) {
-    return this.supportMatchStorage.createExclusion(exclusion);
+    return this.miniAppsStorageComposed.createExclusion(exclusion);
   }
 
   async getExclusionsByUser(userId: string) {
-    return this.supportMatchStorage.getExclusionsByUser(userId);
+    return this.miniAppsStorageComposed.getExclusionsByUser(userId);
   }
 
   async checkMutualExclusion(user1Id: string, user2Id: string) {
-    return this.supportMatchStorage.checkMutualExclusion(user1Id, user2Id);
+    return this.miniAppsStorageComposed.checkMutualExclusion(user1Id, user2Id);
   }
 
   async deleteExclusion(id: string) {
-    return this.supportMatchStorage.deleteExclusion(id);
+    return this.miniAppsStorageComposed.deleteExclusion(id);
   }
 
   async createReport(report: any) {
-    return this.supportMatchStorage.createReport(report);
+    return this.miniAppsStorageComposed.createReport(report);
   }
 
   async getAllReports() {
-    return this.supportMatchStorage.getAllReports();
+    return this.miniAppsStorageComposed.getAllReports();
   }
 
   async updateReportStatus(id: string, status: string, resolution?: string) {
-    return this.supportMatchStorage.updateReportStatus(id, status, resolution);
+    return this.miniAppsStorageComposed.updateReportStatus(id, status, resolution);
   }
 
   async createAnnouncement(announcement: any) {
-    return this.supportMatchStorage.createAnnouncement(announcement);
+    return this.miniAppsStorageComposed.createAnnouncement(announcement);
   }
 
   async getActiveAnnouncements() {
-    return this.supportMatchStorage.getActiveAnnouncements();
+    return this.miniAppsStorageComposed.getActiveAnnouncements();
   }
 
   async getAllAnnouncements() {
-    return this.supportMatchStorage.getAllAnnouncements();
+    return this.miniAppsStorageComposed.getAllAnnouncements();
   }
 
   async updateAnnouncement(id: string, announcement: any) {
-    return this.supportMatchStorage.updateAnnouncement(id, announcement);
+    return this.miniAppsStorageComposed.updateAnnouncement(id, announcement);
   }
 
   async deactivateAnnouncement(id: string) {
-    return this.supportMatchStorage.deactivateAnnouncement(id);
+    return this.miniAppsStorageComposed.deactivateAnnouncement(id);
   }
 
   async createSupportmatchAnnouncement(announcement: any) {
-    return this.supportMatchStorage.createSupportmatchAnnouncement(announcement);
+    return this.miniAppsStorageComposed.createSupportmatchAnnouncement(announcement);
   }
 
   async getActiveSupportmatchAnnouncements() {
-    return this.supportMatchStorage.getActiveSupportmatchAnnouncements();
+    return this.miniAppsStorageComposed.getActiveSupportmatchAnnouncements();
   }
 
   async getAllSupportmatchAnnouncements() {
-    return this.supportMatchStorage.getAllSupportmatchAnnouncements();
+    return this.miniAppsStorageComposed.getAllSupportmatchAnnouncements();
   }
 
   async updateSupportmatchAnnouncement(id: string, announcement: any) {
-    return this.supportMatchStorage.updateSupportmatchAnnouncement(id, announcement);
+    return this.miniAppsStorageComposed.updateSupportmatchAnnouncement(id, announcement);
   }
 
   async deactivateSupportmatchAnnouncement(id: string) {
-    return this.supportMatchStorage.deactivateSupportmatchAnnouncement(id);
+    return this.miniAppsStorageComposed.deactivateSupportmatchAnnouncement(id);
   }
 
   async getSupportMatchStats() {
-    return this.supportMatchStorage.getSupportMatchStats();
+    return this.miniAppsStorageComposed.getSupportMatchStats();
   }
 
   // ========================================
-  // LIGHTHOUSE OPERATIONS
+  // LIGHTHOUSE OPERATIONS (delegated to MiniAppsStorageComposed)
   // ========================================
 
   async createLighthouseProfile(profile: any) {
-    return this.lighthouseStorage.createLighthouseProfile(profile);
+    return this.miniAppsStorageComposed.createLighthouseProfile(profile);
   }
 
   async getLighthouseProfileByUserId(userId: string) {
-    return this.lighthouseStorage.getLighthouseProfileByUserId(userId);
+    return this.miniAppsStorageComposed.getLighthouseProfileByUserId(userId);
   }
 
   async getLighthouseProfileById(id: string) {
-    return this.lighthouseStorage.getLighthouseProfileById(id);
+    return this.miniAppsStorageComposed.getLighthouseProfileById(id);
   }
 
   async updateLighthouseProfile(id: string, profile: any) {
-    return this.lighthouseStorage.updateLighthouseProfile(id, profile);
+    return this.miniAppsStorageComposed.updateLighthouseProfile(id, profile);
   }
 
   async getAllLighthouseProfiles() {
-    return this.lighthouseStorage.getAllLighthouseProfiles();
+    return this.miniAppsStorageComposed.getAllLighthouseProfiles();
   }
 
   async getLighthouseProfilesByType(profileType: string) {
-    return this.lighthouseStorage.getLighthouseProfilesByType(profileType);
+    return this.miniAppsStorageComposed.getLighthouseProfilesByType(profileType);
   }
 
   async createLighthouseProperty(property: any) {
-    return this.lighthouseStorage.createLighthouseProperty(property);
+    return this.miniAppsStorageComposed.createLighthouseProperty(property);
   }
 
   async getLighthousePropertyById(id: string) {
-    return this.lighthouseStorage.getLighthousePropertyById(id);
+    return this.miniAppsStorageComposed.getLighthousePropertyById(id);
   }
 
   async getPropertiesByHost(hostId: string) {
-    return this.lighthouseStorage.getPropertiesByHost(hostId);
+    return this.miniAppsStorageComposed.getPropertiesByHost(hostId);
   }
 
   async getAllActiveProperties() {
-    return this.lighthouseStorage.getAllActiveProperties();
+    return this.miniAppsStorageComposed.getAllActiveProperties();
   }
 
   async getAllProperties() {
-    return this.lighthouseStorage.getAllProperties();
+    return this.miniAppsStorageComposed.getAllProperties();
   }
 
   async updateLighthouseProperty(id: string, property: any) {
-    return this.lighthouseStorage.updateLighthouseProperty(id, property);
+    return this.miniAppsStorageComposed.updateLighthouseProperty(id, property);
   }
 
   async deleteLighthouseProperty(id: string) {
-    return this.lighthouseStorage.deleteLighthouseProperty(id);
+    return this.miniAppsStorageComposed.deleteLighthouseProperty(id);
   }
 
   async createLighthouseMatch(match: any) {
-    return this.lighthouseStorage.createLighthouseMatch(match);
+    return this.miniAppsStorageComposed.createLighthouseMatch(match);
   }
 
   async getLighthouseMatchById(id: string) {
-    return this.lighthouseStorage.getLighthouseMatchById(id);
+    return this.miniAppsStorageComposed.getLighthouseMatchById(id);
   }
 
   async getMatchesBySeeker(seekerId: string) {
-    return this.lighthouseStorage.getMatchesBySeeker(seekerId);
+    return this.miniAppsStorageComposed.getMatchesBySeeker(seekerId);
   }
 
   async getMatchesByProperty(propertyId: string) {
-    return this.lighthouseStorage.getMatchesByProperty(propertyId);
+    return this.miniAppsStorageComposed.getMatchesByProperty(propertyId);
   }
 
   async getAllMatches() {
-    return this.lighthouseStorage.getAllMatches();
+    return this.miniAppsStorageComposed.getAllMatches();
   }
 
   async getMatchesByProfile(profileId: string) {
-    return this.lighthouseStorage.getMatchesByProfile(profileId);
+    // This method is not in the interface, delegating directly
+    const { LighthouseStorage } = await import('./mini-apps');
+    const lighthouseStorage = new LighthouseStorage();
+    return lighthouseStorage.getMatchesByProfile(profileId);
   }
 
   async getAllLighthouseMatches() {
-    return this.lighthouseStorage.getAllLighthouseMatches();
+    return this.miniAppsStorageComposed.getAllLighthouseMatches();
   }
 
   async updateLighthouseMatch(id: string, match: any) {
-    return this.lighthouseStorage.updateLighthouseMatch(id, match);
+    return this.miniAppsStorageComposed.updateLighthouseMatch(id, match);
   }
 
   async getLighthouseStats() {
-    return this.lighthouseStorage.getLighthouseStats();
+    return this.miniAppsStorageComposed.getLighthouseStats();
   }
 
   async createLighthouseAnnouncement(announcement: any) {
-    return this.lighthouseStorage.createLighthouseAnnouncement(announcement);
+    return this.miniAppsStorageComposed.createLighthouseAnnouncement(announcement);
   }
 
   async getActiveLighthouseAnnouncements() {
-    return this.lighthouseStorage.getActiveLighthouseAnnouncements();
+    return this.miniAppsStorageComposed.getActiveLighthouseAnnouncements();
   }
 
   async getAllLighthouseAnnouncements() {
-    return this.lighthouseStorage.getAllLighthouseAnnouncements();
+    return this.miniAppsStorageComposed.getAllLighthouseAnnouncements();
   }
 
   async updateLighthouseAnnouncement(id: string, announcement: any) {
-    return this.lighthouseStorage.updateLighthouseAnnouncement(id, announcement);
+    return this.miniAppsStorageComposed.updateLighthouseAnnouncement(id, announcement);
   }
 
   async deactivateLighthouseAnnouncement(id: string) {
-    return this.lighthouseStorage.deactivateLighthouseAnnouncement(id);
+    return this.miniAppsStorageComposed.deactivateLighthouseAnnouncement(id);
   }
 
   async createLighthouseBlock(block: any) {
-    return this.lighthouseStorage.createLighthouseBlock(block);
+    return this.miniAppsStorageComposed.createLighthouseBlock(block);
   }
 
   async getLighthouseBlocksByUser(userId: string) {
-    return this.lighthouseStorage.getLighthouseBlocksByUser(userId);
+    return this.miniAppsStorageComposed.getLighthouseBlocksByUser(userId);
   }
 
   async checkLighthouseBlock(userId: string, blockedUserId: string) {
-    return this.lighthouseStorage.checkLighthouseBlock(userId, blockedUserId);
+    return this.miniAppsStorageComposed.checkLighthouseBlock(userId, blockedUserId);
   }
 
   async deleteLighthouseBlock(id: string) {
-    return this.lighthouseStorage.deleteLighthouseBlock(id);
+    return this.miniAppsStorageComposed.deleteLighthouseBlock(id);
   }
 
   // ========================================
-  // SOCKETRELAY OPERATIONS
+  // SOCKETRELAY OPERATIONS (delegated to MiniAppsStorageComposed)
   // ========================================
 
   async createSocketrelayRequest(userId: string, description: string, isPublic?: boolean) {
-    return this.socketRelayStorage.createSocketrelayRequest(userId, description, isPublic);
+    return this.miniAppsStorageComposed.createSocketrelayRequest(userId, description, isPublic);
   }
 
   async getActiveSocketrelayRequests() {
-    return this.socketRelayStorage.getActiveSocketrelayRequests();
+    return this.miniAppsStorageComposed.getActiveSocketrelayRequests();
   }
 
   async getAllSocketrelayRequests() {
-    return this.socketRelayStorage.getAllSocketrelayRequests();
+    return this.miniAppsStorageComposed.getAllSocketrelayRequests();
   }
 
   async getSocketrelayRequestById(id: string) {
-    return this.socketRelayStorage.getSocketrelayRequestById(id);
+    return this.miniAppsStorageComposed.getSocketrelayRequestById(id);
   }
 
   async getSocketrelayRequestsByUser(userId: string) {
-    return this.socketRelayStorage.getSocketrelayRequestsByUser(userId);
+    return this.miniAppsStorageComposed.getSocketrelayRequestsByUser(userId);
   }
 
   async getPublicSocketrelayRequestById(id: string) {
-    return this.socketRelayStorage.getPublicSocketrelayRequestById(id);
+    return this.miniAppsStorageComposed.getPublicSocketrelayRequestById(id);
   }
 
   async listPublicSocketrelayRequests() {
-    return this.socketRelayStorage.listPublicSocketrelayRequests();
+    return this.miniAppsStorageComposed.listPublicSocketrelayRequests();
   }
 
   async updateSocketrelayRequest(id: string, userId: string, description: string, isPublic?: boolean) {
-    return this.socketRelayStorage.updateSocketrelayRequest(id, userId, description, isPublic);
+    return this.miniAppsStorageComposed.updateSocketrelayRequest(id, userId, description, isPublic);
   }
 
   async updateSocketrelayRequestStatus(id: string, status: string) {
-    return this.socketRelayStorage.updateSocketrelayRequestStatus(id, status);
+    return this.miniAppsStorageComposed.updateSocketrelayRequestStatus(id, status);
   }
 
   async repostSocketrelayRequest(id: string, userId: string) {
-    return this.socketRelayStorage.repostSocketrelayRequest(id, userId);
+    return this.miniAppsStorageComposed.repostSocketrelayRequest(id, userId);
   }
 
   async deleteSocketrelayRequest(id: string) {
-    return this.socketRelayStorage.deleteSocketrelayRequest(id);
+    return this.miniAppsStorageComposed.deleteSocketrelayRequest(id);
   }
 
   async createSocketrelayFulfillment(requestId: string, fulfillerUserId: string) {
-    return this.socketRelayStorage.createSocketrelayFulfillment(requestId, fulfillerUserId);
+    return this.miniAppsStorageComposed.createSocketrelayFulfillment(requestId, fulfillerUserId);
   }
 
   async getSocketrelayFulfillmentById(id: string) {
-    return this.socketRelayStorage.getSocketrelayFulfillmentById(id);
+    return this.miniAppsStorageComposed.getSocketrelayFulfillmentById(id);
   }
 
   async getSocketrelayFulfillmentsByRequest(requestId: string) {
-    return this.socketRelayStorage.getSocketrelayFulfillmentsByRequest(requestId);
+    return this.miniAppsStorageComposed.getSocketrelayFulfillmentsByRequest(requestId);
   }
 
   async getSocketrelayFulfillmentsByUser(userId: string) {
-    return this.socketRelayStorage.getSocketrelayFulfillmentsByUser(userId);
+    return this.miniAppsStorageComposed.getSocketrelayFulfillmentsByUser(userId);
   }
 
   async getAllSocketrelayFulfillments() {
-    return this.socketRelayStorage.getAllSocketrelayFulfillments();
+    return this.miniAppsStorageComposed.getAllSocketrelayFulfillments();
   }
 
   async closeSocketrelayFulfillment(id: string, userId: string, status: string) {
-    return this.socketRelayStorage.closeSocketrelayFulfillment(id, userId, status);
+    return this.miniAppsStorageComposed.closeSocketrelayFulfillment(id, userId, status);
   }
 
   async createSocketrelayMessage(message: any) {
-    return this.socketRelayStorage.createSocketrelayMessage(message);
+    return this.miniAppsStorageComposed.createSocketrelayMessage(message);
   }
 
   async getSocketrelayMessagesByFulfillment(fulfillmentId: string) {
-    return this.socketRelayStorage.getSocketrelayMessagesByFulfillment(fulfillmentId);
+    return this.miniAppsStorageComposed.getSocketrelayMessagesByFulfillment(fulfillmentId);
   }
 
   async getSocketrelayProfile(userId: string) {
-    return this.socketRelayStorage.getSocketrelayProfile(userId);
+    return this.miniAppsStorageComposed.getSocketrelayProfile(userId);
   }
 
   async createSocketrelayProfile(profile: any) {
-    return this.socketRelayStorage.createSocketrelayProfile(profile);
+    return this.miniAppsStorageComposed.createSocketrelayProfile(profile);
   }
 
   async updateSocketrelayProfile(userId: string, profile: any) {
-    return this.socketRelayStorage.updateSocketrelayProfile(userId, profile);
+    return this.miniAppsStorageComposed.updateSocketrelayProfile(userId, profile);
   }
 
   async createSocketrelayAnnouncement(announcement: any) {
-    return this.socketRelayStorage.createSocketrelayAnnouncement(announcement);
+    return this.miniAppsStorageComposed.createSocketrelayAnnouncement(announcement);
   }
 
   async getActiveSocketrelayAnnouncements() {
-    return this.socketRelayStorage.getActiveSocketrelayAnnouncements();
+    return this.miniAppsStorageComposed.getActiveSocketrelayAnnouncements();
   }
 
   async getAllSocketrelayAnnouncements() {
-    return this.socketRelayStorage.getAllSocketrelayAnnouncements();
+    return this.miniAppsStorageComposed.getAllSocketrelayAnnouncements();
   }
 
   async updateSocketrelayAnnouncement(id: string, announcement: any) {
-    return this.socketRelayStorage.updateSocketrelayAnnouncement(id, announcement);
+    return this.miniAppsStorageComposed.updateSocketrelayAnnouncement(id, announcement);
   }
 
   async deactivateSocketrelayAnnouncement(id: string) {
-    return this.socketRelayStorage.deactivateSocketrelayAnnouncement(id);
+    return this.miniAppsStorageComposed.deactivateSocketrelayAnnouncement(id);
   }
 
   // ========================================
-  // DIRECTORY OPERATIONS
+  // DIRECTORY OPERATIONS (delegated to MiniAppsStorageComposed)
   // ========================================
 
   async getDirectoryProfileById(id: string) {
-    return this.directoryStorage.getDirectoryProfileById(id);
+    return this.miniAppsStorageComposed.getDirectoryProfileById(id);
   }
 
   async getDirectoryProfileByUserId(userId: string) {
-    return this.directoryStorage.getDirectoryProfileByUserId(userId);
+    return this.miniAppsStorageComposed.getDirectoryProfileByUserId(userId);
   }
 
   async listAllDirectoryProfiles() {
-    return this.directoryStorage.listAllDirectoryProfiles();
+    return this.miniAppsStorageComposed.listAllDirectoryProfiles();
   }
 
   async listPublicDirectoryProfiles() {
-    return this.directoryStorage.listPublicDirectoryProfiles();
+    return this.miniAppsStorageComposed.listPublicDirectoryProfiles();
   }
 
   async createDirectoryProfile(profile: any) {
-    return this.directoryStorage.createDirectoryProfile(profile);
+    return this.miniAppsStorageComposed.createDirectoryProfile(profile);
   }
 
   async updateDirectoryProfile(id: string, profile: any) {
-    return this.directoryStorage.updateDirectoryProfile(id, profile);
+    return this.miniAppsStorageComposed.updateDirectoryProfile(id, profile);
   }
 
   async deleteDirectoryProfile(id: string) {
-    return this.directoryStorage.deleteDirectoryProfile(id);
+    return this.miniAppsStorageComposed.deleteDirectoryProfile(id);
   }
 
   async createDirectoryAnnouncement(announcement: any) {
-    return this.directoryStorage.createDirectoryAnnouncement(announcement);
+    return this.miniAppsStorageComposed.createDirectoryAnnouncement(announcement);
   }
 
   async getActiveDirectoryAnnouncements() {
-    return this.directoryStorage.getActiveDirectoryAnnouncements();
+    return this.miniAppsStorageComposed.getActiveDirectoryAnnouncements();
   }
 
   async getAllDirectoryAnnouncements() {
-    return this.directoryStorage.getAllDirectoryAnnouncements();
+    return this.miniAppsStorageComposed.getAllDirectoryAnnouncements();
   }
 
   async updateDirectoryAnnouncement(id: string, announcement: any) {
-    return this.directoryStorage.updateDirectoryAnnouncement(id, announcement);
+    return this.miniAppsStorageComposed.updateDirectoryAnnouncement(id, announcement);
   }
 
   async deactivateDirectoryAnnouncement(id: string) {
-    return this.directoryStorage.deactivateDirectoryAnnouncement(id);
+    return this.miniAppsStorageComposed.deactivateDirectoryAnnouncement(id);
   }
 
   async getAllDirectorySkills() {
-    return this.directoryStorage.getAllDirectorySkills();
+    return this.miniAppsStorageComposed.getAllDirectorySkills();
   }
 
   async createDirectorySkill(skill: any) {
-    return this.directoryStorage.createDirectorySkill(skill);
+    return this.miniAppsStorageComposed.createDirectorySkill(skill);
   }
 
   async deleteDirectorySkill(id: string) {
-    return this.directoryStorage.deleteDirectorySkill(id);
+    return this.miniAppsStorageComposed.deleteDirectorySkill(id);
   }
 
   // ========================================
-  // SKILLS OPERATIONS (Shared)
+  // SKILLS OPERATIONS (Shared) (delegated to MiniAppsStorageComposed)
   // ========================================
 
   async getAllSkillsSectors() {
-    return this.skillsStorage.getAllSkillsSectors();
+    return this.miniAppsStorageComposed.getAllSkillsSectors();
   }
 
   async getSkillsSectorById(id: string) {
-    return this.skillsStorage.getSkillsSectorById(id);
+    return this.miniAppsStorageComposed.getSkillsSectorById(id);
   }
 
   async createSkillsSector(sector: any) {
-    return this.skillsStorage.createSkillsSector(sector);
+    return this.miniAppsStorageComposed.createSkillsSector(sector);
   }
 
   async updateSkillsSector(id: string, sector: any) {
-    return this.skillsStorage.updateSkillsSector(id, sector);
+    return this.miniAppsStorageComposed.updateSkillsSector(id, sector);
   }
 
   async deleteSkillsSector(id: string) {
-    return this.skillsStorage.deleteSkillsSector(id);
+    return this.miniAppsStorageComposed.deleteSkillsSector(id);
   }
 
   async getAllSkillsJobTitles(sectorId?: string) {
-    return this.skillsStorage.getAllSkillsJobTitles(sectorId);
+    return this.miniAppsStorageComposed.getAllSkillsJobTitles(sectorId);
   }
 
   async getSkillsJobTitleById(id: string) {
-    return this.skillsStorage.getSkillsJobTitleById(id);
+    return this.miniAppsStorageComposed.getSkillsJobTitleById(id);
   }
 
   async createSkillsJobTitle(jobTitle: any) {
-    return this.skillsStorage.createSkillsJobTitle(jobTitle);
+    return this.miniAppsStorageComposed.createSkillsJobTitle(jobTitle);
   }
 
   async updateSkillsJobTitle(id: string, jobTitle: any) {
-    return this.skillsStorage.updateSkillsJobTitle(id, jobTitle);
+    return this.miniAppsStorageComposed.updateSkillsJobTitle(id, jobTitle);
   }
 
   async deleteSkillsJobTitle(id: string) {
-    return this.skillsStorage.deleteSkillsJobTitle(id);
+    return this.miniAppsStorageComposed.deleteSkillsJobTitle(id);
   }
 
   async getAllSkillsSkills(jobTitleId?: string) {
-    return this.skillsStorage.getAllSkillsSkills(jobTitleId);
+    return this.miniAppsStorageComposed.getAllSkillsSkills(jobTitleId);
   }
 
   async getSkillsSkillById(id: string) {
-    return this.skillsStorage.getSkillsSkillById(id);
+    return this.miniAppsStorageComposed.getSkillsSkillById(id);
   }
 
   async createSkillsSkill(skill: any) {
-    return this.skillsStorage.createSkillsSkill(skill);
+    return this.miniAppsStorageComposed.createSkillsSkill(skill);
   }
 
   async updateSkillsSkill(id: string, skill: any) {
-    return this.skillsStorage.updateSkillsSkill(id, skill);
+    return this.miniAppsStorageComposed.updateSkillsSkill(id, skill);
   }
 
   async deleteSkillsSkill(id: string) {
-    return this.skillsStorage.deleteSkillsSkill(id);
+    return this.miniAppsStorageComposed.deleteSkillsSkill(id);
   }
 
   async getSkillsHierarchy() {
-    return this.skillsStorage.getSkillsHierarchy();
+    return this.miniAppsStorageComposed.getSkillsHierarchy();
   }
 
   async getAllSkillsFlattened() {
-    return this.skillsStorage.getAllSkillsFlattened();
+    return this.miniAppsStorageComposed.getAllSkillsFlattened();
   }
 
   // ========================================
@@ -1684,19 +1684,19 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteSupportMatchProfile(userId: string, reason?: string): Promise<void> {
-    return this.supportMatchStorage.deleteSupportMatchProfile(userId, reason);
+    return this.miniAppsStorageComposed.deleteSupportMatchProfile(userId, reason);
   }
 
   async deleteLighthouseProfile(userId: string, reason?: string): Promise<void> {
-    return this.lighthouseStorage.deleteLighthouseProfile(userId, reason);
+    return this.miniAppsStorageComposed.deleteLighthouseProfile(userId, reason);
   }
 
   async deleteSocketrelayProfile(userId: string, reason?: string): Promise<void> {
-    return this.socketRelayStorage.deleteSocketrelayProfile(userId, reason);
+    return this.miniAppsStorageComposed.deleteSocketrelayProfile(userId, reason);
   }
 
   async deleteDirectoryProfileWithCascade(userId: string, reason?: string): Promise<void> {
-    return this.directoryStorage.deleteDirectoryProfileWithCascade(userId, reason);
+    return this.miniAppsStorageComposed.deleteDirectoryProfileWithCascade(userId, reason);
   }
 
   async deleteTrusttransportProfile(userId: string, reason?: string): Promise<void> {
@@ -1704,7 +1704,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteMechanicmatchProfile(userId: string, reason?: string): Promise<void> {
-    return this.mechanicMatchStorage.deleteMechanicmatchProfile(userId, reason);
+    return this.miniAppsStorageComposed.deleteMechanicmatchProfile(userId, reason);
   }
 
   async deleteUserAccount(userId: string, reason?: string): Promise<void> {

@@ -1,18 +1,20 @@
 package com.chargingthefuture.chyme.components
 
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.Icon
-import androidx.compose.material.Icons
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Text
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -20,6 +22,8 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.chargingthefuture.chyme.data.model.ChymeUser
 
 /**
@@ -57,16 +61,16 @@ fun Avatar(
             .background(MaterialTheme.colors.primary.copy(alpha = 0.2f)),
         contentAlignment = Alignment.Center
     ) {
-        when {
             !user?.profileImageUrl.isNullOrBlank() -> {
-                // Load profile image
-                AsyncImage(
-                    model = user?.profileImageUrl,
-                    contentDescription = "Profile picture",
-                    modifier = Modifier
-                        .size(size)
-                        .clip(CircleShape),
-                    onError = {
+                // Load profile image with error/loading handling
+                val painter = rememberAsyncImagePainter(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(user?.profileImageUrl)
+                        .build()
+                )
+                
+                when (painter.state) {
+                    is coil.compose.AsyncImagePainter.State.Error -> {
                         // Fallback to initials on error
                         Text(
                             text = initials,
@@ -77,9 +81,9 @@ fun Avatar(
                             color = MaterialTheme.colors.primary,
                             textAlign = TextAlign.Center
                         )
-                    },
-                    onLoading = {
-                        // Show loading state (could be a progress indicator)
+                    }
+                    is coil.compose.AsyncImagePainter.State.Loading -> {
+                        // Show loading state
                         Icon(
                             Icons.Default.Person,
                             contentDescription = null,
@@ -87,7 +91,16 @@ fun Avatar(
                             tint = MaterialTheme.colors.primary.copy(alpha = 0.5f)
                         )
                     }
-                )
+                    else -> {
+                        Image(
+                            painter = painter,
+                            contentDescription = "Profile picture",
+                            modifier = Modifier
+                                .size(size)
+                                .clip(CircleShape)
+                        )
+                    }
+                }
             }
             initials.length >= 2 -> {
                 // Show initials
@@ -139,15 +152,16 @@ fun Avatar(
             .background(MaterialTheme.colors.primary.copy(alpha = 0.2f)),
         contentAlignment = Alignment.Center
     ) {
-        when {
             !imageUrl.isNullOrBlank() -> {
-                AsyncImage(
-                    model = imageUrl,
-                    contentDescription = "Profile picture",
-                    modifier = Modifier
-                        .size(size)
-                        .clip(CircleShape),
-                    onError = {
+                // Load profile image with error handling
+                val painter = rememberAsyncImagePainter(
+                    model = ImageRequest.Builder(LocalContext.current)
+                        .data(imageUrl)
+                        .build()
+                )
+                
+                when (painter.state) {
+                    is coil.compose.AsyncImagePainter.State.Error -> {
                         if (initials.length >= 2) {
                             Text(
                                 text = initials,
@@ -167,7 +181,16 @@ fun Avatar(
                             )
                         }
                     }
-                )
+                    else -> {
+                        Image(
+                            painter = painter,
+                            contentDescription = "Profile picture",
+                            modifier = Modifier
+                                .size(size)
+                                .clip(CircleShape)
+                        )
+                    }
+                }
             }
             initials.length >= 2 -> {
                 Text(

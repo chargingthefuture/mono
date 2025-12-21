@@ -3,7 +3,20 @@
  * 
  * Defines the IStorage interface that all storage implementations must follow.
  * This interface is extracted from the original storage.ts to be shared across modules.
+ * 
+ * NOTE: This file is being refactored. Domain-specific interfaces are now in the types/ directory.
+ * This file maintains backward compatibility by composing those interfaces.
  */
+
+// Import domain-specific interfaces
+import type { ICoreStorage } from './types/core-storage.interface';
+import type { ISupportMatchStorage } from './types/supportmatch-storage.interface';
+import type { ILighthouseStorage } from './types/lighthouse-storage.interface';
+import type { IMechanicMatchStorage } from './types/mechanicmatch-storage.interface';
+import type { ISocketRelayStorage } from './types/socketrelay-storage.interface';
+import type { IDirectoryStorage } from './types/directory-storage.interface';
+import type { ISkillsStorage } from './types/skills-storage.interface';
+import type { IProfileDeletionStorage } from './types/profile-deletion-storage.interface';
 
 import type {
   type User,
@@ -164,8 +177,21 @@ import type {
 } from "@shared/schema";
 
 // Interface for storage operations
-export interface IStorage {
+// Composed from domain-specific interfaces for better maintainability
+export interface IStorage 
+  extends ICoreStorage,
+          ISupportMatchStorage,
+          ILighthouseStorage,
+          IMechanicMatchStorage,
+          ISocketRelayStorage,
+          IDirectoryStorage,
+          ISkillsStorage,
+          IProfileDeletionStorage {
+  // Additional methods that are not yet in domain-specific interfaces
+  // These will be migrated as we continue refactoring
+  
   // User operations (IMPORTANT: mandatory for authentication)
+  // NOTE: These are now in ICoreStorage, but kept here for backward compatibility
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   

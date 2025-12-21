@@ -1,8 +1,8 @@
 # Platform Folder Refactoring Analysis
 
-## Overview
+This document identifies files in the `platform` folder that meet immediate refactoring indicators.
 
-This document identifies files in the `platform` folder that meet the immediate refactoring indicators:
+## Refactoring Indicators
 
 - ✅ File is more than 500 lines long
 - ✅ Multiple responsibilities in a single file
@@ -13,449 +13,415 @@ This document identifies files in the `platform` folder that meet the immediate 
 
 ---
 
-## 🔴 CRITICAL PRIORITY - Files > 1000 Lines
+## 🔴 CRITICAL PRIORITY (Files > 500 lines)
 
-### 1. `server/routes.ts` - **7,681 lines** ⚠️ CRITICAL
+### 1. `server/storage/composed-storage.ts` (1,759 lines)
 
-**Refactoring Indicators:**
-- ✅ **7,681 lines** (15x over limit)
-- ✅ **381+ route handlers** (functions)
-- ✅ **22 import statements** with 80+ imported items
-- ✅ **Multiple responsibilities**: Health, Auth, Webhooks, Admin, Directory, Skills, ChatGroups, Lighthouse, TrustTransport, MechanicMatch, Research, GentlePulse, Blog, LostMail, Chyme, Chyme Rooms, Workforce Recruiter, Default Alive or Dead
-- ✅ **Difficulty understanding**: Monolithic route file handling all API endpoints
+**Issues:**
+- ✅ **1,759 lines** - Far exceeds 500 line limit
+- ✅ **Multiple responsibilities** - Aggregates ALL storage modules (core + 14 mini-apps)
+- ✅ **200+ method definitions** - Massive delegation class
+- ✅ **16+ import groups** - Imports from all storage modules
+- ✅ **Single responsibility violation** - Acts as facade for entire storage layer
 
-**Current Status:**
-- Partial refactoring in progress (see `server/routes/ROUTE_EXTRACTION_GUIDE.md`)
-- Some routes already extracted: `health.routes.ts`, `auth.routes.ts`, `webhooks.routes.ts`, `admin.routes.ts`
-- **Remaining routes to extract:**
-  - Directory Routes (lines 923-1478)
-  - Skills Routes (lines 1480-1622)
-  - ChatGroups Routes (lines 1624-2126)
-  - Lighthouse Routes (lines 2127-3334) - **Note: `lighthouse.routes.ts` exists but routes.ts still contains them**
-  - TrustTransport Routes (lines 3335-3670)
-  - MechanicMatch Routes (lines 3671-4475)
-  - Research Routes (lines 4476-5105)
-  - GentlePulse Routes (lines 5106-5296)
-  - Blog Routes (lines 5297-5613)
-  - LostMail Routes (lines 5614-5898)
-  - Chyme Routes (lines 5899-6316)
-  - Chyme Rooms Routes (lines 6317-6974)
-  - Workforce Recruiter Routes (lines 6975-7517)
-  - Default Alive or Dead Routes (lines 7518-7681)
+**Refactoring Recommendations:**
+1. **Split by domain**: Create separate composed storage files:
+   - `composed-storage-core.ts` - Core operations (users, auth, payments, etc.)
+   - `composed-storage-mini-apps.ts` - Mini-app operations
+   - `composed-storage-factory.ts` - Factory to create composed storage instances
+2. **Use Proxy pattern**: Dynamically delegate method calls instead of explicit methods
+3. **Create domain-specific interfaces**: Split `IStorage` into smaller interfaces per domain
+4. **Consider composition over inheritance**: Use mixins or composition for shared behavior
 
-**Recommended Refactoring:**
-1. Complete route extraction following the existing pattern in `server/routes/`
-2. Update `server/routes/index.ts` to register all extracted routes
-3. Remove extracted routes from `routes.ts`
-4. Verify all route handlers are properly extracted
+**Target Structure:**
+```
+server/storage/
+  composed/
+    core-storage-composed.ts (Core operations)
+    mini-apps-storage-composed.ts (Mini-app operations)
+    storage-factory.ts (Factory pattern)
+```
 
 ---
 
-### 2. `server/storage/composed-storage.ts` - **1,759 lines** ⚠️ HIGH
+### 2. `server/storage/types.ts` (961 lines)
 
-**Refactoring Indicators:**
-- ✅ **1,759 lines** (3.5x over limit)
-- ✅ **394+ method definitions** (delegation methods)
-- ✅ **Multiple responsibilities**: Delegates to 15+ mini-app storage modules + core storage
-- ✅ **Pattern**: Composed class with delegation - acceptable pattern but file is too large
+**Issues:**
+- ✅ **961 lines** - Nearly double the 500 line limit
+- ✅ **160+ lines of type imports** - Excessive dependencies
+- ✅ **Single massive interface** - `IStorage` with 200+ methods
+- ✅ **Multiple responsibilities** - Defines types for all domains (core + 14 mini-apps)
 
-**Current Status:**
-- This is a composition class that delegates to extracted storage modules
-- All methods are simple delegation wrappers
+**Refactoring Recommendations:**
+1. **Split IStorage interface** into domain-specific interfaces:
+   - `ICoreStorage` - User, auth, payment operations
+   - `ISupportMatchStorage` - SupportMatch operations
+   - `ILighthouseStorage` - Lighthouse operations
+   - `IMechanicMatchStorage` - MechanicMatch operations
+   - etc.
+2. **Create separate type files per domain**:
+   - `types/core-storage.interface.ts`
+   - `types/mini-apps-storage.interface.ts`
+   - `types/index.ts` - Re-exports
+3. **Use interface composition**: `IStorage extends ICoreStorage, ISupportMatchStorage, ...`
 
-**Recommended Refactoring:**
-1. **Option A**: Keep current structure but split into multiple files:
-   - `composed-storage-core.ts` - Core operations delegation
-   - `composed-storage-mini-apps.ts` - Mini-app operations delegation
-   - `composed-storage.ts` - Main class that imports both
-2. **Option B**: Generate delegation methods programmatically using TypeScript's Proxy or method mapping
-3. **Option C**: Accept current structure if it's auto-generated or tool-assisted
-
----
-
-### 3. `client/src/pages/directory/admin.tsx` - **1,242 lines** ⚠️ HIGH
-
-**Refactoring Indicators:**
-- ✅ **1,242 lines** (2.5x over limit)
-- ✅ **25+ import statements**
-- ✅ **Multiple responsibilities**: Profile management, skills management, sectors, job titles, search, pagination, CRUD operations
-- ✅ **14+ conditional blocks** (if/else/switch/try-catch)
-- ✅ **Difficulty understanding**: Large admin component with many features
-
-**Recommended Refactoring:**
-1. Extract into sub-components:
-   - `DirectoryAdminProfileList.tsx` - Profile listing and search
-   - `DirectoryAdminProfileForm.tsx` - Create/edit profile form
-   - `DirectoryAdminSkillsManager.tsx` - Skills management section
-   - `DirectoryAdminSectorsManager.tsx` - Sectors management
-   - `DirectoryAdminJobTitlesManager.tsx` - Job titles management
-2. Extract custom hooks:
-   - `useDirectoryAdminProfiles.ts` - Profile data fetching and mutations
-   - `useDirectoryAdminSkills.ts` - Skills data management
-3. Extract utility functions:
-   - `directoryAdminUtils.ts` - Helper functions for validation, formatting
+**Target Structure:**
+```
+server/storage/types/
+  core-storage.interface.ts
+  supportmatch-storage.interface.ts
+  lighthouse-storage.interface.ts
+  mechanicmatch-storage.interface.ts
+  ...
+  index.ts (composed IStorage)
+```
 
 ---
 
-### 4. `client/src/pages/admin/weekly-performance.tsx` - **1,091 lines** ⚠️ HIGH
+### 3. `client/src/pages/mechanicmatch/admin-profiles.tsx` (917 lines)
 
-**Refactoring Indicators:**
-- ✅ **1,091 lines** (2.2x over limit)
-- ✅ **Multiple responsibilities**: Data fetching, chart rendering, metric calculations, date handling, formatting
-- ✅ **Difficulty understanding**: Complex dashboard with many metrics and visualizations
+**Issues:**
+- ✅ **917 lines** - Nearly double the 500 line limit
+- ✅ **Multiple responsibilities**:
+  - Profile CRUD operations
+  - Form handling (create/edit)
+  - User assignment dialog
+  - Delete confirmation dialog
+  - Search and filtering
+  - Pagination
+- ✅ **33+ function/method definitions** - Many mutations, handlers, form components
+- ✅ **Multiple import groups** - 20+ imports
 
-**Recommended Refactoring:**
-1. Extract metric components:
-   - `WeeklyPerformanceMetrics.tsx` - Core metrics display
-   - `WeeklyPerformanceCharts.tsx` - Chart visualizations
-   - `WeeklyPerformanceComparison.tsx` - Week-over-week comparison
-2. Extract custom hooks:
-   - `useWeeklyPerformance.ts` - Data fetching and calculations
-   - `useWeekSelection.ts` - Week selection logic
-3. Extract utility functions:
-   - `weeklyPerformanceUtils.ts` - Formatting, calculations, date utilities
+**Refactoring Recommendations:**
+1. **Extract dialogs into separate components**:
+   - `components/mechanicmatch/ProfileEditDialog.tsx`
+   - `components/mechanicmatch/ProfileAssignDialog.tsx`
+   - `components/mechanicmatch/ProfileDeleteDialog.tsx`
+2. **Extract form components**:
+   - `components/mechanicmatch/ProfileForm.tsx`
+   - `components/mechanicmatch/RoleCheckbox.tsx`
+   - `components/mechanicmatch/LocationSelect.tsx`
+3. **Extract mutations into custom hooks**:
+   - `hooks/useMechanicMatchProfileMutations.ts`
+4. **Extract list component**:
+   - `components/mechanicmatch/ProfileList.tsx`
 
----
-
-### 5. `server/routes/lighthouse.routes.ts` - **1,231 lines** ⚠️ MEDIUM
-
-**Refactoring Indicators:**
-- ✅ **1,231 lines** (2.5x over limit)
-- ✅ **Multiple responsibilities**: Profile routes, property routes, match routes, announcement routes, admin routes
-- ✅ **Many route handlers** (likely 30+ routes)
-
-**Recommended Refactoring:**
-1. Split into domain-specific route files:
-   - `lighthouse-profile.routes.ts` - Profile CRUD operations
-   - `lighthouse-property.routes.ts` - Property management
-   - `lighthouse-match.routes.ts` - Matching logic
-   - `lighthouse-announcement.routes.ts` - Announcements
-   - `lighthouse-admin.routes.ts` - Admin operations
-2. Create `lighthouse.routes.ts` that imports and registers all sub-routes
-
----
-
-### 6. `client/src/App.tsx` - **976 lines** ⚠️ MEDIUM
-
-**Refactoring Indicators:**
-- ✅ **976 lines** (2x over limit)
-- ✅ **138 import statements** (massive import list)
-- ✅ **Multiple responsibilities**: Route configuration, auth setup, error boundaries, terms acceptance, NPS surveys
-- ✅ **Difficulty understanding**: Main app file with routing for 15+ mini-apps
-
-**Recommended Refactoring:**
-1. Extract route configuration:
-   - `routes/index.tsx` - Route definitions
-   - `routes/public.tsx` - Public routes
-   - `routes/authenticated.tsx` - Authenticated routes
-   - `routes/admin.tsx` - Admin routes
-2. Extract app setup:
-   - `AppProviders.tsx` - All context providers (QueryClient, Sidebar, etc.)
-   - `AppLayout.tsx` - Layout components (Sidebar, ErrorBoundary, etc.)
-3. Group imports by category (UI components, pages, hooks, etc.)
+**Target Structure:**
+```
+client/src/pages/mechanicmatch/admin-profiles/
+  index.tsx (main component, ~200 lines)
+  components/
+    ProfileForm.tsx
+    ProfileList.tsx
+    ProfileEditDialog.tsx
+    ProfileAssignDialog.tsx
+    ProfileDeleteDialog.tsx
+  hooks/
+    useMechanicMatchProfileMutations.ts
+```
 
 ---
 
-## 🟡 MEDIUM PRIORITY - Files 500-1000 Lines
+### 4. `server/routes/mechanicmatch.routes.ts` (833 lines)
 
-### 7. `server/storage/types.ts` - **961 lines** ⚠️ MEDIUM
+**Issues:**
+- ✅ **833 lines** - Exceeds 500 line limit
+- ✅ **Multiple responsibilities** - Handles 10+ route groups:
+  - Profile routes (public, admin, user)
+  - Vehicle routes
+  - Service request routes
+  - Job routes
+  - Availability routes
+  - Review routes
+  - Message routes
+  - Search routes
+  - Announcement routes
+- ✅ **30+ route handlers** - Far exceeds 5-7 function limit
+- ✅ **Complex nested conditionals** - Authorization checks, validation
 
-**Refactoring Indicators:**
-- ✅ **961 lines** (2x over limit)
-- ✅ **Multiple responsibilities**: Interface definitions for all storage operations (core + 15 mini-apps)
-- ✅ **Difficulty understanding**: Massive interface with 200+ method signatures
+**Refactoring Recommendations:**
+1. **Split into domain-specific route files**:
+   - `routes/mechanicmatch/profiles.routes.ts`
+   - `routes/mechanicmatch/vehicles.routes.ts`
+   - `routes/mechanicmatch/jobs.routes.ts`
+   - `routes/mechanicmatch/service-requests.routes.ts`
+   - `routes/mechanicmatch/announcements.routes.ts`
+2. **Create shared middleware**:
+   - `routes/mechanicmatch/middleware.ts` - Common auth/validation
+3. **Extract route handlers**:
+   - `routes/mechanicmatch/handlers/` - Separate handler files
 
-**Current Status:**
-- This is a type definition file that defines the `IStorage` interface
-- Contains method signatures for all storage operations
-
-**Recommended Refactoring:**
-1. Split interface into domain-specific interfaces:
-   - `storage-types-core.ts` - Core operations interface
-   - `storage-types-supportmatch.ts` - SupportMatch interface
-   - `storage-types-lighthouse.ts` - Lighthouse interface
-   - (etc. for each mini-app)
-2. Create `storage-types.ts` that extends/combines all interfaces
-3. Or use TypeScript's interface merging/extending features
-
----
-
-### 8. `client/src/pages/mechanicmatch/admin-profiles.tsx` - **917 lines** ⚠️ MEDIUM
-
-**Refactoring Indicators:**
-- ✅ **917 lines** (1.8x over limit)
-- ✅ **Multiple responsibilities**: Profile management, search, filtering, CRUD operations
-
-**Recommended Refactoring:**
-1. Extract sub-components:
-   - `MechanicMatchAdminProfileList.tsx`
-   - `MechanicMatchAdminProfileForm.tsx`
-   - `MechanicMatchAdminProfileFilters.tsx`
-2. Extract hooks:
-   - `useMechanicMatchAdminProfiles.ts`
-
----
-
-### 9. `server/routes/mechanicmatch.routes.ts` - **833 lines** ⚠️ MEDIUM
-
-**Refactoring Indicators:**
-- ✅ **833 lines** (1.7x over limit)
-- ✅ **Multiple responsibilities**: Profile, vehicle, service request, job, availability, review, message, announcement routes
-
-**Recommended Refactoring:**
-1. Split into domain-specific route files:
-   - `mechanicmatch-profile.routes.ts`
-   - `mechanicmatch-vehicle.routes.ts`
-   - `mechanicmatch-service.routes.ts`
-   - `mechanicmatch-admin.routes.ts`
+**Target Structure:**
+```
+server/routes/mechanicmatch/
+  index.ts (registers all routes)
+  profiles.routes.ts
+  vehicles.routes.ts
+  jobs.routes.ts
+  service-requests.routes.ts
+  availability.routes.ts
+  reviews.routes.ts
+  messages.routes.ts
+  search.routes.ts
+  announcements.routes.ts
+  middleware.ts
+```
 
 ---
 
-### 10. `client/src/pages/admin/skills.tsx` - **783 lines** ⚠️ MEDIUM
+### 5. `client/src/pages/admin/skills.tsx` (783 lines)
 
-**Refactoring Indicators:**
-- ✅ **783 lines** (1.6x over limit)
-- ✅ **Multiple responsibilities**: Skills, sectors, job titles management
+**Issues:**
+- ✅ **783 lines** - Exceeds 500 line limit
+- ✅ **Multiple responsibilities**:
+  - Sector management (CRUD)
+  - Job title management (CRUD)
+  - Skill management (CRUD)
+  - Dialog management (3 dialogs)
+  - Form state management
+- ✅ **15+ function definitions** - Mutations, handlers, form components
+- ✅ **Multiple import groups** - 15+ imports
 
-**Recommended Refactoring:**
-1. Extract into tabs/sections:
-   - `SkillsManagement.tsx`
-   - `SectorsManagement.tsx`
-   - `JobTitlesManagement.tsx`
+**Refactoring Recommendations:**
+1. **Extract dialogs into separate components**:
+   - `components/admin/skills/SectorDialog.tsx`
+   - `components/admin/skills/JobTitleDialog.tsx`
+   - `components/admin/skills/SkillDialog.tsx`
+   - `components/admin/skills/DeleteConfirmDialog.tsx`
+2. **Extract hierarchy display component**:
+   - `components/admin/skills/SkillsHierarchy.tsx`
+3. **Extract mutations into custom hooks**:
+   - `hooks/useSkillsMutations.ts`
 
----
-
-### 11. `client/src/pages/mechanicmatch/profile.tsx` - **744 lines** ⚠️ MEDIUM
-
-**Refactoring Indicators:**
-- ✅ **744 lines** (1.5x over limit)
-- ✅ **Multiple responsibilities**: Profile display, editing, vehicle management, availability
-
-**Recommended Refactoring:**
-1. Extract sub-components:
-   - `MechanicMatchProfileView.tsx`
-   - `MechanicMatchProfileEdit.tsx`
-   - `MechanicMatchVehiclesSection.tsx`
-
----
-
-### 12. `client/src/pages/admin/payments.tsx` - **744 lines** ⚠️ MEDIUM
-
-**Refactoring Indicators:**
-- ✅ **744 lines** (1.5x over limit)
-- ✅ **Multiple responsibilities**: Payment listing, filtering, search, details
-
-**Recommended Refactoring:**
-1. Extract sub-components:
-   - `PaymentsList.tsx`
-   - `PaymentFilters.tsx`
-   - `PaymentDetails.tsx`
+**Target Structure:**
+```
+client/src/pages/admin/skills/
+  index.tsx (main component, ~200 lines)
+  components/
+    SkillsHierarchy.tsx
+    SectorDialog.tsx
+    JobTitleDialog.tsx
+    SkillDialog.tsx
+    DeleteConfirmDialog.tsx
+  hooks/
+    useSkillsMutations.ts
+```
 
 ---
 
-### 13. `client/src/pages/socketrelay/dashboard.tsx` - **743 lines** ⚠️ MEDIUM
+### 6. `server/storage/mini-apps/research-storage.ts` (771 lines)
 
-**Refactoring Indicators:**
-- ✅ **743 lines** (1.5x over limit)
-- ✅ **Multiple responsibilities**: Dashboard, request management, chat
+**Issues:**
+- ✅ **771 lines** - Exceeds 500 line limit
+- ✅ **Multiple responsibilities** - Handles 10+ operation types:
+  - Research items
+  - Answers
+  - Comments
+  - Votes
+  - Link provenances
+  - Bookmarks
+  - Follows
+  - Reports
+  - Announcements
+  - Timeline
+  - Reputation
+- ✅ **30+ method definitions** - Far exceeds 5-7 function limit
 
-**Recommended Refactoring:**
-1. Extract sub-components:
-   - `SocketRelayRequestList.tsx`
-   - `SocketRelayChatSection.tsx`
-   - `SocketRelayStats.tsx`
+**Refactoring Recommendations:**
+1. **Split into domain-specific storage classes**:
+   - `research-storage-items.ts` - Items operations
+   - `research-storage-answers.ts` - Answers operations
+   - `research-storage-engagement.ts` - Comments, votes, bookmarks, follows
+   - `research-storage-moderation.ts` - Reports, announcements
+   - `research-storage-analytics.ts` - Timeline, reputation
+2. **Use composition**: Main `ResearchStorage` composes these classes
 
----
-
-### 14. `client/src/pages/directory/profile.tsx` - **741 lines** ⚠️ MEDIUM
-
-**Refactoring Indicators:**
-- ✅ **741 lines** (1.5x over limit)
-- ✅ **Multiple responsibilities**: Profile display, editing, skills management
-
-**Recommended Refactoring:**
-1. Extract sub-components:
-   - `DirectoryProfileView.tsx`
-   - `DirectoryProfileEdit.tsx`
-   - `DirectorySkillsSection.tsx`
-
----
-
-### 15. `server/routes/chyme-rooms.routes.ts` - **679 lines** ⚠️ MEDIUM
-
-**Refactoring Indicators:**
-- ✅ **679 lines** (1.4x over limit)
-- ✅ **Multiple responsibilities**: Room management, messaging, scheduling
-
-**Recommended Refactoring:**
-1. Split into:
-   - `chyme-rooms.routes.ts` - Room CRUD
-   - `chyme-messages.routes.ts` - Messaging
-   - `chyme-scheduling.routes.ts` - Room scheduling
+**Target Structure:**
+```
+server/storage/mini-apps/research/
+  research-storage.ts (main class, composes others)
+  research-items-storage.ts
+  research-answers-storage.ts
+  research-engagement-storage.ts
+  research-moderation-storage.ts
+  research-analytics-storage.ts
+```
 
 ---
 
-### 16. `server/storage/mini-apps/supportmatch-storage.ts` - **667 lines** ⚠️ MEDIUM
+### 7. `server/storage/mini-apps/mechanicmatch-storage.ts` (747 lines)
 
-**Refactoring Indicators:**
-- ✅ **667 lines** (1.3x over limit)
-- ✅ **40+ methods** (per refactoring guide)
+**Issues:**
+- ✅ **747 lines** - Exceeds 500 line limit
+- ✅ **Multiple responsibilities** - Handles 8+ operation types:
+  - Profiles
+  - Vehicles
+  - Service requests
+  - Jobs
+  - Availability
+  - Reviews
+  - Messages
+  - Announcements
+- ✅ **25+ method definitions** - Exceeds 5-7 function limit
 
-**Recommended Refactoring:**
-1. Split into domain-specific modules:
-   - `supportmatch-profile-storage.ts`
-   - `supportmatch-partnership-storage.ts`
-   - `supportmatch-message-storage.ts`
-   - `supportmatch-admin-storage.ts`
+**Refactoring Recommendations:**
+1. **Split into domain-specific storage classes**:
+   - `mechanicmatch-profiles-storage.ts`
+   - `mechanicmatch-vehicles-storage.ts`
+   - `mechanicmatch-jobs-storage.ts`
+   - `mechanicmatch-engagement-storage.ts` - Reviews, messages
+2. **Use composition**: Main `MechanicMatchStorage` composes these classes
 
----
-
-### 17. `server/routes/research.routes.ts` - **656 lines** ⚠️ MEDIUM
-
-**Refactoring Indicators:**
-- ✅ **656 lines** (1.3x over limit)
-- ✅ **Multiple responsibilities**: Items, answers, comments, votes, bookmarks, reports
-
-**Recommended Refactoring:**
-1. Split into:
-   - `research-items.routes.ts`
-   - `research-interactions.routes.ts` (answers, comments, votes)
-   - `research-admin.routes.ts`
-
----
-
-### 18. `client/src/pages/user-payments.tsx` - **637 lines** ⚠️ MEDIUM
-
-**Refactoring Indicators:**
-- ✅ **637 lines** (1.3x over limit)
-- ✅ **Multiple responsibilities**: Payment history, subscription management
-
-**Recommended Refactoring:**
-1. Extract sub-components:
-   - `PaymentHistory.tsx`
-   - `SubscriptionDetails.tsx`
+**Target Structure:**
+```
+server/storage/mini-apps/mechanicmatch/
+  mechanicmatch-storage.ts (main class)
+  mechanicmatch-profiles-storage.ts
+  mechanicmatch-vehicles-storage.ts
+  mechanicmatch-jobs-storage.ts
+  mechanicmatch-engagement-storage.ts
+```
 
 ---
 
-### 19. `client/src/pages/lighthouse/admin.tsx` - **636 lines** ⚠️ MEDIUM
+### 8. `client/src/pages/mechanicmatch/profile.tsx` (744 lines)
 
-**Refactoring Indicators:**
-- ✅ **636 lines** (1.3x over limit)
-- ✅ **Multiple responsibilities**: Profile management, property management, admin operations
+**Issues:**
+- ✅ **744 lines** - Exceeds 500 line limit
+- ✅ **Multiple responsibilities**:
+  - Form handling
+  - Profile display
+  - Public URL management
+  - Delete dialog
+  - Location selectors
+- ✅ **15+ function definitions** - Form handlers, mutations, utilities
 
-**Recommended Refactoring:**
-1. Extract sub-components:
-   - `LighthouseAdminProfiles.tsx`
-   - `LighthouseAdminProperties.tsx`
+**Refactoring Recommendations:**
+1. **Extract form component**:
+   - `components/mechanicmatch/ProfileForm.tsx`
+2. **Extract location selectors**:
+   - `components/mechanicmatch/LocationSelect.tsx`
+3. **Extract profile display**:
+   - `components/mechanicmatch/ProfileDisplay.tsx`
+4. **Extract mutations**:
+   - `hooks/useMechanicMatchProfile.ts`
 
----
-
-### 20. `server/routes/socketrelay.routes.ts` - **626 lines** ⚠️ MEDIUM
-
-**Refactoring Indicators:**
-- ✅ **626 lines** (1.3x over limit)
-- ✅ **Multiple responsibilities**: Request, fulfillment, message, profile routes
-
-**Recommended Refactoring:**
-1. Split into:
-   - `socketrelay-requests.routes.ts`
-   - `socketrelay-messages.routes.ts`
-   - `socketrelay-admin.routes.ts`
-
----
-
-### 21. `server/storage/core/analytics-storage.ts` - **624 lines** ⚠️ MEDIUM
-
-**Refactoring Indicators:**
-- ✅ **624 lines** (1.2x over limit)
-- ✅ **Multiple responsibilities**: Analytics, metrics, performance tracking
-
-**Recommended Refactoring:**
-1. Split into:
-   - `analytics-storage.ts` - Core analytics
-   - `metrics-storage.ts` - Metrics calculations
-   - `performance-storage.ts` - Performance tracking
+**Target Structure:**
+```
+client/src/pages/mechanicmatch/profile/
+  index.tsx (main component, ~200 lines)
+  components/
+    ProfileForm.tsx
+    ProfileDisplay.tsx
+    LocationSelect.tsx
+  hooks/
+    useMechanicMatchProfile.ts
+```
 
 ---
 
-### 22. `client/src/components/ui/sidebar.tsx` - **727 lines** ⚠️ MEDIUM
+### 9. `client/src/pages/admin/payments.tsx` (744 lines)
 
-**Refactoring Indicators:**
-- ✅ **727 lines** (1.5x over limit)
-- ✅ **Multiple responsibilities**: Sidebar context, provider, components, mobile/desktop variants
+**Issues:**
+- ✅ **744 lines** - Exceeds 500 line limit
+- ✅ **Multiple responsibilities** - Payment management, filtering, dialogs
 
-**Recommended Refactoring:**
-1. Split into:
-   - `sidebar-context.tsx` - Context and provider
-   - `sidebar-components.tsx` - UI components
-   - `sidebar-hooks.ts` - Custom hooks
-
----
-
-## 🟢 LOWER PRIORITY - Files 500-600 Lines
-
-### 23. `client/src/pages/default-alive-or-dead/dashboard.tsx` - **596 lines**
-### 24. `client/src/pages/workforce-recruiter/admin-occupations.tsx` - **593 lines**
-### 25. `server/storage/mini-apps/research-storage.ts` - **771 lines**
-### 26. `server/storage/mini-apps/mechanicmatch-storage.ts` - **747 lines**
-
-**Recommended Refactoring:**
-- Similar patterns as above: extract sub-components, hooks, and utilities
+**Refactoring Recommendations:**
+1. Extract payment list component
+2. Extract payment dialogs
+3. Extract payment mutations hook
 
 ---
 
-## 📊 Summary Statistics
+### 10. `client/src/pages/socketrelay/dashboard.tsx` (743 lines)
 
-### By Category
+**Issues:**
+- ✅ **743 lines** - Exceeds 500 line limit
+- ✅ **Multiple responsibilities** - Dashboard, requests, fulfillments
 
-| Category | Files > 500 lines | Files > 1000 lines |
-|----------|------------------|-------------------|
-| **Server Routes** | 8 files | 1 file (routes.ts) |
-| **Client Pages** | 12 files | 2 files |
-| **Storage** | 5 files | 1 file |
-| **Components** | 1 file | 0 files |
-| **Total** | **26 files** | **4 files** |
-
-### Refactoring Priority
-
-1. **🔴 CRITICAL (4 files)**: > 1000 lines, immediate action needed
-2. **🟡 HIGH (6 files)**: 750-1000 lines, should be refactored soon
-3. **🟢 MEDIUM (16 files)**: 500-750 lines, consider refactoring
+**Refactoring Recommendations:**
+1. Extract request list component
+2. Extract fulfillment components
+3. Extract dashboard hooks
 
 ---
 
-## 🎯 Recommended Refactoring Strategy
+### 11. `client/src/pages/directory/profile.tsx` (741 lines)
 
-### Phase 1: Critical Files (Immediate)
-1. Complete `server/routes.ts` extraction (highest priority)
-2. Refactor `server/storage/composed-storage.ts`
-3. Break down `client/src/pages/directory/admin.tsx`
-4. Refactor `client/src/pages/admin/weekly-performance.tsx`
+**Issues:**
+- ✅ **741 lines** - Exceeds 500 line limit
+- ✅ **Multiple responsibilities** - Profile form, display, skills management
 
-### Phase 2: High Priority Files
-1. Split large route files (`lighthouse.routes.ts`, `mechanicmatch.routes.ts`)
-2. Refactor large admin pages
-3. Extract route configuration from `App.tsx`
-
-### Phase 3: Medium Priority Files
-1. Refactor remaining large pages
-2. Split storage modules that exceed 500 lines
-3. Extract components from large UI files
+**Refactoring Recommendations:**
+1. Extract profile form component
+2. Extract skills selector component
+3. Extract profile display component
 
 ---
 
-## 📝 Notes
+## 🟡 MEDIUM PRIORITY (Files 500-600 lines)
 
-- Some files (like `composed-storage.ts`) may be acceptable if they're auto-generated or follow a clear delegation pattern
-- Route files can be large but should be split when they handle multiple domains
-- Component files should prioritize readability and single responsibility
-- Consider using code generation tools for repetitive delegation patterns
+### Additional files needing attention:
+
+- `server/routes/chyme-rooms.routes.ts` (682 lines)
+- `server/routes/research.routes.ts` (656 lines)
+- `client/src/routes/mini-app-routes.tsx` (644 lines)
+- `client/src/pages/user-payments.tsx` (637 lines)
+- `client/src/pages/lighthouse/admin.tsx` (636 lines)
+- `server/routes/socketrelay.routes.ts` (626 lines)
+- `server/storage/core/analytics-storage.ts` (624 lines)
+- `client/src/pages/default-alive-or-dead/dashboard.tsx` (596 lines)
+- `client/src/pages/workforce-recruiter/admin-occupations.tsx` (593 lines)
+- `server/auth.ts` (591 lines)
+- `server/routes/directory.routes.ts` (580 lines)
 
 ---
 
-## ✅ Already Refactored
+## 📋 Summary
 
-- ✅ `shared/schema/schema.ts` - Successfully split into domain modules (see `shared/schema/REFACTORING_SUMMARY.md`)
-- ✅ `server/storage/storage.ts` - Split into modular structure (see `server/storage/REFACTORING_GUIDE.md`)
-- ✅ Partial route extraction in `server/routes/` directory
+### By Category:
 
+**Storage Layer:**
+- `composed-storage.ts` (1,759 lines) - **CRITICAL**
+- `types.ts` (961 lines) - **CRITICAL**
+- `research-storage.ts` (771 lines) - **HIGH**
+- `mechanicmatch-storage.ts` (747 lines) - **HIGH**
+- `analytics-storage.ts` (624 lines) - **MEDIUM**
+
+**Routes Layer:**
+- `mechanicmatch.routes.ts` (833 lines) - **HIGH**
+- `chyme-rooms.routes.ts` (682 lines) - **MEDIUM**
+- `research.routes.ts` (656 lines) - **MEDIUM**
+- `socketrelay.routes.ts` (626 lines) - **MEDIUM**
+- `directory.routes.ts` (580 lines) - **MEDIUM**
+
+**Client Components:**
+- `admin-profiles.tsx` (917 lines) - **HIGH**
+- `skills.tsx` (783 lines) - **HIGH**
+- `profile.tsx` (744 lines) - **HIGH** (multiple instances)
+- `payments.tsx` (744 lines) - **HIGH**
+- `dashboard.tsx` (743 lines) - **HIGH**
+
+### Recommended Refactoring Order:
+
+1. **Phase 1 - Storage Layer** (Highest impact):
+   - Split `composed-storage.ts` into domain-specific files
+   - Split `types.ts` into domain-specific interfaces
+   
+2. **Phase 2 - Routes Layer**:
+   - Split large route files by domain
+   
+3. **Phase 3 - Client Components**:
+   - Extract dialogs and forms from large components
+   - Extract custom hooks for mutations
+   - Extract reusable UI components
+
+---
+
+## Notes
+
+- All files over 500 lines should be considered for refactoring
+- Files with multiple responsibilities should be split by domain
+- Files with 5+ function definitions should extract related functions
+- Consider using composition over large single classes
+- Extract reusable components and hooks to reduce duplication
