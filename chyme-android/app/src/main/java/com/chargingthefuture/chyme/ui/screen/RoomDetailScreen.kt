@@ -29,6 +29,7 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.chargingthefuture.chyme.components.Avatar
 import com.chargingthefuture.chyme.data.model.ParticipantRole
 import com.chargingthefuture.chyme.ui.viewmodel.RoomViewModel
 
@@ -781,15 +782,11 @@ fun ParticipantCard(
                     },
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // Avatar placeholder
-                Box(
-                    modifier = Modifier
-                        .size(40.dp)
-                        .clip(CircleShape),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(Icons.Default.Person, contentDescription = null)
-                }
+                // Avatar
+                Avatar(
+                    user = participant.user,
+                    size = 40.dp
+                )
                 Spacer(modifier = Modifier.width(12.dp))
                 Column {
                     Text(

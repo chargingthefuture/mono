@@ -19,7 +19,9 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.chargingthefuture.chyme.components.Avatar
 import com.chargingthefuture.chyme.data.model.ChymeRoom
+import com.chargingthefuture.chyme.data.model.ChymeUser
 import com.chargingthefuture.chyme.ui.viewmodel.HomeViewModel
 import com.chargingthefuture.chyme.ui.viewmodel.AuthViewModel
 
@@ -65,20 +67,17 @@ fun HomeScreen(
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             // Avatar
-                            Box(
-                                modifier = Modifier
-                                    .size(32.dp)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colors.primary.copy(alpha = 0.2f)),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Icon(
-                                    Icons.Default.Person,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(20.dp),
-                                    tint = MaterialTheme.colors.primary
-                                )
-                            }
+                            Avatar(
+                                user = ChymeUser(
+                                    id = authState.userId ?: "",
+                                    email = authState.userEmail,
+                                    firstName = authState.userFirstName,
+                                    lastName = authState.userLastName,
+                                    displayName = authState.userDisplayName,
+                                    profileImageUrl = null // TODO: Add profileImageUrl to AuthUiState if available
+                                ),
+                                size = 32.dp
+                            )
                             // User name (truncated if too long)
                             Text(
                                 text = userDisplayText,

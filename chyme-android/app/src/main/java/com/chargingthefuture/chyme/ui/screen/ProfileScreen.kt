@@ -14,6 +14,8 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import com.chargingthefuture.chyme.components.Avatar
+import com.chargingthefuture.chyme.data.model.ChymeUser
 import com.chargingthefuture.chyme.ui.viewmodel.AuthViewModel
 
 @Composable
@@ -46,20 +48,17 @@ fun ProfileScreen(
             Spacer(modifier = Modifier.height(32.dp))
             
             // Profile avatar
-            Box(
-                modifier = Modifier
-                    .size(120.dp)
-                    .clip(CircleShape)
-                    .background(MaterialTheme.colors.primary.copy(alpha = 0.2f)),
-                contentAlignment = Alignment.Center
-            ) {
-                Icon(
-                    Icons.Default.Person,
-                    contentDescription = null,
-                    modifier = Modifier.size(64.dp),
-                    tint = MaterialTheme.colors.primary
-                )
-            }
+            Avatar(
+                user = ChymeUser(
+                    id = uiState.userId ?: "",
+                    email = uiState.userEmail,
+                    firstName = uiState.userFirstName,
+                    lastName = uiState.userLastName,
+                    displayName = uiState.userDisplayName,
+                    profileImageUrl = null // TODO: Add profileImageUrl to AuthUiState if available
+                ),
+                size = 120.dp
+            )
             
             Spacer(modifier = Modifier.height(24.dp))
             

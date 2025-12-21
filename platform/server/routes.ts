@@ -384,8 +384,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
       userId = getUserId(req);
     } catch (getUserIdError: any) {
       logError(getUserIdError, req, 'error');
-        stack: getUserIdError.stack,
-      });
       throw new UnauthorizedError("Authentication failed: Unable to extract user ID. Please try signing in again.");
     }
     
