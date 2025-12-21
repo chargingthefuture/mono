@@ -413,7 +413,32 @@ export {
 } from "./schema/research";
 
 // ========================================
-// ========================================// GENTLEPULSE APP TABLES - Re-exported from module// ========================================export {  gentlepulseMeditations,  gentlepulseRatings,  gentlepulseMoodChecks,  gentlepulseFavorites,  gentlepulseAnnouncements,  insertGentlepulseMeditationSchema,  insertGentlepulseRatingSchema,  insertGentlepulseMoodCheckSchema,  insertGentlepulseFavoriteSchema,  insertGentlepulseAnnouncementSchema,  type InsertGentlepulseMeditation,  type GentlepulseMeditation,  type InsertGentlepulseRating,  type GentlepulseRating,  type InsertGentlepulseMoodCheck,  type GentlepulseMoodCheck,  type InsertGentlepulseFavorite,  type GentlepulseFavorite,  type InsertGentlepulseAnnouncement,  type GentlepulseAnnouncement,} from "./schema/gentlepulse";// ========================================
+// GENTLEPULSE APP TABLES - Re-exported from module
+// ========================================
+
+export {
+  gentlepulseMeditations,
+  gentlepulseRatings,
+  gentlepulseMoodChecks,
+  gentlepulseFavorites,
+  gentlepulseAnnouncements,
+  insertGentlepulseMeditationSchema,
+  insertGentlepulseRatingSchema,
+  insertGentlepulseMoodCheckSchema,
+  insertGentlepulseFavoriteSchema,
+  insertGentlepulseAnnouncementSchema,
+  type InsertGentlepulseMeditation,
+  type GentlepulseMeditation,
+  type InsertGentlepulseRating,
+  type GentlepulseRating,
+  type InsertGentlepulseMoodCheck,
+  type GentlepulseMoodCheck,
+  type InsertGentlepulseFavorite,
+  type GentlepulseFavorite,
+  type InsertGentlepulseAnnouncement,
+  type GentlepulseAnnouncement,
+} from "./schema/gentlepulse";
+
 // ========================================
 // CHYME APP TABLES - Re-exported from module
 // ========================================
