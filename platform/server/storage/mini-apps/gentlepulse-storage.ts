@@ -22,7 +22,7 @@ import {
   type GentlepulseAnnouncement,
   type InsertGentlepulseAnnouncement,
 } from "@shared/schema";
-import { db } from "../db";
+import { db } from "../../db";
 import { eq, and, desc, or, gte, lte, sql } from "drizzle-orm";
 
 export class GentlePulseStorage {

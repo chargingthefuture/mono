@@ -16,7 +16,7 @@ import {
   type DirectorySkill,
   type InsertDirectorySkill,
 } from "@shared/schema";
-import { db } from "../db";
+import { db } from "../../db";
 import { eq, and, desc, asc, or, gte, sql } from "drizzle-orm";
 
 export class DirectoryStorage {

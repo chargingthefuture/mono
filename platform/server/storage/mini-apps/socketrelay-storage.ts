@@ -23,7 +23,7 @@ import {
   type SocketrelayAnnouncement,
   type InsertSocketrelayAnnouncement,
 } from "@shared/schema";
-import { db } from "../db";
+import { db } from "../../db";
 import { eq, and, desc, or, gte, sql } from "drizzle-orm";
 import { NotFoundError, ForbiddenError, ValidationError } from "../errors";
 

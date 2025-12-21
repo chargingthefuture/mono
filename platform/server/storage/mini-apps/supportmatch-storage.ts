@@ -29,7 +29,7 @@ import {
   type SupportmatchAnnouncement,
   type InsertSupportmatchAnnouncement,
 } from "@shared/schema";
-import { db } from "../db";
+import { db } from "../../db";
 import { eq, and, desc, or, gte, sql, inArray } from "drizzle-orm";
 import { NotFoundError } from "../errors";
 

@@ -16,7 +16,7 @@ import {
   type SkillsSkill,
   type InsertSkillsSkill,
 } from "@shared/schema";
-import { db } from "../db";
+import { db } from "../../db";
 import { eq, asc } from "drizzle-orm";
 
 export class SkillsStorage {

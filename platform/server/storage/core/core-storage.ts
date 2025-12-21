@@ -30,7 +30,7 @@ import {
   type NpsResponse,
   type InsertNpsResponse,
 } from "@shared/schema";
-import { db } from "../db";
+import { db } from "../../db";
 import { eq, and, desc, gte, lte, lt } from "drizzle-orm";
 import { NotFoundError, normalizeError } from "../errors";
 import { logError } from "../errorLogger";
