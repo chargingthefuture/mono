@@ -89,6 +89,8 @@ import { withDatabaseErrorHandling } from "./databaseErrorHandler";
 import { NotFoundError, ForbiddenError, ValidationError, UnauthorizedError, ExternalServiceError } from "./errors";
 import { logError } from "./errorLogger";
 import * as Sentry from '@sentry/node';
+import { verifyLink } from "./linkVerification";
+import { generateChymeToken, getTokenExpirationDate } from "./chymeJwt";
 
 // Map to track scheduled room closures (roomId -> timeout)
 const scheduledRoomClosures = new Map<string, NodeJS.Timeout>();
@@ -1038,26 +1040,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // Public job titles endpoint (for authenticated users to view available job titles)
   app.get('/api/directory/job-titles', isAuthenticated, asyncHandler(async (req, res) => {
-    try {
-      const jobTitles = await withDatabaseErrorHandling(
-        () => storage.getAllSkillsJobTitles(),
-        'getAllSkillsJobTitles'
-      );
-      // Format as { id, name }[] for Directory app compatibility
-      const formatted = jobTitles.map(jt => ({ id: jt.id, name: jt.name }));
-      
-      // Log if no job titles found (helps debug seeding issues)
-      if (formatted.length === 0) {
-        console.warn('⚠️ No job titles found in database. Run seed script: npx tsx scripts/seedSkills.ts');
-      }
-      
-      res.json(formatted);
-    } catch (error: any) {
-      // Log error but return empty array to prevent frontend breakage
-      // This is intentional graceful degradation
-      logError(error, req);
-      res.json([]);
+    const jobTitles = await withDatabaseErrorHandling(
+      () => storage.getAllSkillsJobTitles(),
+      'getAllSkillsJobTitles'
+    );
+    // Format as { id, name }[] for Directory app compatibility
+    const formatted = jobTitles.map(jt => ({ id: jt.id, name: jt.name }));
+    
+    // Log if no job titles found (helps debug seeding issues)
+    if (formatted.length === 0) {
+      console.warn('⚠️ No job titles found in database. Run seed script: npx tsx scripts/seedSkills.ts');
     }
+    
+    res.json(formatted);
   }));
 
   // Public routes (with rate limiting to prevent scraping)
@@ -4622,7 +4617,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
           try {
             await verifyCompareNotesLink(answer.id, url);
           } catch (error) {
-            console.error(`Error verifying link ${url}:`, error);
+            // Error is already logged in verifyCompareNotesLink
+            // Just continue processing other links
           }
         }
       });
@@ -4896,7 +4892,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         await verifyCompareNotesLink(answerId, url);
       } catch (error) {
-        console.error(`Error verifying link ${url}:`, error);
+        // Error is already logged in verifyCompareNotesLink
       }
     });
 
@@ -5015,63 +5011,40 @@ export async function registerRoutes(app: Express): Promise<Server> {
     res.json(announcement);
   }));
 
-  // Link verification helper function (simplified - fetches link and computes fake similarity)
+  // Link verification helper function - fetches actual content and computes real similarity
   async function verifyCompareNotesLink(answerId: string, url: string): Promise<void> {
     try {
-      const urlObj = new URL(url);
-      const domain = urlObj.hostname;
+      // Get answer content for similarity comparison
+      const answer = await withDatabaseErrorHandling(
+        () => storage.getResearchAnswerById(answerId),
+        'getResearchAnswerForLinkVerification'
+      );
 
-      // Fetch link (simplified - in production, use proper HTTP client with timeout)
-      let httpStatus = 200;
-      let title = "";
-      let snippet = "";
-      let domainScore = 0.5; // Default
-
-      try {
-        // Simple domain scoring (in production, use whitelist/blacklist)
-        if (domain.includes('.edu') || domain.includes('.gov')) {
-          domainScore = 0.9;
-        } else if (domain.includes('.org')) {
-          domainScore = 0.7;
-        } else if (domain.includes('.com')) {
-          domainScore = 0.5;
-        }
-
-        // In production, fetch actual page content
-        // For now, create a fake similarity score (0.6-0.9 range)
-        const similarityScore = 0.6 + Math.random() * 0.3;
-
-        // Create provenance entry
-        await storage.createResearchLinkProvenance({
-          answerId,
-          url,
-          httpStatus,
-          title: title || domain,
-          snippet: snippet || `Content from ${domain}`,
-          domain,
-          domainScore,
-          similarityScore,
-          isSupportive: similarityScore > 0.7 && domainScore > 0.5,
-        });
-
-        console.log(`Link verified: ${url} for answer ${answerId}`);
-      } catch (fetchError: any) {
-        // If fetch fails, still create provenance with error status
-        await storage.createResearchLinkProvenance({
-          answerId,
-          url,
-          httpStatus: 0,
-          title: domain,
-          snippet: `Error fetching: ${fetchError.message}`,
-          domain,
-          domainScore: 0.3,
-          similarityScore: 0,
-          isSupportive: false,
-        });
+      if (!answer) {
+        throw new Error(`Answer ${answerId} not found`);
       }
+
+      // Verify link using the link verification utility
+      const verificationResult = await verifyLink(answerId, url, answer.bodyMd);
+
+      // Create provenance entry with real verification data
+      await storage.createResearchLinkProvenance({
+        answerId,
+        url,
+        httpStatus: verificationResult.httpStatus,
+        title: verificationResult.title,
+        snippet: verificationResult.snippet,
+        domain: verificationResult.domain,
+        domainScore: verificationResult.domainScore,
+        similarityScore: verificationResult.similarityScore,
+        isSupportive: verificationResult.isSupportive,
+      });
     } catch (error: any) {
-      console.error(`Error verifying link ${url}:`, error);
-      throw error;
+      // Log error but don't throw - we want to continue processing other links
+      logError(error, undefined);
+      Sentry.captureException(error, {
+        tags: { component: 'linkVerification', answerId, url },
+      });
     }
   }
 
@@ -5244,8 +5217,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     stripIPAndMetadata(req);
     const clientId = req.query.clientId as string;
     if (!clientId) {
-      console.warn(`[GentlePulse] Missing clientId parameter in /api/gentlepulse/favorites`);
-      return res.json([]);
+      throw new ValidationError("clientId query parameter is required");
     }
     const favorites = await withDatabaseErrorHandling(
       () => storage.getGentlepulseFavoritesByClientId(clientId),
@@ -6031,12 +6003,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(403).json({ message: "User is not approved" });
     }
     
-    // Generate auth token (simple JWT-like token, in production use proper JWT)
-    // For now, we'll create a session token
-    const token = randomBytes(32).toString('hex');
-    const tokenExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+    // Generate JWT token for Chyme mobile authentication
+    const token = generateChymeToken(userId);
+    const tokenExpiresAt = getTokenExpirationDate();
     
-    // Store token in database (persistent storage)
+    // Store token in database for revocation tracking
     await withDatabaseErrorHandling(
       () => storage.createAuthToken(token, userId, tokenExpiresAt),
       'createAuthToken'
@@ -6249,11 +6220,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       return res.status(403).json({ message: "User is not approved" });
     }
     
-    // Generate auth token (30 days)
-    const token = randomBytes(32).toString('hex');
-    const tokenExpiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days
+    // Generate JWT token for Chyme mobile authentication
+    const token = generateChymeToken(userId);
+    const tokenExpiresAt = getTokenExpirationDate();
     
-    // Store token in database
+    // Store token in database for revocation tracking
     await withDatabaseErrorHandling(
       () => storage.createAuthToken(token, userId, tokenExpiresAt),
       'createAuthTokenFromMobileCode'

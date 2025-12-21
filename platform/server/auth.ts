@@ -421,13 +421,36 @@ export async function setupAuth(app: Express) {
 }
 
 // Middleware to validate OTP token from Android app
+// Supports both JWT tokens (new) and database-stored tokens (legacy)
 export const validateOTPToken: RequestHandler = async (req: any, res, next) => {
   const authHeader = req.headers.authorization;
   if (authHeader && authHeader.startsWith('Bearer ')) {
     const token = authHeader.substring(7);
     
-    // Check if token exists in database
     try {
+      // First, try to validate as JWT token (new implementation)
+      const { verifyChymeToken } = await import('./chymeJwt');
+      const jwtPayload = verifyChymeToken(token);
+      
+      if (jwtPayload) {
+        // JWT token is valid, check database for revocation (optional)
+        const { storage } = await import('./storage');
+        const authToken = await storage.findAuthTokenByToken(token);
+        
+        // If token exists in DB, it's valid (not revoked)
+        // If it doesn't exist in DB, it might be a new token that hasn't been stored yet
+        // For security, we'll require it to exist in DB (revocation check)
+        if (authToken) {
+          req.auth = {
+            userId: jwtPayload.userId
+          };
+          req.otpAuth = true; // Flag to indicate this is OTP auth, not Clerk
+          return next();
+        }
+        // If JWT is valid but not in DB, continue to fallback (legacy token check)
+      }
+      
+      // Fallback: Check if token exists in database (legacy tokens)
       const { storage } = await import('./storage');
       const authToken = await storage.findAuthTokenByToken(token);
       
@@ -448,8 +471,11 @@ export const validateOTPToken: RequestHandler = async (req: any, res, next) => {
         }
       }
     } catch (error) {
-      // If database lookup fails, continue to Clerk auth
-      console.error('Error validating OTP token:', error);
+      // If validation fails, continue to Clerk auth
+      // Don't log JWT validation errors (expected for invalid/expired tokens)
+      if (error instanceof Error && error.name !== 'JsonWebTokenError' && error.name !== 'TokenExpiredError') {
+        console.error('Error validating OTP token:', error);
+      }
     }
   }
   // If no valid OTP token, continue to Clerk auth

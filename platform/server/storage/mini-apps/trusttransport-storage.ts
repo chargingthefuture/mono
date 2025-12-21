@@ -62,6 +62,22 @@ export class TrustTransportStorage {
       throw new ValidationError("riderId is required to create a ride request");
     }
     
+    // Verify rider has a TrustTransport profile
+    const riderProfile = await this.getTrusttransportProfile(requestData.riderId);
+    if (!riderProfile) {
+      throw new ValidationError("You must have a TrustTransport profile to create a ride request");
+    }
+    if (!riderProfile.isRider) {
+      throw new ValidationError("Your profile must be set as a rider to create ride requests");
+    }
+    
+    // Validate departure date is in the future
+    const departureDate = new Date(requestData.departureDateTime);
+    const now = new Date();
+    if (departureDate <= now) {
+      throw new ValidationError("Departure date and time must be in the future");
+    }
+    
     // Explicitly build values object to ensure riderId is included
     // TypeScript may strip riderId from spread since it's not in InsertTrusttransportRideRequest type
     const values: any = {
@@ -173,6 +189,11 @@ export class TrustTransportStorage {
       throw new ValidationError("Ride request has already been claimed");
     }
 
+    // Prevent drivers from claiming their own ride requests
+    if (request.riderId === driverId) {
+      throw new ValidationError("You cannot claim your own ride request");
+    }
+
     // Get driver profile to verify they meet criteria
     // Note: driverId here is userId, need to get profile
     const driverProfile = await db
@@ -185,10 +206,42 @@ export class TrustTransportStorage {
       throw new ForbiddenError("You must be a driver to claim ride requests");
     }
 
+    const profile = driverProfile[0];
+
+    // Verify driver profile is active
+    if (!profile.isActive) {
+      throw new ValidationError("Your driver profile must be active to claim ride requests");
+    }
+
+    // Check for double-booking: driver already has a claimed ride at the same time
+    const departureDate = new Date(request.departureDateTime);
+    const oneHourBefore = new Date(departureDate.getTime() - 3600 * 1000);
+    const oneHourAfter = new Date(departureDate.getTime() + 3600 * 1000);
+    const existingRides = await db
+      .select()
+      .from(trusttransportRideRequests)
+      .where(
+        and(
+          eq(trusttransportRideRequests.driverId, profile.id),
+          eq(trusttransportRideRequests.status, 'claimed'),
+          gte(trusttransportRideRequests.departureDateTime, oneHourBefore),
+          lt(trusttransportRideRequests.departureDateTime, oneHourAfter)
+        )
+      );
+    
+    if (existingRides.length > 0) {
+      throw new ValidationError("You already have a claimed ride request at this time. Please cancel or complete it first.");
+    }
+
+    // Verify driver has vehicle information (basic requirement for claiming rides)
+    if (!profile.vehicleMake || !profile.vehicleModel) {
+      throw new ValidationError("You must have vehicle information in your profile to claim ride requests");
+    }
+
     const [updated] = await db
       .update(trusttransportRideRequests)
       .set({
-        driverId: driverProfile[0].id,
+        driverId: profile.id,
         status: 'claimed',
         driverMessage: driverMessage || null,
         updatedAt: new Date(),
