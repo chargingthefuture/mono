@@ -2532,5 +2532,26 @@
     "statusCode": 200,
     "responseTime": 629,
     "error": null
+  },
+  {
+    "timestamp": "2025-12-21T14:33:00.788Z",
+    "status": "up",
+    "statusCode": 200,
+    "responseTime": 650,
+    "error": null
+  },
+  {
+    "timestamp": "2025-12-21T14:45:00.694Z",
+    "status": "up",
+    "statusCode": 200,
+    "responseTime": 273,
+    "error": null
+  },
+  {
+    "timestamp": "2025-12-21T14:53:01.045Z",
+    "status": "up",
+    "statusCode": 200,
+    "responseTime": 410,
+    "error": null
   }
 ]
