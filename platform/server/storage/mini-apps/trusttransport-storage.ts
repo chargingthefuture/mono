@@ -15,9 +15,10 @@ import {
   type TrusttransportAnnouncement,
   type InsertTrusttransportAnnouncement,
 } from "@shared/schema";
-import { db } from "../db";
+import { db } from "../../db";
 import { eq, and, desc, asc, or, gte, lt, sql } from "drizzle-orm";
-import { NotFoundError, ValidationError, ForbiddenError } from "../errors";
+import { NotFoundError, ValidationError, ForbiddenError } from "../../errors";
+import { generateAnonymizedUserId, logProfileDeletion } from "../profile-deletion";
 
 export class TrustTransportStorage {
   // ========================================
@@ -311,6 +312,38 @@ export class TrustTransportStorage {
       .where(eq(trusttransportAnnouncements.id, id))
       .returning();
     return announcement;
+  }
+
+  async deleteTrusttransportProfile(userId: string, reason?: string): Promise<void> {
+    const profile = await this.getTrusttransportProfile(userId);
+    if (!profile) {
+      throw new NotFoundError("TrustTransport profile");
+    }
+
+    const anonymizedUserId = generateAnonymizedUserId();
+
+    // Anonymize related data
+    try {
+      // Anonymize ride requests where user is rider
+      await db
+        .update(trusttransportRideRequests)
+        .set({ riderId: anonymizedUserId })
+        .where(eq(trusttransportRideRequests.riderId, userId));
+
+      // Anonymize ride requests where user is driver
+      await db
+        .update(trusttransportRideRequests)
+        .set({ driverId: anonymizedUserId })
+        .where(eq(trusttransportRideRequests.driverId, userId));
+    } catch (error: any) {
+      console.warn(`Failed to anonymize TrustTransport related data: ${error.message}`);
+    }
+
+    // Delete the profile
+    await db.delete(trusttransportProfiles).where(eq(trusttransportProfiles.userId, userId));
+
+    // Log the deletion
+    await logProfileDeletion(userId, "trusttransport", reason);
   }
 }
 

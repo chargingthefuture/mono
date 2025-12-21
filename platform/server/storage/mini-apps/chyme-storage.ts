@@ -25,9 +25,9 @@ import {
   type ChymeMessage,
   type InsertChymeMessage,
 } from "@shared/schema";
-import { db } from "../db";
+import { db } from "../../db";
 import { eq, and, desc, asc, or, gte, sql } from "drizzle-orm";
-import { NotFoundError } from "../errors";
+import { NotFoundError } from "../../errors";
 
 export class ChymeStorage {
   // ========================================

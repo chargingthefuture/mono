@@ -25,7 +25,8 @@ import {
 } from "@shared/schema";
 import { db } from "../../db";
 import { eq, and, desc, or, gte, sql } from "drizzle-orm";
-import { NotFoundError, ForbiddenError, ValidationError } from "../errors";
+import { NotFoundError, ForbiddenError, ValidationError } from "../../errors";
+import { generateAnonymizedUserId, logProfileDeletion } from "../profile-deletion";
 
 export class SocketRelayStorage {
   // ========================================
@@ -473,6 +474,48 @@ export class SocketRelayStorage {
       .where(eq(socketrelayAnnouncements.id, id))
       .returning();
     return announcement;
+  }
+
+  async deleteSocketrelayProfile(userId: string, reason?: string): Promise<void> {
+    const profile = await this.getSocketrelayProfile(userId);
+    if (!profile) {
+      throw new NotFoundError("SocketRelay profile");
+    }
+
+    const anonymizedUserId = generateAnonymizedUserId();
+
+    // Anonymize related data
+    try {
+      // Anonymize requests where user is userId
+      await db
+        .update(socketrelayRequests)
+        .set({ userId: anonymizedUserId })
+        .where(eq(socketrelayRequests.userId, userId));
+
+      // Anonymize fulfillments where user is fulfiller or closer
+      await db
+        .update(socketrelayFulfillments)
+        .set({ fulfillerUserId: anonymizedUserId })
+        .where(eq(socketrelayFulfillments.fulfillerUserId, userId));
+      await db
+        .update(socketrelayFulfillments)
+        .set({ closedBy: anonymizedUserId })
+        .where(eq(socketrelayFulfillments.closedBy, userId));
+
+      // Anonymize messages where user is sender
+      await db
+        .update(socketrelayMessages)
+        .set({ senderId: anonymizedUserId })
+        .where(eq(socketrelayMessages.senderId, userId));
+    } catch (error: any) {
+      console.warn(`Failed to anonymize SocketRelay related data: ${error.message}`);
+    }
+
+    // Delete the profile
+    await db.delete(socketrelayProfiles).where(eq(socketrelayProfiles.userId, userId));
+
+    // Log the deletion
+    await logProfileDeletion(userId, "socketrelay", reason);
   }
 }
 

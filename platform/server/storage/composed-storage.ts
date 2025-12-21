@@ -418,6 +418,14 @@ export class DatabaseStorage implements IStorage {
     return this.lighthouseStorage.getAllMatches();
   }
 
+  async getMatchesByProfile(profileId: string) {
+    return this.lighthouseStorage.getMatchesByProfile(profileId);
+  }
+
+  async getAllLighthouseMatches() {
+    return this.lighthouseStorage.getAllLighthouseMatches();
+  }
+
   async updateLighthouseMatch(id: string, match: any) {
     return this.lighthouseStorage.updateLighthouseMatch(id, match);
   }
@@ -1202,6 +1210,18 @@ export class DatabaseStorage implements IStorage {
     return this.researchStorage.deactivateResearchAnnouncement(id);
   }
 
+  async calculateAnswerRelevance(answerId: string) {
+    return this.researchStorage.calculateAnswerRelevance(answerId);
+  }
+
+  async updateAnswerScore(answerId: string) {
+    return this.researchStorage.updateAnswerScore(answerId);
+  }
+
+  async calculateAnswerVerificationScore(answerId: string) {
+    return this.researchStorage.calculateAnswerVerificationScore(answerId);
+  }
+
   async getResearchTimeline(userId: string, limit?: number, offset?: number) {
     return this.researchStorage.getResearchTimeline(userId, limit, offset);
   }
@@ -1292,6 +1312,10 @@ export class DatabaseStorage implements IStorage {
 
   async deactivateGentlepulseAnnouncement(id: string) {
     return this.gentlePulseStorage.deactivateGentlepulseAnnouncement(id);
+  }
+
+  async updateGentlepulseMeditationRating(meditationId: string) {
+    return this.gentlePulseStorage.updateGentlepulseMeditationRating(meditationId);
   }
 
   // ========================================
@@ -1632,6 +1656,101 @@ export class DatabaseStorage implements IStorage {
 
   async getDefaultAliveOrDeadCurrentStatus() {
     return this.defaultAliveOrDeadStorage.getDefaultAliveOrDeadCurrentStatus();
+  }
+
+  async getDefaultAliveOrDeadWeeklyTrends(weeks?: number) {
+    return this.defaultAliveOrDeadStorage.getDefaultAliveOrDeadWeeklyTrends(weeks);
+  }
+
+  async getDefaultAliveOrDeadWeekComparison(weekStart: Date) {
+    return this.defaultAliveOrDeadStorage.getDefaultAliveOrDeadWeekComparison(weekStart);
+  }
+
+  async getDefaultAliveOrDeadCurrentFunding() {
+    return this.defaultAliveOrDeadStorage.getDefaultAliveOrDeadCurrentFunding();
+  }
+
+  async updateDefaultAliveOrDeadCurrentFunding(amount: number) {
+    return this.defaultAliveOrDeadStorage.updateDefaultAliveOrDeadCurrentFunding(amount);
+  }
+
+  // ========================================
+  // PROFILE DELETION OPERATIONS
+  // ========================================
+
+  async logProfileDeletion(userId: string, appName: string, reason?: string) {
+    const { logProfileDeletion } = await import('./profile-deletion');
+    return logProfileDeletion(userId, appName, reason);
+  }
+
+  async deleteSupportMatchProfile(userId: string, reason?: string): Promise<void> {
+    return this.supportMatchStorage.deleteSupportMatchProfile(userId, reason);
+  }
+
+  async deleteLighthouseProfile(userId: string, reason?: string): Promise<void> {
+    return this.lighthouseStorage.deleteLighthouseProfile(userId, reason);
+  }
+
+  async deleteSocketrelayProfile(userId: string, reason?: string): Promise<void> {
+    return this.socketRelayStorage.deleteSocketrelayProfile(userId, reason);
+  }
+
+  async deleteDirectoryProfileWithCascade(userId: string, reason?: string): Promise<void> {
+    return this.directoryStorage.deleteDirectoryProfileWithCascade(userId, reason);
+  }
+
+  async deleteTrusttransportProfile(userId: string, reason?: string): Promise<void> {
+    return this.trustTransportStorage.deleteTrusttransportProfile(userId, reason);
+  }
+
+  async deleteMechanicmatchProfile(userId: string, reason?: string): Promise<void> {
+    return this.mechanicMatchStorage.deleteMechanicmatchProfile(userId, reason);
+  }
+
+  async deleteUserAccount(userId: string, reason?: string): Promise<void> {
+    // Verify user exists
+    const user = await this.getUser(userId);
+    if (!user) {
+      throw new Error("User not found");
+    }
+
+    // Delete all mini-app profiles
+    const profileDeletions = [
+      { name: "SupportMatch", deleteFn: () => this.deleteSupportMatchProfile(userId, reason) },
+      { name: "Lighthouse", deleteFn: () => this.deleteLighthouseProfile(userId, reason) },
+      { name: "SocketRelay", deleteFn: () => this.deleteSocketrelayProfile(userId, reason) },
+      { name: "Directory", deleteFn: () => this.deleteDirectoryProfileWithCascade(userId, reason) },
+      { name: "TrustTransport", deleteFn: () => this.deleteTrusttransportProfile(userId, reason) },
+      { name: "MechanicMatch", deleteFn: () => this.deleteMechanicmatchProfile(userId, reason) },
+      { name: "WorkforceRecruiter", deleteFn: () => this.deleteWorkforceRecruiterProfile(userId, reason) },
+    ];
+
+    // Execute all deletions, catching errors to continue with others
+    for (const { name, deleteFn } of profileDeletions) {
+      try {
+        await deleteFn();
+      } catch (error: any) {
+        console.warn(`Failed to delete ${name} profile: ${error.message}`);
+      }
+    }
+
+    // Anonymize user data in core tables
+    try {
+      await this.coreStorage.anonymizeUserData(userId);
+    } catch (error: any) {
+      console.warn(`Failed to anonymize core user data: ${error.message}`);
+      // Continue with deletion even if anonymization fails
+    }
+
+    // Log the account deletion
+    try {
+      await this.logProfileDeletion(userId, "user_account", reason);
+    } catch (error: any) {
+      console.warn(`Failed to log account deletion: ${error.message}`);
+    }
+
+    // Finally, delete the user account from users table
+    await this.coreStorage.deleteUser(userId);
   }
 }
 

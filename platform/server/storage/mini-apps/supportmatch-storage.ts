@@ -31,7 +31,8 @@ import {
 } from "@shared/schema";
 import { db } from "../../db";
 import { eq, and, desc, or, gte, sql, inArray } from "drizzle-orm";
-import { NotFoundError } from "../errors";
+import { NotFoundError } from "../../errors";
+import { generateAnonymizedUserId, logProfileDeletion } from "../profile-deletion";
 
 export class SupportMatchStorage {
   // ========================================
@@ -604,6 +605,62 @@ export class SupportMatchStorage {
       currentPartnerships: currentPartnerships.length,
       pendingReports: pendingReportsCount.length,
     };
+  }
+
+  async deleteSupportMatchProfile(userId: string, reason?: string): Promise<void> {
+    const profile = await this.getSupportMatchProfile(userId);
+    if (!profile) {
+      throw new NotFoundError("SupportMatch profile");
+    }
+
+    const anonymizedUserId = generateAnonymizedUserId();
+
+    // Anonymize related data
+    try {
+      // Anonymize partnerships where user is user1 or user2
+      await db
+        .update(partnerships)
+        .set({ user1Id: anonymizedUserId })
+        .where(eq(partnerships.user1Id, userId));
+      await db
+        .update(partnerships)
+        .set({ user2Id: anonymizedUserId })
+        .where(eq(partnerships.user2Id, userId));
+
+      // Anonymize messages where user is sender
+      await db
+        .update(messages)
+        .set({ senderId: anonymizedUserId })
+        .where(eq(messages.senderId, userId));
+
+      // Anonymize exclusions where user is userId or excludedUserId
+      await db
+        .update(exclusions)
+        .set({ userId: anonymizedUserId })
+        .where(eq(exclusions.userId, userId));
+      await db
+        .update(exclusions)
+        .set({ excludedUserId: anonymizedUserId })
+        .where(eq(exclusions.excludedUserId, userId));
+
+      // Anonymize reports where user is reporter or reported
+      await db
+        .update(reports)
+        .set({ reporterId: anonymizedUserId })
+        .where(eq(reports.reporterId, userId));
+      await db
+        .update(reports)
+        .set({ reportedUserId: anonymizedUserId })
+        .where(eq(reports.reportedUserId, userId));
+    } catch (error: any) {
+      console.warn(`Failed to anonymize SupportMatch related data: ${error.message}`);
+    }
+
+    // Delete the profile
+    await db.delete(supportMatchProfiles).where(eq(supportMatchProfiles.userId, userId));
+
+    // Log the deletion
+    await logProfileDeletion(userId, "support_match", reason);
   }
 }
 

@@ -24,7 +24,8 @@ import {
 } from "@shared/schema";
 import { db } from "../../db";
 import { eq, and, desc, or, gte, sql, inArray } from "drizzle-orm";
-import { NotFoundError } from "../errors";
+import { NotFoundError } from "../../errors";
+import { generateAnonymizedUserId, logProfileDeletion } from "../profile-deletion";
 
 export class LighthouseStorage {
   // ========================================
@@ -380,5 +381,58 @@ export class LighthouseStorage {
 
   async deleteLighthouseBlock(id: string): Promise<void> {
     await db.delete(lighthouseBlocks).where(eq(lighthouseBlocks.id, id));
+  }
+
+  async deleteLighthouseProfile(userId: string, reason?: string): Promise<void> {
+    const profile = await this.getLighthouseProfileByUserId(userId);
+    if (!profile) {
+      throw new NotFoundError("Lighthouse profile");
+    }
+
+    const anonymizedUserId = generateAnonymizedUserId();
+
+    // Get all properties owned by this profile
+    const userProperties = await this.getPropertiesByHost(profile.id);
+    const propertyIds = userProperties.map(p => p.id);
+
+    // Anonymize related data
+    try {
+      // Anonymize matches where user is seeker
+      await db
+        .update(lighthouseMatches)
+        .set({ seekerId: anonymizedUserId })
+        .where(eq(lighthouseMatches.seekerId, profile.id));
+
+      // Anonymize matches where user is host (via their properties)
+      if (propertyIds.length > 0) {
+        await db
+          .update(lighthouseMatches)
+          .set({ propertyId: anonymizedUserId as any }) // Type workaround for propertyId
+          .where(inArray(lighthouseMatches.propertyId, propertyIds));
+      }
+
+      // Anonymize blocks where user is userId or blockedUserId
+      await db
+        .update(lighthouseBlocks)
+        .set({ userId: anonymizedUserId })
+        .where(eq(lighthouseBlocks.userId, userId));
+      await db
+        .update(lighthouseBlocks)
+        .set({ blockedUserId: anonymizedUserId })
+        .where(eq(lighthouseBlocks.blockedUserId, userId));
+
+      // Delete properties owned by this profile
+      if (propertyIds.length > 0) {
+        await db.delete(lighthouseProperties).where(inArray(lighthouseProperties.id, propertyIds));
+      }
+    } catch (error: any) {
+      console.warn(`Failed to anonymize Lighthouse related data: ${error.message}`);
+    }
+
+    // Delete the profile
+    await db.delete(lighthouseProfiles).where(eq(lighthouseProfiles.userId, userId));
+
+    // Log the deletion
+    await logProfileDeletion(userId, "lighthouse", reason);
   }
 }

@@ -34,7 +34,7 @@ import {
   type ResearchAnnouncement,
   type InsertResearchAnnouncement,
 } from "@shared/schema";
-import { db } from "../db";
+import { db } from "../../db";
 import { eq, and, desc, asc, or, gte, sql, inArray } from "drizzle-orm";
 
 export class ResearchStorage {

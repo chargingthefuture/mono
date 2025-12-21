@@ -14,7 +14,7 @@ import {
   type InsertBlogAnnouncement,
   type BlogComment,
 } from "@shared/schema";
-import { db } from "../db";
+import { db } from "../../db";
 import { eq, and, desc, or, gte, sql } from "drizzle-orm";
 
 export class BlogStorage {

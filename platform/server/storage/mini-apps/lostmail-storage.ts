@@ -15,7 +15,7 @@ import {
   type LostmailAnnouncement,
   type InsertLostmailAnnouncement,
 } from "@shared/schema";
-import { db } from "../db";
+import { db } from "../../db";
 import { eq, and, desc, or, gte, lte, sql } from "drizzle-orm";
 
 export class LostMailStorage {

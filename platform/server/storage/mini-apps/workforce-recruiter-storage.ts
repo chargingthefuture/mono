@@ -29,9 +29,9 @@ import {
   profileDeletionLogs,
   type ProfileDeletionLog,
 } from "@shared/schema";
-import { db } from "../db";
+import { db } from "../../db";
 import { eq, and, desc, or, gte, sql } from "drizzle-orm";
-import { NotFoundError, ValidationError } from "../errors";
+import { NotFoundError, ValidationError } from "../../errors";
 import { generateAnonymizedUserId } from "../core/utils";
 import { WorkforceRecruiterReports } from "./workforce-recruiter/reports";
 

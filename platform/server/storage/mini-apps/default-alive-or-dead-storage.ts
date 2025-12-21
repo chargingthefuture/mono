@@ -13,7 +13,7 @@ import {
   type DefaultAliveOrDeadEbitdaSnapshot,
   type InsertDefaultAliveOrDeadEbitdaSnapshot,
 } from "@shared/schema";
-import { db } from "../db";
+import { db } from "../../db";
 import { eq, and, desc, gte, lte, sql } from "drizzle-orm";
 import { getWeekStart } from "../core/utils";
 
@@ -257,6 +257,136 @@ export class DefaultAliveOrDeadStorage {
       projectedCapitalNeeded,
       weeksUntilProfitability,
     };
+  }
+
+  async getDefaultAliveOrDeadWeeklyTrends(weeks: number = 12): Promise<DefaultAliveOrDeadEbitdaSnapshot[]> {
+    const snapshots = await db
+      .select()
+      .from(defaultAliveOrDeadEbitdaSnapshots)
+      .orderBy(desc(defaultAliveOrDeadEbitdaSnapshots.weekStartDate))
+      .limit(weeks);
+    return snapshots;
+  }
+
+  async getDefaultAliveOrDeadWeekComparison(weekStart: Date): Promise<{
+    currentWeek: {
+      snapshot: DefaultAliveOrDeadEbitdaSnapshot | null;
+      weekStart: Date;
+      weekEnd: Date;
+    };
+    previousWeek: {
+      snapshot: DefaultAliveOrDeadEbitdaSnapshot | null;
+      weekStart: Date;
+      weekEnd: Date;
+    };
+    comparison: {
+      revenueChange: number;
+      ebitdaChange: number;
+      operatingExpensesChange: number;
+      growthRate: number;
+    };
+  }> {
+    const currentWeekStart = getWeekStart(weekStart);
+    const currentWeekEnd = new Date(currentWeekStart);
+    currentWeekEnd.setDate(currentWeekEnd.getDate() + 6); // Add 6 days to get Friday
+
+    const previousWeekStart = new Date(currentWeekStart);
+    previousWeekStart.setDate(previousWeekStart.getDate() - 7);
+    const previousWeekEnd = new Date(previousWeekStart);
+    previousWeekEnd.setDate(previousWeekEnd.getDate() + 6);
+
+    const currentSnapshot = await this.getDefaultAliveOrDeadEbitdaSnapshot(currentWeekStart);
+    const previousSnapshot = await this.getDefaultAliveOrDeadEbitdaSnapshot(previousWeekStart);
+
+    // Get financial entries for comparison
+    const currentEntry = await this.getDefaultAliveOrDeadFinancialEntryByWeek(currentWeekStart);
+    const previousEntry = await this.getDefaultAliveOrDeadFinancialEntryByWeek(previousWeekStart);
+
+    const currentRevenue = currentEntry ? Number(currentEntry.revenue || 0) : 0;
+    const previousRevenue = previousEntry ? Number(previousEntry.revenue || 0) : 0;
+    const currentOperatingExpenses = currentEntry ? Number(currentEntry.operatingExpenses || 0) : 0;
+    const previousOperatingExpenses = previousEntry ? Number(previousEntry.operatingExpenses || 0) : 0;
+    const currentEbitda = currentSnapshot ? Number(currentSnapshot.ebitda || 0) : 0;
+    const previousEbitda = previousSnapshot ? Number(previousSnapshot.ebitda || 0) : 0;
+
+    const revenueChange = previousRevenue === 0 
+      ? (currentRevenue > 0 ? 100 : 0)
+      : ((currentRevenue - previousRevenue) / previousRevenue) * 100;
+    
+    const operatingExpensesChange = previousOperatingExpenses === 0
+      ? (currentOperatingExpenses > 0 ? 100 : 0)
+      : ((currentOperatingExpenses - previousOperatingExpenses) / previousOperatingExpenses) * 100;
+    
+    const ebitdaChange = previousEbitda === 0
+      ? (currentEbitda > 0 ? 100 : (currentEbitda < 0 ? -100 : 0))
+      : ((currentEbitda - previousEbitda) / Math.abs(previousEbitda)) * 100;
+
+    const growthRate = previousRevenue === 0
+      ? (currentRevenue > 0 ? 100 : 0)
+      : ((currentRevenue - previousRevenue) / previousRevenue) * 100;
+
+    return {
+      currentWeek: {
+        snapshot: currentSnapshot || null,
+        weekStart: currentWeekStart,
+        weekEnd: currentWeekEnd,
+      },
+      previousWeek: {
+        snapshot: previousSnapshot || null,
+        weekStart: previousWeekStart,
+        weekEnd: previousWeekEnd,
+      },
+      comparison: {
+        revenueChange,
+        ebitdaChange,
+        operatingExpensesChange,
+        growthRate,
+      },
+    };
+  }
+
+  async getDefaultAliveOrDeadCurrentFunding(): Promise<number> {
+    // Get the most recent snapshot's current funding
+    const [snapshot] = await db
+      .select()
+      .from(defaultAliveOrDeadEbitdaSnapshots)
+      .orderBy(desc(defaultAliveOrDeadEbitdaSnapshots.weekStartDate))
+      .limit(1);
+    
+    return snapshot ? Number(snapshot.currentFunding || 0) : 0;
+  }
+
+  async updateDefaultAliveOrDeadCurrentFunding(amount: number): Promise<void> {
+    // Get the most recent snapshot
+    const [snapshot] = await db
+      .select()
+      .from(defaultAliveOrDeadEbitdaSnapshots)
+      .orderBy(desc(defaultAliveOrDeadEbitdaSnapshots.weekStartDate))
+      .limit(1);
+    
+    if (snapshot) {
+      // Update the most recent snapshot with new funding
+      await db
+        .update(defaultAliveOrDeadEbitdaSnapshots)
+        .set({
+          currentFunding: amount.toString(),
+          updatedAt: new Date(),
+        })
+        .where(eq(defaultAliveOrDeadEbitdaSnapshots.id, snapshot.id));
+    } else {
+      // If no snapshot exists, create one for the current week
+      const weekStart = getWeekStart(new Date());
+      await db
+        .insert(defaultAliveOrDeadEbitdaSnapshots)
+        .values({
+          weekStartDate: weekStart,
+          ebitda: "0",
+          burnRate: "0",
+          currentFunding: amount.toString(),
+          runway: null,
+          isDefaultAlive: false,
+        });
+    }
   }
 }
 

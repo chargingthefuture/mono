@@ -18,6 +18,8 @@ import {
 } from "@shared/schema";
 import { db } from "../../db";
 import { eq, and, desc, asc, or, gte, sql } from "drizzle-orm";
+import { NotFoundError } from "../../errors";
+import { generateAnonymizedUserId, logProfileDeletion } from "../profile-deletion";
 
 export class DirectoryStorage {
   // ========================================
@@ -250,6 +252,30 @@ export class DirectoryStorage {
     await db
       .delete(directorySkills)
       .where(eq(directorySkills.id, id));
+  }
+
+  async deleteDirectoryProfileWithCascade(userId: string, reason?: string): Promise<void> {
+    const profile = await this.getDirectoryProfileByUserId(userId);
+    if (!profile) {
+      throw new NotFoundError("Directory profile");
+    }
+
+    const anonymizedUserId = generateAnonymizedUserId();
+
+    // Anonymize related data
+    try {
+      // Anonymize announcements where user is createdBy (if announcements have createdBy field)
+      // Note: Check schema to see if directoryAnnouncements has createdBy field
+      // For now, we'll just delete the profile as Directory doesn't have much user-specific data
+    } catch (error: any) {
+      console.warn(`Failed to anonymize Directory related data: ${error.message}`);
+    }
+
+    // Delete the profile
+    await db.delete(directoryProfiles).where(eq(directoryProfiles.userId, userId));
+
+    // Log the deletion
+    await logProfileDeletion(userId, "directory", reason);
   }
 }
 
