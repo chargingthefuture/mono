@@ -61,6 +61,7 @@ fun Avatar(
             .background(MaterialTheme.colors.primary.copy(alpha = 0.2f)),
         contentAlignment = Alignment.Center
     ) {
+        when {
             !user?.profileImageUrl.isNullOrBlank() -> {
                 // Load profile image with error/loading handling
                 val painter = rememberAsyncImagePainter(
@@ -152,6 +153,7 @@ fun Avatar(
             .background(MaterialTheme.colors.primary.copy(alpha = 0.2f)),
         contentAlignment = Alignment.Center
     ) {
+        when {
             !imageUrl.isNullOrBlank() -> {
                 // Load profile image with error handling
                 val painter = rememberAsyncImagePainter(

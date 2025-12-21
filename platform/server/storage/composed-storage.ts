@@ -12,55 +12,22 @@ import { IStorage } from './types';
 import { CoreStorage } from './core';
 import { CoreStorageComposed } from './composed/core-storage-composed';
 import { MiniAppsStorageComposed } from './composed/mini-apps-storage-composed';
-import { SupportMatchStorage } from './mini-apps';
-import { LighthouseStorage } from './mini-apps';
-import { SocketRelayStorage } from './mini-apps';
-import { DirectoryStorage } from './mini-apps';
-import { SkillsStorage } from './mini-apps';
-import { ChatGroupsStorage } from './mini-apps';
-import { TrustTransportStorage } from './mini-apps';
-import { MechanicMatchStorage } from './mini-apps';
-import { LostMailStorage } from './mini-apps';
-import { ResearchStorage } from './mini-apps';
-import { GentlePulseStorage } from './mini-apps';
-import { ChymeStorage } from './mini-apps';
-import { WorkforceRecruiterStorage } from './mini-apps';
-import { BlogStorage } from './mini-apps';
-import { DefaultAliveOrDeadStorage } from './mini-apps';
 
 export class DatabaseStorage implements IStorage {
   // Composed storage modules (refactored)
   private coreStorageComposed: CoreStorageComposed;
   private miniAppsStorageComposed: MiniAppsStorageComposed;
   
-  // Direct storage module references (for methods not yet in composed classes)
+  // Direct storage module reference (only for getWeeklyPerformanceReview which needs callbacks)
   private coreStorage: CoreStorage;
-  private lostMailStorage: LostMailStorage;
-  private researchStorage: ResearchStorage;
-  private gentlePulseStorage: GentlePulseStorage;
-  private chymeStorage: ChymeStorage;
-  private workforceRecruiterStorage: WorkforceRecruiterStorage;
-  private blogStorage: BlogStorage;
-  private defaultAliveOrDeadStorage: DefaultAliveOrDeadStorage;
-  private trustTransportStorage: TrustTransportStorage;
-  private chatGroupsStorage: ChatGroupsStorage;
 
   constructor() {
     // Initialize composed storage modules
     this.coreStorageComposed = new CoreStorageComposed();
     this.miniAppsStorageComposed = new MiniAppsStorageComposed();
     
-    // Initialize remaining storage modules (not yet in composed classes)
+    // Initialize core storage (only needed for getWeeklyPerformanceReview callback)
     this.coreStorage = new CoreStorage();
-    this.lostMailStorage = new LostMailStorage();
-    this.researchStorage = new ResearchStorage();
-    this.gentlePulseStorage = new GentlePulseStorage();
-    this.chymeStorage = new ChymeStorage();
-    this.workforceRecruiterStorage = new WorkforceRecruiterStorage();
-    this.blogStorage = new BlogStorage();
-    this.defaultAliveOrDeadStorage = new DefaultAliveOrDeadStorage();
-    this.trustTransportStorage = new TrustTransportStorage();
-    this.chatGroupsStorage = new ChatGroupsStorage();
   }
 
   // ========================================
@@ -719,959 +686,776 @@ export class DatabaseStorage implements IStorage {
   }
 
   // ========================================
-  // CHATGROUPS OPERATIONS
+  // CHATGROUPS OPERATIONS (delegated to MiniAppsStorageComposed)
   // ========================================
 
   async getAllChatGroups() {
-    return this.chatGroupsStorage.getAllChatGroups();
+    return this.miniAppsStorageComposed.getAllChatGroups();
   }
 
   async getActiveChatGroups() {
-    return this.chatGroupsStorage.getActiveChatGroups();
+    return this.miniAppsStorageComposed.getActiveChatGroups();
   }
 
   async getChatGroupById(id: string) {
-    return this.chatGroupsStorage.getChatGroupById(id);
+    return this.miniAppsStorageComposed.getChatGroupById(id);
   }
 
   async createChatGroup(group: any) {
-    return this.chatGroupsStorage.createChatGroup(group);
+    return this.miniAppsStorageComposed.createChatGroup(group);
   }
 
   async updateChatGroup(id: string, group: any) {
-    return this.chatGroupsStorage.updateChatGroup(id, group);
+    return this.miniAppsStorageComposed.updateChatGroup(id, group);
   }
 
   async deleteChatGroup(id: string) {
-    return this.chatGroupsStorage.deleteChatGroup(id);
+    return this.miniAppsStorageComposed.deleteChatGroup(id);
   }
 
   async createChatgroupsAnnouncement(announcement: any) {
-    return this.chatGroupsStorage.createChatgroupsAnnouncement(announcement);
+    return this.miniAppsStorageComposed.createChatgroupsAnnouncement(announcement);
   }
 
   async getActiveChatgroupsAnnouncements() {
-    return this.chatGroupsStorage.getActiveChatgroupsAnnouncements();
+    return this.miniAppsStorageComposed.getActiveChatgroupsAnnouncements();
   }
 
   async getAllChatgroupsAnnouncements() {
-    return this.chatGroupsStorage.getAllChatgroupsAnnouncements();
+    return this.miniAppsStorageComposed.getAllChatgroupsAnnouncements();
   }
 
   async updateChatgroupsAnnouncement(id: string, announcement: any) {
-    return this.chatGroupsStorage.updateChatgroupsAnnouncement(id, announcement);
+    return this.miniAppsStorageComposed.updateChatgroupsAnnouncement(id, announcement);
   }
 
   async deactivateChatgroupsAnnouncement(id: string) {
-    return this.chatGroupsStorage.deactivateChatgroupsAnnouncement(id);
+    return this.miniAppsStorageComposed.deactivateChatgroupsAnnouncement(id);
   }
 
   // ========================================
-  // TRUSTTRANSPORT OPERATIONS
+  // TRUSTTRANSPORT OPERATIONS (delegated to MiniAppsStorageComposed)
   // ========================================
 
   async getTrusttransportProfile(userId: string) {
-    return this.trustTransportStorage.getTrusttransportProfile(userId);
+    return this.miniAppsStorageComposed.getTrusttransportProfile(userId);
   }
 
   async createTrusttransportProfile(profile: any) {
-    return this.trustTransportStorage.createTrusttransportProfile(profile);
+    return this.miniAppsStorageComposed.createTrusttransportProfile(profile);
   }
 
   async updateTrusttransportProfile(userId: string, profile: any) {
-    return this.trustTransportStorage.updateTrusttransportProfile(userId, profile);
+    return this.miniAppsStorageComposed.updateTrusttransportProfile(userId, profile);
   }
 
   async createTrusttransportRideRequest(request: any) {
-    return this.trustTransportStorage.createTrusttransportRideRequest(request);
+    return this.miniAppsStorageComposed.createTrusttransportRideRequest(request);
   }
 
   async getTrusttransportRideRequestById(id: string) {
-    return this.trustTransportStorage.getTrusttransportRideRequestById(id);
+    return this.miniAppsStorageComposed.getTrusttransportRideRequestById(id);
   }
 
   async getTrusttransportRideRequestsByRider(riderId: string) {
-    return this.trustTransportStorage.getTrusttransportRideRequestsByRider(riderId);
+    return this.miniAppsStorageComposed.getTrusttransportRideRequestsByRider(riderId);
   }
 
   async getOpenTrusttransportRideRequests() {
-    return this.trustTransportStorage.getOpenTrusttransportRideRequests();
+    return this.miniAppsStorageComposed.getOpenTrusttransportRideRequests();
   }
 
   async getTrusttransportRideRequestsByDriver(driverId: string) {
-    return this.trustTransportStorage.getTrusttransportRideRequestsByDriver(driverId);
+    return this.miniAppsStorageComposed.getTrusttransportRideRequestsByDriver(driverId);
   }
 
   async claimTrusttransportRideRequest(requestId: string, driverId: string, driverMessage?: string) {
-    return this.trustTransportStorage.claimTrusttransportRideRequest(requestId, driverId, driverMessage);
+    return this.miniAppsStorageComposed.claimTrusttransportRideRequest(requestId, driverId, driverMessage);
   }
 
   async updateTrusttransportRideRequest(id: string, request: any) {
-    return this.trustTransportStorage.updateTrusttransportRideRequest(id, request);
+    return this.miniAppsStorageComposed.updateTrusttransportRideRequest(id, request);
   }
 
   async cancelTrusttransportRideRequest(id: string, userId: string) {
-    return this.trustTransportStorage.cancelTrusttransportRideRequest(id, userId);
+    return this.miniAppsStorageComposed.cancelTrusttransportRideRequest(id, userId);
   }
 
   async createTrusttransportAnnouncement(announcement: any) {
-    return this.trustTransportStorage.createTrusttransportAnnouncement(announcement);
+    return this.miniAppsStorageComposed.createTrusttransportAnnouncement(announcement);
   }
 
   async getActiveTrusttransportAnnouncements() {
-    return this.trustTransportStorage.getActiveTrusttransportAnnouncements();
+    return this.miniAppsStorageComposed.getActiveTrusttransportAnnouncements();
   }
 
   async getAllTrusttransportAnnouncements() {
-    return this.trustTransportStorage.getAllTrusttransportAnnouncements();
+    return this.miniAppsStorageComposed.getAllTrusttransportAnnouncements();
   }
 
   async updateTrusttransportAnnouncement(id: string, announcement: any) {
-    return this.trustTransportStorage.updateTrusttransportAnnouncement(id, announcement);
+    return this.miniAppsStorageComposed.updateTrusttransportAnnouncement(id, announcement);
   }
 
   async deactivateTrusttransportAnnouncement(id: string) {
-    return this.trustTransportStorage.deactivateTrusttransportAnnouncement(id);
+    return this.miniAppsStorageComposed.deactivateTrusttransportAnnouncement(id);
   }
+
 
   // ========================================
-  // MECHANICMATCH OPERATIONS
-  // ========================================
-
-  async getMechanicmatchProfile(userId: string) {
-    return this.mechanicMatchStorage.getMechanicmatchProfile(userId);
-  }
-
-  async getMechanicmatchProfileById(profileId: string) {
-    return this.mechanicMatchStorage.getMechanicmatchProfileById(profileId);
-  }
-
-  async listMechanicmatchProfiles(filters?: any) {
-    return this.mechanicMatchStorage.listMechanicmatchProfiles(filters);
-  }
-
-  async listPublicMechanicmatchProfiles() {
-    return this.mechanicMatchStorage.listPublicMechanicmatchProfiles();
-  }
-
-  async createMechanicmatchProfile(profile: any) {
-    return this.mechanicMatchStorage.createMechanicmatchProfile(profile);
-  }
-
-  async updateMechanicmatchProfile(userId: string, profile: any) {
-    return this.mechanicMatchStorage.updateMechanicmatchProfile(userId, profile);
-  }
-
-  async updateMechanicmatchProfileById(profileId: string, profile: any) {
-    return this.mechanicMatchStorage.updateMechanicmatchProfileById(profileId, profile);
-  }
-
-  async deleteMechanicmatchProfileById(profileId: string) {
-    return this.mechanicMatchStorage.deleteMechanicmatchProfileById(profileId);
-  }
-
-  async getMechanicmatchVehiclesByOwner(ownerId: string) {
-    return this.mechanicMatchStorage.getMechanicmatchVehiclesByOwner(ownerId);
-  }
-
-  async getMechanicmatchVehicleById(id: string) {
-    return this.mechanicMatchStorage.getMechanicmatchVehicleById(id);
-  }
-
-  async createMechanicmatchVehicle(vehicle: any) {
-    return this.mechanicMatchStorage.createMechanicmatchVehicle(vehicle);
-  }
-
-  async updateMechanicmatchVehicle(id: string, vehicle: any) {
-    return this.mechanicMatchStorage.updateMechanicmatchVehicle(id, vehicle);
-  }
-
-  async deleteMechanicmatchVehicle(id: string, ownerId: string) {
-    return this.mechanicMatchStorage.deleteMechanicmatchVehicle(id, ownerId);
-  }
-
-  async createMechanicmatchServiceRequest(request: any) {
-    return this.mechanicMatchStorage.createMechanicmatchServiceRequest(request);
-  }
-
-  async getMechanicmatchServiceRequestById(id: string) {
-    return this.mechanicMatchStorage.getMechanicmatchServiceRequestById(id);
-  }
-
-  async getMechanicmatchServiceRequestsByOwner(ownerId: string) {
-    return this.mechanicMatchStorage.getMechanicmatchServiceRequestsByOwner(ownerId);
-  }
-
-  async getMechanicmatchServiceRequestsByOwnerPaginated(ownerId: string, limit: number, offset: number) {
-    return this.mechanicMatchStorage.getMechanicmatchServiceRequestsByOwnerPaginated(ownerId, limit, offset);
-  }
-
-  async getOpenMechanicmatchServiceRequests() {
-    return this.mechanicMatchStorage.getOpenMechanicmatchServiceRequests();
-  }
-
-  async updateMechanicmatchServiceRequest(id: string, request: any) {
-    return this.mechanicMatchStorage.updateMechanicmatchServiceRequest(id, request);
-  }
-
-  async createMechanicmatchJob(job: any) {
-    return this.mechanicMatchStorage.createMechanicmatchJob(job);
-  }
-
-  async getMechanicmatchJobById(id: string) {
-    return this.mechanicMatchStorage.getMechanicmatchJobById(id);
-  }
-
-  async getMechanicmatchJobsByOwner(ownerId: string) {
-    return this.mechanicMatchStorage.getMechanicmatchJobsByOwner(ownerId);
-  }
-
-  async getMechanicmatchJobsByMechanic(mechanicId: string) {
-    return this.mechanicMatchStorage.getMechanicmatchJobsByMechanic(mechanicId);
-  }
-
-  async updateMechanicmatchJob(id: string, job: any) {
-    return this.mechanicMatchStorage.updateMechanicmatchJob(id, job);
-  }
-
-  async acceptMechanicmatchJob(jobId: string, mechanicId: string) {
-    return this.mechanicMatchStorage.acceptMechanicmatchJob(jobId, mechanicId);
-  }
-
-  async getMechanicmatchAvailabilityByMechanic(mechanicId: string) {
-    return this.mechanicMatchStorage.getMechanicmatchAvailabilityByMechanic(mechanicId);
-  }
-
-  async createMechanicmatchAvailability(availability: any) {
-    return this.mechanicMatchStorage.createMechanicmatchAvailability(availability);
-  }
-
-  async updateMechanicmatchAvailability(id: string, availability: any) {
-    return this.mechanicMatchStorage.updateMechanicmatchAvailability(id, availability);
-  }
-
-  async deleteMechanicmatchAvailability(id: string, mechanicId: string) {
-    return this.mechanicMatchStorage.deleteMechanicmatchAvailability(id, mechanicId);
-  }
-
-  async createMechanicmatchReview(review: any) {
-    return this.mechanicMatchStorage.createMechanicmatchReview(review);
-  }
-
-  async getMechanicmatchReviewById(id: string) {
-    return this.mechanicMatchStorage.getMechanicmatchReviewById(id);
-  }
-
-  async getMechanicmatchReviewsByReviewee(revieweeId: string) {
-    return this.mechanicMatchStorage.getMechanicmatchReviewsByReviewee(revieweeId);
-  }
-
-  async getMechanicmatchReviewsByReviewer(reviewerId: string) {
-    return this.mechanicMatchStorage.getMechanicmatchReviewsByReviewer(reviewerId);
-  }
-
-  async getMechanicmatchReviewsByJob(jobId: string) {
-    return this.mechanicMatchStorage.getMechanicmatchReviewsByJob(jobId);
-  }
-
-  async createMechanicmatchMessage(message: any) {
-    return this.mechanicMatchStorage.createMechanicmatchMessage(message);
-  }
-
-  async getMechanicmatchMessagesByJob(jobId: string) {
-    return this.mechanicMatchStorage.getMechanicmatchMessagesByJob(jobId);
-  }
-
-  async getMechanicmatchMessagesBetweenUsers(userId1: string, userId2: string) {
-    return this.mechanicMatchStorage.getMechanicmatchMessagesBetweenUsers(userId1, userId2);
-  }
-
-  async markMechanicmatchMessageAsRead(messageId: string, userId: string) {
-    return this.mechanicMatchStorage.markMechanicmatchMessageAsRead(messageId, userId);
-  }
-
-  async getUnreadMechanicmatchMessages(userId: string) {
-    return this.mechanicMatchStorage.getUnreadMechanicmatchMessages(userId);
-  }
-
-  async searchMechanicmatchMechanics(filters: any) {
-    return this.mechanicMatchStorage.searchMechanicmatchMechanics(filters);
-  }
-
-  async createMechanicmatchAnnouncement(announcement: any) {
-    return this.mechanicMatchStorage.createMechanicmatchAnnouncement(announcement);
-  }
-
-  async getActiveMechanicmatchAnnouncements() {
-    return this.mechanicMatchStorage.getActiveMechanicmatchAnnouncements();
-  }
-
-  async getAllMechanicmatchAnnouncements() {
-    return this.mechanicMatchStorage.getAllMechanicmatchAnnouncements();
-  }
-
-  async updateMechanicmatchAnnouncement(id: string, announcement: any) {
-    return this.mechanicMatchStorage.updateMechanicmatchAnnouncement(id, announcement);
-  }
-
-  async deactivateMechanicmatchAnnouncement(id: string) {
-    return this.mechanicMatchStorage.deactivateMechanicmatchAnnouncement(id);
-  }
-
-  // ========================================
-  // LOSTMAIL OPERATIONS
+  // LOSTMAIL OPERATIONS (delegated to MiniAppsStorageComposed)
   // ========================================
 
   async createLostmailIncident(incident: any) {
-    return this.lostMailStorage.createLostmailIncident(incident);
+    return this.miniAppsStorageComposed.createLostmailIncident(incident);
   }
 
   async getLostmailIncidentById(id: string) {
-    return this.lostMailStorage.getLostmailIncidentById(id);
+    return this.miniAppsStorageComposed.getLostmailIncidentById(id);
   }
 
   async getLostmailIncidentsByEmail(email: string) {
-    return this.lostMailStorage.getLostmailIncidentsByEmail(email);
+    return this.miniAppsStorageComposed.getLostmailIncidentsByEmail(email);
   }
 
   async getLostmailIncidents(filters?: any) {
-    return this.lostMailStorage.getLostmailIncidents(filters);
+    return this.miniAppsStorageComposed.getLostmailIncidents(filters);
   }
 
   async updateLostmailIncident(id: string, incident: any) {
-    return this.lostMailStorage.updateLostmailIncident(id, incident);
+    return this.miniAppsStorageComposed.updateLostmailIncident(id, incident);
   }
 
   async createLostmailAuditTrailEntry(entry: any) {
-    return this.lostMailStorage.createLostmailAuditTrailEntry(entry);
+    return this.miniAppsStorageComposed.createLostmailAuditTrailEntry(entry);
   }
 
   async getLostmailAuditTrailByIncident(incidentId: string) {
-    return this.lostMailStorage.getLostmailAuditTrailByIncident(incidentId);
+    return this.miniAppsStorageComposed.getLostmailAuditTrailByIncident(incidentId);
   }
 
   async createLostmailAnnouncement(announcement: any) {
-    return this.lostMailStorage.createLostmailAnnouncement(announcement);
+    return this.miniAppsStorageComposed.createLostmailAnnouncement(announcement);
   }
 
   async getActiveLostmailAnnouncements() {
-    return this.lostMailStorage.getActiveLostmailAnnouncements();
+    return this.miniAppsStorageComposed.getActiveLostmailAnnouncements();
   }
 
   async getAllLostmailAnnouncements() {
-    return this.lostMailStorage.getAllLostmailAnnouncements();
+    return this.miniAppsStorageComposed.getAllLostmailAnnouncements();
   }
 
   async updateLostmailAnnouncement(id: string, announcement: any) {
-    return this.lostMailStorage.updateLostmailAnnouncement(id, announcement);
+    return this.miniAppsStorageComposed.updateLostmailAnnouncement(id, announcement);
   }
 
   async deactivateLostmailAnnouncement(id: string) {
-    return this.lostMailStorage.deactivateLostmailAnnouncement(id);
+    return this.miniAppsStorageComposed.deactivateLostmailAnnouncement(id);
   }
 
   // ========================================
-  // RESEARCH OPERATIONS
+  // RESEARCH OPERATIONS (delegated to MiniAppsStorageComposed)
   // ========================================
 
   async createResearchItem(item: any) {
-    return this.researchStorage.createResearchItem(item);
+    return this.miniAppsStorageComposed.createResearchItem(item);
   }
 
   async getResearchItemById(id: string) {
-    return this.researchStorage.getResearchItemById(id);
+    return this.miniAppsStorageComposed.getResearchItemById(id);
   }
 
   async getResearchItems(filters?: any) {
-    return this.researchStorage.getResearchItems(filters);
+    return this.miniAppsStorageComposed.getResearchItems(filters);
   }
 
   async updateResearchItem(id: string, item: any) {
-    return this.researchStorage.updateResearchItem(id, item);
+    return this.miniAppsStorageComposed.updateResearchItem(id, item);
   }
 
   async incrementResearchItemViewCount(id: string) {
-    return this.researchStorage.incrementResearchItemViewCount(id);
+    return this.miniAppsStorageComposed.incrementResearchItemViewCount(id);
   }
 
   async acceptResearchAnswer(itemId: string, answerId: string) {
-    return this.researchStorage.acceptResearchAnswer(itemId, answerId);
+    return this.miniAppsStorageComposed.acceptResearchAnswer(itemId, answerId);
   }
 
   async createResearchAnswer(answer: any) {
-    return this.researchStorage.createResearchAnswer(answer);
+    return this.miniAppsStorageComposed.createResearchAnswer(answer);
   }
 
   async getResearchAnswerById(id: string) {
-    return this.researchStorage.getResearchAnswerById(id);
+    return this.miniAppsStorageComposed.getResearchAnswerById(id);
   }
 
   async getResearchAnswersByItemId(itemId: string, sortBy?: string) {
-    return this.researchStorage.getResearchAnswersByItemId(itemId, sortBy);
+    return this.miniAppsStorageComposed.getResearchAnswersByItemId(itemId, sortBy);
   }
 
   async updateResearchAnswer(id: string, answer: any) {
-    return this.researchStorage.updateResearchAnswer(id, answer);
+    return this.miniAppsStorageComposed.updateResearchAnswer(id, answer);
   }
 
   async createResearchComment(comment: any) {
-    return this.researchStorage.createResearchComment(comment);
+    return this.miniAppsStorageComposed.createResearchComment(comment);
   }
 
   async getResearchComments(filters: any) {
-    return this.researchStorage.getResearchComments(filters);
+    return this.miniAppsStorageComposed.getResearchComments(filters);
   }
 
   async updateResearchComment(id: string, comment: any) {
-    return this.researchStorage.updateResearchComment(id, comment);
+    return this.miniAppsStorageComposed.updateResearchComment(id, comment);
   }
 
   async deleteResearchComment(id: string) {
-    return this.researchStorage.deleteResearchComment(id);
+    return this.miniAppsStorageComposed.deleteResearchComment(id);
   }
 
   async createOrUpdateResearchVote(vote: any) {
-    return this.researchStorage.createOrUpdateResearchVote(vote);
+    return this.miniAppsStorageComposed.createOrUpdateResearchVote(vote);
   }
 
   async getResearchVote(userId: string, researchItemId?: string, answerId?: string) {
-    return this.researchStorage.getResearchVote(userId, researchItemId, answerId);
+    return this.miniAppsStorageComposed.getResearchVote(userId, researchItemId, answerId);
   }
 
   async deleteResearchVote(userId: string, researchItemId?: string, answerId?: string) {
-    return this.researchStorage.deleteResearchVote(userId, researchItemId, answerId);
+    return this.miniAppsStorageComposed.deleteResearchVote(userId, researchItemId, answerId);
   }
 
   async createResearchLinkProvenance(provenance: any) {
-    return this.researchStorage.createResearchLinkProvenance(provenance);
+    return this.miniAppsStorageComposed.createResearchLinkProvenance(provenance);
   }
 
   async getResearchLinkProvenancesByAnswerId(answerId: string) {
-    return this.researchStorage.getResearchLinkProvenancesByAnswerId(answerId);
+    return this.miniAppsStorageComposed.getResearchLinkProvenancesByAnswerId(answerId);
   }
 
   async updateResearchLinkProvenance(id: string, provenance: any) {
-    return this.researchStorage.updateResearchLinkProvenance(id, provenance);
+    return this.miniAppsStorageComposed.updateResearchLinkProvenance(id, provenance);
   }
 
   async createResearchBookmark(bookmark: any) {
-    return this.researchStorage.createResearchBookmark(bookmark);
+    return this.miniAppsStorageComposed.createResearchBookmark(bookmark);
   }
 
   async deleteResearchBookmark(userId: string, researchItemId: string) {
-    return this.researchStorage.deleteResearchBookmark(userId, researchItemId);
+    return this.miniAppsStorageComposed.deleteResearchBookmark(userId, researchItemId);
   }
 
   async getResearchBookmarks(userId: string) {
-    return this.researchStorage.getResearchBookmarks(userId);
+    return this.miniAppsStorageComposed.getResearchBookmarks(userId);
   }
 
   async createResearchFollow(follow: any) {
-    return this.researchStorage.createResearchFollow(follow);
+    return this.miniAppsStorageComposed.createResearchFollow(follow);
   }
 
   async deleteResearchFollow(userId: string, filters: any) {
-    return this.researchStorage.deleteResearchFollow(userId, filters);
+    return this.miniAppsStorageComposed.deleteResearchFollow(userId, filters);
   }
 
   async getResearchFollows(userId: string) {
-    return this.researchStorage.getResearchFollows(userId);
+    return this.miniAppsStorageComposed.getResearchFollows(userId);
   }
 
   async createResearchReport(report: any) {
-    return this.researchStorage.createResearchReport(report);
+    return this.miniAppsStorageComposed.createResearchReport(report);
   }
 
   async getResearchReports(filters?: any) {
-    return this.researchStorage.getResearchReports(filters);
+    return this.miniAppsStorageComposed.getResearchReports(filters);
   }
 
   async updateResearchReport(id: string, report: any) {
-    return this.researchStorage.updateResearchReport(id, report);
+    return this.miniAppsStorageComposed.updateResearchReport(id, report);
   }
 
   async createResearchAnnouncement(announcement: any) {
-    return this.researchStorage.createResearchAnnouncement(announcement);
+    return this.miniAppsStorageComposed.createResearchAnnouncement(announcement);
   }
 
   async getActiveResearchAnnouncements() {
-    return this.researchStorage.getActiveResearchAnnouncements();
+    return this.miniAppsStorageComposed.getActiveResearchAnnouncements();
   }
 
   async getAllResearchAnnouncements() {
-    return this.researchStorage.getAllResearchAnnouncements();
+    return this.miniAppsStorageComposed.getAllResearchAnnouncements();
   }
 
   async updateResearchAnnouncement(id: string, announcement: any) {
-    return this.researchStorage.updateResearchAnnouncement(id, announcement);
+    return this.miniAppsStorageComposed.updateResearchAnnouncement(id, announcement);
   }
 
   async deactivateResearchAnnouncement(id: string) {
-    return this.researchStorage.deactivateResearchAnnouncement(id);
+    return this.miniAppsStorageComposed.deactivateResearchAnnouncement(id);
   }
 
   async calculateAnswerRelevance(answerId: string) {
-    return this.researchStorage.calculateAnswerRelevance(answerId);
+    return this.miniAppsStorageComposed.calculateAnswerRelevance(answerId);
   }
 
   async updateAnswerScore(answerId: string) {
-    return this.researchStorage.updateAnswerScore(answerId);
+    return this.miniAppsStorageComposed.updateAnswerScore(answerId);
   }
 
   async calculateAnswerVerificationScore(answerId: string) {
-    return this.researchStorage.calculateAnswerVerificationScore(answerId);
+    return this.miniAppsStorageComposed.calculateAnswerVerificationScore(answerId);
   }
 
   async getResearchTimeline(userId: string, limit?: number, offset?: number) {
-    return this.researchStorage.getResearchTimeline(userId, limit, offset);
+    return this.miniAppsStorageComposed.getResearchTimeline(userId, limit, offset);
   }
 
   async getUserReputation(userId: string) {
-    return this.researchStorage.getUserReputation(userId);
+    return this.miniAppsStorageComposed.getUserReputation(userId);
   }
 
   // ========================================
-  // GENTLEPULSE OPERATIONS
+  // GENTLEPULSE OPERATIONS (delegated to MiniAppsStorageComposed)
   // ========================================
 
   async createGentlepulseMeditation(meditation: any) {
-    return this.gentlePulseStorage.createGentlepulseMeditation(meditation);
+    return this.miniAppsStorageComposed.createGentlepulseMeditation(meditation);
   }
 
   async getGentlepulseMeditations(filters?: any) {
-    return this.gentlePulseStorage.getGentlepulseMeditations(filters);
+    return this.miniAppsStorageComposed.getGentlepulseMeditations(filters);
   }
 
   async getGentlepulseMeditationById(id: string) {
-    return this.gentlePulseStorage.getGentlepulseMeditationById(id);
+    return this.miniAppsStorageComposed.getGentlepulseMeditationById(id);
   }
 
   async updateGentlepulseMeditation(id: string, meditation: any) {
-    return this.gentlePulseStorage.updateGentlepulseMeditation(id, meditation);
+    return this.miniAppsStorageComposed.updateGentlepulseMeditation(id, meditation);
   }
 
   async incrementGentlepulsePlayCount(id: string) {
-    return this.gentlePulseStorage.incrementGentlepulsePlayCount(id);
+    return this.miniAppsStorageComposed.incrementGentlepulsePlayCount(id);
   }
 
   async createOrUpdateGentlepulseRating(rating: any) {
-    return this.gentlePulseStorage.createOrUpdateGentlepulseRating(rating);
+    return this.miniAppsStorageComposed.createOrUpdateGentlepulseRating(rating);
   }
 
   async getGentlepulseRatingsByMeditationId(meditationId: string) {
-    return this.gentlePulseStorage.getGentlepulseRatingsByMeditationId(meditationId);
+    return this.miniAppsStorageComposed.getGentlepulseRatingsByMeditationId(meditationId);
   }
 
   async getGentlepulseRatingByClientAndMeditation(clientId: string, meditationId: string) {
-    return this.gentlePulseStorage.getGentlepulseRatingByClientAndMeditation(clientId, meditationId);
+    return this.miniAppsStorageComposed.getGentlepulseRatingByClientAndMeditation(clientId, meditationId);
   }
 
   async createGentlepulseMoodCheck(moodCheck: any) {
-    return this.gentlePulseStorage.createGentlepulseMoodCheck(moodCheck);
+    return this.miniAppsStorageComposed.createGentlepulseMoodCheck(moodCheck);
   }
 
   async getGentlepulseMoodChecksByClientId(clientId: string, days?: number) {
-    return this.gentlePulseStorage.getGentlepulseMoodChecksByClientId(clientId, days);
+    return this.miniAppsStorageComposed.getGentlepulseMoodChecksByClientId(clientId, days);
   }
 
   async getGentlepulseMoodChecksByDateRange(startDate: Date, endDate: Date) {
-    return this.gentlePulseStorage.getGentlepulseMoodChecksByDateRange(startDate, endDate);
+    return this.miniAppsStorageComposed.getGentlepulseMoodChecksByDateRange(startDate, endDate);
   }
 
   async createGentlepulseFavorite(favorite: any) {
-    return this.gentlePulseStorage.createGentlepulseFavorite(favorite);
+    return this.miniAppsStorageComposed.createGentlepulseFavorite(favorite);
   }
 
   async deleteGentlepulseFavorite(clientId: string, meditationId: string) {
-    return this.gentlePulseStorage.deleteGentlepulseFavorite(clientId, meditationId);
+    return this.miniAppsStorageComposed.deleteGentlepulseFavorite(clientId, meditationId);
   }
 
   async getGentlepulseFavoritesByClientId(clientId: string) {
-    return this.gentlePulseStorage.getGentlepulseFavoritesByClientId(clientId);
+    return this.miniAppsStorageComposed.getGentlepulseFavoritesByClientId(clientId);
   }
 
   async isGentlepulseFavorite(clientId: string, meditationId: string) {
-    return this.gentlePulseStorage.isGentlepulseFavorite(clientId, meditationId);
+    return this.miniAppsStorageComposed.isGentlepulseFavorite(clientId, meditationId);
   }
 
   async createGentlepulseAnnouncement(announcement: any) {
-    return this.gentlePulseStorage.createGentlepulseAnnouncement(announcement);
+    return this.miniAppsStorageComposed.createGentlepulseAnnouncement(announcement);
   }
 
   async getActiveGentlepulseAnnouncements() {
-    return this.gentlePulseStorage.getActiveGentlepulseAnnouncements();
+    return this.miniAppsStorageComposed.getActiveGentlepulseAnnouncements();
   }
 
   async getAllGentlepulseAnnouncements() {
-    return this.gentlePulseStorage.getAllGentlepulseAnnouncements();
+    return this.miniAppsStorageComposed.getAllGentlepulseAnnouncements();
   }
 
   async updateGentlepulseAnnouncement(id: string, announcement: any) {
-    return this.gentlePulseStorage.updateGentlepulseAnnouncement(id, announcement);
+    return this.miniAppsStorageComposed.updateGentlepulseAnnouncement(id, announcement);
   }
 
   async deactivateGentlepulseAnnouncement(id: string) {
-    return this.gentlePulseStorage.deactivateGentlepulseAnnouncement(id);
+    return this.miniAppsStorageComposed.deactivateGentlepulseAnnouncement(id);
   }
 
   async updateGentlepulseMeditationRating(meditationId: string) {
-    return this.gentlePulseStorage.updateGentlepulseMeditationRating(meditationId);
+    return this.miniAppsStorageComposed.updateGentlepulseMeditationRating(meditationId);
   }
 
   // ========================================
-  // CHYME OPERATIONS
+  // CHYME OPERATIONS (delegated to MiniAppsStorageComposed)
   // ========================================
 
   async createChymeAnnouncement(announcement: any) {
-    return this.chymeStorage.createChymeAnnouncement(announcement);
+    return this.miniAppsStorageComposed.createChymeAnnouncement(announcement);
   }
 
   async getActiveChymeAnnouncements() {
-    return this.chymeStorage.getActiveChymeAnnouncements();
+    return this.miniAppsStorageComposed.getActiveChymeAnnouncements();
   }
 
   async getAllChymeAnnouncements() {
-    return this.chymeStorage.getAllChymeAnnouncements();
+    return this.miniAppsStorageComposed.getAllChymeAnnouncements();
   }
 
   async updateChymeAnnouncement(id: string, announcement: any) {
-    return this.chymeStorage.updateChymeAnnouncement(id, announcement);
+    return this.miniAppsStorageComposed.updateChymeAnnouncement(id, announcement);
   }
 
   async deactivateChymeAnnouncement(id: string) {
-    return this.chymeStorage.deactivateChymeAnnouncement(id);
+    return this.miniAppsStorageComposed.deactivateChymeAnnouncement(id);
   }
 
   async createChymeRoom(room: any) {
-    return this.chymeStorage.createChymeRoom(room);
+    return this.miniAppsStorageComposed.createChymeRoom(room);
   }
 
   async getChymeRoom(id: string) {
-    return this.chymeStorage.getChymeRoom(id);
+    return this.miniAppsStorageComposed.getChymeRoom(id);
   }
 
   async getChymeRooms(roomType?: "public" | "private") {
-    return this.chymeStorage.getChymeRooms(roomType);
+    return this.miniAppsStorageComposed.getChymeRooms(roomType);
   }
 
   async updateChymeRoom(id: string, room: any) {
-    return this.chymeStorage.updateChymeRoom(id, room);
+    return this.miniAppsStorageComposed.updateChymeRoom(id, room);
   }
 
   async deactivateChymeRoom(id: string) {
-    return this.chymeStorage.deactivateChymeRoom(id);
+    return this.miniAppsStorageComposed.deactivateChymeRoom(id);
   }
 
   async updateChymeRoomPinnedLink(id: string, pinnedLink: string | null) {
-    return this.chymeStorage.updateChymeRoomPinnedLink(id, pinnedLink);
+    return this.miniAppsStorageComposed.updateChymeRoomPinnedLink(id, pinnedLink);
   }
 
   async getChymeRoomParticipantCount(roomId: string) {
-    return this.chymeStorage.getChymeRoomParticipantCount(roomId);
+    return this.miniAppsStorageComposed.getChymeRoomParticipantCount(roomId);
   }
 
   async joinChymeRoom(participant: any) {
-    return this.chymeStorage.joinChymeRoom(participant);
+    return this.miniAppsStorageComposed.joinChymeRoom(participant);
   }
 
   async leaveChymeRoom(roomId: string, userId: string) {
-    return this.chymeStorage.leaveChymeRoom(roomId, userId);
+    return this.miniAppsStorageComposed.leaveChymeRoom(roomId, userId);
   }
 
   async getChymeRoomParticipants(roomId: string) {
-    return this.chymeStorage.getChymeRoomParticipants(roomId);
+    return this.miniAppsStorageComposed.getChymeRoomParticipants(roomId);
   }
 
   async getChymeRoomParticipant(roomId: string, userId: string) {
-    return this.chymeStorage.getChymeRoomParticipant(roomId, userId);
+    return this.miniAppsStorageComposed.getChymeRoomParticipant(roomId, userId);
   }
 
   async getActiveRoomsForUser(userId: string) {
-    return this.chymeStorage.getActiveRoomsForUser(userId);
+    return this.miniAppsStorageComposed.getActiveRoomsForUser(userId);
   }
 
   async updateChymeRoomParticipant(roomId: string, userId: string, updates: any) {
-    return this.chymeStorage.updateChymeRoomParticipant(roomId, userId, updates);
+    return this.miniAppsStorageComposed.updateChymeRoomParticipant(roomId, userId, updates);
   }
 
   async followChymeUser(userId: string, followedUserId: string) {
-    return this.chymeStorage.followChymeUser(userId, followedUserId);
+    return this.miniAppsStorageComposed.followChymeUser(userId, followedUserId);
   }
 
   async unfollowChymeUser(userId: string, followedUserId: string) {
-    return this.chymeStorage.unfollowChymeUser(userId, followedUserId);
+    return this.miniAppsStorageComposed.unfollowChymeUser(userId, followedUserId);
   }
 
   async isFollowingChymeUser(userId: string, followedUserId: string) {
-    return this.chymeStorage.isFollowingChymeUser(userId, followedUserId);
+    return this.miniAppsStorageComposed.isFollowingChymeUser(userId, followedUserId);
   }
 
   async getChymeUserFollows(userId: string) {
-    return this.chymeStorage.getChymeUserFollows(userId);
+    return this.miniAppsStorageComposed.getChymeUserFollows(userId);
   }
 
   async blockChymeUser(userId: string, blockedUserId: string) {
-    return this.chymeStorage.blockChymeUser(userId, blockedUserId);
+    return this.miniAppsStorageComposed.blockChymeUser(userId, blockedUserId);
   }
 
   async unblockChymeUser(userId: string, blockedUserId: string) {
-    return this.chymeStorage.unblockChymeUser(userId, blockedUserId);
+    return this.miniAppsStorageComposed.unblockChymeUser(userId, blockedUserId);
   }
 
   async isBlockingChymeUser(userId: string, blockedUserId: string) {
-    return this.chymeStorage.isBlockingChymeUser(userId, blockedUserId);
+    return this.miniAppsStorageComposed.isBlockingChymeUser(userId, blockedUserId);
   }
 
   async getChymeUserBlocks(userId: string) {
-    return this.chymeStorage.getChymeUserBlocks(userId);
+    return this.miniAppsStorageComposed.getChymeUserBlocks(userId);
   }
 
   async createChymeMessage(message: any) {
-    return this.chymeStorage.createChymeMessage(message);
+    return this.miniAppsStorageComposed.createChymeMessage(message);
   }
 
   async getChymeMessages(roomId: string) {
-    return this.chymeStorage.getChymeMessages(roomId);
+    return this.miniAppsStorageComposed.getChymeMessages(roomId);
   }
 
   // ========================================
-  // WORKFORCE RECRUITER OPERATIONS
+  // WORKFORCE RECRUITER OPERATIONS (delegated to MiniAppsStorageComposed)
   // ========================================
 
   async getWorkforceRecruiterProfile(userId: string) {
-    return this.workforceRecruiterStorage.getWorkforceRecruiterProfile(userId);
+    return this.miniAppsStorageComposed.getWorkforceRecruiterProfile(userId);
   }
 
   async createWorkforceRecruiterProfile(profile: any) {
-    return this.workforceRecruiterStorage.createWorkforceRecruiterProfile(profile);
+    return this.miniAppsStorageComposed.createWorkforceRecruiterProfile(profile);
   }
 
   async updateWorkforceRecruiterProfile(userId: string, profile: any) {
-    return this.workforceRecruiterStorage.updateWorkforceRecruiterProfile(userId, profile);
+    return this.miniAppsStorageComposed.updateWorkforceRecruiterProfile(userId, profile);
   }
 
   async deleteWorkforceRecruiterProfile(userId: string, reason?: string) {
-    return this.workforceRecruiterStorage.deleteWorkforceRecruiterProfile(userId, reason);
+    return this.miniAppsStorageComposed.deleteWorkforceRecruiterProfile(userId, reason);
   }
 
   async getWorkforceRecruiterConfig() {
-    return this.workforceRecruiterStorage.getWorkforceRecruiterConfig();
+    return this.miniAppsStorageComposed.getWorkforceRecruiterConfig();
   }
 
   async updateWorkforceRecruiterConfig(config: any) {
-    return this.workforceRecruiterStorage.updateWorkforceRecruiterConfig(config);
+    return this.miniAppsStorageComposed.updateWorkforceRecruiterConfig(config);
   }
 
   async createWorkforceRecruiterConfig(config: any) {
-    return this.workforceRecruiterStorage.createWorkforceRecruiterConfig(config);
+    return this.miniAppsStorageComposed.createWorkforceRecruiterConfig(config);
   }
 
   async getWorkforceRecruiterOccupation(id: string) {
-    return this.workforceRecruiterStorage.getWorkforceRecruiterOccupation(id);
+    return this.miniAppsStorageComposed.getWorkforceRecruiterOccupation(id);
   }
 
   async getAllWorkforceRecruiterOccupations(filters?: any) {
-    return this.workforceRecruiterStorage.getAllWorkforceRecruiterOccupations(filters);
+    return this.miniAppsStorageComposed.getAllWorkforceRecruiterOccupations(filters);
   }
 
   async createWorkforceRecruiterOccupation(occupation: any) {
-    return this.workforceRecruiterStorage.createWorkforceRecruiterOccupation(occupation);
+    return this.miniAppsStorageComposed.createWorkforceRecruiterOccupation(occupation);
   }
 
   async updateWorkforceRecruiterOccupation(id: string, occupation: any) {
-    return this.workforceRecruiterStorage.updateWorkforceRecruiterOccupation(id, occupation);
+    return this.miniAppsStorageComposed.updateWorkforceRecruiterOccupation(id, occupation);
   }
 
   async deleteWorkforceRecruiterOccupation(id: string) {
-    return this.workforceRecruiterStorage.deleteWorkforceRecruiterOccupation(id);
+    return this.miniAppsStorageComposed.deleteWorkforceRecruiterOccupation(id);
   }
 
   async createWorkforceRecruiterMeetupEvent(event: any) {
-    return this.workforceRecruiterStorage.createWorkforceRecruiterMeetupEvent(event);
+    return this.miniAppsStorageComposed.createWorkforceRecruiterMeetupEvent(event);
   }
 
   async getWorkforceRecruiterMeetupEvents(filters?: any) {
-    return this.workforceRecruiterStorage.getWorkforceRecruiterMeetupEvents(filters);
+    return this.miniAppsStorageComposed.getWorkforceRecruiterMeetupEvents(filters);
   }
 
   async getWorkforceRecruiterMeetupEventById(id: string) {
-    return this.workforceRecruiterStorage.getWorkforceRecruiterMeetupEventById(id);
+    return this.miniAppsStorageComposed.getWorkforceRecruiterMeetupEventById(id);
   }
 
   async updateWorkforceRecruiterMeetupEvent(id: string, event: any) {
-    return this.workforceRecruiterStorage.updateWorkforceRecruiterMeetupEvent(id, event);
+    return this.miniAppsStorageComposed.updateWorkforceRecruiterMeetupEvent(id, event);
   }
 
   async deleteWorkforceRecruiterMeetupEvent(id: string) {
-    return this.workforceRecruiterStorage.deleteWorkforceRecruiterMeetupEvent(id);
+    return this.miniAppsStorageComposed.deleteWorkforceRecruiterMeetupEvent(id);
   }
 
   async createWorkforceRecruiterMeetupEventSignup(signup: any) {
-    return this.workforceRecruiterStorage.createWorkforceRecruiterMeetupEventSignup(signup);
+    return this.miniAppsStorageComposed.createWorkforceRecruiterMeetupEventSignup(signup);
   }
 
   async getWorkforceRecruiterMeetupEventSignups(filters?: any) {
-    return this.workforceRecruiterStorage.getWorkforceRecruiterMeetupEventSignups(filters);
+    return this.miniAppsStorageComposed.getWorkforceRecruiterMeetupEventSignups(filters);
   }
 
   async getWorkforceRecruiterMeetupEventSignupCount(eventId: string) {
-    return this.workforceRecruiterStorage.getWorkforceRecruiterMeetupEventSignupCount(eventId);
+    return this.miniAppsStorageComposed.getWorkforceRecruiterMeetupEventSignupCount(eventId);
   }
 
   async getUserMeetupEventSignup(eventId: string, userId: string) {
-    return this.workforceRecruiterStorage.getUserMeetupEventSignup(eventId, userId);
+    return this.miniAppsStorageComposed.getUserMeetupEventSignup(eventId, userId);
   }
 
   async updateWorkforceRecruiterMeetupEventSignup(id: string, signup: any) {
-    return this.workforceRecruiterStorage.updateWorkforceRecruiterMeetupEventSignup(id, signup);
+    return this.miniAppsStorageComposed.updateWorkforceRecruiterMeetupEventSignup(id, signup);
   }
 
   async deleteWorkforceRecruiterMeetupEventSignup(id: string) {
-    return this.workforceRecruiterStorage.deleteWorkforceRecruiterMeetupEventSignup(id);
+    return this.miniAppsStorageComposed.deleteWorkforceRecruiterMeetupEventSignup(id);
   }
 
   async getWorkforceRecruiterSummaryReport() {
-    return this.workforceRecruiterStorage.getWorkforceRecruiterSummaryReport();
+    return this.miniAppsStorageComposed.getWorkforceRecruiterSummaryReport();
   }
 
   async getWorkforceRecruiterSkillLevelDetail(skillLevel: string) {
-    return this.workforceRecruiterStorage.getWorkforceRecruiterSkillLevelDetail(skillLevel);
+    return this.miniAppsStorageComposed.getWorkforceRecruiterSkillLevelDetail(skillLevel);
   }
 
   async getWorkforceRecruiterSectorDetail(sector: string) {
-    return this.workforceRecruiterStorage.getWorkforceRecruiterSectorDetail(sector);
+    return this.miniAppsStorageComposed.getWorkforceRecruiterSectorDetail(sector);
   }
 
   async createWorkforceRecruiterAnnouncement(announcement: any) {
-    return this.workforceRecruiterStorage.createWorkforceRecruiterAnnouncement(announcement);
+    return this.miniAppsStorageComposed.createWorkforceRecruiterAnnouncement(announcement);
   }
 
   async getActiveWorkforceRecruiterAnnouncements() {
-    return this.workforceRecruiterStorage.getActiveWorkforceRecruiterAnnouncements();
+    return this.miniAppsStorageComposed.getActiveWorkforceRecruiterAnnouncements();
   }
 
   async getAllWorkforceRecruiterAnnouncements() {
-    return this.workforceRecruiterStorage.getAllWorkforceRecruiterAnnouncements();
+    return this.miniAppsStorageComposed.getAllWorkforceRecruiterAnnouncements();
   }
 
   async updateWorkforceRecruiterAnnouncement(id: string, announcement: any) {
-    return this.workforceRecruiterStorage.updateWorkforceRecruiterAnnouncement(id, announcement);
+    return this.miniAppsStorageComposed.updateWorkforceRecruiterAnnouncement(id, announcement);
   }
 
   async deactivateWorkforceRecruiterAnnouncement(id: string) {
-    return this.workforceRecruiterStorage.deactivateWorkforceRecruiterAnnouncement(id);
+    return this.miniAppsStorageComposed.deactivateWorkforceRecruiterAnnouncement(id);
   }
 
   // ========================================
-  // BLOG OPERATIONS
+  // BLOG OPERATIONS (delegated to MiniAppsStorageComposed)
   // ========================================
 
   async getPublishedBlogPosts(limit?: number, offset?: number) {
-    return this.blogStorage.getPublishedBlogPosts(limit, offset);
+    return this.miniAppsStorageComposed.getPublishedBlogPosts(limit, offset);
   }
 
   async getBlogPostBySlug(slug: string) {
-    return this.blogStorage.getBlogPostBySlug(slug);
+    return this.miniAppsStorageComposed.getBlogPostBySlug(slug);
   }
 
   async getAllBlogPosts() {
-    return this.blogStorage.getAllBlogPosts();
+    return this.miniAppsStorageComposed.getAllBlogPosts();
   }
 
   async createBlogPost(post: any) {
-    return this.blogStorage.createBlogPost(post);
+    return this.miniAppsStorageComposed.createBlogPost(post);
   }
 
   async updateBlogPost(id: string, post: any) {
-    return this.blogStorage.updateBlogPost(id, post);
+    return this.miniAppsStorageComposed.updateBlogPost(id, post);
   }
 
   async deleteBlogPost(id: string) {
-    return this.blogStorage.deleteBlogPost(id);
+    return this.miniAppsStorageComposed.deleteBlogPost(id);
   }
 
   async getBlogCommentsForTopic(discourseTopicId: number, limit?: number, offset?: number) {
-    return this.blogStorage.getBlogCommentsForTopic(discourseTopicId, limit, offset);
+    return this.miniAppsStorageComposed.getBlogCommentsForTopic(discourseTopicId, limit, offset);
   }
 
   async createBlogAnnouncement(announcement: any) {
-    return this.blogStorage.createBlogAnnouncement(announcement);
+    return this.miniAppsStorageComposed.createBlogAnnouncement(announcement);
   }
 
   async getActiveBlogAnnouncements() {
-    return this.blogStorage.getActiveBlogAnnouncements();
+    return this.miniAppsStorageComposed.getActiveBlogAnnouncements();
   }
 
   async getAllBlogAnnouncements() {
-    return this.blogStorage.getAllBlogAnnouncements();
+    return this.miniAppsStorageComposed.getAllBlogAnnouncements();
   }
 
   async updateBlogAnnouncement(id: string, announcement: any) {
-    return this.blogStorage.updateBlogAnnouncement(id, announcement);
+    return this.miniAppsStorageComposed.updateBlogAnnouncement(id, announcement);
   }
 
   async deactivateBlogAnnouncement(id: string) {
-    return this.blogStorage.deactivateBlogAnnouncement(id);
+    return this.miniAppsStorageComposed.deactivateBlogAnnouncement(id);
   }
 
   // ========================================
-  // DEFAULT ALIVE OR DEAD OPERATIONS
+  // DEFAULT ALIVE OR DEAD OPERATIONS (delegated to MiniAppsStorageComposed)
   // ========================================
 
   async createDefaultAliveOrDeadFinancialEntry(entry: any, userId: string) {
-    return this.defaultAliveOrDeadStorage.createDefaultAliveOrDeadFinancialEntry(entry, userId);
+    return this.miniAppsStorageComposed.createDefaultAliveOrDeadFinancialEntry(entry, userId);
   }
 
   async getDefaultAliveOrDeadFinancialEntry(id: string) {
-    return this.defaultAliveOrDeadStorage.getDefaultAliveOrDeadFinancialEntry(id);
+    return this.miniAppsStorageComposed.getDefaultAliveOrDeadFinancialEntry(id);
   }
 
   async getDefaultAliveOrDeadFinancialEntries(filters?: any) {
-    return this.defaultAliveOrDeadStorage.getDefaultAliveOrDeadFinancialEntries(filters);
+    return this.miniAppsStorageComposed.getDefaultAliveOrDeadFinancialEntries(filters);
   }
 
   async updateDefaultAliveOrDeadFinancialEntry(id: string, entry: any) {
-    return this.defaultAliveOrDeadStorage.updateDefaultAliveOrDeadFinancialEntry(id, entry);
+    return this.miniAppsStorageComposed.updateDefaultAliveOrDeadFinancialEntry(id, entry);
   }
 
   async deleteDefaultAliveOrDeadFinancialEntry(id: string) {
-    return this.defaultAliveOrDeadStorage.deleteDefaultAliveOrDeadFinancialEntry(id);
+    return this.miniAppsStorageComposed.deleteDefaultAliveOrDeadFinancialEntry(id);
   }
 
   async getDefaultAliveOrDeadFinancialEntryByWeek(weekStartDate: Date) {
-    return this.defaultAliveOrDeadStorage.getDefaultAliveOrDeadFinancialEntryByWeek(weekStartDate);
+    return this.miniAppsStorageComposed.getDefaultAliveOrDeadFinancialEntryByWeek(weekStartDate);
   }
 
   async calculateAndStoreEbitdaSnapshot(weekStartDate: Date, currentFunding?: number) {
-    return this.defaultAliveOrDeadStorage.calculateAndStoreEbitdaSnapshot(weekStartDate, currentFunding);
+    return this.miniAppsStorageComposed.calculateAndStoreEbitdaSnapshot(weekStartDate, currentFunding);
   }
 
   async getDefaultAliveOrDeadEbitdaSnapshot(weekStartDate: Date) {
-    return this.defaultAliveOrDeadStorage.getDefaultAliveOrDeadEbitdaSnapshot(weekStartDate);
+    return this.miniAppsStorageComposed.getDefaultAliveOrDeadEbitdaSnapshot(weekStartDate);
   }
 
   async getDefaultAliveOrDeadEbitdaSnapshots(filters?: any) {
-    return this.defaultAliveOrDeadStorage.getDefaultAliveOrDeadEbitdaSnapshots(filters);
+    return this.miniAppsStorageComposed.getDefaultAliveOrDeadEbitdaSnapshots(filters);
   }
 
   async getDefaultAliveOrDeadCurrentStatus() {
-    return this.defaultAliveOrDeadStorage.getDefaultAliveOrDeadCurrentStatus();
+    return this.miniAppsStorageComposed.getDefaultAliveOrDeadCurrentStatus();
   }
 
   async getDefaultAliveOrDeadWeeklyTrends(weeks?: number) {
-    return this.defaultAliveOrDeadStorage.getDefaultAliveOrDeadWeeklyTrends(weeks);
+    return this.miniAppsStorageComposed.getDefaultAliveOrDeadWeeklyTrends(weeks);
   }
 
   async getDefaultAliveOrDeadWeekComparison(weekStart: Date) {
-    return this.defaultAliveOrDeadStorage.getDefaultAliveOrDeadWeekComparison(weekStart);
+    return this.miniAppsStorageComposed.getDefaultAliveOrDeadWeekComparison(weekStart);
   }
 
   async getDefaultAliveOrDeadCurrentFunding() {
-    return this.defaultAliveOrDeadStorage.getDefaultAliveOrDeadCurrentFunding();
+    return this.miniAppsStorageComposed.getDefaultAliveOrDeadCurrentFunding();
   }
 
   async updateDefaultAliveOrDeadCurrentFunding(amount: number) {
-    return this.defaultAliveOrDeadStorage.updateDefaultAliveOrDeadCurrentFunding(amount);
+    return this.miniAppsStorageComposed.updateDefaultAliveOrDeadCurrentFunding(amount);
   }
 
   // ========================================
@@ -1700,7 +1484,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   async deleteTrusttransportProfile(userId: string, reason?: string): Promise<void> {
-    return this.trustTransportStorage.deleteTrusttransportProfile(userId, reason);
+    return this.miniAppsStorageComposed.deleteTrusttransportProfile(userId, reason);
   }
 
   async deleteMechanicmatchProfile(userId: string, reason?: string): Promise<void> {
@@ -1736,7 +1520,7 @@ export class DatabaseStorage implements IStorage {
 
     // Anonymize user data in core tables
     try {
-      await this.coreStorage.anonymizeUserData(userId);
+      await this.coreStorageComposed.anonymizeUserData(userId);
     } catch (error: any) {
       console.warn(`Failed to anonymize core user data: ${error.message}`);
       // Continue with deletion even if anonymization fails
@@ -1750,7 +1534,7 @@ export class DatabaseStorage implements IStorage {
     }
 
     // Finally, delete the user account from users table
-    await this.coreStorage.deleteUser(userId);
+    await this.coreStorageComposed.deleteUser(userId);
   }
 }
 
