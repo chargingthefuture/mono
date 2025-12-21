@@ -109,4 +109,3 @@ export function registerLighthouseProfileRoutes(app: Express) {
   }));
 }
 
-
