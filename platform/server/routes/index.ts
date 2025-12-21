@@ -13,24 +13,22 @@ import { registerHealthRoutes } from "./health.routes";
 import { registerAuthRoutes } from "./auth.routes";
 import { registerWebhookRoutes } from "./webhooks.routes";
 import { registerAdminRoutes } from "./admin.routes";
-
-// TODO: Import remaining route modules as they are created:
-// import { registerDirectoryRoutes } from "./directory.routes";
-// import { registerSupportMatchRoutes } from "./supportmatch.routes";
-// import { registerLighthouseRoutes } from "./lighthouse.routes";
-// import { registerTrustTransportRoutes } from "./trusttransport.routes";
-// import { registerMechanicMatchRoutes } from "./mechanicmatch.routes";
-// import { registerResearchRoutes } from "./research.routes";
-// import { registerGentlePulseRoutes } from "./gentlepulse.routes";
-// import { registerBlogRoutes } from "./blog.routes";
-// import { registerLostMailRoutes } from "./lostmail.routes";
-// import { registerChymeRoutes } from "./chyme.routes";
-// import { registerChymeRoomsRoutes } from "./chyme-rooms.routes";
-// import { registerWorkforceRecruiterRoutes } from "./workforce-recruiter.routes";
-// import { registerDefaultAliveOrDeadRoutes } from "./default-alive-or-dead.routes";
-// import { registerChatGroupsRoutes } from "./chatgroups.routes";
-// import { registerSocketRelayRoutes } from "./socketrelay.routes";
-// import { registerSkillsRoutes } from "./skills.routes";
+import { registerDirectoryRoutes } from "./directory.routes";
+import { registerSupportMatchRoutes } from "./supportmatch.routes";
+import { registerSkillsRoutes } from "./skills.routes";
+import { registerChatGroupsRoutes } from "./chatgroups.routes";
+import { registerLighthouseRoutes } from "./lighthouse.routes";
+import { registerTrustTransportRoutes } from "./trusttransport.routes";
+import { registerMechanicMatchRoutes } from "./mechanicmatch.routes";
+import { registerResearchRoutes } from "./research.routes";
+import { registerGentlePulseRoutes } from "./gentlepulse.routes";
+import { registerBlogRoutes } from "./blog.routes";
+import { registerLostMailRoutes } from "./lostmail.routes";
+import { registerChymeRoutes } from "./chyme.routes";
+import { registerChymeRoomsRoutes } from "./chyme-rooms.routes";
+import { registerWorkforceRecruiterRoutes } from "./workforce-recruiter.routes";
+import { registerDefaultAliveOrDeadRoutes } from "./default-alive-or-dead.routes";
+import { registerSocketRelayRoutes } from "./socketrelay.routes";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
@@ -44,24 +42,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerAuthRoutes(app);
   registerWebhookRoutes(app);
   registerAdminRoutes(app);
-
-  // TODO: Register remaining route modules as they are created:
-  // registerDirectoryRoutes(app);
-  // registerSupportMatchRoutes(app);
-  // registerLighthouseRoutes(app);
-  // registerTrustTransportRoutes(app);
-  // registerMechanicMatchRoutes(app);
-  // registerResearchRoutes(app);
-  // registerGentlePulseRoutes(app);
-  // registerBlogRoutes(app);
-  // registerLostMailRoutes(app);
-  // registerChymeRoutes(app);
-  // registerChymeRoomsRoutes(app);
-  // registerWorkforceRecruiterRoutes(app);
-  // registerDefaultAliveOrDeadRoutes(app);
-  // registerChatGroupsRoutes(app);
-  // registerSocketRelayRoutes(app);
-  // registerSkillsRoutes(app);
+  registerDirectoryRoutes(app);
+  registerSupportMatchRoutes(app);
+  registerSkillsRoutes(app);
+  registerChatGroupsRoutes(app);
+  registerLighthouseRoutes(app);
+  registerTrustTransportRoutes(app);
+  registerMechanicMatchRoutes(app);
+  registerResearchRoutes(app);
+  registerGentlePulseRoutes(app);
+  registerBlogRoutes(app);
+  registerLostMailRoutes(app);
+  registerChymeRoutes(app);
+  registerChymeRoomsRoutes(app);
+  registerWorkforceRecruiterRoutes(app);
+  registerDefaultAliveOrDeadRoutes(app);
+  registerSocketRelayRoutes(app);
 
   const httpServer = createServer(app);
   return httpServer;

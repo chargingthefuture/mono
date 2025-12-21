@@ -11,6 +11,7 @@ import {
   timestamp,
   varchar,
   boolean,
+  decimal,
 } from "drizzle-orm/pg-core";
 
 // Session storage table - Required for authentication (OIDC/OAuth2)
@@ -35,7 +36,7 @@ export const users = pgTable("users", {
   isAdmin: boolean("is_admin").default(false).notNull(),
   isVerified: boolean("is_verified").default(false).notNull(),
   isApproved: boolean("is_approved").default(false).notNull(), // Manual approval for app access
-  pricingTier: varchar("pricing_tier").notNull().default('1.00'), // Changed from decimal for compatibility
+  pricingTier: decimal("pricing_tier", { precision: 10, scale: 2 }).notNull().default('1.00'),
   subscriptionStatus: varchar("subscription_status", { length: 20 }).notNull().default('active'), // active, overdue, inactive
   termsAcceptedAt: timestamp("terms_accepted_at"), // Timestamp of last terms acceptance
   createdAt: timestamp("created_at").defaultNow().notNull(),
