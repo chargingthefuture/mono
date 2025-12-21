@@ -2553,5 +2553,33 @@
     "statusCode": 200,
     "responseTime": 404,
     "error": null
+  },
+  {
+    "timestamp": "2025-12-21T15:00:51.841Z",
+    "status": "up",
+    "statusCode": 200,
+    "responseTime": 245,
+    "error": null
+  },
+  {
+    "timestamp": "2025-12-21T15:26:23.654Z",
+    "status": "up",
+    "statusCode": 200,
+    "responseTime": 483,
+    "error": null
+  },
+  {
+    "timestamp": "2025-12-21T15:38:10.443Z",
+    "status": "up",
+    "statusCode": 200,
+    "responseTime": 454,
+    "error": null
+  },
+  {
+    "timestamp": "2025-12-21T15:46:15.541Z",
+    "status": "up",
+    "statusCode": 200,
+    "responseTime": 675,
+    "error": null
   }
 ]
