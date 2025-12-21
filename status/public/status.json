@@ -1,102 +1,102 @@
 {
-  "timestamp": "2025-12-21T10:42:29.666Z",
+  "timestamp": "2025-12-21T10:51:38.979Z",
   "services": [
     {
       "name": "Main Platform",
       "key": "main",
       "status": "up",
-      "responseTime": 589,
+      "responseTime": 361,
       "statusCode": 200
     },
     {
       "name": "ChatGroups",
       "key": "chatgroups",
       "status": "up",
-      "responseTime": 501,
+      "responseTime": 373,
       "statusCode": 200
     },
     {
       "name": "Directory",
       "key": "directory",
       "status": "up",
-      "responseTime": 584,
+      "responseTime": 329,
       "statusCode": 200
     },
     {
       "name": "GentlePulse",
       "key": "gentlepulse",
       "status": "up",
-      "responseTime": 619,
+      "responseTime": 331,
       "statusCode": 200
     },
     {
       "name": "Chyme",
       "key": "chyme",
       "status": "up",
-      "responseTime": 765,
+      "responseTime": 411,
       "statusCode": 200
     },
     {
       "name": "Default Alive or Dead",
       "key": "default-alive-or-dead",
       "status": "up",
-      "responseTime": 745,
+      "responseTime": 403,
       "statusCode": 200
     },
     {
       "name": "Workforce Recruiter",
       "key": "workforce-recruiter",
       "status": "up",
-      "responseTime": 814,
+      "responseTime": 427,
       "statusCode": 200
     },
     {
       "name": "LightHouse",
       "key": "lighthouse",
       "status": "up",
-      "responseTime": 908,
+      "responseTime": 421,
       "statusCode": 200
     },
     {
       "name": "LostMail",
       "key": "lostmail",
       "status": "up",
-      "responseTime": 812,
+      "responseTime": 395,
       "statusCode": 200
     },
     {
       "name": "MechanicMatch",
       "key": "mechanicmatch",
       "status": "up",
-      "responseTime": 898,
+      "responseTime": 429,
       "statusCode": 200
     },
     {
       "name": "CompareNotes",
       "key": "research",
       "status": "up",
-      "responseTime": 880,
+      "responseTime": 441,
       "statusCode": 200
     },
     {
       "name": "SocketRelay",
       "key": "socketrelay",
       "status": "up",
-      "responseTime": 939,
+      "responseTime": 398,
       "statusCode": 200
     },
     {
       "name": "SupportMatch",
       "key": "supportmatch",
       "status": "up",
-      "responseTime": 992,
+      "responseTime": 436,
       "statusCode": 200
     },
     {
       "name": "TrustTransport",
       "key": "trusttransport",
       "status": "up",
-      "responseTime": 994,
+      "responseTime": 448,
       "statusCode": 200
     }
   ],
