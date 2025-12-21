@@ -81,23 +81,19 @@ fun RoomDetailScreen(
         viewModel.loadParticipants(roomId)
         viewModel.loadMessages(roomId)
         
-        // Reduced polling for participants only (messages come via WebSocket)
-        // Poll every 10 seconds as fallback
+        // Poll participants periodically as fallback (messages come via WebSocket)
+        // This ensures participant list stays up-to-date even if WebSocket has issues
+        // Poll every 10 seconds
         while (true) {
             kotlinx.coroutines.delay(10000)
             if (uiState.isJoined) {
                 viewModel.loadParticipants(roomId)
-                // Only poll messages if WebSocket is not connected (fallback)
-                // In production, this would check WebSocket connection state
+                // Messages are handled via WebSocket in RoomViewModel.setupChatWebSocket()
+                // No need to poll messages here
+            } else {
+                break // Stop polling if user leaves room
             }
         }
-    }
-    
-    // Observe WebSocket messages from signaling client (if available)
-    // This will be integrated when WebRTCManager is active
-    LaunchedEffect(roomId) {
-        // WebSocket message handling will be added via WebRTCManager's signaling client
-        // For now, we still use polling as fallback
     }
     // Treat user as creator if their role is CREATOR or they match createdBy
     val isCreator = uiState.currentUserRole == ParticipantRole.CREATOR ||
@@ -128,8 +124,13 @@ fun RoomDetailScreen(
                 "Mic access is disabled. Enable microphone permission in system settings to speak in rooms."
             }
 
-            // Show snackbar in the permission launcher callback context
-            // Note: This will be shown when the permission is denied
+            // Show snackbar with error message
+            kotlinx.coroutines.CoroutineScope(kotlinx.coroutines.Dispatchers.Main).launch {
+                scaffoldState.snackbarHostState.showSnackbar(
+                    message = message,
+                    duration = SnackbarDuration.Long
+                )
+            }
         }
     }
     
@@ -466,8 +467,29 @@ fun RoomDetailScreen(
             confirmButton = {
                 TextButton(onClick = {
                     val trimmed = pendingPinLink.trim()
-                    val uri = android.net.Uri.parse(trimmed)
-                    val valid = (uri.scheme == "http" || uri.scheme == "https") && !uri.host.isNullOrBlank()
+                    if (trimmed.isBlank()) {
+                        showPinDialog = false
+                        return@TextButton
+                    }
+                    
+                    // Validate URL format
+                    val uri = try {
+                        android.net.Uri.parse(trimmed)
+                    } catch (e: Exception) {
+                        // Invalid URI format
+                        return@TextButton
+                    }
+                    
+                    // Check URL length (prevent extremely long URLs)
+                    if (trimmed.length > 2048) {
+                        return@TextButton
+                    }
+                    
+                    // Validate scheme and host
+                    val valid = (uri.scheme == "http" || uri.scheme == "https") && 
+                                !uri.host.isNullOrBlank() &&
+                                uri.host.length <= 253 // Max hostname length
+                    
                     if (valid) {
                         viewModel.updatePinnedLink(roomId, trimmed)
                         showPinDialog = false

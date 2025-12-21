@@ -46,9 +46,30 @@ class WebRTCManager(
     // Map of userId -> PeerConnection for all active peer connections
     private val peerConnections = ConcurrentHashMap<String, PeerConnection>()
     private var peerConnectionFactory: PeerConnectionFactory? = null
-    private val iceServers = listOf(
-        PeerConnection.IceServer.builder("stun:stun.l.google.com:19302").createIceServer()
-    )
+    
+    // ICE servers: STUN for discovery, TURN for NAT traversal
+    // Note: TURN servers should be configured with actual credentials in production
+    // For now, using public STUN and placeholder TURN configuration
+    private val iceServers = buildList {
+        // Public STUN server for NAT discovery
+        add(PeerConnection.IceServer.builder("stun:stun.l.google.com:19302").createIceServer())
+        
+        // TURN servers for NAT traversal (required for many mobile/corporate networks)
+        // TODO: Replace with actual TURN server credentials in production
+        // Example TURN server configuration (uncomment and configure):
+        // add(PeerConnection.IceServer.builder("turn:your-turn-server.com:3478")
+        //     .setUsername("username")
+        //     .setPassword("password")
+        //     .createIceServer())
+        
+        // Fallback: Try using STUN as TURN (may work in some cases)
+        // This is not ideal but better than nothing
+        add(PeerConnection.IceServer.builder("stun:stun1.l.google.com:19302").createIceServer())
+        add(PeerConnection.IceServer.builder("stun:stun2.l.google.com:19302").createIceServer())
+    }
+    
+    // Track remote audio tracks per peer for proper cleanup
+    private val remoteAudioTracks = ConcurrentHashMap<String, org.webrtc.AudioTrack>()
     
     // Track which peers we've sent offers to (to avoid duplicate offers)
     private val pendingOffers = mutableSetOf<String>()
@@ -103,6 +124,11 @@ class WebRTCManager(
      * Remove a peer connection when a user leaves or is no longer a speaker.
      */
     fun removePeer(userId: String) {
+        // Disable and cleanup remote audio track
+        remoteAudioTracks[userId]?.setEnabled(false)
+        remoteAudioTracks.remove(userId)
+        
+        // Close peer connection
         peerConnections[userId]?.close()
         peerConnections.remove(userId)
         pendingOffers.remove(userId)
@@ -134,6 +160,10 @@ class WebRTCManager(
         _connectionError.value = null
         signalingClient.dispose()
         
+        // Disable and cleanup all remote audio tracks
+        remoteAudioTracks.values.forEach { it.setEnabled(false) }
+        remoteAudioTracks.clear()
+        
         // Close all peer connections
         peerConnections.values.forEach { it.close() }
         peerConnections.clear()
@@ -153,7 +183,12 @@ class WebRTCManager(
                 sendIceCandidate(candidate, userId)
             }
             override fun onAddStream(stream: org.webrtc.MediaStream?) {
-                // Audio-only: playback is handled automatically by WebRTC audio APIs.
+                // Legacy callback - modern WebRTC uses onTrack instead
+                // Handle audio tracks from legacy streams
+                stream?.audioTracks?.forEach { track ->
+                    track.setEnabled(true)
+                    remoteAudioTracks[userId] = track
+                }
             }
             override fun onConnectionChange(newState: PeerConnection.PeerConnectionState?) {
                 peerConnectionStates[userId] = newState ?: PeerConnection.PeerConnectionState.NEW
@@ -186,11 +221,27 @@ class WebRTCManager(
             }
             override fun onIceGatheringChange(newState: PeerConnection.IceGatheringState?) {}
             override fun onIceCandidatesRemoved(candidates: Array<out IceCandidate>?) {}
-            override fun onRemoveStream(stream: org.webrtc.MediaStream?) {}
+            override fun onRemoveStream(stream: org.webrtc.MediaStream?) {
+                // Clean up remote audio tracks when stream is removed
+                stream?.audioTracks?.forEach { track ->
+                    track.setEnabled(false)
+                    remoteAudioTracks.remove(userId)
+                }
+            }
             override fun onDataChannel(dc: org.webrtc.DataChannel?) {}
             override fun onRenegotiationNeeded() {}
             override fun onTrack(rtpTransceiver: org.webrtc.RtpTransceiver?) {
-                // Handle remote audio track
+                // Handle remote audio track from peer
+                rtpTransceiver?.receiver?.track()?.let { track ->
+                    if (track is org.webrtc.AudioTrack) {
+                        // Enable the remote audio track for playback
+                        track.setEnabled(true)
+                        // Store reference for cleanup
+                        remoteAudioTracks[userId] = track
+                        // WebRTC Android automatically routes enabled audio tracks to the speaker
+                        // No additional audio renderer setup needed for basic audio playback
+                    }
+                }
             }
         })
 
@@ -204,23 +255,39 @@ class WebRTCManager(
     
     private fun updateOverallConnectionState() {
         val states = peerConnectionStates.values
+        val connectedCount = states.count { it == PeerConnection.PeerConnectionState.CONNECTED }
+        val failedCount = states.count { it == PeerConnection.PeerConnectionState.FAILED }
+        val connectingCount = states.count { it == PeerConnection.PeerConnectionState.CONNECTING }
+        val totalCount = states.size
+        
         when {
             states.isEmpty() -> {
                 _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.DISCONNECTED
-            }
-            states.any { it == PeerConnection.PeerConnectionState.CONNECTED } -> {
-                _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.CONNECTED
                 _connectionError.value = null
             }
-            states.any { it == PeerConnection.PeerConnectionState.FAILED } -> {
-                _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.FAILED
-                _connectionError.value = "Some peer connections failed"
+            connectedCount > 0 -> {
+                // At least one peer is connected - we're in a good state
+                _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.CONNECTED
+                // Only show error if some peers failed and we have multiple peers
+                if (failedCount > 0 && totalCount > 1) {
+                    _connectionError.value = "$failedCount of $totalCount peer connections failed"
+                } else {
+                    _connectionError.value = null
+                }
             }
-            states.any { it == PeerConnection.PeerConnectionState.CONNECTING } -> {
+            failedCount == totalCount && totalCount > 0 -> {
+                // All peers failed
+                _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.FAILED
+                _connectionError.value = "All peer connections failed"
+            }
+            connectingCount > 0 -> {
+                // Some peers are still connecting
                 _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.CONNECTING
+                _connectionError.value = null
             }
             else -> {
                 _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.DISCONNECTED
+                _connectionError.value = null
             }
         }
     }

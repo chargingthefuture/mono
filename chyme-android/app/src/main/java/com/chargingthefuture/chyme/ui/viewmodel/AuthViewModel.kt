@@ -42,7 +42,9 @@ class AuthViewModel @Inject constructor(
             level = SentryLevel.DEBUG
         )
         
-        // Auth is not implemented yet - user needs to authenticate via web
+        // Authentication state is managed via MobileAuthManager/OTPAuthManager
+        // Users authenticate via mobile code (deep link) or OTP code
+        // Initial state is unauthenticated until token is loaded from storage
         _uiState.value = _uiState.value.copy(isAuthenticated = false)
         
         // Observe user info from auth manager

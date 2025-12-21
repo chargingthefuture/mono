@@ -78,7 +78,20 @@ class RoomViewModel @Inject constructor(
     private var chatSignalingClient: SignalingClient? = null
     private var currentRoomId: String? = null
     private val maxMessages = 500 // Trim to last 500 messages
-    private val messageQueue = mutableListOf<Pair<String, String>>() // roomId to content
+    private val messageQueue = mutableListOf<QueuedMessage>()
+    private val maxQueueSize = 50 // Maximum queued messages
+    private val maxQueueAgeMs = 5 * 60 * 1000L // 5 minutes
+    
+    // Track message IDs to prevent duplicates (with timestamp for cleanup)
+    private val receivedMessageIds = mutableSetOf<String>()
+    private val messageIdCleanupThreshold = 1000 // Clean up old IDs when set gets large
+    
+    data class QueuedMessage(
+        val roomId: String,
+        val content: String,
+        val timestamp: Long = System.currentTimeMillis(),
+        var retryCount: Int = 0
+    )
     
     init {
         // Observe WebRTC connection state changes
@@ -155,14 +168,40 @@ class RoomViewModel @Inject constructor(
         if (!_uiState.value.isOnline) return
         
         viewModelScope.launch {
-            val queue = messageQueue.toList()
-            messageQueue.clear()
-            
-            for ((queuedRoomId, content) in queue) {
-                if (queuedRoomId == roomId) {
-                    sendMessageWithRetry(queuedRoomId, content, isAnonymous = true)
-                }
+            val now = System.currentTimeMillis()
+            val validMessages = messageQueue.filter { 
+                it.roomId == roomId && 
+                (now - it.timestamp) < maxQueueAgeMs &&
+                it.retryCount < 3 // Max 3 retries per message
             }
+            
+            // Remove processed and expired messages
+            messageQueue.removeAll { 
+                it.roomId == roomId && 
+                ((now - it.timestamp) >= maxQueueAgeMs || it.retryCount >= 3)
+            }
+            
+            // Process valid messages
+            for (queuedMessage in validMessages) {
+                val result = roomRepository.sendMessage(queuedMessage.roomId, queuedMessage.content, isAnonymous = true)
+                result.fold(
+                    onSuccess = { 
+                        // Message sent successfully, remove from queue
+                        messageQueue.remove(queuedMessage)
+                    },
+                    onFailure = { 
+                        // Increment retry count
+                        queuedMessage.retryCount++
+                    }
+                )
+                // Small delay between retries
+                delay(500)
+            }
+            
+            // Update pending messages count
+            _uiState.value = _uiState.value.copy(
+                pendingMessages = messageQueue.map { it.content }
+            )
         }
     }
     
@@ -263,11 +302,25 @@ class RoomViewModel @Inject constructor(
     }
     
     fun addMessageFromWebSocket(message: ChymeMessage) {
-        val currentMessages = _uiState.value.messages
-        // Check if message already exists (avoid duplicates)
-        if (currentMessages.any { it.id == message.id }) {
+        // Clean up old message IDs if set gets too large
+        if (receivedMessageIds.size > messageIdCleanupThreshold) {
+            receivedMessageIds.clear()
+        }
+        
+        // Check if message already exists using ID tracking (more reliable than list search)
+        if (message.id in receivedMessageIds) {
             return
         }
+        
+        val currentMessages = _uiState.value.messages
+        // Double-check in current messages list (defensive)
+        if (currentMessages.any { it.id == message.id }) {
+            receivedMessageIds.add(message.id)
+            return
+        }
+        
+        // Add message ID to tracking set
+        receivedMessageIds.add(message.id)
         
         val updatedMessages = (currentMessages + message)
             .sortedBy { it.createdAt }
@@ -398,19 +451,27 @@ class RoomViewModel @Inject constructor(
         if (content.isBlank()) return
         
         currentRoomId = roomId
+        val trimmedContent = content.trim()
         
         // If offline, queue the message
         if (!_uiState.value.isOnline) {
-            messageQueue.add(roomId to content.trim())
+            // Prevent queue from growing too large
+            if (messageQueue.size >= maxQueueSize) {
+                // Remove oldest messages
+                messageQueue.sortBy { it.timestamp }
+                messageQueue.removeAt(0)
+            }
+            
+            messageQueue.add(QueuedMessage(roomId, trimmedContent))
             _uiState.value = _uiState.value.copy(
-                chatErrorMessage = "Offline. Message will be sent when connection is restored.",
-                pendingMessages = messageQueue.map { it.second }
+                chatErrorMessage = "Offline. ${messageQueue.size} message(s) queued. They will be sent when connection is restored.",
+                pendingMessages = messageQueue.map { it.content }
             )
             return
         }
         
         viewModelScope.launch {
-            sendMessageWithRetry(roomId, content.trim(), isAnonymous)
+            sendMessageWithRetry(roomId, trimmedContent, isAnonymous)
         }
     }
     
@@ -469,9 +530,16 @@ class RoomViewModel @Inject constructor(
             isSendingMessage = false
         )
         
-        // Queue message for retry when connection is restored
-        if (!_uiState.value.isOnline) {
-            messageQueue.add(roomId to content)
+        // Queue message for retry when connection is restored (if not already queued)
+        if (!_uiState.value.isOnline && !messageQueue.any { it.roomId == roomId && it.content == content }) {
+            if (messageQueue.size >= maxQueueSize) {
+                messageQueue.sortBy { it.timestamp }
+                messageQueue.removeAt(0)
+            }
+            messageQueue.add(QueuedMessage(roomId, content))
+            _uiState.value = _uiState.value.copy(
+                pendingMessages = messageQueue.map { it.content }
+            )
         }
     }
 
@@ -581,7 +649,10 @@ class RoomViewModel @Inject constructor(
             roomRepository.updateParticipant(roomId, userId, request).fold(
                 onSuccess = {
                     _uiState.value = _uiState.value.copy(participantActionError = null)
+                    // Reload participants to get updated roles
                     loadParticipants(roomId)
+                    // Immediately update WebRTC peer connections for the newly promoted speaker
+                    // This ensures they can start speaking right away
                     maybeUpdateWebRTC(roomId)
                 },
                 onFailure = { error ->

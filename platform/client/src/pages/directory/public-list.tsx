@@ -54,12 +54,6 @@ export default function PublicDirectoryList() {
       const res = await fetch("/api/directory/public");
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
-      // Debug: Log first profile to see what we're getting
-      // Removed console.log for production - use browser dev tools if needed
-      if (data && data.length > 0) {
-        // Profile data available
-        });
-      }
       return data;
     }
   });
