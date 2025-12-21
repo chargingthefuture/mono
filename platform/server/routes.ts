@@ -5,7 +5,8 @@ import { Webhook } from "svix";
 import { storage } from "./storage";
 import { setupAuth, isAuthenticated, isAdmin, isAdminWithCsrf, isUserAdmin, getUserId, syncClerkUserToDatabase } from "./auth";
 import { validateCsrfToken, generateCsrfTokenForAdmin } from "./csrf";
-import { publicListingLimiter, publicItemLimiter, chatMessageLimiter } from "./rateLimiter";
+import { publicListingLimiter, publicItemLimiter, chatMessageLimiter, healthCheckLimiter } from "./rateLimiter";
+import { performHealthCheck, type HealthCheckResponse } from "./healthCheck";
 import { fingerprintRequests, getSuspiciousPatterns, getSuspiciousPatternsForIP, clearSuspiciousPatterns } from "./antiScraping";
 import { rotateDisplayOrder, addAntiScrapingDelay, isLikelyBot } from "./dataObfuscation";
 import { readSkillsFromFile, addSkillToFile, removeSkillFromFile, getSkillsAsDirectorySkills } from "./skillsFileManager";
@@ -109,135 +110,209 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // =====================================================
   // Public health check endpoints (used by status page)
   // =====================================================
-  // These endpoints are intentionally unauthenticated and very simple.
-  // They are only meant to answer "is this service reachable at all?"
-  // without exposing any sensitive information.
+  // These endpoints check actual service health including database connectivity.
+  // They are intentionally unauthenticated but rate-limited to prevent abuse.
+  // Status codes: 200 for up/degraded, 503 for down
+
+  // Helper function to handle health check responses
+  const handleHealthCheck = async (req: express.Request, res: express.Response, serviceName: string) => {
+    try {
+      const healthCheck = await performHealthCheck(serviceName, true);
+      
+      // Map health status to HTTP status code
+      // up/degraded = 200, down = 503
+      const statusCode = healthCheck.status === 'down' ? 503 : 200;
+      
+      // Map internal status to external status for backward compatibility
+      const externalStatus = healthCheck.status === 'up' ? 'ok' : 
+                            healthCheck.status === 'degraded' ? 'degraded' : 'down';
+      
+      res.status(statusCode).json({
+        status: externalStatus,
+        service: healthCheck.service,
+        timestamp: healthCheck.timestamp,
+        responseTime: healthCheck.responseTime,
+        ...(healthCheck.database && {
+          database: {
+            status: healthCheck.database.status === 'up' ? 'ok' : healthCheck.database.status,
+            responseTime: healthCheck.database.responseTime,
+            ...(healthCheck.database.error && { error: healthCheck.database.error }),
+          },
+        }),
+        ...(healthCheck.error && { error: healthCheck.error }),
+      });
+    } catch (error: any) {
+      logError(error, req, 'error');
+      res.status(503).json({
+        status: 'down',
+        service: serviceName,
+        timestamp: new Date().toISOString(),
+        error: 'Health check failed',
+      });
+    }
+  };
 
   // Main platform health
-  app.get("/api/health", (_req, res) => {
-    res.json({
-      status: "ok",
-      service: "main",
-      timestamp: new Date().toISOString(),
-    });
-  });
+  app.get("/api/health", healthCheckLimiter, asyncHandler(async (req, res) => {
+    await handleHealthCheck(req, res, "main");
+  }));
 
   // ChatGroups health
-  app.get("/api/health/chatgroups", (_req, res) => {
-    res.json({
-      status: "ok",
-      service: "chatgroups",
-      timestamp: new Date().toISOString(),
-    });
-  });
+  app.get("/api/health/chatgroups", healthCheckLimiter, asyncHandler(async (req, res) => {
+    await handleHealthCheck(req, res, "chatgroups");
+  }));
 
   // Directory health
-  app.get("/api/health/directory", (_req, res) => {
-    res.json({
-      status: "ok",
-      service: "directory",
-      timestamp: new Date().toISOString(),
-    });
-  });
+  app.get("/api/health/directory", healthCheckLimiter, asyncHandler(async (req, res) => {
+    await handleHealthCheck(req, res, "directory");
+  }));
 
   // GentlePulse health
-  app.get("/api/health/gentlepulse", (_req, res) => {
-    res.json({
-      status: "ok",
-      service: "gentlepulse",
-      timestamp: new Date().toISOString(),
-    });
-  });
+  app.get("/api/health/gentlepulse", healthCheckLimiter, asyncHandler(async (req, res) => {
+    await handleHealthCheck(req, res, "gentlepulse");
+  }));
 
   // Chyme health
-  app.get("/api/health/chyme", (_req, res) => {
-    res.json({
-      status: "ok",
-      service: "chyme",
-      timestamp: new Date().toISOString(),
-    });
-  });
+  app.get("/api/health/chyme", healthCheckLimiter, asyncHandler(async (req, res) => {
+    await handleHealthCheck(req, res, "chyme");
+  }));
 
   // Default Alive or Dead health
-  app.get("/api/health/default-alive-or-dead", (_req, res) => {
-    res.json({
-      status: "ok",
-      service: "default-alive-or-dead",
-      timestamp: new Date().toISOString(),
-    });
-  });
+  app.get("/api/health/default-alive-or-dead", healthCheckLimiter, asyncHandler(async (req, res) => {
+    await handleHealthCheck(req, res, "default-alive-or-dead");
+  }));
 
   // Workforce Recruiter health
-  app.get("/api/health/workforce-recruiter", (_req, res) => {
-    res.json({
-      status: "ok",
-      service: "workforce-recruiter",
-      timestamp: new Date().toISOString(),
-    });
-  });
+  app.get("/api/health/workforce-recruiter", healthCheckLimiter, asyncHandler(async (req, res) => {
+    await handleHealthCheck(req, res, "workforce-recruiter");
+  }));
 
   // LightHouse health
-  app.get("/api/health/lighthouse", (_req, res) => {
-    res.json({
-      status: "ok",
-      service: "lighthouse",
-      timestamp: new Date().toISOString(),
-    });
-  });
+  app.get("/api/health/lighthouse", healthCheckLimiter, asyncHandler(async (req, res) => {
+    await handleHealthCheck(req, res, "lighthouse");
+  }));
 
   // LostMail health
-  app.get("/api/health/lostmail", (_req, res) => {
-    res.json({
-      status: "ok",
-      service: "lostmail",
-      timestamp: new Date().toISOString(),
-    });
-  });
+  app.get("/api/health/lostmail", healthCheckLimiter, asyncHandler(async (req, res) => {
+    await handleHealthCheck(req, res, "lostmail");
+  }));
 
   // MechanicMatch health
-  app.get("/api/health/mechanicmatch", (_req, res) => {
-    res.json({
-      status: "ok",
-      service: "mechanicmatch",
-      timestamp: new Date().toISOString(),
-    });
-  });
+  app.get("/api/health/mechanicmatch", healthCheckLimiter, asyncHandler(async (req, res) => {
+    await handleHealthCheck(req, res, "mechanicmatch");
+  }));
 
   // CompareNotes / Research health
-  app.get("/api/health/research", (_req, res) => {
-    res.json({
-      status: "ok",
-      service: "research",
-      timestamp: new Date().toISOString(),
-    });
-  });
+  app.get("/api/health/research", healthCheckLimiter, asyncHandler(async (req, res) => {
+    await handleHealthCheck(req, res, "research");
+  }));
 
   // SocketRelay health
-  app.get("/api/health/socketrelay", (_req, res) => {
-    res.json({
-      status: "ok",
-      service: "socketrelay",
-      timestamp: new Date().toISOString(),
-    });
-  });
+  app.get("/api/health/socketrelay", healthCheckLimiter, asyncHandler(async (req, res) => {
+    await handleHealthCheck(req, res, "socketrelay");
+  }));
 
   // SupportMatch health
-  app.get("/api/health/supportmatch", (_req, res) => {
-    res.json({
-      status: "ok",
-      service: "supportmatch",
-      timestamp: new Date().toISOString(),
-    });
-  });
+  app.get("/api/health/supportmatch", healthCheckLimiter, asyncHandler(async (req, res) => {
+    await handleHealthCheck(req, res, "supportmatch");
+  }));
 
   // TrustTransport health
-  app.get("/api/health/trusttransport", (_req, res) => {
-    res.json({
-      status: "ok",
-      service: "trusttransport",
-      timestamp: new Date().toISOString(),
-    });
-  });
+  app.get("/api/health/trusttransport", healthCheckLimiter, asyncHandler(async (req, res) => {
+    await handleHealthCheck(req, res, "trusttransport");
+  }));
+
+  // Database health check endpoint
+  app.get("/api/health/database", healthCheckLimiter, asyncHandler(async (req, res) => {
+    try {
+      const healthCheck = await performHealthCheck("database", true);
+      const statusCode = healthCheck.status === 'down' ? 503 : 200;
+      const externalStatus = healthCheck.status === 'up' ? 'ok' : 
+                            healthCheck.status === 'degraded' ? 'degraded' : 'down';
+      
+      res.status(statusCode).json({
+        status: externalStatus,
+        service: "database",
+        timestamp: healthCheck.timestamp,
+        responseTime: healthCheck.responseTime,
+        ...(healthCheck.database && {
+          database: {
+            status: healthCheck.database.status === 'up' ? 'ok' : healthCheck.database.status,
+            responseTime: healthCheck.database.responseTime,
+            ...(healthCheck.database.error && { error: healthCheck.database.error }),
+          },
+        }),
+        ...(healthCheck.error && { error: healthCheck.error }),
+      });
+    } catch (error: any) {
+      logError(error, req, 'error');
+      res.status(503).json({
+        status: 'down',
+        service: "database",
+        timestamp: new Date().toISOString(),
+        error: 'Database health check failed',
+      });
+    }
+  }));
+
+  // Aggregated health check endpoint - returns status of all services
+  app.get("/api/health/all", healthCheckLimiter, asyncHandler(async (req, res) => {
+    try {
+      const services = [
+        { name: "main", endpoint: "/api/health" },
+        { name: "chatgroups", endpoint: "/api/health/chatgroups" },
+        { name: "directory", endpoint: "/api/health/directory" },
+        { name: "gentlepulse", endpoint: "/api/health/gentlepulse" },
+        { name: "chyme", endpoint: "/api/health/chyme" },
+        { name: "default-alive-or-dead", endpoint: "/api/health/default-alive-or-dead" },
+        { name: "workforce-recruiter", endpoint: "/api/health/workforce-recruiter" },
+        { name: "lighthouse", endpoint: "/api/health/lighthouse" },
+        { name: "lostmail", endpoint: "/api/health/lostmail" },
+        { name: "mechanicmatch", endpoint: "/api/health/mechanicmatch" },
+        { name: "research", endpoint: "/api/health/research" },
+        { name: "socketrelay", endpoint: "/api/health/socketrelay" },
+        { name: "supportmatch", endpoint: "/api/health/supportmatch" },
+        { name: "trusttransport", endpoint: "/api/health/trusttransport" },
+      ];
+
+      // Check all services in parallel
+      const healthChecks = await Promise.all(
+        services.map(service => performHealthCheck(service.name, true))
+      );
+
+      // Calculate overall status
+      const allUp = healthChecks.every(h => h.status === 'up');
+      const anyDown = healthChecks.some(h => h.status === 'down');
+      const overallStatus = anyDown ? 'down' : allUp ? 'up' : 'degraded';
+      const statusCode = overallStatus === 'down' ? 503 : 200;
+
+      const summary = {
+        status: overallStatus === 'up' ? 'ok' : overallStatus,
+        timestamp: new Date().toISOString(),
+        services: healthChecks.map(h => ({
+          name: h.service,
+          status: h.status === 'up' ? 'ok' : h.status,
+          responseTime: h.responseTime,
+          ...(h.error && { error: h.error }),
+        })),
+        summary: {
+          total: healthChecks.length,
+          up: healthChecks.filter(h => h.status === 'up').length,
+          degraded: healthChecks.filter(h => h.status === 'degraded').length,
+          down: healthChecks.filter(h => h.status === 'down').length,
+        },
+      };
+
+      res.status(statusCode).json(summary);
+    } catch (error: any) {
+      logError(error, req, 'error');
+      res.status(503).json({
+        status: 'down',
+        timestamp: new Date().toISOString(),
+        error: 'Failed to check all services',
+      });
+    }
+  }));
 
   // Helper to get user ID from request (imported from auth module)
 

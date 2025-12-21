@@ -72,6 +72,22 @@ export const publicApiLimiter = rateLimit({
   }
 });
 
+// Rate limiter for health check endpoints
+// More lenient than other endpoints since they're meant to be checked frequently
+// but still protected from abuse
+export const healthCheckLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 60, // Allow 60 requests per minute per IP (1 per second)
+  message: "Too many health check requests. Please slow down.",
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req) => getIpAddress(req),
+  handler: (req: Request, res: Response, next: NextFunction) => {
+    const retryAfter = Math.ceil(req.rateLimit?.resetTime ? (req.rateLimit.resetTime - Date.now()) / 1000 : 60);
+    next(new RateLimitError("Too many health check requests from this IP. Please try again in a minute.", retryAfter));
+  }
+});
+
 // Rate limiter for authenticated chat message posting
 // Stricter limits to prevent spam/abuse
 export const chatMessageLimiter = rateLimit({

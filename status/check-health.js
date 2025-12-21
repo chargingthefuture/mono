@@ -14,6 +14,18 @@ const BASE_URL = process.env.BASE_URL || 'https://app.chargingthefuture.com';
 const HISTORY_DIR = path.join(__dirname, 'history');
 const PUBLIC_DIR = path.join(__dirname, 'public');
 
+// Health check configuration
+const MAX_RETRIES = 3;
+const RETRY_DELAY_BASE = 1000; // Base delay in ms (exponential backoff)
+const REQUEST_TIMEOUT = 10000; // 10 seconds
+
+// Response time thresholds (in milliseconds)
+const RESPONSE_TIME_THRESHOLDS = {
+  FAST: 200,      // < 200ms = up
+  SLOW: 2000,     // 200-2000ms = degraded
+  // > 2000ms = down (or error)
+};
+
 // Services to check based on the upptime config
 const SERVICES = [
   { name: 'Main Platform', endpoint: '/api/health', key: 'main' },
@@ -41,7 +53,7 @@ if (!fs.existsSync(PUBLIC_DIR)) {
 }
 
 /**
- * Make HTTP/HTTPS request
+ * Make HTTP/HTTPS request with timeout
  */
 function makeRequest(url) {
   return new Promise((resolve, reject) => {
@@ -58,6 +70,7 @@ function makeRequest(url) {
       headers: {
         'User-Agent': 'Status-Page-Health-Check/1.0',
       },
+      timeout: REQUEST_TIMEOUT,
     };
 
     const req = client.request(options, (res) => {
@@ -87,7 +100,7 @@ function makeRequest(url) {
     });
 
     // Set timeout explicitly - this is required for the timeout event to fire
-    req.setTimeout(10000, () => {
+    req.setTimeout(REQUEST_TIMEOUT, () => {
       req.destroy();
       const responseTime = Date.now() - startTime;
       reject({
@@ -101,38 +114,163 @@ function makeRequest(url) {
 }
 
 /**
- * Check a single service
+ * Sleep utility for retry delays
+ */
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+/**
+ * Validate health check response body
+ */
+function validateResponse(body, statusCode) {
+  if (statusCode !== 200 && statusCode !== 503) {
+    return { valid: false, error: `Unexpected status code: ${statusCode}` };
+  }
+  
+  try {
+    const data = JSON.parse(body);
+    
+    // Check required fields
+    if (!data.service) {
+      return { valid: false, error: 'Missing "service" field in response' };
+    }
+    
+    if (!data.status) {
+      return { valid: false, error: 'Missing "status" field in response' };
+    }
+    
+    // Validate status values
+    const validStatuses = ['ok', 'up', 'degraded', 'down'];
+    if (!validStatuses.includes(data.status)) {
+      return { valid: false, error: `Invalid status value: ${data.status}` };
+    }
+    
+    return { valid: true, data };
+  } catch (e) {
+    return { valid: false, error: `Invalid JSON response: ${e.message}` };
+  }
+}
+
+/**
+ * Determine status based on response time and HTTP status
+ */
+function determineStatus(statusCode, responseTime, responseData) {
+  // If HTTP status is 503, service is down
+  if (statusCode === 503) {
+    return 'down';
+  }
+  
+  // If HTTP status is not 200, service is down
+  if (statusCode !== 200) {
+    return 'down';
+  }
+  
+  // Check response data status if available
+  if (responseData && responseData.status) {
+    if (responseData.status === 'down') {
+      return 'down';
+    }
+    if (responseData.status === 'degraded') {
+      return 'degraded';
+    }
+  }
+  
+  // Determine based on response time
+  if (responseTime >= RESPONSE_TIME_THRESHOLDS.SLOW) {
+    return 'down';
+  }
+  if (responseTime >= RESPONSE_TIME_THRESHOLDS.FAST) {
+    return 'degraded';
+  }
+  
+  return 'up';
+}
+
+/**
+ * Check a single service with retry logic
  */
 async function checkService(service) {
   const url = `${BASE_URL}${service.endpoint}`;
   const timestamp = new Date().toISOString();
+  let lastError = null;
+  let lastResult = null;
   
-  try {
-    const result = await makeRequest(url);
-    const isUp = result.status === 200;
-    
-    return {
-      name: service.name,
-      key: service.key,
-      endpoint: service.endpoint,
-      status: isUp ? 'up' : 'down',
-      statusCode: result.status,
-      responseTime: result.responseTime,
-      timestamp,
-      error: isUp ? null : `HTTP ${result.status}`,
-    };
-  } catch (error) {
-    return {
-      name: service.name,
-      key: service.key,
-      endpoint: service.endpoint,
-      status: 'down',
-      statusCode: null,
-      responseTime: error.responseTime || null,
-      timestamp,
-      error: error.error || 'Unknown error',
-    };
+  // Retry logic with exponential backoff
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+    try {
+      const result = await makeRequest(url);
+      
+      // Validate response
+      const validation = validateResponse(result.body, result.status);
+      if (!validation.valid) {
+        lastError = validation.error;
+        // If validation fails, retry (might be transient)
+        if (attempt < MAX_RETRIES - 1) {
+          const delay = RETRY_DELAY_BASE * Math.pow(2, attempt);
+          await sleep(delay);
+          continue;
+        }
+        // Last attempt failed validation
+        return {
+          name: service.name,
+          key: service.key,
+          endpoint: service.endpoint,
+          status: 'down',
+          statusCode: result.status,
+          responseTime: result.responseTime,
+          timestamp,
+          error: validation.error,
+        };
+      }
+      
+      // Determine status based on response time and data
+      const status = determineStatus(result.status, result.responseTime, validation.data);
+      
+      return {
+        name: service.name,
+        key: service.key,
+        endpoint: service.endpoint,
+        status: status,
+        statusCode: result.status,
+        responseTime: result.responseTime,
+        timestamp,
+        error: status === 'down' ? (validation.data?.error || `HTTP ${result.status}`) : null,
+      };
+    } catch (error) {
+      lastError = error.error || error.message || 'Unknown error';
+      lastResult = {
+        responseTime: error.responseTime || null,
+      };
+      
+      // Retry on transient errors (timeout, network errors)
+      const isTransientError = error.error?.includes('timeout') || 
+                               error.error?.includes('ECONNREFUSED') ||
+                               error.error?.includes('ENOTFOUND') ||
+                               error.error?.includes('ETIMEDOUT');
+      
+      if (isTransientError && attempt < MAX_RETRIES - 1) {
+        const delay = RETRY_DELAY_BASE * Math.pow(2, attempt);
+        await sleep(delay);
+        continue;
+      }
+      
+      // Non-transient error or last attempt
+      break;
+    }
   }
+  
+  // All retries failed
+  return {
+    name: service.name,
+    key: service.key,
+    endpoint: service.endpoint,
+    status: 'down',
+    statusCode: null,
+    responseTime: lastResult?.responseTime || null,
+    timestamp,
+    error: lastError || 'Unknown error',
+  };
 }
 
 /**
@@ -197,6 +335,7 @@ function saveSummary(results) {
     overall: {
       total: results.length,
       up: results.filter(r => r.status === 'up').length,
+      degraded: results.filter(r => r.status === 'degraded').length,
       down: results.filter(r => r.status === 'down').length,
     },
   };
@@ -231,6 +370,20 @@ function saveSummary(results) {
  * Main function
  */
 async function main() {
+  // Validate BASE_URL
+  if (!BASE_URL || BASE_URL.trim() === '') {
+    console.error('Error: BASE_URL environment variable is not set or is empty');
+    process.exit(1);
+  }
+  
+  try {
+    // Validate URL format
+    new URL(BASE_URL);
+  } catch (e) {
+    console.error(`Error: BASE_URL "${BASE_URL}" is not a valid URL: ${e.message}`);
+    process.exit(1);
+  }
+  
   console.log(`Starting health checks for ${BASE_URL}...`);
   
   try {
@@ -250,11 +403,13 @@ async function main() {
     
     // Print summary
     const upCount = results.filter(r => r.status === 'up').length;
+    const degradedCount = results.filter(r => r.status === 'degraded').length;
     const downCount = results.filter(r => r.status === 'down').length;
     
-    console.log(`\nSummary: ${upCount} up, ${downCount} down`);
+    console.log(`\nSummary: ${upCount} up, ${degradedCount} degraded, ${downCount} down`);
     
     // Exit with error code if any service is down
+    // Degraded services don't cause exit failure (they're still operational)
     if (downCount > 0) {
       process.exit(1);
     }
