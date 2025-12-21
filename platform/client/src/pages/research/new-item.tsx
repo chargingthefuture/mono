@@ -15,6 +15,7 @@ import { z } from "zod";
 import { useLocation } from "wouter";
 import { ArrowLeft, Plus, X } from "lucide-react";
 import { Link } from "wouter";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
 
 const itemFormSchema = insertResearchItemSchema.omit({ userId: true });
 
@@ -22,6 +23,7 @@ type ItemFormData = z.infer<typeof itemFormSchema>;
 
 export default function NewCompareNotesItem() {
   const { toast } = useToast();
+  const { handleError } = useErrorHandler();
   const [, setLocation] = useLocation();
   const [tags, setTags] = useState<string[]>([]);
   const [newTag, setNewTag] = useState("");
@@ -81,11 +83,7 @@ export default function NewCompareNotesItem() {
       setLocation(`/apps/comparenotes/item/${item.id}`);
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create item",
-        variant: "destructive",
-      });
+      handleError(error, "Error");
     },
   });
 

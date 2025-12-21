@@ -16,16 +16,19 @@ import { z } from "zod";
 import { useLocation } from "wouter";
 import { Send, AlertCircle } from "lucide-react";
 import type { LostmailIncident } from "@shared/schema";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
 
 const reportFormSchema = insertLostmailIncidentSchema.omit({
   status: true,
   assignedTo: true,
+  photos: true, // Photos feature removed
 });
 
 type ReportFormData = z.infer<typeof reportFormSchema>;
 
 export default function LostMailReport() {
   const { toast } = useToast();
+  const { handleError } = useErrorHandler();
   const [, setLocation] = useLocation();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -41,7 +44,6 @@ export default function LostMailReport() {
       expectedDeliveryDate: new Date(),
       noticedDate: null,
       description: "",
-      photos: null,
       severity: "medium",
       consent: false,
     },
@@ -53,7 +55,6 @@ export default function LostMailReport() {
     try {
       const response = await apiRequest("POST", "/api/lostmail/incidents", {
         ...data,
-        photos: null,
         expectedDeliveryDate: data.expectedDeliveryDate instanceof Date ? data.expectedDeliveryDate : new Date(data.expectedDeliveryDate),
         noticedDate: data.noticedDate instanceof Date ? data.noticedDate : (data.noticedDate ? new Date(data.noticedDate) : null),
       });
@@ -68,11 +69,7 @@ export default function LostMailReport() {
       // Redirect to confirmation page
       setLocation(`/apps/lostmail/incident/${incident.id}`);
     } catch (error: any) {
-      toast({
-        title: "Submission Failed",
-        description: error.message || "Failed to submit report",
-        variant: "destructive",
-      });
+      handleError(error, "Submission Failed");
     } finally {
       setIsSubmitting(false);
     }

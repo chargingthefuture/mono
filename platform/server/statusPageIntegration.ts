@@ -31,17 +31,12 @@ export interface IncidentInfo {
 
 /**
  * Update status page via webhook or API
- * PLACEHOLDER: Logs only, no actual webhooks sent
- * To enable webhooks, call sendStatusPageWebhook() after configuring webhook URLs
+ * Sends webhook to configured status page service if available
  */
 export async function updateStatusPage(
   service: StatusPageService,
   incident: IncidentInfo
 ): Promise<void> {
-  // PLACEHOLDER: This function only logs status updates
-  // For now, Upptime auto-detects issues, but you can extend this
-  // to call Statuspage.io, UptimeRobot, or Better Stack APIs
-  
   console.log(`[Status Page] ${service}: ${incident.name} - ${incident.status}`);
   console.log(`[Status Page] Message: ${incident.message}`);
   
@@ -56,6 +51,9 @@ export async function updateStatusPage(
       affectedServices: incident.affectedServices,
     },
   });
+
+  // Send webhook if configured
+  await sendStatusPageWebhook(service, incident);
 }
 
 /**
@@ -107,8 +105,7 @@ export function getStatusPageWebhookUrl(service: StatusPageService): string | un
 
 /**
  * Send webhook to status page service
- * PLACEHOLDER: Logs only, no actual webhooks sent
- * To enable webhooks, uncomment the fetch call and configure webhook URLs
+ * Sends actual HTTP request to configured webhook URL if available
  */
 export async function sendStatusPageWebhook(
   service: StatusPageService,
@@ -116,38 +113,37 @@ export async function sendStatusPageWebhook(
 ): Promise<boolean> {
   const webhookUrl = getStatusPageWebhookUrl(service);
   
-  // Format payload based on service type (for logging purposes)
+  // Format payload based on service type
   const payload = formatWebhookPayload(service, incident);
   
-  // Log webhook details
-  console.log(`[Status Page] Webhook placeholder for ${service}:`);
-  console.log(`[Status Page]   URL: ${webhookUrl || '(not configured)'}`);
+  // If no webhook URL is configured, log and return false
+  if (!webhookUrl) {
+    console.log(`[Status Page] No webhook URL configured for ${service} - skipping webhook`);
+    console.log(`[Status Page]   Incident: ${incident.name}`);
+    console.log(`[Status Page]   Status: ${incident.status}`);
+    console.log(`[Status Page]   Message: ${incident.message}`);
+    
+    // Log to Sentry for tracking (but not as an error)
+    Sentry.addBreadcrumb({
+      message: `Status page webhook skipped (not configured): ${incident.name}`,
+      level: 'info',
+      category: 'status-page-webhook',
+      data: {
+        service,
+        status: incident.status,
+        affectedServices: incident.affectedServices,
+      },
+    });
+    
+    return false;
+  }
+  
+  // Log webhook attempt
+  console.log(`[Status Page] Sending webhook to ${service}:`);
+  console.log(`[Status Page]   URL: ${webhookUrl}`);
   console.log(`[Status Page]   Incident: ${incident.name}`);
   console.log(`[Status Page]   Status: ${incident.status}`);
   console.log(`[Status Page]   Message: ${incident.message}`);
-  console.log(`[Status Page]   Payload:`, JSON.stringify(payload, null, 2));
-  
-  // Log to Sentry for tracking
-  Sentry.addBreadcrumb({
-    message: `Status page webhook (placeholder): ${incident.name}`,
-    level: incident.status === 'major_outage' ? 'error' : 'warning',
-    category: 'status-page-webhook',
-    data: {
-      service,
-      status: incident.status,
-      affectedServices: incident.affectedServices,
-      webhookUrl: webhookUrl ? '(configured)' : '(not configured)',
-      payload,
-    },
-  });
-  
-  // PLACEHOLDER: No actual webhook is sent
-  // To enable webhooks, uncomment the code below:
-  /*
-  if (!webhookUrl) {
-    console.warn(`[Status Page] No webhook URL configured for ${service}`);
-    return false;
-  }
   
   try {
     const response = await fetch(webhookUrl, {
@@ -163,21 +159,38 @@ export async function sendStatusPageWebhook(
     }
     
     console.log(`[Status Page] Successfully sent webhook to ${service}`);
+    
+    // Log success to Sentry
+    Sentry.addBreadcrumb({
+      message: `Status page webhook sent successfully: ${incident.name}`,
+      level: 'info',
+      category: 'status-page-webhook',
+      data: {
+        service,
+        status: incident.status,
+        affectedServices: incident.affectedServices,
+      },
+    });
+    
     return true;
   } catch (error: any) {
     console.error(`[Status Page] Failed to send webhook to ${service}:`, error);
+    
+    // Log error to Sentry
     Sentry.captureException(error, {
       tags: {
         service: 'status-page-integration',
         target: service,
       },
+      extra: {
+        incidentName: incident.name,
+        incidentStatus: incident.status,
+        webhookUrl: webhookUrl ? '(configured)' : '(not configured)',
+      },
     });
+    
     return false;
   }
-  */
-  
-  // Placeholder returns true to indicate "success" (logged)
-  return true;
 }
 
 /**

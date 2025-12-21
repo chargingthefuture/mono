@@ -24,6 +24,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem } from "@/components/ui/command";
 import { Checkbox } from "@/components/ui/checkbox";
 import { VerifiedBadge } from "@/components/verified-badge";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
 
 const profileFormSchema = insertTrusttransportProfileSchema.omit({ userId: true });
 
@@ -31,6 +32,7 @@ type ProfileFormData = z.infer<typeof profileFormSchema>;
 
 export default function TrustTransportProfile() {
   const { toast } = useToast();
+  const { handleError } = useErrorHandler();
   const [, setLocation] = useLocation();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [countryOpen, setCountryOpen] = useState(false);
@@ -107,11 +109,7 @@ export default function TrustTransportProfile() {
       setLocation("/apps/trusttransport");
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create profile",
-        variant: "destructive",
-      });
+      handleError(error, "Error");
     },
   });
 
@@ -130,11 +128,7 @@ export default function TrustTransportProfile() {
       }, 500);
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update profile",
-        variant: "destructive",
-      });
+      handleError(error, "Error");
     },
   });
 
@@ -151,11 +145,7 @@ export default function TrustTransportProfile() {
       setLocation("/apps/trusttransport");
     },
     onError: (error: any) => {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to delete profile",
-        variant: "destructive",
-      });
+      handleError(error, "Error");
     },
   });
 

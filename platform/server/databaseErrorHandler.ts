@@ -112,11 +112,54 @@ export function isPostgresError(error: any): error is PostgresError {
 }
 
 /**
+ * Fallback error logging when request context is not available
+ */
+function logErrorFallback(error: any, context?: string): void {
+  try {
+    const errorInfo = {
+      message: error?.message || String(error),
+      code: error?.code,
+      name: error?.name,
+      stack: error?.stack,
+      context,
+      timestamp: new Date().toISOString(),
+    };
+    
+    // Log to console as fallback
+    console.error('[Database Error Handler]', errorInfo);
+    
+    // Try to log to Sentry if available (doesn't require request context)
+    if (typeof process !== 'undefined' && process.env.NODE_ENV === 'production') {
+      try {
+        // Dynamic import to avoid issues if Sentry is not available
+        const Sentry = require('./sentry').Sentry;
+        if (Sentry && typeof Sentry.captureException === 'function') {
+          Sentry.captureException(error, {
+            tags: {
+              error_source: 'database_error_handler',
+              context: context || 'unknown',
+            },
+            extra: errorInfo,
+          });
+        }
+      } catch (sentryError) {
+        // Silently fail if Sentry is not available
+      }
+    }
+  } catch (logError) {
+    // If even fallback logging fails, just log the original error
+    console.error('[Database Error Handler] Failed to log error:', logError);
+    console.error('[Database Error Handler] Original error:', error);
+  }
+}
+
+/**
  * Convert database error to application error
  */
 export function handleDatabaseError(error: any, context?: string): DatabaseError | ValidationError | ConflictError | NotFoundError | ExternalServiceError {
   // Note: Error logging is handled by the error handler middleware which has access to the proper request object
-  // We don't log here to avoid passing incomplete request objects to the logging system
+  // However, we provide fallback logging here for cases where the request context is not available
+  // This ensures errors are still tracked even if they occur outside of normal request handling
   
   // Check if it's a connection/timeout error first (before checking if it's a PostgreSQL error)
   // This handles Neon serverless connection errors that might not have PostgreSQL error codes
@@ -131,6 +174,8 @@ export function handleDatabaseError(error: any, context?: string): DatabaseError
   if (!isPostgresError(error)) {
     // Not a PostgreSQL error, return generic database error
     // (Connection errors are already handled above)
+    // Log fallback for non-PostgreSQL errors
+    logErrorFallback(error, context);
     return new DatabaseError(
       context ? `Database error in ${context}` : 'Database operation failed',
       error
@@ -246,6 +291,8 @@ export function handleDatabaseError(error: any, context?: string): DatabaseError
 
     default:
       // Unknown PostgreSQL error
+      // Log fallback for unknown errors
+      logErrorFallback(error, context);
       return new DatabaseError(
         context ? `Database error in ${context}` : 'Database operation failed',
         error

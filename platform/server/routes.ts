@@ -5600,18 +5600,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   // LostMail Incident routes
   app.post('/api/lostmail/incidents', asyncHandler(async (req, res) => {
-    // Parse photos array if present (from JSON string)
-    const body = req.body;
-    if (typeof body.photos === 'string') {
-      try {
-        body.photos = JSON.parse(body.photos);
-      } catch (e) {
-        body.photos = null;
-      }
-    }
-    if (Array.isArray(body.photos)) {
-      body.photos = JSON.stringify(body.photos);
-    }
+    // Photos feature removed - ensure it's always null
+    const body = { ...req.body, photos: null };
 
     const validatedData = validateWithZod(insertLostmailIncidentSchema, body, 'Invalid incident data');
     const incident = await withDatabaseErrorHandling(
@@ -7588,90 +7578,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
   }));
 
   app.get('/api/default-alive-or-dead/ebitda-snapshots', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
-    try {
-      const limit = req.query.limit ? parseInt(req.query.limit, 10) : undefined;
-      const offset = req.query.offset ? parseInt(req.query.offset, 10) : undefined;
-      
-      const result = await storage.getDefaultAliveOrDeadEbitdaSnapshots({
+    const limit = req.query.limit ? parseInt(req.query.limit, 10) : undefined;
+    const offset = req.query.offset ? parseInt(req.query.offset, 10) : undefined;
+    
+    const result = await withDatabaseErrorHandling(
+      () => storage.getDefaultAliveOrDeadEbitdaSnapshots({
         limit,
         offset,
-      });
-      res.json(result);
-    } catch (error: any) {
-      console.error("Error fetching EBITDA snapshots:", error);
-      res.status(500).json({ message: error.message });
-    }
+      }),
+      'getDefaultAliveOrDeadEbitdaSnapshots'
+    );
+    res.json(result);
   }));
 
   app.get('/api/default-alive-or-dead/current-status', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
-    try {
-      const status = await storage.getDefaultAliveOrDeadCurrentStatus();
-      res.json(status);
-    } catch (error: any) {
-      console.error("Error fetching current status:", error);
-      res.status(500).json({ message: error.message });
-    }
+    const status = await withDatabaseErrorHandling(
+      () => storage.getDefaultAliveOrDeadCurrentStatus(),
+      'getDefaultAliveOrDeadCurrentStatus'
+    );
+    res.json(status);
   }));
 
   app.get('/api/default-alive-or-dead/weekly-trends', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
-    try {
-      const weeks = req.query.weeks ? parseInt(req.query.weeks, 10) : 12;
-      const trends = await storage.getDefaultAliveOrDeadWeeklyTrends(weeks);
-      res.json(trends);
-    } catch (error: any) {
-      console.error("Error fetching weekly trends:", error);
-      res.status(500).json({ message: error.message });
-    }
+    const weeks = req.query.weeks ? parseInt(req.query.weeks, 10) : 12;
+    const trends = await withDatabaseErrorHandling(
+      () => storage.getDefaultAliveOrDeadWeeklyTrends(weeks),
+      'getDefaultAliveOrDeadWeeklyTrends'
+    );
+    res.json(trends);
   }));
 
   app.get('/api/default-alive-or-dead/week-comparison', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
-    try {
-      const weekStartParam = req.query.weekStart;
-      let weekStart: Date;
-      
-      if (weekStartParam) {
-        // Parse date string (YYYY-MM-DD) and interpret as local date, not UTC
-        const [year, month, day] = weekStartParam.split('-').map(Number);
-        weekStart = new Date(year, month - 1, day);
-        if (isNaN(weekStart.getTime())) {
-          return res.status(400).json({ message: "Invalid weekStart date format" });
-        }
-      } else {
-        // Default to current week
-        weekStart = new Date();
+    const weekStartParam = req.query.weekStart;
+    let weekStart: Date;
+    
+    if (weekStartParam) {
+      // Parse date string (YYYY-MM-DD) and interpret as local date, not UTC
+      const [year, month, day] = weekStartParam.split('-').map(Number);
+      weekStart = new Date(year, month - 1, day);
+      if (isNaN(weekStart.getTime())) {
+        throw new ValidationError("Invalid weekStart date format");
       }
-      
-      const comparison = await storage.getDefaultAliveOrDeadWeekComparison(weekStart);
-      res.json(comparison);
-    } catch (error: any) {
-      console.error("Error fetching week comparison:", error);
-      res.status(500).json({ message: error.message });
+    } else {
+      // Default to current week
+      weekStart = new Date();
     }
+    
+    const comparison = await withDatabaseErrorHandling(
+      () => storage.getDefaultAliveOrDeadWeekComparison(weekStart),
+      'getDefaultAliveOrDeadWeekComparison'
+    );
+    res.json(comparison);
   }));
 
   // Current funding routes
   app.get('/api/default-alive-or-dead/current-funding', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
-    try {
-      const funding = await storage.getDefaultAliveOrDeadCurrentFunding();
-      res.json({ currentFunding: funding });
-    } catch (error: any) {
-      console.error("Error fetching current funding:", error);
-      res.status(500).json({ message: error.message });
-    }
+    const funding = await withDatabaseErrorHandling(
+      () => storage.getDefaultAliveOrDeadCurrentFunding(),
+      'getDefaultAliveOrDeadCurrentFunding'
+    );
+    res.json({ currentFunding: funding });
   }));
 
   app.put('/api/default-alive-or-dead/current-funding', isAuthenticated, isAdmin, asyncHandler(async (req: any, res) => {
-    try {
-      const { currentFunding } = req.body;
-      if (typeof currentFunding !== 'number' || currentFunding < 0) {
-        return res.status(400).json({ message: "currentFunding must be a non-negative number" });
-      }
-      await storage.updateDefaultAliveOrDeadCurrentFunding(currentFunding);
-      res.json({ message: "Current funding updated successfully", currentFunding });
-    } catch (error: any) {
-      console.error("Error updating current funding:", error);
-      res.status(500).json({ message: error.message });
+    const { currentFunding } = req.body;
+    if (typeof currentFunding !== 'number' || currentFunding < 0) {
+      throw new ValidationError("currentFunding must be a non-negative number");
     }
+    await withDatabaseErrorHandling(
+      () => storage.updateDefaultAliveOrDeadCurrentFunding(currentFunding),
+      'updateDefaultAliveOrDeadCurrentFunding'
+    );
+    res.json({ message: "Current funding updated successfully", currentFunding });
   }));
 
   const httpServer = createServer(app);

@@ -55,6 +55,13 @@ const GEOCODING_CACHE = new Map<string, CacheEntry>();
 const CACHE_TTL_MS = 24 * 60 * 60 * 1000; // 24 hours
 
 /**
+ * Rate limiting: Track last request time to ensure minimum spacing
+ * Nominatim rate limit: 1 request per second
+ */
+let lastRequestTime = 0;
+const MIN_REQUEST_INTERVAL_MS = 1100; // 1.1 seconds to be safe
+
+/**
  * Retry configuration
  */
 const RETRY_CONFIG = {
@@ -265,6 +272,15 @@ export async function geocodeLocation(
   if (cached !== null) {
     return cached;
   }
+
+  // Rate limiting: Ensure minimum time between requests
+  const now = Date.now();
+  const timeSinceLastRequest = now - lastRequestTime;
+  if (timeSinceLastRequest < MIN_REQUEST_INTERVAL_MS) {
+    const waitTime = MIN_REQUEST_INTERVAL_MS - timeSinceLastRequest;
+    await new Promise((resolve) => setTimeout(resolve, waitTime));
+  }
+  lastRequestTime = Date.now();
 
   let lastError: GeocodingError | null = null;
 

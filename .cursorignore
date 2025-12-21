@@ -77,7 +77,6 @@
 
 # Documentation - exclude if not needed
 **/README.md
-**/docs/
 **/CHANGELOG.md
 **/LICENSE
 **/LICENSE.txt
