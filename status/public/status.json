@@ -1,109 +1,109 @@
 {
-  "timestamp": "2025-12-21T16:39:22.151Z",
+  "timestamp": "2025-12-21T16:51:46.410Z",
   "services": [
     {
       "name": "Main Platform",
       "key": "main",
-      "status": "degraded",
-      "responseTime": 347,
-      "statusCode": 200
+      "status": "down",
+      "responseTime": 385,
+      "statusCode": 503
     },
     {
       "name": "ChatGroups",
       "key": "chatgroups",
-      "status": "degraded",
-      "responseTime": 318,
-      "statusCode": 200
+      "status": "down",
+      "responseTime": 319,
+      "statusCode": 503
     },
     {
       "name": "Directory",
       "key": "directory",
-      "status": "degraded",
-      "responseTime": 388,
-      "statusCode": 200
+      "status": "down",
+      "responseTime": 361,
+      "statusCode": 503
     },
     {
       "name": "GentlePulse",
       "key": "gentlepulse",
-      "status": "degraded",
-      "responseTime": 328,
-      "statusCode": 200
+      "status": "down",
+      "responseTime": 421,
+      "statusCode": 503
     },
     {
       "name": "Chyme",
       "key": "chyme",
-      "status": "degraded",
-      "responseTime": 413,
-      "statusCode": 200
+      "status": "down",
+      "responseTime": 441,
+      "statusCode": 503
     },
     {
       "name": "Default Alive or Dead",
       "key": "default-alive-or-dead",
-      "status": "degraded",
-      "responseTime": 411,
-      "statusCode": 200
+      "status": "down",
+      "responseTime": 380,
+      "statusCode": 503
     },
     {
       "name": "Workforce Recruiter",
       "key": "workforce-recruiter",
-      "status": "degraded",
-      "responseTime": 394,
-      "statusCode": 200
+      "status": "down",
+      "responseTime": 446,
+      "statusCode": 503
     },
     {
       "name": "LightHouse",
       "key": "lighthouse",
-      "status": "degraded",
-      "responseTime": 396,
-      "statusCode": 200
+      "status": "down",
+      "responseTime": 504,
+      "statusCode": 503
     },
     {
       "name": "LostMail",
       "key": "lostmail",
-      "status": "degraded",
-      "responseTime": 402,
-      "statusCode": 200
+      "status": "down",
+      "responseTime": 512,
+      "statusCode": 503
     },
     {
       "name": "MechanicMatch",
       "key": "mechanicmatch",
-      "status": "degraded",
-      "responseTime": 549,
-      "statusCode": 200
+      "status": "down",
+      "responseTime": 496,
+      "statusCode": 503
     },
     {
       "name": "CompareNotes",
       "key": "research",
-      "status": "degraded",
-      "responseTime": 455,
-      "statusCode": 200
+      "status": "down",
+      "responseTime": 527,
+      "statusCode": 503
     },
     {
       "name": "SocketRelay",
       "key": "socketrelay",
-      "status": "degraded",
-      "responseTime": 478,
-      "statusCode": 200
+      "status": "down",
+      "responseTime": 457,
+      "statusCode": 503
     },
     {
       "name": "SupportMatch",
       "key": "supportmatch",
-      "status": "degraded",
-      "responseTime": 488,
-      "statusCode": 200
+      "status": "down",
+      "responseTime": 483,
+      "statusCode": 503
     },
     {
       "name": "TrustTransport",
       "key": "trusttransport",
-      "status": "degraded",
-      "responseTime": 422,
-      "statusCode": 200
+      "status": "down",
+      "responseTime": 551,
+      "statusCode": 503
     }
   ],
   "overall": {
     "total": 14,
     "up": 0,
-    "degraded": 14,
-    "down": 0
+    "degraded": 0,
+    "down": 14
   }
 }
