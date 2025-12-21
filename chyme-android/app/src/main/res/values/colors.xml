@@ -1,11 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Legacy colors kept for compatibility -->
     <color name="purple_200">#FFBB86FC</color>
     <color name="purple_500">#FF6200EE</color>
     <color name="purple_700">#FF3700B3</color>
     <color name="teal_200">#FF03DAC5</color>
     <color name="teal_700">#FF018786</color>
+    
+    <!-- High contrast accessible colors -->
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
-    <color name="chyme_green">#4CAF50</color>
+    <color name="chyme_green">#4ADE80</color>
+    
+    <!-- Primary theme colors -->
+    <color name="primary_green">#4ADE80</color>
+    <color name="primary_green_dark">#22C55E</color>
+    <color name="on_primary">#FF000000</color>
+    
+    <!-- High contrast background colors -->
+    <color name="background_light">#FFFFFFFF</color>
+    <color name="background_dark">#FF000000</color>
+    <color name="on_background_light">#FF000000</color>
+    <color name="on_background_dark">#FFFFFFFF</color>
+    
+    <!-- Error colors -->
+    <color name="error_light">#FFDC2626</color>
+    <color name="error_dark">#FFEF4444</color>
 </resources>

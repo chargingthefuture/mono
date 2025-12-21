@@ -97,8 +97,18 @@ export const authTokens = pgTable(
   ],
 );
 
-// Note: Relations and types will be exported from a separate file to avoid circular dependencies
-// These will reference payments and adminActionLogs which are in other modules
+// Import for relations (will be set up after all modules are loaded)
+// Note: These use type imports to avoid circular dependencies at module load time
+import type { payments } from "./payments";
+import type { adminActionLogs } from "./admin";
+
+// Relations - Note: These reference modules that may not be loaded yet
+// They will be properly connected in the main schema index file
+export const usersRelations = relations(users, ({ many }) => ({
+  paymentsReceived: many(payments as any),
+  paymentsRecorded: many(payments as any, { relationName: "recordedBy" }),
+  adminActions: many(adminActionLogs as any),
+}));
 
 export type UpsertUser = typeof users.$inferInsert;
 export type User = typeof users.$inferSelect;
