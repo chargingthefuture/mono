@@ -18,6 +18,9 @@ import {
     insertChymeMessageSchema,
 } from "@shared/schema";
 
+// Map to track scheduled room closures (roomId -> timeout)
+const scheduledRoomClosures = new Map<string, NodeJS.Timeout>();
+
 export function registerChymeRoomsRoutes(app: Express) {
   // CHYME ROOMS ROUTES (Database-backed)
 

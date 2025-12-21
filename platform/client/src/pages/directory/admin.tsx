@@ -743,6 +743,16 @@ export default function AdminDirectoryPage() {
                         <Textarea value={editDescription} onChange={(e) => setEditDescription(e.target.value.slice(0,140))} placeholder="140 chars max" rows={3} />
                       </div>
                       <div className="space-y-2">
+                        <Label htmlFor={`edit-first-name-${p.id}`}>First Name</Label>
+                        <Input 
+                          id={`edit-first-name-${p.id}`}
+                          value={editFirstName} 
+                          onChange={(e) => setEditFirstName(e.target.value)} 
+                          placeholder="First name (for unclaimed profiles)" 
+                          data-testid={`input-edit-first-name-${p.id}`}
+                        />
+                      </div>
+                      <div className="space-y-2">
                         <Label htmlFor={`edit-signal-url-${p.id}`}>Signal URL</Label>
                         <Input id={`edit-signal-url-${p.id}`} type="url" value={editSignalUrl} onChange={(e) => setEditSignalUrl(e.target.value)} placeholder="https://signal.me/#p/…" />
                       </div>
