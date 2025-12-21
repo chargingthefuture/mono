@@ -10,12 +10,7 @@
 
 // Import domain-specific interfaces
 import type { ICoreStorage } from './types/core-storage.interface';
-import type { ISupportMatchStorage } from './types/supportmatch-storage.interface';
-import type { ILighthouseStorage } from './types/lighthouse-storage.interface';
-import type { IMechanicMatchStorage } from './types/mechanicmatch-storage.interface';
-import type { ISocketRelayStorage } from './types/socketrelay-storage.interface';
-import type { IDirectoryStorage } from './types/directory-storage.interface';
-import type { ISkillsStorage } from './types/skills-storage.interface';
+import type { IMiniAppsStorage } from './types/mini-apps-storage.interface';
 import type { IProfileDeletionStorage } from './types/profile-deletion-storage.interface';
 
 import type {
@@ -180,12 +175,7 @@ import type {
 // Composed from domain-specific interfaces for better maintainability
 export interface IStorage 
   extends ICoreStorage,
-          ISupportMatchStorage,
-          ILighthouseStorage,
-          IMechanicMatchStorage,
-          ISocketRelayStorage,
-          IDirectoryStorage,
-          ISkillsStorage,
+          IMiniAppsStorage,
           IProfileDeletionStorage {
   // Additional methods that are not yet in domain-specific interfaces
   // These will be migrated as we continue refactoring
