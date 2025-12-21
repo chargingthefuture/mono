@@ -49,13 +49,13 @@ app.use((req, res, next) => {
   // Prevents XSS attacks by controlling what resources can be loaded
   const cspDirectives = [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://*.clerk.com https://clerk.app.chargingthefuture.com https://*.app.chargingthefuture.com https://*.the-comic.com", // Clerk CDN + custom domains + staging
+    "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://*.clerk.com https://clerk.app.chargingthefuture.com https://*.app.chargingthefuture.com https://*.the-comic.com https://js.stripe.com", // Clerk CDN + custom domains + staging + Stripe
     "worker-src 'self' blob:", // Allow blob: URLs for Clerk workers
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://*.clerk.accounts.dev https://*.clerk.com https://clerk.app.chargingthefuture.com https://*.app.chargingthefuture.com https://*.the-comic.com", // Clerk styles + OpenDyslexic font
     "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net https://*.clerk.accounts.dev https://*.clerk.com https://clerk.app.chargingthefuture.com https://*.app.chargingthefuture.com https://*.the-comic.com", // Clerk fonts + OpenDyslexic font files
     "img-src 'self' data: https:",
-    "connect-src 'self' wss: ws: https://*.clerk.accounts.dev https://*.clerk.com https://clerk.app.chargingthefuture.com https://*.app.chargingthefuture.com https://*.the-comic.com", // Clerk API calls
-    "frame-src 'self' https://*.clerk.accounts.dev https://*.clerk.com https://clerk.app.chargingthefuture.com https://*.app.chargingthefuture.com https://*.the-comic.com", // Clerk iframes for auth
+    "connect-src 'self' wss: ws: https://*.clerk.accounts.dev https://*.clerk.com https://clerk.app.chargingthefuture.com https://*.app.chargingthefuture.com https://*.the-comic.com https://api.stripe.com", // Clerk API calls + Stripe API
+    "frame-src 'self' https://*.clerk.accounts.dev https://*.clerk.com https://clerk.app.chargingthefuture.com https://*.app.chargingthefuture.com https://*.the-comic.com https://js.stripe.com", // Clerk iframes for auth + Stripe Elements
     "frame-ancestors 'none'", // Prevents clickjacking
   ].join('; ');
   res.setHeader('Content-Security-Policy', cspDirectives);

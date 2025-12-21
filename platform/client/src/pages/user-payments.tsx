@@ -251,7 +251,7 @@ export default function UserPayments() {
         </Card>
       </div>
 
-      {/* Card payments via Clerk (placeholder for Billing components) */}
+      {/* Card payments via Clerk and Stripe */}
       <Card data-testid="card-clerk-card-payments">
         <CardHeader>
           <CardTitle>Pay by Card</CardTitle>
