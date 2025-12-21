@@ -1,102 +1,102 @@
 {
-  "timestamp": "2025-12-21T21:47:22.202Z",
+  "timestamp": "2025-12-21T21:55:13.617Z",
   "services": [
     {
       "name": "Main Platform",
       "key": "main",
       "status": "down",
-      "responseTime": 463,
+      "responseTime": 318,
       "statusCode": 503
     },
     {
       "name": "ChatGroups",
       "key": "chatgroups",
       "status": "down",
-      "responseTime": 428,
+      "responseTime": 278,
       "statusCode": 503
     },
     {
       "name": "Directory",
       "key": "directory",
       "status": "down",
-      "responseTime": 483,
+      "responseTime": 291,
       "statusCode": 503
     },
     {
       "name": "GentlePulse",
       "key": "gentlepulse",
       "status": "down",
-      "responseTime": 483,
+      "responseTime": 295,
       "statusCode": 503
     },
     {
       "name": "Chyme",
       "key": "chyme",
       "status": "down",
-      "responseTime": 502,
+      "responseTime": 304,
       "statusCode": 503
     },
     {
       "name": "Default Alive or Dead",
       "key": "default-alive-or-dead",
       "status": "down",
-      "responseTime": 517,
+      "responseTime": 323,
       "statusCode": 503
     },
     {
       "name": "Workforce Recruiter",
       "key": "workforce-recruiter",
       "status": "down",
-      "responseTime": 581,
+      "responseTime": 317,
       "statusCode": 503
     },
     {
       "name": "LightHouse",
       "key": "lighthouse",
       "status": "down",
-      "responseTime": 562,
+      "responseTime": 310,
       "statusCode": 503
     },
     {
       "name": "LostMail",
       "key": "lostmail",
       "status": "down",
-      "responseTime": 620,
+      "responseTime": 396,
       "statusCode": 503
     },
     {
       "name": "MechanicMatch",
       "key": "mechanicmatch",
       "status": "down",
-      "responseTime": 612,
+      "responseTime": 341,
       "statusCode": 503
     },
     {
       "name": "CompareNotes",
       "key": "research",
       "status": "down",
-      "responseTime": 683,
+      "responseTime": 493,
       "statusCode": 503
     },
     {
       "name": "SocketRelay",
       "key": "socketrelay",
       "status": "down",
-      "responseTime": 689,
+      "responseTime": 478,
       "statusCode": 503
     },
     {
       "name": "SupportMatch",
       "key": "supportmatch",
       "status": "down",
-      "responseTime": 739,
+      "responseTime": 424,
       "statusCode": 503
     },
     {
       "name": "TrustTransport",
       "key": "trusttransport",
       "status": "down",
-      "responseTime": 749,
+      "responseTime": 418,
       "statusCode": 503
     }
   ],
