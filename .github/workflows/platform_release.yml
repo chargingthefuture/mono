@@ -18,6 +18,8 @@ jobs:
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
       
     - name: Set up Node.js
       uses: actions/setup-node@v4
@@ -58,6 +60,17 @@ jobs:
       run: |
         VERSION=$(node -p "require('./package.json').version")
         echo "version=$VERSION" >> $GITHUB_OUTPUT
+        
+    - name: Create Sentry release
+      uses: getsentry/action-release@v3
+      env:
+        SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+        SENTRY_PROJECT: javascript-react
+      with:
+        environment: production
+        version: ${{ steps.version.outputs.version }}
+        sourcemaps: "./platform/dist/public"
         
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
