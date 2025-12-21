@@ -51,242 +51,51 @@ export const approveUserSchema = z.object({
   }),
 });
 
-// Session storage table - Required for authentication (OIDC/OAuth2)
-export const sessions = pgTable(
-  "sessions",
-  {
-    sid: varchar("sid").primaryKey(),
-    sess: jsonb("sess").notNull(),
-    expire: timestamp("expire").notNull(),
-  },
-  (table) => [index("IDX_session_expire").on(table.expire)],
-);
+// ========================================
+// CORE SCHEMAS - Re-exported from modules
+// ========================================
 
-// User storage table - Required for authentication (OIDC/OAuth2) with additional fields
-export const users = pgTable("users", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  email: varchar("email").unique(),
-  firstName: varchar("first_name"),
-  lastName: varchar("last_name"),
-  profileImageUrl: varchar("profile_image_url"),
-  quoraProfileUrl: varchar("quora_profile_url"),
-  isAdmin: boolean("is_admin").default(false).notNull(),
-  isVerified: boolean("is_verified").default(false).notNull(),
-  isApproved: boolean("is_approved").default(false).notNull(), // Manual approval for app access
-  pricingTier: decimal("pricing_tier", { precision: 10, scale: 2 }).notNull().default('1.00'),
-  subscriptionStatus: varchar("subscription_status", { length: 20 }).notNull().default('active'), // active, overdue, inactive
-  termsAcceptedAt: timestamp("terms_accepted_at"), // Timestamp of last terms acceptance
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
-});
+// Re-export from core modules
+export {
+  sessions,
+  users,
+  loginEvents,
+  otpCodes,
+  authTokens,
+  usersRelations,
+  type UpsertUser,
+  type User,
+  type OTPCode,
+  type InsertOTPCode,
+  type AuthToken,
+  type InsertAuthToken,
+} from "./core/users";
 
-// Login events table - tracks successful webapp logins for DAU/MAU analytics
-export const loginEvents = pgTable(
-  "login_events",
-  {
-    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-    userId: varchar("user_id")
-      .notNull()
-      .references(() => users.id),
-    source: varchar("source", { length: 50 }).notNull().default("webapp"),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-  },
-  (table) => [
-    index("IDX_login_events_user_created_at").on(table.userId, table.createdAt),
-  ],
-);
+export {
+  pricingTiers,
+  payments,
+  paymentsRelations,
+  insertPricingTierSchema,
+  insertPaymentSchema,
+  type InsertPricingTier,
+  type PricingTier,
+  type InsertPayment,
+  type Payment,
+} from "./core/payments";
 
-// OTP codes table - stores OTP codes for Android app authentication
-export const otpCodes = pgTable(
-  "otp_codes",
-  {
-    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-    userId: varchar("user_id")
-      .notNull()
-      .references(() => users.id),
-    code: varchar("code", { length: 8 }).notNull(),
-    expiresAt: timestamp("expires_at").notNull(),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-  },
-  (table) => [
-    index("IDX_otp_codes_user_id").on(table.userId),
-    index("IDX_otp_codes_code").on(table.code),
-    index("IDX_otp_codes_expires_at").on(table.expiresAt),
-  ],
-);
+export {
+  adminActionLogs,
+  adminActionLogsRelations,
+  npsResponses,
+  npsResponsesRelations,
+  insertAdminActionLogSchema,
+  insertNpsResponseSchema,
+  type InsertAdminActionLog,
+  type AdminActionLog,
+  type InsertNpsResponse,
+  type NpsResponse,
+} from "./core/admin";
 
-// Auth tokens table - stores OTP-based auth tokens for Android app
-export const authTokens = pgTable(
-  "auth_tokens",
-  {
-    id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-    token: varchar("token", { length: 64 }).notNull().unique(),
-    userId: varchar("user_id")
-      .notNull()
-      .references(() => users.id),
-    expiresAt: timestamp("expires_at").notNull(),
-    createdAt: timestamp("created_at").notNull().defaultNow(),
-  },
-  (table) => [
-    index("IDX_auth_tokens_token").on(table.token),
-    index("IDX_auth_tokens_user_id").on(table.userId),
-    index("IDX_auth_tokens_expires_at").on(table.expiresAt),
-  ],
-);
-
-export const usersRelations = relations(users, ({ many }) => ({
-  paymentsReceived: many(payments),
-  paymentsRecorded: many(payments, { relationName: "recordedBy" }),
-  adminActions: many(adminActionLogs),
-}));
-
-export type UpsertUser = typeof users.$inferInsert;
-export type User = typeof users.$inferSelect;
-
-export type OTPCode = typeof otpCodes.$inferSelect;
-export type InsertOTPCode = typeof otpCodes.$inferInsert;
-export type AuthToken = typeof authTokens.$inferSelect;
-export type InsertAuthToken = typeof authTokens.$inferInsert;
-
-// Pricing tiers table - tracks historical pricing levels
-export const pricingTiers = pgTable("pricing_tiers", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
-  effectiveDate: timestamp("effective_date").notNull().defaultNow(),
-  isCurrentTier: boolean("is_current_tier").notNull().default(false),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
-export const insertPricingTierSchema = createInsertSchema(pricingTiers).omit({
-  id: true,
-  createdAt: true,
-}).extend({
-  effectiveDate: z.coerce.date().optional(),
-});
-
-export type InsertPricingTier = z.infer<typeof insertPricingTierSchema>;
-export type PricingTier = typeof pricingTiers.$inferSelect;
-
-// Payments table - manual payment tracking
-export const payments = pgTable("payments", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  userId: varchar("user_id").notNull().references(() => users.id),
-  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
-  paymentDate: timestamp("payment_date").notNull(), // Exact date the customer paid
-  paymentMethod: varchar("payment_method", { length: 50 }).notNull().default('cash'),
-  billingPeriod: varchar("billing_period", { length: 20 }).notNull().default('monthly'), // monthly, yearly
-  billingMonth: varchar("billing_month", { length: 7 }), // YYYY-MM format for calendar month (monthly payments only)
-  yearlyStartMonth: varchar("yearly_start_month", { length: 7 }), // YYYY-MM format for yearly subscription start
-  yearlyEndMonth: varchar("yearly_end_month", { length: 7 }), // YYYY-MM format for yearly subscription end
-  notes: text("notes"),
-  recordedBy: varchar("recorded_by").notNull().references(() => users.id),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
-export const paymentsRelations = relations(payments, ({ one }) => ({
-  user: one(users, {
-    fields: [payments.userId],
-    references: [users.id],
-  }),
-  recorder: one(users, {
-    fields: [payments.recordedBy],
-    references: [users.id],
-    relationName: "recordedBy",
-  }),
-}));
-
-export const insertPaymentSchema = createInsertSchema(payments).omit({
-  id: true,
-  createdAt: true,
-  paymentDate: true,
-}).extend({
-  paymentDate: z.preprocess(
-    (val) => {
-      if (val instanceof Date) return val;
-      if (typeof val === "string") return new Date(val);
-      return val;
-    },
-    z.date()
-  ),
-  billingPeriod: z.enum(["monthly", "yearly"]).default("monthly"),
-  billingMonth: z.preprocess(
-    (val) => {
-      // Normalize: convert undefined/empty to null
-      if (val === undefined || val === "" || val === null) {
-        return null;
-      }
-      // If it's a string, validate format
-      if (typeof val === "string" && /^\d{4}-\d{2}$/.test(val)) {
-        return val;
-      }
-      // If it doesn't match, still return it (validation will catch it)
-      return val;
-    },
-    z.union([
-      z.string().regex(/^\d{4}-\d{2}$/, "Must be in YYYY-MM format"),
-      z.null(),
-    ]).optional()
-  ),
-  yearlyStartMonth: z.preprocess(
-    (val) => {
-      if (val === undefined || val === "" || val === null) {
-        return null;
-      }
-      if (typeof val === "string" && /^\d{4}-\d{2}$/.test(val)) {
-        return val;
-      }
-      return val;
-    },
-    z.union([
-      z.string().regex(/^\d{4}-\d{2}$/, "Must be in YYYY-MM format"),
-      z.null(),
-    ]).optional()
-  ),
-  yearlyEndMonth: z.preprocess(
-    (val) => {
-      if (val === undefined || val === "" || val === null) {
-        return null;
-      }
-      if (typeof val === "string" && /^\d{4}-\d{2}$/.test(val)) {
-        return val;
-      }
-      return val;
-    },
-    z.union([
-      z.string().regex(/^\d{4}-\d{2}$/, "Must be in YYYY-MM format"),
-      z.null(),
-    ]).optional()
-  ),
-});
-
-export type InsertPayment = z.infer<typeof insertPaymentSchema>;
-export type Payment = typeof payments.$inferSelect;
-
-// Admin action logs table
-export const adminActionLogs = pgTable("admin_action_logs", {
-  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  adminId: varchar("admin_id").notNull().references(() => users.id),
-  action: varchar("action", { length: 100 }).notNull(),
-  resourceType: varchar("resource_type", { length: 50 }).notNull(), // user, invite_code, payment
-  resourceId: varchar("resource_id"),
-  details: jsonb("details"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-});
-
-export const adminActionLogsRelations = relations(adminActionLogs, ({ one }) => ({
-  admin: one(users, {
-    fields: [adminActionLogs.adminId],
-    references: [users.id],
-  }),
-}));
-
-export const insertAdminActionLogSchema = createInsertSchema(adminActionLogs).omit({
-  id: true,
-  createdAt: true,
-});
-
-export type InsertAdminActionLog = z.infer<typeof insertAdminActionLogSchema>;
-export type AdminActionLog = typeof adminActionLogs.$inferSelect;
 
 // ========================================
 // SUPPORTMATCH APP TABLES

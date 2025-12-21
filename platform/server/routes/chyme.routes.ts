@@ -3,6 +3,7 @@
  */
 
 import express, { type Express } from "express";
+import { randomBytes } from "crypto";
 import { storage } from "../storage";
 import { isAuthenticated, isAdmin, isAdminWithCsrf, getUserId } from "../auth";
 import { validateCsrfToken } from "../csrf";
@@ -12,6 +13,8 @@ import { validateWithZod } from "../validationErrorFormatter";
 import { withDatabaseErrorHandling } from "../databaseErrorHandler";
 import { NotFoundError } from "../errors";
 import { logAdminAction } from "./shared";
+import { generateChymeToken, getTokenExpirationDate } from "../chymeJwt";
+import { logInfo, logWarning, logError } from "../errorLogger";
 import { z } from "zod";
 import {
   insertChymeAnnouncementSchema,
@@ -96,7 +99,7 @@ export function registerChymeRoutes(app: Express) {
     }
     
     // Generate OTP using simple method (6-digit code, expires in 5 minutes)
-    const { generateSimpleOTP } = await import('./otp');
+    const { generateSimpleOTP } = await import('../otp');
     const { code, expiresAt } = generateSimpleOTP();
     
     // Store OTP in database (persistent storage)
