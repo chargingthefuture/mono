@@ -1,11 +1,11 @@
 export function MissionSection() {
   return (
-    <section className="py-8 sm:py-12 md:py-16 lg:py-20 border-b-[6px] border-foreground bg-background">
+    <section className="py-8 sm:py-12 md:py-16 lg:py-20 border-b-[6px] border-foreground bg-background" aria-labelledby="mission-heading">
       <div className="container mx-auto px-4">
         {/* Section header in comic style */}
         <div className="text-center mb-8 sm:mb-12 md:mb-16">
           <div className="inline-block bg-foreground text-background px-4 py-2 sm:px-6 sm:py-3 md:px-8 md:py-4 border-[4px] border-foreground mb-4 sm:mb-6 transform -rotate-1">
-            <h2 className="font-[var(--font-bangers)] text-2xl sm:text-3xl md:text-4xl lg:text-5xl tracking-wide">OUR FOUNDATION</h2>
+            <h2 id="mission-heading" className="font-[var(--font-bangers)] text-2xl sm:text-3xl md:text-4xl lg:text-5xl tracking-wide">OUR FOUNDATION</h2>
           </div>
         </div>
 

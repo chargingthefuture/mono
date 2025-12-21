@@ -1,6 +1,8 @@
+import { config } from "@/lib/config"
+
 export function Footer() {
   return (
-    <footer className="border-t-[6px] border-foreground bg-card">
+    <footer className="border-t-[6px] border-foreground bg-card" role="contentinfo">
       <div className="container mx-auto px-4 py-6 sm:py-8 md:py-12">
         <div className="grid md:grid-cols-3 gap-6 sm:gap-8">
           {/* Brand */}
@@ -20,18 +22,42 @@ export function Footer() {
                 <span className="w-2 h-2 bg-green-500 rounded-full flex-shrink-0" />
                 Active and continuously improving
               </li>
-              <a href="https://github.com/chargingthefuture"
-                              target="_blank"
-                rel="noopener noreferrer"><li>Access: Open source code</li></a>
-              <a href="https://chargingthefuture.discourse.group"
-                              target="_blank"
-                rel="noopener noreferrer"><li>Support: Townsquare</li></a>
-              <a href="https://signal.group/#CjQKILHj7074l2Kl-oYy0qGSFdydXbtu0Pf66Z_88K9IlSCtEhDDdqV_BFAW2qm2EiTGEaNs"
-                              target="_blank"
-                rel="noopener noreferrer"><li>Chat: Signal group</li></a>
-              <a href="https://chargingthefuture.github.io/mono/"
-                              target="_blank"
-                rel="noopener noreferrer"><li>Status: Platform status</li></a>
+              <li>
+                <a href={config.links.github}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="View source code on GitHub"
+                >
+                  Access: Open source code
+                </a>
+              </li>
+              <li>
+                <a href={config.links.discourse}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Visit Townsquare support forum"
+                >
+                  Support: Townsquare
+                </a>
+              </li>
+              <li>
+                <a href={config.links.signalGroup}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="Join Signal group chat"
+                >
+                  Chat: Signal group
+                </a>
+              </li>
+              <li>
+                <a href={config.links.statusPage}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label="View platform status page"
+                >
+                  Status: Platform status
+                </a>
+              </li>
             </ul>
           </div>
 
@@ -53,18 +79,20 @@ export function Footer() {
           </p>
           <div className="flex items-center gap-4 sm:gap-6">
             <a
-              href="https://app.chargingthefuture.com/terms"
-                              target="_blank"
-                rel="noopener noreferrer"
+              href={config.links.terms}
+              target="_blank"
+              rel="noopener noreferrer"
               className="font-[var(--font-inter)] text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="View Terms of Service"
             >
               Terms of Service
             </a>
             <a
-              href="https://app.chargingthefuture.com/terms"
-                              target="_blank"
-                rel="noopener noreferrer"
+              href={config.links.privacy}
+              target="_blank"
+              rel="noopener noreferrer"
               className="font-[var(--font-inter)] text-xs sm:text-sm text-muted-foreground hover:text-foreground transition-colors"
+              aria-label="View Privacy Policy"
             >
               Privacy Policy
             </a>

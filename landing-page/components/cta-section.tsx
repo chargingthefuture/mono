@@ -1,9 +1,10 @@
 import { Button } from "@/components/ui/button"
 import { Lock, Shield, Eye } from "lucide-react"
+import { config } from "@/lib/config"
 
 export function CTASection() {
   return (
-    <section className="py-8 sm:py-12 md:py-16 lg:py-24 relative overflow-hidden">
+    <section className="py-8 sm:py-12 md:py-16 lg:py-24 relative overflow-hidden" aria-label="Call to action">
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-5">
         <div
@@ -58,9 +59,10 @@ export function CTASection() {
 
             <div className="flex flex-wrap justify-center gap-3 sm:gap-4">
               <a
-                href="https://app.chargingthefuture.com"
+                href={config.links.app}
                 target="_blank"
                 rel="noopener noreferrer"
+                aria-label="Start using the platform"
               >
                 <Button
                   size="lg"

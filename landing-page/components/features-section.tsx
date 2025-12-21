@@ -35,12 +35,12 @@ const features = [
 
 export function FeaturesSection() {
   return (
-    <section className="py-8 sm:py-12 md:py-16 lg:py-20 border-b-[6px] border-foreground">
+    <section className="py-8 sm:py-12 md:py-16 lg:py-20 border-b-[6px] border-foreground" aria-labelledby="features-heading">
       <div className="container mx-auto px-4">
         {/* Section header in comic style */}
         <div className="text-center mb-8 sm:mb-12 md:mb-16">
           <div className="inline-block bg-foreground text-background px-4 py-2 sm:px-6 sm:py-3 md:px-8 md:py-4 border-[4px] border-foreground mb-4 sm:mb-6 transform -rotate-1">
-            <h2 className="font-[var(--font-bangers)] text-2xl sm:text-3xl md:text-4xl lg:text-5xl tracking-wide">KEY VALUES</h2>
+            <h2 id="features-heading" className="font-[var(--font-bangers)] text-2xl sm:text-3xl md:text-4xl lg:text-5xl tracking-wide">KEY VALUES</h2>
           </div>
           <p className="font-[var(--font-inter)] text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base md:text-lg">
             Every feature is designed with trauma-informed principles, accessibility standards, and user dignity at the
@@ -49,16 +49,17 @@ export function FeaturesSection() {
         </div>
 
         {/* Features grid - comic panel style */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 border-[4px] border-foreground">
+        <div className="grid md:grid-cols-2 lg:grid-cols-3 border-[4px] border-foreground" role="list">
           {features.map((feature, index) => (
             <div
               key={feature.title}
               className={`p-4 sm:p-6 md:p-8 border-[2px] border-foreground bg-card hover:bg-secondary transition-colors group ${
                 index % 2 === 0 ? "" : "bg-secondary"
               }`}
+              role="listitem"
             >
               <div className="flex items-start gap-3 sm:gap-4">
-                <div className="bg-accent text-accent-foreground p-2 sm:p-2.5 md:p-3 border-[3px] border-foreground flex-shrink-0">
+                <div className="bg-accent text-accent-foreground p-2 sm:p-2.5 md:p-3 border-[3px] border-foreground flex-shrink-0" aria-hidden="true">
                   <feature.icon className="w-5 h-5 sm:w-6 sm:h-6" />
                 </div>
                 <div>
