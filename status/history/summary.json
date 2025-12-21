@@ -43662,5 +43662,114 @@
       "degraded": 0,
       "down": 14
     }
+  },
+  {
+    "timestamp": "2025-12-21T23:49:06.331Z",
+    "services": [
+      {
+        "name": "Main Platform",
+        "key": "main",
+        "status": "down",
+        "responseTime": 541,
+        "statusCode": 503
+      },
+      {
+        "name": "ChatGroups",
+        "key": "chatgroups",
+        "status": "down",
+        "responseTime": 470,
+        "statusCode": 503
+      },
+      {
+        "name": "Directory",
+        "key": "directory",
+        "status": "down",
+        "responseTime": 522,
+        "statusCode": 503
+      },
+      {
+        "name": "GentlePulse",
+        "key": "gentlepulse",
+        "status": "down",
+        "responseTime": 520,
+        "statusCode": 503
+      },
+      {
+        "name": "Chyme",
+        "key": "chyme",
+        "status": "down",
+        "responseTime": 527,
+        "statusCode": 503
+      },
+      {
+        "name": "Default Alive or Dead",
+        "key": "default-alive-or-dead",
+        "status": "down",
+        "responseTime": 533,
+        "statusCode": 503
+      },
+      {
+        "name": "Workforce Recruiter",
+        "key": "workforce-recruiter",
+        "status": "down",
+        "responseTime": 581,
+        "statusCode": 503
+      },
+      {
+        "name": "LightHouse",
+        "key": "lighthouse",
+        "status": "down",
+        "responseTime": 537,
+        "statusCode": 503
+      },
+      {
+        "name": "LostMail",
+        "key": "lostmail",
+        "status": "down",
+        "responseTime": 648,
+        "statusCode": 503
+      },
+      {
+        "name": "MechanicMatch",
+        "key": "mechanicmatch",
+        "status": "down",
+        "responseTime": 587,
+        "statusCode": 503
+      },
+      {
+        "name": "CompareNotes",
+        "key": "research",
+        "status": "down",
+        "responseTime": 565,
+        "statusCode": 503
+      },
+      {
+        "name": "SocketRelay",
+        "key": "socketrelay",
+        "status": "down",
+        "responseTime": 635,
+        "statusCode": 503
+      },
+      {
+        "name": "SupportMatch",
+        "key": "supportmatch",
+        "status": "down",
+        "responseTime": 590,
+        "statusCode": 503
+      },
+      {
+        "name": "TrustTransport",
+        "key": "trusttransport",
+        "status": "down",
+        "responseTime": 610,
+        "statusCode": 503
+      }
+    ],
+    "overall": {
+      "total": 14,
+      "up": 0,
+      "degraded": 0,
+      "down": 14
+    }
   }
 ]
