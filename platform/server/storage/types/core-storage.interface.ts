@@ -131,5 +131,9 @@ export interface ICoreStorage {
   getUserLastNpsResponse(userId: string): Promise<NpsResponse | undefined>;
   getNpsResponsesForWeek(weekStart: Date, weekEnd: Date): Promise<NpsResponse[]>;
   getAllNpsResponses(): Promise<NpsResponse[]>;
+  
+  // User deletion operations
+  anonymizeUserData(userId: string): Promise<void>;
+  deleteUser(userId: string): Promise<void>;
 }
 

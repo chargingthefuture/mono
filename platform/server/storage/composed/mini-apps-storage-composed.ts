@@ -2,7 +2,10 @@
  * Mini-Apps Storage Composed
  * 
  * Handles delegation of mini-app storage operations.
- * This is a partial implementation - the main DatabaseStorage class will compose this.
+ * This class composes all individual mini-app composed storage classes.
+ * 
+ * REFACTORED: Now uses individual composed storage classes for better organization.
+ * Each mini-app has its own composed storage file in the mini-apps/ directory.
  */
 
 import type { ISupportMatchStorage } from '../types/supportmatch-storage.interface';
@@ -21,59 +24,61 @@ import type { IWorkforceRecruiterStorage } from '../types/workforce-recruiter-st
 import type { IBlogStorage } from '../types/blog-storage.interface';
 import type { IDefaultAliveOrDeadStorage } from '../types/default-alive-or-dead-storage.interface';
 
-import { SupportMatchStorage } from '../mini-apps';
-import { LighthouseStorage } from '../mini-apps';
-import { MechanicMatchStorage } from '../mini-apps';
-import { SocketRelayStorage } from '../mini-apps';
-import { DirectoryStorage } from '../mini-apps';
-import { SkillsStorage } from '../mini-apps';
-import { ResearchStorage } from '../mini-apps';
-import { LostMailStorage } from '../mini-apps';
-import { TrustTransportStorage } from '../mini-apps';
-import { ChatGroupsStorage } from '../mini-apps';
-import { GentlePulseStorage } from '../mini-apps';
-import { ChymeStorage } from '../mini-apps';
-import { WorkforceRecruiterStorage } from '../mini-apps';
-import { BlogStorage } from '../mini-apps';
-import { DefaultAliveOrDeadStorage } from '../mini-apps';
+import {
+  SupportMatchStorageComposed,
+  LighthouseStorageComposed,
+  MechanicMatchStorageComposed,
+  SocketRelayStorageComposed,
+  DirectoryStorageComposed,
+  SkillsStorageComposed,
+  ResearchStorageComposed,
+  LostMailStorageComposed,
+  TrustTransportStorageComposed,
+  ChatGroupsStorageComposed,
+  GentlePulseStorageComposed,
+  ChymeStorageComposed,
+  WorkforceRecruiterStorageComposed,
+  BlogStorageComposed,
+  DefaultAliveOrDeadStorageComposed,
+} from './mini-apps';
 
 export class MiniAppsStorageComposed 
   implements ISupportMatchStorage, ILighthouseStorage, IMechanicMatchStorage, ISocketRelayStorage, IDirectoryStorage, ISkillsStorage,
              IResearchStorage, ILostMailStorage, ITrustTransportStorage, IChatGroupsStorage, IGentlePulseStorage, IChymeStorage,
              IWorkforceRecruiterStorage, IBlogStorage, IDefaultAliveOrDeadStorage {
   
-  private supportMatchStorage: SupportMatchStorage;
-  private lighthouseStorage: LighthouseStorage;
-  private mechanicMatchStorage: MechanicMatchStorage;
-  private socketRelayStorage: SocketRelayStorage;
-  private directoryStorage: DirectoryStorage;
-  private skillsStorage: SkillsStorage;
-  private researchStorage: ResearchStorage;
-  private lostMailStorage: LostMailStorage;
-  private trustTransportStorage: TrustTransportStorage;
-  private chatGroupsStorage: ChatGroupsStorage;
-  private gentlePulseStorage: GentlePulseStorage;
-  private chymeStorage: ChymeStorage;
-  private workforceRecruiterStorage: WorkforceRecruiterStorage;
-  private blogStorage: BlogStorage;
-  private defaultAliveOrDeadStorage: DefaultAliveOrDeadStorage;
+  private supportMatchStorage: SupportMatchStorageComposed;
+  private lighthouseStorage: LighthouseStorageComposed;
+  private mechanicMatchStorage: MechanicMatchStorageComposed;
+  private socketRelayStorage: SocketRelayStorageComposed;
+  private directoryStorage: DirectoryStorageComposed;
+  private skillsStorage: SkillsStorageComposed;
+  private researchStorage: ResearchStorageComposed;
+  private lostMailStorage: LostMailStorageComposed;
+  private trustTransportStorage: TrustTransportStorageComposed;
+  private chatGroupsStorage: ChatGroupsStorageComposed;
+  private gentlePulseStorage: GentlePulseStorageComposed;
+  private chymeStorage: ChymeStorageComposed;
+  private workforceRecruiterStorage: WorkforceRecruiterStorageComposed;
+  private blogStorage: BlogStorageComposed;
+  private defaultAliveOrDeadStorage: DefaultAliveOrDeadStorageComposed;
 
   constructor() {
-    this.supportMatchStorage = new SupportMatchStorage();
-    this.lighthouseStorage = new LighthouseStorage();
-    this.mechanicMatchStorage = new MechanicMatchStorage();
-    this.socketRelayStorage = new SocketRelayStorage();
-    this.directoryStorage = new DirectoryStorage();
-    this.skillsStorage = new SkillsStorage();
-    this.researchStorage = new ResearchStorage();
-    this.lostMailStorage = new LostMailStorage();
-    this.trustTransportStorage = new TrustTransportStorage();
-    this.chatGroupsStorage = new ChatGroupsStorage();
-    this.gentlePulseStorage = new GentlePulseStorage();
-    this.chymeStorage = new ChymeStorage();
-    this.workforceRecruiterStorage = new WorkforceRecruiterStorage();
-    this.blogStorage = new BlogStorage();
-    this.defaultAliveOrDeadStorage = new DefaultAliveOrDeadStorage();
+    this.supportMatchStorage = new SupportMatchStorageComposed();
+    this.lighthouseStorage = new LighthouseStorageComposed();
+    this.mechanicMatchStorage = new MechanicMatchStorageComposed();
+    this.socketRelayStorage = new SocketRelayStorageComposed();
+    this.directoryStorage = new DirectoryStorageComposed();
+    this.skillsStorage = new SkillsStorageComposed();
+    this.researchStorage = new ResearchStorageComposed();
+    this.lostMailStorage = new LostMailStorageComposed();
+    this.trustTransportStorage = new TrustTransportStorageComposed();
+    this.chatGroupsStorage = new ChatGroupsStorageComposed();
+    this.gentlePulseStorage = new GentlePulseStorageComposed();
+    this.chymeStorage = new ChymeStorageComposed();
+    this.workforceRecruiterStorage = new WorkforceRecruiterStorageComposed();
+    this.blogStorage = new BlogStorageComposed();
+    this.defaultAliveOrDeadStorage = new DefaultAliveOrDeadStorageComposed();
   }
 
   // ========================================

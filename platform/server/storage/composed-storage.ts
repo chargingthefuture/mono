@@ -18,7 +18,7 @@ export class DatabaseStorage implements IStorage {
   private coreStorageComposed: CoreStorageComposed;
   private miniAppsStorageComposed: MiniAppsStorageComposed;
   
-  // Direct storage module reference (only for getWeeklyPerformanceReview which needs callbacks)
+  // Direct storage module references (for methods not yet in composed classes)
   private coreStorage: CoreStorage;
 
   constructor() {
@@ -26,7 +26,7 @@ export class DatabaseStorage implements IStorage {
     this.coreStorageComposed = new CoreStorageComposed();
     this.miniAppsStorageComposed = new MiniAppsStorageComposed();
     
-    // Initialize core storage (only needed for getWeeklyPerformanceReview callback)
+    // Initialize remaining storage modules (not yet in composed classes)
     this.coreStorage = new CoreStorage();
   }
 
@@ -686,6 +686,195 @@ export class DatabaseStorage implements IStorage {
   }
 
   // ========================================
+  // MECHANICMATCH OPERATIONS
+  // ========================================
+
+  async getMechanicmatchProfile(userId: string) {
+    return this.miniAppsStorageComposed.getMechanicmatchProfile(userId);
+  }
+
+  async getMechanicmatchProfileById(profileId: string) {
+    return this.miniAppsStorageComposed.getMechanicmatchProfileById(profileId);
+  }
+
+  async listMechanicmatchProfiles(filters?: any) {
+    return this.miniAppsStorageComposed.listMechanicmatchProfiles(filters);
+  }
+
+  async listPublicMechanicmatchProfiles() {
+    return this.miniAppsStorageComposed.listPublicMechanicmatchProfiles();
+  }
+
+  async createMechanicmatchProfile(profile: any) {
+    return this.miniAppsStorageComposed.createMechanicmatchProfile(profile);
+  }
+
+  async updateMechanicmatchProfile(userId: string, profile: any) {
+    return this.miniAppsStorageComposed.updateMechanicmatchProfile(userId, profile);
+  }
+
+  async updateMechanicmatchProfileById(profileId: string, profile: any) {
+    return this.miniAppsStorageComposed.updateMechanicmatchProfileById(profileId, profile);
+  }
+
+  async deleteMechanicmatchProfile(userId: string, reason?: string) {
+    return this.miniAppsStorageComposed.deleteMechanicmatchProfile(userId, reason);
+  }
+
+  async deleteMechanicmatchProfileById(profileId: string) {
+    return this.miniAppsStorageComposed.deleteMechanicmatchProfileById(profileId);
+  }
+
+  async getMechanicmatchVehiclesByOwner(ownerId: string) {
+    return this.miniAppsStorageComposed.getMechanicmatchVehiclesByOwner(ownerId);
+  }
+
+  async getMechanicmatchVehicleById(id: string) {
+    return this.miniAppsStorageComposed.getMechanicmatchVehicleById(id);
+  }
+
+  async createMechanicmatchVehicle(vehicle: any) {
+    return this.miniAppsStorageComposed.createMechanicmatchVehicle(vehicle);
+  }
+
+  async updateMechanicmatchVehicle(id: string, vehicle: any) {
+    return this.miniAppsStorageComposed.updateMechanicmatchVehicle(id, vehicle);
+  }
+
+  async deleteMechanicmatchVehicle(id: string, ownerId: string) {
+    return this.miniAppsStorageComposed.deleteMechanicmatchVehicle(id, ownerId);
+  }
+
+  async createMechanicmatchServiceRequest(request: any) {
+    return this.miniAppsStorageComposed.createMechanicmatchServiceRequest(request);
+  }
+
+  async getMechanicmatchServiceRequestById(id: string) {
+    return this.miniAppsStorageComposed.getMechanicmatchServiceRequestById(id);
+  }
+
+  async getMechanicmatchServiceRequestsByOwner(ownerId: string) {
+    return this.miniAppsStorageComposed.getMechanicmatchServiceRequestsByOwner(ownerId);
+  }
+
+  async getMechanicmatchServiceRequestsByOwnerPaginated(ownerId: string, limit: number, offset: number) {
+    return this.miniAppsStorageComposed.getMechanicmatchServiceRequestsByOwnerPaginated(ownerId, limit, offset);
+  }
+
+  async getOpenMechanicmatchServiceRequests() {
+    return this.miniAppsStorageComposed.getOpenMechanicmatchServiceRequests();
+  }
+
+  async updateMechanicmatchServiceRequest(id: string, request: any) {
+    return this.miniAppsStorageComposed.updateMechanicmatchServiceRequest(id, request);
+  }
+
+  async createMechanicmatchJob(job: any) {
+    return this.miniAppsStorageComposed.createMechanicmatchJob(job);
+  }
+
+  async getMechanicmatchJobById(id: string) {
+    return this.miniAppsStorageComposed.getMechanicmatchJobById(id);
+  }
+
+  async getMechanicmatchJobsByOwner(ownerId: string) {
+    return this.miniAppsStorageComposed.getMechanicmatchJobsByOwner(ownerId);
+  }
+
+  async getMechanicmatchJobsByMechanic(mechanicId: string) {
+    return this.miniAppsStorageComposed.getMechanicmatchJobsByMechanic(mechanicId);
+  }
+
+  async updateMechanicmatchJob(id: string, job: any) {
+    return this.miniAppsStorageComposed.updateMechanicmatchJob(id, job);
+  }
+
+  async acceptMechanicmatchJob(jobId: string, mechanicId: string) {
+    return this.miniAppsStorageComposed.acceptMechanicmatchJob(jobId, mechanicId);
+  }
+
+  async getMechanicmatchAvailabilityByMechanic(mechanicId: string) {
+    return this.miniAppsStorageComposed.getMechanicmatchAvailabilityByMechanic(mechanicId);
+  }
+
+  async createMechanicmatchAvailability(availability: any) {
+    return this.miniAppsStorageComposed.createMechanicmatchAvailability(availability);
+  }
+
+  async updateMechanicmatchAvailability(id: string, availability: any) {
+    return this.miniAppsStorageComposed.updateMechanicmatchAvailability(id, availability);
+  }
+
+  async deleteMechanicmatchAvailability(id: string, mechanicId: string) {
+    return this.miniAppsStorageComposed.deleteMechanicmatchAvailability(id, mechanicId);
+  }
+
+  async createMechanicmatchReview(review: any) {
+    return this.miniAppsStorageComposed.createMechanicmatchReview(review);
+  }
+
+  async getMechanicmatchReviewById(id: string) {
+    return this.miniAppsStorageComposed.getMechanicmatchReviewById(id);
+  }
+
+  async getMechanicmatchReviewsByReviewee(revieweeId: string) {
+    return this.miniAppsStorageComposed.getMechanicmatchReviewsByReviewee(revieweeId);
+  }
+
+  async getMechanicmatchReviewsByReviewer(reviewerId: string) {
+    return this.miniAppsStorageComposed.getMechanicmatchReviewsByReviewer(reviewerId);
+  }
+
+  async getMechanicmatchReviewsByJob(jobId: string) {
+    return this.miniAppsStorageComposed.getMechanicmatchReviewsByJob(jobId);
+  }
+
+  async createMechanicmatchMessage(message: any) {
+    return this.miniAppsStorageComposed.createMechanicmatchMessage(message);
+  }
+
+  async getMechanicmatchMessagesByJob(jobId: string) {
+    return this.miniAppsStorageComposed.getMechanicmatchMessagesByJob(jobId);
+  }
+
+  async getMechanicmatchMessagesBetweenUsers(userId1: string, userId2: string) {
+    return this.miniAppsStorageComposed.getMechanicmatchMessagesBetweenUsers(userId1, userId2);
+  }
+
+  async markMechanicmatchMessageAsRead(messageId: string, userId: string) {
+    return this.miniAppsStorageComposed.markMechanicmatchMessageAsRead(messageId, userId);
+  }
+
+  async getUnreadMechanicmatchMessages(userId: string) {
+    return this.miniAppsStorageComposed.getUnreadMechanicmatchMessages(userId);
+  }
+
+  async searchMechanicmatchMechanics(filters: any) {
+    return this.miniAppsStorageComposed.searchMechanicmatchMechanics(filters);
+  }
+
+  async createMechanicmatchAnnouncement(announcement: any) {
+    return this.miniAppsStorageComposed.createMechanicmatchAnnouncement(announcement);
+  }
+
+  async getActiveMechanicmatchAnnouncements() {
+    return this.miniAppsStorageComposed.getActiveMechanicmatchAnnouncements();
+  }
+
+  async getAllMechanicmatchAnnouncements() {
+    return this.miniAppsStorageComposed.getAllMechanicmatchAnnouncements();
+  }
+
+  async updateMechanicmatchAnnouncement(id: string, announcement: any) {
+    return this.miniAppsStorageComposed.updateMechanicmatchAnnouncement(id, announcement);
+  }
+
+  async deactivateMechanicmatchAnnouncement(id: string) {
+    return this.miniAppsStorageComposed.deactivateMechanicmatchAnnouncement(id);
+  }
+
+
+  // ========================================
   // CHATGROUPS OPERATIONS (delegated to MiniAppsStorageComposed)
   // ========================================
 
@@ -855,7 +1044,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // ========================================
-  // RESEARCH OPERATIONS (delegated to MiniAppsStorageComposed)
+  // RESEARCH OPERATIONS
   // ========================================
 
   async createResearchItem(item: any) {
@@ -1015,7 +1204,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // ========================================
-  // GENTLEPULSE OPERATIONS (delegated to MiniAppsStorageComposed)
+  // GENTLEPULSE OPERATIONS
   // ========================================
 
   async createGentlepulseMeditation(meditation: any) {
@@ -1103,7 +1292,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // ========================================
-  // CHYME OPERATIONS (delegated to MiniAppsStorageComposed)
+  // CHYME OPERATIONS
   // ========================================
 
   async createChymeAnnouncement(announcement: any) {
@@ -1219,7 +1408,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // ========================================
-  // WORKFORCE RECRUITER OPERATIONS (delegated to MiniAppsStorageComposed)
+  // WORKFORCE RECRUITER OPERATIONS
   // ========================================
 
   async getWorkforceRecruiterProfile(userId: string) {
@@ -1347,7 +1536,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // ========================================
-  // BLOG OPERATIONS (delegated to MiniAppsStorageComposed)
+  // BLOG OPERATIONS
   // ========================================
 
   async getPublishedBlogPosts(limit?: number, offset?: number) {
@@ -1399,7 +1588,7 @@ export class DatabaseStorage implements IStorage {
   }
 
   // ========================================
-  // DEFAULT ALIVE OR DEAD OPERATIONS (delegated to MiniAppsStorageComposed)
+  // DEFAULT ALIVE OR DEAD OPERATIONS
   // ========================================
 
   async createDefaultAliveOrDeadFinancialEntry(entry: any, userId: string) {
@@ -1540,4 +1729,3 @@ export class DatabaseStorage implements IStorage {
 
 // Export singleton instance for backward compatibility
 export const storage = new DatabaseStorage();
-

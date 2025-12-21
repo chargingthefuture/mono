@@ -154,6 +154,15 @@ export class CoreStorageComposed implements ICoreStorage {
     return this.coreStorage.getAllNpsResponses();
   }
 
+  // User deletion operations
+  async anonymizeUserData(userId: string) {
+    return this.coreStorage.anonymizeUserData(userId);
+  }
+
+  async deleteUser(userId: string) {
+    return this.coreStorage.deleteUser(userId);
+  }
+
   // Helper methods for Weekly Performance Review
   // These are accessed via closure in getWeeklyPerformanceReview
   private async getDefaultAliveOrDeadEbitdaSnapshot(weekStart: Date) {
