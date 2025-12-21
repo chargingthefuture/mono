@@ -69,7 +69,7 @@ export {
   type InsertOTPCode,
   type AuthToken,
   type InsertAuthToken,
-} from "./core/users";
+} from "./schema/core/users";
 
 export {
   pricingTiers,
@@ -81,7 +81,7 @@ export {
   type PricingTier,
   type InsertPayment,
   type Payment,
-} from "./core/payments";
+} from "./schema/core/payments";
 
 export {
   adminActionLogs,
@@ -94,7 +94,7 @@ export {
   type AdminActionLog,
   type InsertNpsResponse,
   type NpsResponse,
-} from "./core/admin";
+} from "./schema/core/admin";
 
 
 // ========================================
@@ -135,7 +135,7 @@ export {
   type Announcement,
   type InsertSupportmatchAnnouncement,
   type SupportmatchAnnouncement,
-} from "./supportmatch";
+} from "./schema/supportmatch";
 
 
 // ========================================
@@ -167,7 +167,7 @@ export {
   type LighthouseAnnouncement,
   type InsertLighthouseBlock,
   type LighthouseBlock,
-} from "./lighthouse";
+} from "./schema/lighthouse";
 
 // ========================================
 // SOCKETRELAY APP TABLES - Re-exported from module
@@ -198,7 +198,7 @@ export {
   type SocketrelayProfile,
   type InsertSocketrelayAnnouncement,
   type SocketrelayAnnouncement,
-} from "./socketrelay";
+} from "./schema/socketrelay";
 
 // ========================================
 // DIRECTORY APP TABLES - Re-exported from module
@@ -218,7 +218,7 @@ export {
   type DirectoryAnnouncement,
   type InsertDirectorySkill,
   type DirectorySkill,
-} from "./directory";
+} from "./schema/directory";
 
 // ========================================
 // SKILLS MANAGEMENT TABLES - Re-exported from module
@@ -237,7 +237,7 @@ export {
   type SkillsJobTitle,
   type InsertSkillsSkill,
   type SkillsSkill,
-} from "./skills";
+} from "./schema/skills";
 
 // ========================================
 // CHAT GROUPS APP TABLES - Re-exported from module
@@ -253,7 +253,7 @@ export {
   type ChatGroup,
   type InsertChatgroupsAnnouncement,
   type ChatgroupsAnnouncement,
-} from "./chatgroups";
+} from "./schema/chatgroups";
 
 // ========================================
 // TRUSTTRANSPORT APP TABLES - Re-exported from module
@@ -279,7 +279,7 @@ export {
   type TrusttransportAnnouncement,
   type InsertTrusttransportBlock,
   type TrusttransportBlock,
-} from "./trusttransport";
+} from "./schema/trusttransport";
 
 // ========================================
 // PROFILE DELETION LOG TABLE - Re-exported from module
@@ -291,7 +291,7 @@ export {
   insertProfileDeletionLogSchema,
   type InsertProfileDeletionLog,
   type ProfileDeletionLog,
-} from "./core/profile-deletion";
+} from "./schema/core/profile-deletion";
 
 // ========================================
 // MECHANICMATCH APP TABLES - Re-exported from module
@@ -342,7 +342,7 @@ export {
   type MechanicmatchAnnouncement,
   type InsertMechanicmatchBlock,
   type MechanicmatchBlock,
-} from "./mechanicmatch";
+} from "./schema/mechanicmatch";
 
 // ========================================
 // LOSTMAIL APP TABLES - Re-exported from module
@@ -359,7 +359,7 @@ export {
   type LostmailIncident,
   type InsertLostmailAuditTrail,
   type LostmailAuditTrail,
-} from "./lostmail";
+} from "./schema/lostmail";
 
 // ========================================
 // RESEARCH APP TABLES - Re-exported from module
@@ -410,10 +410,10 @@ export {
   type ResearchReport,
   type InsertResearchAnnouncement,
   type ResearchAnnouncement,
-} from "./research";
+} from "./schema/research";
 
 // ========================================
-// ========================================// GENTLEPULSE APP TABLES - Re-exported from module// ========================================export {  gentlepulseMeditations,  gentlepulseRatings,  gentlepulseMoodChecks,  gentlepulseFavorites,  gentlepulseAnnouncements,  insertGentlepulseMeditationSchema,  insertGentlepulseRatingSchema,  insertGentlepulseMoodCheckSchema,  insertGentlepulseFavoriteSchema,  insertGentlepulseAnnouncementSchema,  type InsertGentlepulseMeditation,  type GentlepulseMeditation,  type InsertGentlepulseRating,  type GentlepulseRating,  type InsertGentlepulseMoodCheck,  type GentlepulseMoodCheck,  type InsertGentlepulseFavorite,  type GentlepulseFavorite,  type InsertGentlepulseAnnouncement,  type GentlepulseAnnouncement,} from "./gentlepulse";// ========================================
+// ========================================// GENTLEPULSE APP TABLES - Re-exported from module// ========================================export {  gentlepulseMeditations,  gentlepulseRatings,  gentlepulseMoodChecks,  gentlepulseFavorites,  gentlepulseAnnouncements,  insertGentlepulseMeditationSchema,  insertGentlepulseRatingSchema,  insertGentlepulseMoodCheckSchema,  insertGentlepulseFavoriteSchema,  insertGentlepulseAnnouncementSchema,  type InsertGentlepulseMeditation,  type GentlepulseMeditation,  type InsertGentlepulseRating,  type GentlepulseRating,  type InsertGentlepulseMoodCheck,  type GentlepulseMoodCheck,  type InsertGentlepulseFavorite,  type GentlepulseFavorite,  type InsertGentlepulseAnnouncement,  type GentlepulseAnnouncement,} from "./schema/gentlepulse";// ========================================
 // ========================================
 // CHYME APP TABLES - Re-exported from module
 // ========================================
@@ -443,7 +443,7 @@ export {
   type ChymeUserFollow,
   type InsertChymeUserBlock,
   type ChymeUserBlock,
-} from "./chyme";
+} from "./schema/chyme";
 
 
 // ========================================
@@ -479,7 +479,7 @@ export {
   type WorkforceRecruiterMeetupEventSignup,
   type InsertWorkforceRecruiterAnnouncement,
   type WorkforceRecruiterAnnouncement,
-} from "./workforcerecruitertracker";
+} from "./schema/workforcerecruitertracker";
 
 
 // ========================================
@@ -497,7 +497,7 @@ export {
   type DefaultAliveOrDeadFinancialEntry,
   type InsertDefaultAliveOrDeadEbitdaSnapshot,
   type DefaultAliveOrDeadEbitdaSnapshot,
-} from "./defaultaliveordead";
+} from "./schema/defaultaliveordead";
 
 // ========================================
 // BLOG (CONTENT-ONLY) APP TABLES - Re-exported from module
@@ -516,4 +516,4 @@ export {
   type BlogComment,
   type InsertBlogAnnouncement,
   type BlogAnnouncement,
-} from "./blog";
+} from "./schema/blog";
