@@ -245,6 +245,7 @@ const miniAppMenuItems = [
     url: "/apps/lostmail",
     icon: Mail,
     testId: "link-lostmail",
+    showBeta: true,
   },
   {
     title: "MechanicMatch",
@@ -282,6 +283,7 @@ const miniAppMenuItems = [
     url: "/blog",
     icon: PenSquare,
     testId: "link-blog",
+    showBeta: true,
   },
 ];
 
@@ -299,7 +301,7 @@ export function AppSidebar() {
   const clerk = useClerk();
   const { isMobile, setOpenMobile } = useSidebar();
 
-  const townsquareUrl = "https://chargingthefuture.discourse.group";
+  const codeUrl = "https://github.com/chargingthefuture";
 
   // Close sidebar on mobile when navigation link is clicked
   const handleNavClick = () => {
@@ -397,11 +399,11 @@ export function AppSidebar() {
         <Button
           variant="outline"
           className="w-full justify-start"
-          onClick={() => openExternal(townsquareUrl)}
-          data-testid="link-townsquare"
+          onClick={() => openExternal(codeUrl)}
+          data-testid="link-code"
         >
           <ExternalLink className="w-4 h-4 mr-2" />
-          Townsquare
+          Code
         </Button>
         <Button
           variant="outline"

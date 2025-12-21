@@ -36,7 +36,13 @@ export function VerifiedBadge({ isVerified, className = "", testId }: VerifiedBa
             <Info className="w-4 h-4" />
           </button>
         </PopoverTrigger>
-        <PopoverContent className="w-80 sm:w-96" side="right" align="start">
+        <PopoverContent 
+          className="w-[calc(100vw-2rem)] max-w-sm sm:w-80" 
+          side="bottom" 
+          align="start"
+          sideOffset={8}
+          collisionPadding={16}
+        >
           <p className="text-sm leading-relaxed">{VERIFICATION_EXPLANATION}</p>
         </PopoverContent>
       </Popover>
