@@ -118,6 +118,8 @@ export class CoreStorage {
         }
       }
       // Re-throw if it's not a unique email constraint violation
+      // Log error with context before re-throwing
+      logError(error, undefined, 'error');
       throw error;
     }
   }
@@ -419,8 +421,6 @@ export class CoreStorage {
   // ========================================
 
   async createPayment(paymentData: InsertPayment): Promise<Payment> {
-    console.log("Creating payment with data:", JSON.stringify(paymentData, null, 2));
-    
     // Explicitly build the values object to ensure all fields are included
     const values: any = {
       userId: paymentData.userId,
@@ -452,14 +452,11 @@ export class CoreStorage {
       values.yearlyEndMonth = null;
     }
     
-    console.log("Inserting with values:", JSON.stringify(values, null, 2));
-    
     const [payment] = await db
       .insert(payments)
       .values(values)
       .returning();
     
-    console.log("Created payment:", JSON.stringify(payment, null, 2));
     return payment;
   }
 

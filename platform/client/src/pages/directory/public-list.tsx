@@ -55,13 +55,9 @@ export default function PublicDirectoryList() {
       if (!res.ok) throw new Error(await res.text());
       const data = await res.json();
       // Debug: Log first profile to see what we're getting
+      // Removed console.log for production - use browser dev tools if needed
       if (data && data.length > 0) {
-        console.log("[DEBUG] First profile from API:", {
-          id: data[0].id,
-          displayName: data[0].displayName,
-          firstName: data[0].firstName,
-          lastName: data[0].lastName,
-          userId: data[0].userId,
+        // Profile data available
         });
       }
       return data;

@@ -6,6 +6,7 @@
  */
 
 import * as Sentry from '@sentry/node';
+import { logInfo, logWarning, logError } from './errorLogger';
 
 /**
  * Status page service types
@@ -37,8 +38,12 @@ export async function updateStatusPage(
   service: StatusPageService,
   incident: IncidentInfo
 ): Promise<void> {
-  console.log(`[Status Page] ${service}: ${incident.name} - ${incident.status}`);
-  console.log(`[Status Page] Message: ${incident.message}`);
+  logInfo(`[Status Page] ${service}: ${incident.name} - ${incident.status}`, undefined, {
+    service,
+    incidentName: incident.name,
+    status: incident.status,
+    message: incident.message
+  });
   
   // Log to Sentry for tracking
   Sentry.addBreadcrumb({
@@ -118,10 +123,12 @@ export async function sendStatusPageWebhook(
   
   // If no webhook URL is configured, log and return false
   if (!webhookUrl) {
-    console.log(`[Status Page] No webhook URL configured for ${service} - skipping webhook`);
-    console.log(`[Status Page]   Incident: ${incident.name}`);
-    console.log(`[Status Page]   Status: ${incident.status}`);
-    console.log(`[Status Page]   Message: ${incident.message}`);
+    logInfo(`[Status Page] No webhook URL configured for ${service} - skipping webhook`, undefined, {
+      service,
+      incident: incident.name,
+      status: incident.status,
+      message: incident.message
+    });
     
     // Log to Sentry for tracking (but not as an error)
     Sentry.addBreadcrumb({
@@ -139,11 +146,13 @@ export async function sendStatusPageWebhook(
   }
   
   // Log webhook attempt
-  console.log(`[Status Page] Sending webhook to ${service}:`);
-  console.log(`[Status Page]   URL: ${webhookUrl}`);
-  console.log(`[Status Page]   Incident: ${incident.name}`);
-  console.log(`[Status Page]   Status: ${incident.status}`);
-  console.log(`[Status Page]   Message: ${incident.message}`);
+  logInfo(`[Status Page] Sending webhook to ${service}`, undefined, {
+    service,
+    url: webhookUrl,
+    incident: incident.name,
+    status: incident.status,
+    message: incident.message
+  });
   
   try {
     const response = await fetch(webhookUrl, {
@@ -158,7 +167,10 @@ export async function sendStatusPageWebhook(
       throw new Error(`Webhook failed: ${response.status} ${response.statusText}`);
     }
     
-    console.log(`[Status Page] Successfully sent webhook to ${service}`);
+    logInfo(`[Status Page] Successfully sent webhook to ${service}`, undefined, {
+      service,
+      incident: incident.name
+    });
     
     // Log success to Sentry
     Sentry.addBreadcrumb({
@@ -174,7 +186,7 @@ export async function sendStatusPageWebhook(
     
     return true;
   } catch (error: any) {
-    console.error(`[Status Page] Failed to send webhook to ${service}:`, error);
+    logError(error, undefined, 'error');
     
     // Log error to Sentry
     Sentry.captureException(error, {

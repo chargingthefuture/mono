@@ -179,7 +179,7 @@ export function serveStatic(app: Express) {
         if (isClientDisconnection) {
           // Client disconnected - this is normal behavior, just log and don't call next()
           // Don't treat this as an error that needs to go to Sentry
-          console.log("Client disconnected while sending index.html:", nodeError.code);
+          // This is expected behavior when clients abort connections, no need to log
           return;
         }
         

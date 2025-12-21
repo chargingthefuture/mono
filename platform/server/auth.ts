@@ -5,7 +5,7 @@ import { storage } from "./storage";
 import { validateCsrfToken } from "./csrf";
 import { withDatabaseErrorHandling } from "./databaseErrorHandler";
 import { ExternalServiceError, UnauthorizedError, ForbiddenError, normalizeError, AppError } from "./errors";
-import { logError, logWarning } from "./errorLogger";
+import { logError, logWarning, logInfo } from "./errorLogger";
 import { loginEvents } from "@shared/schema";
 import { db } from "./db";
 
@@ -74,7 +74,11 @@ async function retryWithBackoff<T>(
       }
       // Exponential backoff
       const delay = baseDelay * Math.pow(2, attempt);
-      console.log(`Retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms for sync operation`);
+      logInfo(`Retry attempt ${attempt + 1}/${maxRetries} after ${delay}ms for sync operation`, undefined, {
+        attempt: attempt + 1,
+        maxRetries,
+        delay
+      });
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
@@ -149,7 +153,10 @@ export async function syncClerkUserToDatabase(userId: string, sessionClaims?: an
             );
             pricingTier = currentTier?.amount || '1.00';
           } catch (tierError: any) {
-            console.warn(`Failed to get pricing tier, using default: ${tierError.message}`);
+            logWarning(`Failed to get pricing tier, using default: ${tierError.message}`, undefined, {
+              userId,
+              error: tierError.message
+            });
             // Use default pricing tier if database is unavailable
           }
           

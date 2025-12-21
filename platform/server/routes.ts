@@ -87,7 +87,7 @@ import { asyncHandler } from "./errorHandler";
 import { validateWithZod } from "./validationErrorFormatter";
 import { withDatabaseErrorHandling } from "./databaseErrorHandler";
 import { NotFoundError, ForbiddenError, ValidationError, UnauthorizedError, ExternalServiceError } from "./errors";
-import { logError } from "./errorLogger";
+import { logError, logInfo, logWarning } from "./errorLogger";
 import * as Sentry from '@sentry/node';
 import { verifyLink } from "./linkVerification";
 import { generateChymeToken, getTokenExpirationDate } from "./chymeJwt";
@@ -258,7 +258,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         details: details || null,
       });
     } catch (error) {
-      console.error("Failed to log admin action:", error);
+      logError(error as Error, req, 'error');
     }
   };
 
@@ -383,9 +383,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       userId = getUserId(req);
     } catch (getUserIdError: any) {
-      console.error("Error getting userId from request:", {
-        ...requestInfo,
-        error: getUserIdError.message,
+      logError(getUserIdError, req, 'error');
         stack: getUserIdError.stack,
       });
       throw new UnauthorizedError("Authentication failed: Unable to extract user ID. Please try signing in again.");
@@ -393,7 +391,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     
     // Validate userId is present
     if (!userId || userId.trim() === "") {
-      console.error("Error: userId is missing or empty", requestInfo);
+      logError(new Error("userId is missing or empty"), req, 'error');
       throw new UnauthorizedError("Authentication failed: User ID not found. Please try signing in again.");
     }
       
@@ -403,22 +401,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         user = await storage.getUser(userId);
       } catch (dbError: any) {
         // Log detailed database error for production debugging
-        console.error("Database error fetching user:", {
-          userId,
-          error: dbError.message,
-          code: dbError.code,
-          errno: dbError.errno,
-          sqlState: dbError.sqlState,
-          stack: dbError.stack,
-          name: dbError.name,
-          // Include environment info for debugging
-          nodeEnv: process.env.NODE_ENV,
-          hasDatabaseUrl: !!process.env.DATABASE_URL,
-        });
+        logError(dbError, req, 'error');
         
         // If database query fails, try to sync from Clerk as fallback
         // This handles cases where database is temporarily unavailable
-        console.log(`Database query failed for user ${userId}, attempting to sync from Clerk as fallback`);
+        logWarning(`Database query failed for user ${userId}, attempting to sync from Clerk as fallback`, req);
         try {
           const sessionClaims = (req.auth as any)?.sessionClaims;
           user = await syncClerkUserToDatabase(userId, sessionClaims);
@@ -428,26 +415,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           }
           // If sync returns null, treat it as a sync failure
           // This should not happen normally, but we handle it explicitly to avoid returning null
-          console.error(`Sync returned null for user ${userId}. This indicates a sync failure.`, {
-            userId,
-            environment: process.env.NODE_ENV,
-            timestamp: new Date().toISOString(),
-          });
+          logError(new Error(`Sync returned null for user ${userId}. This indicates a sync failure.`), req, 'error');
           throw new Error("User sync failed: Unable to retrieve or create user. Please try refreshing the page.");
         } catch (syncError: any) {
-          console.error("Both database and Clerk sync failed:", {
-            userId,
-            dbError: dbError.message,
-            syncError: syncError.message,
-            dbErrorCode: dbError.code,
-            syncErrorCode: syncError.code,
-            dbErrorStack: dbError.stack,
-            syncErrorStack: syncError.stack,
-            environment: process.env.NODE_ENV,
-            hasClerkSecretKey: !!process.env.CLERK_SECRET_KEY,
-            hasDatabaseUrl: !!process.env.DATABASE_URL,
-            timestamp: new Date().toISOString(),
-          });
+          logError(syncError, req, 'error');
+          // Also log the original database error for full context
+          logError(dbError, req, 'error');
           
           // If sync fails (e.g., deleted user), return appropriate error
           if (syncError.message?.includes("deleted")) {
@@ -464,24 +437,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
             dbError.code === "ECONNREFUSED";
           
           if (isConnectionError) {
-            console.error("Database connection error - returning 503 Service Unavailable", {
-              userId,
-              environment: process.env.NODE_ENV,
-              timestamp: new Date().toISOString(),
-            });
+            logError(new Error("Database connection error - returning 503 Service Unavailable"), req, 'error');
             throw new ExternalServiceError("Database temporarily unavailable. Please try again in a moment.", 503);
           }
           
           // For other errors, return 500 error instead of null
           // Never return null for authenticated users - this causes sync failure errors in frontend
-          console.error(`Both database query and sync failed for user ${userId}, returning error.`, {
-            environment: process.env.NODE_ENV,
-            timestamp: new Date().toISOString(),
-            dbErrorType: dbError.constructor?.name,
-            syncErrorType: syncError.constructor?.name,
-            dbErrorMessage: dbError.message,
-            syncErrorMessage: syncError.message,
-          });
+          logError(new Error(`Both database query and sync failed for user ${userId}`), req, 'error');
           const errorMsg = "Failed to sync user. Please try refreshing the page.";
           const error = new Error(errorMsg);
           (error as any).statusCode = 500;
@@ -493,7 +455,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // If user doesn't exist in our database after middleware sync, try one more time
       // This handles edge cases where sync might have failed in middleware
       if (!user) {
-        console.log(`User not found in database after middleware sync, attempting fallback sync: ${userId}`, {
+        logWarning(`User not found in database after middleware sync, attempting fallback sync: ${userId}`, req, {
           hasSessionClaims: !!(req.auth as any)?.sessionClaims,
           environment: process.env.NODE_ENV,
           timestamp: new Date().toISOString(),
@@ -507,28 +469,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
           
           // If sync succeeded but user is still null, log warning and try one more fetch
           if (!user) {
-            console.error(`Sync completed but user is still null for ${userId}. This should not happen.`, {
-              syncDuration,
-              environment: process.env.NODE_ENV,
-              timestamp: new Date().toISOString(),
-            });
+            logError(new Error(`Sync completed but user is still null for ${userId}. This should not happen.`), req, 'error');
             // Try one more time to get the user (might be a timing issue)
             try {
               // Wait a bit for database to catch up
               await new Promise(resolve => setTimeout(resolve, 100));
               user = await storage.getUser(userId);
               if (user) {
-                console.log(`User found on retry for ${userId}`);
+                logInfo(`User found on retry for ${userId}`, req);
               } else {
-                console.error(`User still not found after retry for ${userId}. This indicates a sync failure.`);
+                logError(new Error(`User still not found after retry for ${userId}. This indicates a sync failure.`), req);
                 throw new Error("User sync failed. Please try refreshing the page.");
               }
             } catch (retryError: any) {
-              console.error(`Retry getUser also failed for ${userId}:`, retryError.message);
+              logError(retryError, req, 'error');
               throw new Error("Failed to retrieve user after sync. Please try refreshing the page.");
             }
           } else {
-            console.log(`Successfully synced user ${userId} in ${syncDuration}ms (fallback sync)`);
+            logInfo(`Successfully synced user ${userId} in ${syncDuration}ms (fallback sync)`, req);
           }
         } catch (syncError: any) {
           const errorDetails = {
@@ -544,7 +502,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             timestamp: new Date().toISOString(),
           };
           
-          console.error("Error syncing user from Clerk (fallback):", errorDetails);
+          logError(new Error("Error syncing user from Clerk (fallback)"), req, 'error');
           
           // If sync fails (e.g., deleted user), return appropriate error
           if (syncError.message?.includes("deleted")) {
@@ -636,19 +594,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
       weekStart = new Date();
     }
     
-    console.log("Weekly performance request - weekStart input:", weekStartParam || "current date");
-    console.log("Parsed weekStart date:", weekStart.toISOString());
+    logInfo("Weekly performance request", req, {
+      weekStartInput: weekStartParam || "current date",
+      parsedWeekStart: weekStart.toISOString()
+    });
     
     const review = await withDatabaseErrorHandling(
       () => storage.getWeeklyPerformanceReview(weekStart),
       'getWeeklyPerformanceReview'
     );
     
-    console.log("=== Weekly Performance Review Result ===");
-    console.log("Review keys:", Object.keys(review));
-    console.log("Has metrics property:", 'metrics' in review);
-    console.log("Metrics value:", review.metrics);
-    console.log("Metrics type:", typeof review.metrics);
+    logInfo("Weekly Performance Review Result", req, {
+      reviewKeys: Object.keys(review),
+      hasMetricsProperty: 'metrics' in review,
+      metricsValue: review.metrics,
+      metricsType: typeof review.metrics
+    });
     
     // ALWAYS ensure metrics is present
     const defaultMetrics = {
@@ -674,9 +635,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       metrics: review.metrics || defaultMetrics,
     };
     
-    console.log("Response keys:", Object.keys(response));
-    console.log("Response has metrics:", 'metrics' in response);
-    console.log("Response metrics:", response.metrics);
+    logInfo("Weekly Performance Response", req, {
+      responseKeys: Object.keys(response),
+      hasMetrics: 'metrics' in response,
+      metrics: response.metrics
+    });
     
     res.json(response);
   }));
@@ -702,9 +665,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       () => storage.getAllUsers(),
       'getAllUsers'
     );
-    console.log(`[Admin Users API] Fetched ${users.length} users from database`);
+    logInfo(`[Admin Users API] Fetched ${users.length} users from database`, req);
     if (users.length > 0) {
-      console.log(`[Admin Users API] Sample user IDs:`, users.slice(0, 3).map(u => ({ id: u.id, idType: typeof u.id, email: u.email })));
+      logInfo(`[Admin Users API] Sample user IDs`, req, {
+        sampleUsers: users.slice(0, 3).map(u => ({ id: u.id, idType: typeof u.id, email: u.email }))
+      });
     }
     res.json(users);
   }));
@@ -1163,7 +1128,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       };
       // Debug: Log if firstName exists but displayName doesn't
       if (userFirstName && !name) {
-        console.log(`[DEBUG] Profile ${p.id}: firstName=${userFirstName}, lastName=${userLastName}, displayName=${name}, userId=${p.userId}`);
+        logInfo(`[DEBUG] Profile ${p.id}`, req, {
+          firstName: userFirstName,
+          lastName: userLastName,
+          displayName: name,
+          userId: p.userId
+        });
       }
       return result;
     }));
@@ -4452,6 +4422,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         body.tags = JSON.parse(body.tags);
       } catch (e) {
+        logWarning(`Failed to parse tags JSON for CompareNotes item by user ${userId}`, req, {
+          userId,
+          rawTags: body.tags,
+          error: e instanceof Error ? e.message : String(e)
+        });
         body.tags = [];
       }
     }
@@ -4459,6 +4434,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
       try {
         body.attachments = JSON.parse(body.attachments);
       } catch (e) {
+        logWarning(`Failed to parse attachments JSON for CompareNotes item by user ${userId}`, req, {
+          userId,
+          rawAttachments: body.attachments,
+          error: e instanceof Error ? e.message : String(e)
+        });
         body.attachments = [];
       }
     }
@@ -4469,7 +4449,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       'createResearchItem'
     );
     
-    console.log(`CompareNotes question created: ${item.id} by ${userId}`);
+    logInfo(`CompareNotes question created: ${item.id} by ${userId}`, req);
     res.json(item);
   }));
 
@@ -5121,7 +5101,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       'createOrUpdateGentlepulseRating'
     );
     
-    console.log(`GentlePulse rating submitted: meditation ${validatedData.meditationId}, rating ${validatedData.rating}`);
+    logInfo(`GentlePulse rating submitted: meditation ${validatedData.meditationId}, rating ${validatedData.rating}`, req);
     
     res.json(rating);
   }));
@@ -5160,7 +5140,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     );
     const extremelyNegative = recentMoods.filter(m => m.moodValue === 1).length;
     
-    console.log(`GentlePulse mood check submitted: client ${validatedData.clientId}, mood ${validatedData.moodValue}`);
+    logInfo(`GentlePulse mood check submitted: client ${validatedData.clientId}, mood ${validatedData.moodValue}`, req);
     
     res.json({
       ...moodCheck,
@@ -5581,7 +5561,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       'createLostmailIncident'
     );
     
-    console.log(`LostMail incident created: ${incident.id} by ${incident.reporterEmail}`);
+    logInfo(`LostMail incident created: ${incident.id} by ${incident.reporterEmail}`, req);
     
     res.json(incident);
   }));
@@ -5704,7 +5684,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       'updateLostmailIncident'
     );
     
-    console.log(`LostMail incident ${incidentId} updated by admin ${adminName}`);
+    logInfo(`LostMail incident ${incidentId} updated by admin ${adminName}`, req);
     
     res.json(updated);
   }));
@@ -5773,7 +5753,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.json(incidents);
     }
     
-    console.log(`LostMail export: ${incidents.length} incidents exported as ${format}`);
+    logInfo(`LostMail export: ${incidents.length} incidents exported as ${format}`, req);
   }));
 
   // LostMail Admin Announcement routes
@@ -5964,7 +5944,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     );
     
     if (!otpRecord) {
-      console.log(`[OTP Validation] No matching OTP found. Received: "${otp}"`);
+      logWarning(`[OTP Validation] No matching OTP found. Received: "${otp}"`, req);
       return res.status(400).json({ message: "Invalid OTP code" });
     }
     
@@ -5977,12 +5957,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         () => storage.deleteOTPCode(otpRecord.userId),
         'deleteExpiredOTP'
       );
-      console.log(`[OTP Validation] OTP matched but expired for user ${otpRecord.userId}`);
+      logWarning(`[OTP Validation] OTP matched but expired for user ${otpRecord.userId}`, req);
       return res.status(400).json({ message: "OTP has expired" });
     }
     
     const userId = otpRecord.userId;
-    console.log(`[OTP Validation] OTP matched successfully for user ${userId}`);
+    logInfo(`[OTP Validation] OTP matched successfully for user ${userId}`, req);
     
     // Verify user is still approved
     const user = await withDatabaseErrorHandling(
@@ -6099,13 +6079,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate deep link and redirect
       const deepLink = `chyme://auth?code=${code}`;
       
-      console.log(`[Mobile Auth Redirect] Generated code for user ${userId} from Android device, redirecting to deep link`);
+      logInfo(`[Mobile Auth Redirect] Generated code for user ${userId} from Android device, redirecting to deep link`, req);
       
       // Redirect to deep link
       return res.redirect(deepLink);
     } catch (error) {
       // If anything goes wrong, let SPA handle it
-      console.error('[Mobile Auth Redirect] Error:', error);
+      logError(error as Error, req);
       return next();
     }
   }));
@@ -6151,7 +6131,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     // Generate deep link
     const deepLink = `chyme://auth?code=${code}`;
     
-    console.log(`[Mobile Auth] Generated code for user ${userId}, expires at ${expiresAt.toISOString()}`);
+    logInfo(`[Mobile Auth] Generated code for user ${userId}, expires at ${expiresAt.toISOString()}`, req);
     
     res.json({
       code,
@@ -6181,7 +6161,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     );
     
     if (!codeRecord) {
-      console.log(`[Mobile Auth] No matching code found. Received: "${code}"`);
+      logWarning(`[Mobile Auth] No matching code found. Received: "${code}"`, req);
       return res.status(400).json({ message: "Invalid or expired code" });
     }
     
@@ -6194,12 +6174,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         () => storage.deleteOTPCode(codeRecord.userId),
         'deleteExpiredMobileAuthCode'
       );
-      console.log(`[Mobile Auth] Code matched but expired for user ${codeRecord.userId}`);
+      logWarning(`[Mobile Auth] Code matched but expired for user ${codeRecord.userId}`, req);
       return res.status(400).json({ message: "Code has expired" });
     }
     
     const userId = codeRecord.userId;
-    console.log(`[Mobile Auth] Code matched successfully for user ${userId}`);
+    logInfo(`[Mobile Auth] Code matched successfully for user ${userId}`, req);
     
     // Verify user is still approved
     const user = await withDatabaseErrorHandling(
