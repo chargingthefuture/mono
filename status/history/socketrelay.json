@@ -2763,5 +2763,12 @@
     "statusCode": 503,
     "responseTime": 925,
     "error": "checkDatabase is not a function"
+  },
+  {
+    "timestamp": "2025-12-21T21:47:21.441Z",
+    "status": "down",
+    "statusCode": 503,
+    "responseTime": 689,
+    "error": "checkDatabase is not a function"
   }
 ]
