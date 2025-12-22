@@ -7,6 +7,7 @@ import { storage } from "../../storage";
 import { isAuthenticated } from "../../auth";
 import { asyncHandler } from "../../errorHandler";
 import { withDatabaseErrorHandling } from "../../databaseErrorHandler";
+import { type MechanicmatchProfile, type User } from "@shared/schema";
 
 export function registerMechanicMatchSearchRoutes(app: Express) {
   app.get('/api/mechanicmatch/search/mechanics', isAuthenticated, asyncHandler(async (req: any, res) => {
@@ -21,17 +22,17 @@ export function registerMechanicMatchSearchRoutes(app: Express) {
     const mechanics = await withDatabaseErrorHandling(
       () => storage.searchMechanicmatchMechanics(filters),
       'searchMechanicmatchMechanics'
-    );
+    ) as MechanicmatchProfile[];
     
     // Enrich profiles with firstName from users for claimed profiles
-    const enrichedMechanics = await Promise.all(mechanics.map(async (mechanic) => {
+    const enrichedMechanics = await Promise.all(mechanics.map(async (mechanic: MechanicmatchProfile) => {
       let firstName: string | null = null;
       if (mechanic.userId) {
         // For claimed profiles, get firstName from user record
         const user = await withDatabaseErrorHandling(
           () => storage.getUser(mechanic.userId!),
           'getUserForMechanicmatchSearch'
-        );
+        ) as User | undefined;
         if (user) {
           firstName = (user.firstName && user.firstName.trim()) || null;
         }

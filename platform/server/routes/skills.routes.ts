@@ -14,6 +14,9 @@ import {
   insertSkillsSectorSchema,
   insertSkillsJobTitleSchema,
   insertSkillsSkillSchema,
+  type SkillsSector,
+  type SkillsJobTitle,
+  type SkillsSkill,
 } from "@shared/schema";
 
 export function registerSkillsRoutes(app: Express) {
@@ -52,7 +55,7 @@ export function registerSkillsRoutes(app: Express) {
     const sector = await withDatabaseErrorHandling(
       () => storage.createSkillsSector(validated),
       'createSkillsSector'
-    );
+    ) as SkillsSector;
     await logAdminAction(adminId, 'create_skills_sector', 'skills_sector', sector.id, { name: sector.name });
     res.json(sector);
   }));
@@ -62,7 +65,7 @@ export function registerSkillsRoutes(app: Express) {
     const sector = await withDatabaseErrorHandling(
       () => storage.updateSkillsSector(req.params.id, req.body),
       'updateSkillsSector'
-    );
+    ) as SkillsSector;
     await logAdminAction(adminId, 'update_skills_sector', 'skills_sector', sector.id, { name: sector.name });
     res.json(sector);
   }));
@@ -93,7 +96,7 @@ export function registerSkillsRoutes(app: Express) {
     const jobTitle = await withDatabaseErrorHandling(
       () => storage.createSkillsJobTitle(validated),
       'createSkillsJobTitle'
-    );
+    ) as SkillsJobTitle;
     await logAdminAction(adminId, 'create_skills_job_title', 'skills_job_title', jobTitle.id, { name: jobTitle.name });
     res.json(jobTitle);
   }));
@@ -103,7 +106,7 @@ export function registerSkillsRoutes(app: Express) {
     const jobTitle = await withDatabaseErrorHandling(
       () => storage.updateSkillsJobTitle(req.params.id, req.body),
       'updateSkillsJobTitle'
-    );
+    ) as SkillsJobTitle;
     await logAdminAction(adminId, 'update_skills_job_title', 'skills_job_title', jobTitle.id, { name: jobTitle.name });
     res.json(jobTitle);
   }));
@@ -134,7 +137,7 @@ export function registerSkillsRoutes(app: Express) {
     const skill = await withDatabaseErrorHandling(
       () => storage.createSkillsSkill(validated),
       'createSkillsSkill'
-    );
+    ) as SkillsSkill;
     await logAdminAction(adminId, 'create_skills_skill', 'skills_skill', skill.id, { name: skill.name });
     res.json(skill);
   }));
@@ -144,7 +147,7 @@ export function registerSkillsRoutes(app: Express) {
     const skill = await withDatabaseErrorHandling(
       () => storage.updateSkillsSkill(req.params.id, req.body),
       'updateSkillsSkill'
-    );
+    ) as SkillsSkill;
     await logAdminAction(adminId, 'update_skills_skill', 'skills_skill', skill.id, { name: skill.name });
     res.json(skill);
   }));

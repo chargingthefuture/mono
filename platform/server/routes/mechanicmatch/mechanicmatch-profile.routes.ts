@@ -9,7 +9,7 @@ import { publicListingLimiter, publicItemLimiter } from "../../rateLimiter";
 import { asyncHandler } from "../../errorHandler";
 import { validateWithZod } from "../../validationErrorFormatter";
 import { withDatabaseErrorHandling } from "../../databaseErrorHandler";
-import { insertMechanicmatchProfileSchema } from "@shared/schema";
+import { insertMechanicmatchProfileSchema, type MechanicmatchProfile, type User } from "@shared/schema";
 import { rotateDisplayOrder, addAntiScrapingDelay, isLikelyBot } from "../../dataObfuscation";
 
 export function registerMechanicMatchProfileRoutes(app: Express) {
@@ -19,7 +19,7 @@ export function registerMechanicMatchProfileRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.getMechanicmatchProfile(userId),
       'getMechanicmatchProfile'
-    );
+    ) as MechanicmatchProfile | undefined;
     if (!profile) {
       return res.json(null);
     }
@@ -27,7 +27,7 @@ export function registerMechanicMatchProfileRoutes(app: Express) {
     const user = await withDatabaseErrorHandling(
       () => storage.getUser(userId),
       'getUserVerificationForMechanicmatchProfile'
-    );
+    ) as User | undefined;
     const userIsVerified = user?.isVerified || false;
     const userFirstName = user?.firstName || null;
     res.json({ ...profile, userIsVerified, firstName: userFirstName });
@@ -43,7 +43,7 @@ export function registerMechanicMatchProfileRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.createMechanicmatchProfile(validatedData),
       'createMechanicmatchProfile'
-    );
+    ) as MechanicmatchProfile;
     res.json(profile);
   }));
 
@@ -52,7 +52,7 @@ export function registerMechanicMatchProfileRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.updateMechanicmatchProfile(userId, req.body),
       'updateMechanicmatchProfile'
-    );
+    ) as MechanicmatchProfile;
     res.json(profile);
   }));
 
@@ -71,7 +71,7 @@ export function registerMechanicMatchProfileRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.getMechanicmatchProfileById(req.params.id),
       'getMechanicmatchProfileById'
-    );
+    ) as MechanicmatchProfile | undefined;
     if (!profile || !profile.isPublic) {
       return res.status(404).json({ message: "Profile not found" });
     }
@@ -84,7 +84,7 @@ export function registerMechanicMatchProfileRoutes(app: Express) {
       const user = await withDatabaseErrorHandling(
         () => storage.getUser(profile.userId!),
         'getUserVerificationForPublicMechanicmatchProfile'
-      );
+      ) as User | undefined;
       if (user) {
         userIsVerified = user.isVerified || false;
         userFirstName = (user.firstName && user.firstName.trim()) || null;
@@ -113,8 +113,8 @@ export function registerMechanicMatchProfileRoutes(app: Express) {
     const profiles = await withDatabaseErrorHandling(
       () => storage.listPublicMechanicmatchProfiles(),
       'listPublicMechanicmatchProfiles'
-    );
-    const withVerification = await Promise.all(profiles.map(async (p) => {
+    ) as MechanicmatchProfile[];
+    const withVerification = await Promise.all(profiles.map(async (p: MechanicmatchProfile) => {
       let userIsVerified = false;
       let userFirstName: string | null = null;
       if (p.userId) {
@@ -122,7 +122,7 @@ export function registerMechanicMatchProfileRoutes(app: Express) {
         const u = await withDatabaseErrorHandling(
           () => storage.getUser(userId),
           'getUserVerificationForPublicMechanicmatchList'
-        );
+        ) as User | undefined;
         if (u) {
           userIsVerified = u.isVerified || false;
           userFirstName = (u.firstName && u.firstName.trim()) || null;

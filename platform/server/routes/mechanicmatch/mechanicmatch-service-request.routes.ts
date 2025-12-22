@@ -9,7 +9,7 @@ import { asyncHandler } from "../../errorHandler";
 import { validateWithZod } from "../../validationErrorFormatter";
 import { withDatabaseErrorHandling } from "../../databaseErrorHandler";
 import { NotFoundError, ForbiddenError, ValidationError } from "../../errors";
-import { insertMechanicmatchServiceRequestSchema } from "@shared/schema";
+import { insertMechanicmatchServiceRequestSchema, type MechanicmatchProfile, type MechanicmatchServiceRequest } from "@shared/schema";
 
 export function registerMechanicMatchServiceRequestRoutes(app: Express) {
   app.get('/api/mechanicmatch/service-requests', isAuthenticated, asyncHandler(async (req: any, res) => {
@@ -19,7 +19,7 @@ export function registerMechanicMatchServiceRequestRoutes(app: Express) {
     const requests = await withDatabaseErrorHandling(
       () => storage.getMechanicmatchServiceRequestsByOwnerPaginated(userId, limit, offset),
       'getMechanicmatchServiceRequestsByOwnerPaginated'
-    );
+    ) as { items: MechanicmatchServiceRequest[]; total: number };
     res.json(requests);
   }));
 
@@ -27,7 +27,7 @@ export function registerMechanicMatchServiceRequestRoutes(app: Express) {
     const requests = await withDatabaseErrorHandling(
       () => storage.getOpenMechanicmatchServiceRequests(),
       'getOpenMechanicmatchServiceRequests'
-    );
+    ) as MechanicmatchServiceRequest[];
     res.json(requests);
   }));
 
@@ -35,7 +35,7 @@ export function registerMechanicMatchServiceRequestRoutes(app: Express) {
     const request = await withDatabaseErrorHandling(
       () => storage.getMechanicmatchServiceRequestById(req.params.id),
       'getMechanicmatchServiceRequestById'
-    );
+    ) as MechanicmatchServiceRequest | undefined;
     if (!request) {
       throw new NotFoundError('Service request', req.params.id);
     }
@@ -47,7 +47,7 @@ export function registerMechanicMatchServiceRequestRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.getMechanicmatchProfile(userId),
       'getMechanicmatchProfile'
-    );
+    ) as MechanicmatchProfile | undefined;
     if (!profile || !profile.isCarOwner) {
       throw new ValidationError("You must be a car owner to create service requests");
     }
@@ -58,7 +58,7 @@ export function registerMechanicMatchServiceRequestRoutes(app: Express) {
         ownerId: userId,
       }),
       'createMechanicmatchServiceRequest'
-    );
+    ) as MechanicmatchServiceRequest;
     res.json(request);
   }));
 
@@ -67,14 +67,14 @@ export function registerMechanicMatchServiceRequestRoutes(app: Express) {
     const request = await withDatabaseErrorHandling(
       () => storage.getMechanicmatchServiceRequestById(req.params.id),
       'getMechanicmatchServiceRequestById'
-    );
+    ) as MechanicmatchServiceRequest | undefined;
     if (!request || request.ownerId !== userId) {
       throw new ForbiddenError("Unauthorized");
     }
     const updated = await withDatabaseErrorHandling(
       () => storage.updateMechanicmatchServiceRequest(req.params.id, req.body),
       'updateMechanicmatchServiceRequest'
-    );
+    ) as MechanicmatchServiceRequest;
     res.json(updated);
   }));
 }

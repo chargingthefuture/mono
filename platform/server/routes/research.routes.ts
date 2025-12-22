@@ -113,7 +113,7 @@ export function registerResearchRoutes(app: Express) {
     const result = await withDatabaseErrorHandling(
       () => storage.getResearchItems(filters),
       'getResearchItems'
-    );
+    ) as { items: ResearchItem[]; total: number };
     res.json(result.items);
   }));
 
@@ -573,7 +573,7 @@ export function registerResearchRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.createResearchAnnouncement(validatedData),
       'createResearchAnnouncement'
-    );
+    ) as ResearchAnnouncement;
     
     await logAdminAction(
       userId,
@@ -592,7 +592,7 @@ export function registerResearchRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.updateResearchAnnouncement(req.params.id, validatedData),
       'updateResearchAnnouncement'
-    );
+    ) as ResearchAnnouncement;
     
     await logAdminAction(
       userId,
@@ -610,7 +610,7 @@ export function registerResearchRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.deactivateResearchAnnouncement(req.params.id),
       'deactivateResearchAnnouncement'
-    );
+    ) as ResearchAnnouncement;
     
     await logAdminAction(
       userId,
@@ -630,7 +630,7 @@ export function registerResearchRoutes(app: Express) {
       const answer = await withDatabaseErrorHandling(
         () => storage.getResearchAnswerById(answerId),
         'getResearchAnswerForLinkVerification'
-      );
+      ) as ResearchAnswer | undefined;
 
       if (!answer) {
         throw new Error(`Answer ${answerId} not found`);

@@ -399,7 +399,7 @@ export function registerSocketRelayRoutes(app: Express) {
     const request = await withDatabaseErrorHandling(
       () => storage.getSocketrelayRequestById(fulfillment.requestId),
       'getSocketrelayRequestById'
-    );
+    ) as SocketrelayRequest | undefined;
     if (!request) {
       throw new NotFoundError('Request', fulfillment.requestId);
     }
@@ -437,7 +437,7 @@ export function registerSocketRelayRoutes(app: Express) {
     const request = await withDatabaseErrorHandling(
       () => storage.getSocketrelayRequestById(fulfillment.requestId),
       'getSocketrelayRequestById'
-    );
+    ) as SocketrelayRequest | undefined;
     if (!request) {
       throw new NotFoundError('Request', fulfillment.requestId);
     }
@@ -618,7 +618,7 @@ export function registerSocketRelayRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.deactivateDirectoryAnnouncement(req.params.id),
       'deactivateDirectoryAnnouncement'
-    );
+    ) as DirectoryAnnouncement;
     
     await logAdminAction(
       userId,

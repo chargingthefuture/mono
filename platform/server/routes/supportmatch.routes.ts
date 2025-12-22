@@ -20,6 +20,10 @@ import {
   insertReportSchema,
   insertSupportmatchAnnouncementSchema,
   type User,
+  type SupportmatchProfile,
+  type SupportmatchPartnership,
+  type SupportmatchAnnouncement,
+  type SupportmatchReport,
 } from "@shared/schema";
 
 export function registerSupportMatchRoutes(app: Express) {
@@ -37,7 +41,7 @@ export function registerSupportMatchRoutes(app: Express) {
     const user = await withDatabaseErrorHandling(
       () => storage.getUser(userId),
       'getUserVerificationForSupportMatchProfile'
-    );
+    ) as User | undefined;
     const userIsVerified = user?.isVerified || false;
     const userFirstName = user?.firstName || null;
     res.json({ ...profile, userIsVerified, firstName: userFirstName });
@@ -198,17 +202,17 @@ export function registerSupportMatchRoutes(app: Express) {
     const profiles = await withDatabaseErrorHandling(
       () => storage.getAllSupportMatchProfiles(),
       'getAllSupportMatchProfiles'
-    );
+    ) as SupportmatchProfile[];
     
     // Enrich profiles with firstName from user table or profile's own firstName for unclaimed
-    const profilesWithNames = await Promise.all(profiles.map(async (profile) => {
+    const profilesWithNames = await Promise.all(profiles.map(async (profile: SupportmatchProfile) => {
       let userFirstName: string | null = null;
       if (profile.userId) {
         const userId = profile.userId;
         const user = await withDatabaseErrorHandling(
           () => storage.getUser(userId),
           'getUserForSupportMatchAdminProfiles'
-        );
+        ) as User | undefined;
         if (user) {
           userFirstName = user.firstName || null;
         }
@@ -226,7 +230,7 @@ export function registerSupportMatchRoutes(app: Express) {
     const partnerships = await withDatabaseErrorHandling(
       () => storage.getAllPartnerships(),
       'getAllPartnerships'
-    );
+    ) as SupportmatchPartnership[];
     
     // Get all unique user IDs
     const userIds = new Set<string>();
@@ -245,13 +249,13 @@ export function registerSupportMatchRoutes(app: Express) {
         return users.filter((u): u is User => !!u);
       },
       'getAllUsersForSupportMatchAdminPartnerships'
-    ) : [];
+    ) as User[] : [];
     
     // Create a map of userId -> user data
     const userMap = new Map(allUsers.map(u => [u.id, u]));
     
     // Enrich partnerships with firstName and lastName for both users
-    const partnershipsWithNames = partnerships.map((partnership) => {
+    const partnershipsWithNames = partnerships.map((partnership: SupportmatchPartnership) => {
       const user1 = partnership.user1Id ? userMap.get(partnership.user1Id) : null;
       const user2 = partnership.user2Id ? userMap.get(partnership.user2Id) : null;
       
@@ -276,7 +280,7 @@ export function registerSupportMatchRoutes(app: Express) {
     const partnership = await withDatabaseErrorHandling(
       () => storage.updatePartnershipStatus(req.params.id, status),
       'updatePartnershipStatus'
-    );
+    ) as SupportmatchPartnership;
     await logAdminAction(
       userId,
       "update_partnership_status",
@@ -292,7 +296,7 @@ export function registerSupportMatchRoutes(app: Express) {
     const partnerships = await withDatabaseErrorHandling(
       () => storage.createAlgorithmicMatches(),
       'createAlgorithmicMatches'
-    );
+    ) as SupportmatchPartnership[];
     await logAdminAction(
       userId,
       "run_algorithmic_matching",
@@ -323,7 +327,7 @@ export function registerSupportMatchRoutes(app: Express) {
     const report = await withDatabaseErrorHandling(
       () => storage.updateReportStatus(req.params.id, status, resolution),
       'updateReportStatus'
-    );
+    ) as SupportmatchReport;
     await logAdminAction(
       userId,
       "update_report_status",
@@ -349,7 +353,7 @@ export function registerSupportMatchRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.createSupportmatchAnnouncement(validatedData),
       'createSupportmatchAnnouncement'
-    );
+    ) as SupportmatchAnnouncement;
     
     await logAdminAction(
       userId,
@@ -368,7 +372,7 @@ export function registerSupportMatchRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.updateSupportmatchAnnouncement(req.params.id, validatedData),
       'updateSupportmatchAnnouncement'
-    );
+    ) as SupportmatchAnnouncement;
     
     await logAdminAction(
       userId,
@@ -386,7 +390,7 @@ export function registerSupportMatchRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.deactivateSupportmatchAnnouncement(req.params.id),
       'deactivateSupportmatchAnnouncement'
-    );
+    ) as SupportmatchAnnouncement;
     
     await logAdminAction(
       userId,

@@ -9,7 +9,7 @@ import { asyncHandler } from "../../errorHandler";
 import { validateWithZod } from "../../validationErrorFormatter";
 import { withDatabaseErrorHandling } from "../../databaseErrorHandler";
 import { ValidationError } from "../../errors";
-import { insertMechanicmatchAvailabilitySchema } from "@shared/schema";
+import { insertMechanicmatchAvailabilitySchema, type MechanicmatchProfile, type MechanicmatchAvailability } from "@shared/schema";
 
 export function registerMechanicMatchAvailabilityRoutes(app: Express) {
   app.get('/api/mechanicmatch/availability', isAuthenticated, asyncHandler(async (req: any, res) => {
@@ -17,14 +17,14 @@ export function registerMechanicMatchAvailabilityRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.getMechanicmatchProfile(userId),
       'getMechanicmatchProfile'
-    );
+    ) as MechanicmatchProfile | undefined;
     if (!profile || !profile.isMechanic) {
       throw new ValidationError("You must be a mechanic to view availability");
     }
     const availability = await withDatabaseErrorHandling(
       () => storage.getMechanicmatchAvailabilityByMechanic(profile.id),
       'getMechanicmatchAvailabilityByMechanic'
-    );
+    ) as MechanicmatchAvailability[];
     res.json(availability);
   }));
 
@@ -33,7 +33,7 @@ export function registerMechanicMatchAvailabilityRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.getMechanicmatchProfile(userId),
       'getMechanicmatchProfile'
-    );
+    ) as MechanicmatchProfile | undefined;
     if (!profile || !profile.isMechanic) {
       throw new ValidationError("You must be a mechanic to set availability");
     }
@@ -44,7 +44,7 @@ export function registerMechanicMatchAvailabilityRoutes(app: Express) {
         mechanicId: profile.id,
       }),
       'createMechanicmatchAvailability'
-    );
+    ) as MechanicmatchAvailability;
     res.json(availability);
   }));
 
@@ -53,14 +53,14 @@ export function registerMechanicMatchAvailabilityRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.getMechanicmatchProfile(userId),
       'getMechanicmatchProfile'
-    );
+    ) as MechanicmatchProfile | undefined;
     if (!profile || !profile.isMechanic) {
       throw new ValidationError("You must be a mechanic to update availability");
     }
     const updated = await withDatabaseErrorHandling(
       () => storage.updateMechanicmatchAvailability(req.params.id, req.body),
       'updateMechanicmatchAvailability'
-    );
+    ) as MechanicmatchAvailability;
     res.json(updated);
   }));
 
@@ -69,7 +69,7 @@ export function registerMechanicMatchAvailabilityRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.getMechanicmatchProfile(userId),
       'getMechanicmatchProfile'
-    );
+    ) as MechanicmatchProfile | undefined;
     if (!profile || !profile.isMechanic) {
       throw new ValidationError("You must be a mechanic to delete availability");
     }

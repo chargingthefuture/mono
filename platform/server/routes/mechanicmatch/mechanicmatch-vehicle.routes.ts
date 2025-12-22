@@ -9,7 +9,7 @@ import { asyncHandler } from "../../errorHandler";
 import { validateWithZod } from "../../validationErrorFormatter";
 import { withDatabaseErrorHandling } from "../../databaseErrorHandler";
 import { NotFoundError, ForbiddenError } from "../../errors";
-import { insertMechanicmatchVehicleSchema } from "@shared/schema";
+import { insertMechanicmatchVehicleSchema, type MechanicmatchVehicle } from "@shared/schema";
 
 export function registerMechanicMatchVehicleRoutes(app: Express) {
   app.get('/api/mechanicmatch/vehicles', isAuthenticated, asyncHandler(async (req: any, res) => {
@@ -17,7 +17,7 @@ export function registerMechanicMatchVehicleRoutes(app: Express) {
     const vehicles = await withDatabaseErrorHandling(
       () => storage.getMechanicmatchVehiclesByOwner(userId),
       'getMechanicmatchVehiclesByOwner'
-    );
+    ) as MechanicmatchVehicle[];
     res.json(vehicles);
   }));
 
@@ -25,7 +25,7 @@ export function registerMechanicMatchVehicleRoutes(app: Express) {
     const vehicle = await withDatabaseErrorHandling(
       () => storage.getMechanicmatchVehicleById(req.params.id),
       'getMechanicmatchVehicleById'
-    );
+    ) as MechanicmatchVehicle | undefined;
     if (!vehicle) {
       throw new NotFoundError('Vehicle', req.params.id);
     }
@@ -41,7 +41,7 @@ export function registerMechanicMatchVehicleRoutes(app: Express) {
         ownerId: userId,
       }),
       'createMechanicmatchVehicle'
-    );
+    ) as MechanicmatchVehicle;
     res.json(vehicle);
   }));
 
@@ -50,14 +50,14 @@ export function registerMechanicMatchVehicleRoutes(app: Express) {
     const vehicle = await withDatabaseErrorHandling(
       () => storage.getMechanicmatchVehicleById(req.params.id),
       'getMechanicmatchVehicleById'
-    );
+    ) as MechanicmatchVehicle | undefined;
     if (!vehicle || vehicle.ownerId !== userId) {
       throw new ForbiddenError("Unauthorized");
     }
     const updated = await withDatabaseErrorHandling(
       () => storage.updateMechanicmatchVehicle(req.params.id, req.body),
       'updateMechanicmatchVehicle'
-    );
+    ) as MechanicmatchVehicle;
     res.json(updated);
   }));
 

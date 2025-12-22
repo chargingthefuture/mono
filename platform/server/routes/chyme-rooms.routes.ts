@@ -620,7 +620,7 @@ export function registerChymeRoomsRoutes(app: Express) {
     const user = await withDatabaseErrorHandling(
       () => storage.getUser(targetUserId),
       'getUser'
-    );
+    ) as User | undefined;
 
     if (!user) {
       return res.status(404).json({ message: "User not found" });

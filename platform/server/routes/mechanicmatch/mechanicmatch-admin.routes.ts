@@ -159,7 +159,7 @@ export function registerMechanicMatchAdminRoutes(app: Express) {
     const existingProfile = await withDatabaseErrorHandling(
       () => storage.getMechanicmatchProfileById(req.params.id),
       'getMechanicmatchProfileById'
-    );
+    ) as MechanicmatchProfile | undefined;
 
     if (!existingProfile) {
       return res.status(404).json({ message: "Profile not found" });
@@ -173,7 +173,7 @@ export function registerMechanicMatchAdminRoutes(app: Express) {
     const updated = await withDatabaseErrorHandling(
       () => storage.updateMechanicmatchProfileById(req.params.id, validated as any),
       'updateMechanicmatchProfileById'
-    );
+    ) as MechanicmatchProfile;
 
     await logAdminAction(
       adminId,
@@ -190,7 +190,7 @@ export function registerMechanicMatchAdminRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.getMechanicmatchProfileById(req.params.id),
       'getMechanicmatchProfileById'
-    );
+    ) as MechanicmatchProfile | undefined;
 
     if (!profile) {
       return res.status(404).json({ message: "Profile not found" });
@@ -271,7 +271,7 @@ export function registerMechanicMatchAdminRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.deactivateMechanicmatchAnnouncement(req.params.id),
       'deactivateMechanicmatchAnnouncement'
-    );
+    ) as MechanicmatchAnnouncement;
     
     await logAdminAction(
       userId,

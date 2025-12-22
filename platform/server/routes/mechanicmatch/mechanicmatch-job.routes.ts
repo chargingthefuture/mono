@@ -9,7 +9,7 @@ import { asyncHandler } from "../../errorHandler";
 import { validateWithZod } from "../../validationErrorFormatter";
 import { withDatabaseErrorHandling } from "../../databaseErrorHandler";
 import { NotFoundError, ForbiddenError, ValidationError } from "../../errors";
-import { insertMechanicmatchJobSchema } from "@shared/schema";
+import { insertMechanicmatchJobSchema, type MechanicmatchProfile, type MechanicmatchJob } from "@shared/schema";
 
 export function registerMechanicMatchJobRoutes(app: Express) {
   app.get('/api/mechanicmatch/jobs', isAuthenticated, asyncHandler(async (req: any, res) => {
@@ -17,22 +17,22 @@ export function registerMechanicMatchJobRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.getMechanicmatchProfile(userId),
       'getMechanicmatchProfile'
-    );
+    ) as MechanicmatchProfile | undefined;
     if (!profile) {
       throw new NotFoundError('Profile');
     }
     
-    let jobs;
+    let jobs: MechanicmatchJob[];
     if (profile.isCarOwner) {
       jobs = await withDatabaseErrorHandling(
         () => storage.getMechanicmatchJobsByOwner(userId),
         'getMechanicmatchJobsByOwner'
-      );
+      ) as MechanicmatchJob[];
     } else if (profile.isMechanic) {
       jobs = await withDatabaseErrorHandling(
         () => storage.getMechanicmatchJobsByMechanic(profile.id),
         'getMechanicmatchJobsByMechanic'
-      );
+      ) as MechanicmatchJob[];
     } else {
       console.warn(`[MechanicMatch] Profile ${profile.id} has no role (isCarOwner: ${profile.isCarOwner}, isMechanic: ${profile.isMechanic}) in /api/mechanicmatch/jobs`);
       return res.status(404).json({ message: "Profile role not set. Please set up your profile as a car owner or mechanic first." });
@@ -45,7 +45,7 @@ export function registerMechanicMatchJobRoutes(app: Express) {
     const job = await withDatabaseErrorHandling(
       () => storage.getMechanicmatchJobById(req.params.id),
       'getMechanicmatchJobById'
-    );
+    ) as MechanicmatchJob | undefined;
     if (!job) {
       throw new NotFoundError('Job', req.params.id);
     }
@@ -61,7 +61,7 @@ export function registerMechanicMatchJobRoutes(app: Express) {
         ownerId: userId,
       }),
       'createMechanicmatchJob'
-    );
+    ) as MechanicmatchJob;
     res.json(job);
   }));
 
@@ -70,7 +70,7 @@ export function registerMechanicMatchJobRoutes(app: Express) {
     const job = await withDatabaseErrorHandling(
       () => storage.getMechanicmatchJobById(req.params.id),
       'getMechanicmatchJobById'
-    );
+    ) as MechanicmatchJob | undefined;
     if (!job) {
       throw new NotFoundError('Job', req.params.id);
     }
@@ -78,7 +78,7 @@ export function registerMechanicMatchJobRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.getMechanicmatchProfile(userId),
       'getMechanicmatchProfile'
-    );
+    ) as MechanicmatchProfile | undefined;
     if (!profile) {
       throw new NotFoundError('Profile');
     }
@@ -91,7 +91,7 @@ export function registerMechanicMatchJobRoutes(app: Express) {
     const updated = await withDatabaseErrorHandling(
       () => storage.updateMechanicmatchJob(req.params.id, req.body),
       'updateMechanicmatchJob'
-    );
+    ) as MechanicmatchJob;
     res.json(updated);
   }));
 
@@ -100,14 +100,14 @@ export function registerMechanicMatchJobRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.getMechanicmatchProfile(userId),
       'getMechanicmatchProfile'
-    );
+    ) as MechanicmatchProfile | undefined;
     if (!profile || !profile.isMechanic) {
       throw new ValidationError("You must be a mechanic to accept jobs");
     }
     const job = await withDatabaseErrorHandling(
       () => storage.acceptMechanicmatchJob(req.params.id, profile.id),
       'acceptMechanicmatchJob'
-    );
+    ) as MechanicmatchJob;
     res.json(job);
   }));
 }

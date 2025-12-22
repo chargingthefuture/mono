@@ -19,6 +19,11 @@ import {
   insertTrusttransportAnnouncementSchema,
   insertNpsResponseSchema,
   type InsertTrusttransportRideRequest,
+  type TrusttransportProfile,
+  type TrusttransportAnnouncement,
+  type TrusttransportRideRequest,
+  type User,
+  type NpsResponse,
 } from "@shared/schema";
 
 export function registerTrustTransportRoutes(app: Express) {
@@ -47,7 +52,7 @@ export function registerTrustTransportRoutes(app: Express) {
     const user = await withDatabaseErrorHandling(
       () => storage.getUser(userId),
       'getUserVerificationForTrusttransportProfile'
-    );
+    ) as User | undefined;
     const userIsVerified = user?.isVerified || false;
     const userFirstName = user?.firstName || null;
     res.json({ ...profile, userIsVerified, firstName: userFirstName });
@@ -96,7 +101,7 @@ export function registerTrustTransportRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.getTrusttransportProfile(userId),
       'getTrusttransportProfile'
-    );
+    ) as TrusttransportProfile | undefined;
     if (!profile || !profile.isRider) {
       throw new ValidationError("You must be a rider to create ride requests");
     }
@@ -138,7 +143,7 @@ export function registerTrustTransportRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.getTrusttransportProfile(userId),
       'getTrusttransportProfile'
-    );
+    ) as TrusttransportProfile | undefined;
     if (!profile) {
       console.warn(`[TrustTransport] Profile not found for user ${userId} in /api/trusttransport/ride-requests/my-claimed`);
       return res.status(404).json({ message: "Profile not found. Please create a profile first." });
@@ -150,7 +155,7 @@ export function registerTrustTransportRoutes(app: Express) {
     const requests = await withDatabaseErrorHandling(
       () => storage.getTrusttransportRideRequestsByDriver(profile.id),
       'getTrusttransportRideRequestsByDriver'
-    );
+    ) as TrusttransportRideRequest[];
     res.json(requests);
   }));
 
@@ -159,7 +164,7 @@ export function registerTrustTransportRoutes(app: Express) {
     const request = await withDatabaseErrorHandling(
       () => storage.getTrusttransportRideRequestById(req.params.id),
       'getTrusttransportRideRequestById'
-    );
+    ) as TrusttransportRideRequest | undefined;
     if (!request) {
       throw new NotFoundError('Ride request', req.params.id);
     }
@@ -184,7 +189,7 @@ export function registerTrustTransportRoutes(app: Express) {
     const request = await withDatabaseErrorHandling(
       () => storage.getTrusttransportRideRequestById(req.params.id),
       'getTrusttransportRideRequestById'
-    );
+    ) as TrusttransportRideRequest | undefined;
     if (!request) {
       throw new NotFoundError('Ride request', req.params.id);
     }
@@ -192,7 +197,7 @@ export function registerTrustTransportRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.getTrusttransportProfile(userId),
       'getTrusttransportProfile'
-    );
+    ) as TrusttransportProfile | undefined;
     
     // Check authorization
     const isRider = request.riderId === userId;
@@ -241,7 +246,7 @@ export function registerTrustTransportRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.createTrusttransportAnnouncement(validatedData),
       'createTrusttransportAnnouncement'
-    );
+    ) as TrusttransportAnnouncement;
     
     await logAdminAction(
       userId,
@@ -260,7 +265,7 @@ export function registerTrustTransportRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.updateTrusttransportAnnouncement(req.params.id, validatedData),
       'updateTrusttransportAnnouncement'
-    );
+    ) as TrusttransportAnnouncement;
     
     await logAdminAction(
       userId,
@@ -278,7 +283,7 @@ export function registerTrustTransportRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.deactivateTrusttransportAnnouncement(req.params.id),
       'deactivateTrusttransportAnnouncement'
-    );
+    ) as TrusttransportAnnouncement;
     
     await logAdminAction(
       userId,
@@ -299,7 +304,7 @@ export function registerTrustTransportRoutes(app: Express) {
     const lastResponse = await withDatabaseErrorHandling(
       () => storage.getUserLastNpsResponse(userId),
       'getUserLastNpsResponse'
-    );
+    ) as NpsResponse | undefined;
     
     // Get current month in YYYY-MM format
     const now = new Date();

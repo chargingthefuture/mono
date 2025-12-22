@@ -20,6 +20,12 @@ import {
     insertWorkforceRecruiterMeetupEventSchema,
     insertWorkforceRecruiterMeetupEventSignupSchema,
     insertWorkforceRecruiterAnnouncementSchema,
+    type WorkforceRecruiterProfile,
+    type WorkforceRecruiterOccupation,
+    type WorkforceRecruiterMeetupEvent,
+    type WorkforceRecruiterMeetupEventSignup,
+    type WorkforceRecruiterAnnouncement,
+    type User,
 } from "@shared/schema";
 
 export function registerWorkforceRecruiterRoutes(app: Express) {
@@ -48,7 +54,7 @@ export function registerWorkforceRecruiterRoutes(app: Express) {
     const user = await withDatabaseErrorHandling(
       () => storage.getUser(userId),
       'getUserVerificationForWorkforceRecruiterProfile'
-    );
+    ) as User | undefined;
     const userIsVerified = user?.isVerified || false;
     const userFirstName = user?.firstName || null;
     res.json({ ...profile, userIsVerified, firstName: userFirstName });
@@ -142,7 +148,7 @@ export function registerWorkforceRecruiterRoutes(app: Express) {
     const occupation = await withDatabaseErrorHandling(
       () => storage.createWorkforceRecruiterOccupation(validatedData),
       'createWorkforceRecruiterOccupation'
-    );
+    ) as WorkforceRecruiterOccupation;
     
     await logAdminAction(
       userId,
@@ -161,7 +167,7 @@ export function registerWorkforceRecruiterRoutes(app: Express) {
     const occupation = await withDatabaseErrorHandling(
       () => storage.updateWorkforceRecruiterOccupation(req.params.id, validatedData),
       'updateWorkforceRecruiterOccupation'
-    );
+    ) as WorkforceRecruiterOccupation;
     
     await logAdminAction(
       userId,
@@ -204,7 +210,7 @@ export function registerWorkforceRecruiterRoutes(app: Express) {
         createdBy: userId,
       } as any),
       'createWorkforceRecruiterMeetupEvent'
-    );
+    ) as WorkforceRecruiterMeetupEvent;
     
     await logAdminAction(
       userId,
@@ -253,7 +259,7 @@ export function registerWorkforceRecruiterRoutes(app: Express) {
     const event = await withDatabaseErrorHandling(
       () => storage.updateWorkforceRecruiterMeetupEvent(req.params.id, validatedData),
       'updateWorkforceRecruiterMeetupEvent'
-    );
+    ) as WorkforceRecruiterMeetupEvent;
     
     await logAdminAction(
       userId,
@@ -360,7 +366,7 @@ export function registerWorkforceRecruiterRoutes(app: Express) {
     const existingSignup = await withDatabaseErrorHandling(
       () => storage.getWorkforceRecruiterMeetupEventSignups({ userId, limit: 1000, offset: 0 }),
       'getWorkforceRecruiterMeetupEventSignups'
-    );
+    ) as { signups: WorkforceRecruiterMeetupEventSignup[]; total: number };
     const signup = existingSignup.signups.find(s => s.id === signupId);
     if (!signup || signup.userId !== userId) {
       return res.status(403).json({ message: "You can only update your own signup" });
@@ -382,7 +388,7 @@ export function registerWorkforceRecruiterRoutes(app: Express) {
     const existingSignup = await withDatabaseErrorHandling(
       () => storage.getWorkforceRecruiterMeetupEventSignups({ userId, limit: 1000, offset: 0 }),
       'getWorkforceRecruiterMeetupEventSignups'
-    );
+    ) as { signups: WorkforceRecruiterMeetupEventSignup[]; total: number };
     const signup = existingSignup.signups.find(s => s.id === signupId);
     if (!signup || signup.userId !== userId) {
       return res.status(403).json({ message: "You can only delete your own signup" });
@@ -426,7 +432,7 @@ export function registerWorkforceRecruiterRoutes(app: Express) {
         () => storage.getAllWorkforceRecruiterOccupations({ limit: 10000, offset: 0 }),
         'getAllWorkforceRecruiterOccupations'
       ),
-    ]);
+    ]) as [any, { occupations: WorkforceRecruiterOccupation[]; total: number }];
 
     const occupations = occupationsResult.occupations;
 
@@ -496,7 +502,7 @@ export function registerWorkforceRecruiterRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.createWorkforceRecruiterAnnouncement(validatedData),
       'createWorkforceRecruiterAnnouncement'
-    );
+    ) as WorkforceRecruiterAnnouncement;
     
     await logAdminAction(
       userId,
@@ -515,7 +521,7 @@ export function registerWorkforceRecruiterRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.updateWorkforceRecruiterAnnouncement(req.params.id, validatedData),
       'updateWorkforceRecruiterAnnouncement'
-    );
+    ) as WorkforceRecruiterAnnouncement;
     
     await logAdminAction(
       userId,
@@ -533,7 +539,7 @@ export function registerWorkforceRecruiterRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.deactivateWorkforceRecruiterAnnouncement(req.params.id),
       'deactivateWorkforceRecruiterAnnouncement'
-    );
+    ) as WorkforceRecruiterAnnouncement;
     
     await logAdminAction(
       userId,
