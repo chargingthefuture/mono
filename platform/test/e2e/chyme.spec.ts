@@ -36,14 +36,13 @@ test.describe('Chyme Dashboard', () => {
     });
     
     // Check if Clerk is configured (skip if Configuration Error)
-    const heading = await page.locator('h1').textContent({ timeout: 5000 }).catch(() => null);
+    const heading = await page.locator('h1').textContent({ timeout: 10000 }).catch(() => null);
     if (heading && heading.includes('Configuration Error')) {
       test.skip();
       return;
     }
     
     // Verify dashboard content
-    const heading = await page.locator('h1').textContent({ timeout: 10000 });
     expect(heading).toContain('Chyme');
   });
 });
