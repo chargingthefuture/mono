@@ -37,6 +37,14 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser()); // Required for CSRF token cookies
 
 // Clerk middleware - must be before routes
+// Note: clerkMiddleware() reads from environment variables:
+// - CLERK_SECRET_KEY (required)
+// - CLERK_PUBLISHABLE_KEY (may be required by some Clerk SDK versions)
+// If VITE_CLERK_PUBLISHABLE_KEY is set but CLERK_PUBLISHABLE_KEY is not,
+// use the VITE_ version as fallback for server-side usage
+if (!process.env.CLERK_PUBLISHABLE_KEY && process.env.VITE_CLERK_PUBLISHABLE_KEY) {
+  process.env.CLERK_PUBLISHABLE_KEY = process.env.VITE_CLERK_PUBLISHABLE_KEY;
+}
 app.use(clerkMiddleware());
 
 // Security headers middleware
