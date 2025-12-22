@@ -2994,5 +2994,12 @@
     "statusCode": 200,
     "responseTime": 250,
     "error": null
+  },
+  {
+    "timestamp": "2025-12-22T11:28:31.336Z",
+    "status": "degraded",
+    "statusCode": 200,
+    "responseTime": 309,
+    "error": null
   }
 ]
