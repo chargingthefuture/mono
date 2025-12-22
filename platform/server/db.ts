@@ -22,8 +22,26 @@ if (!process.env.DATABASE_URL) {
   );
 }
 
+// Validate that DATABASE_URL is not empty and is a valid URL format
+const rawConnectionString = process.env.DATABASE_URL.trim();
+if (!rawConnectionString) {
+  throw new Error(
+    "DATABASE_URL is set but is empty. Please provide a valid database connection string.",
+  );
+}
+
+// Validate URL format before passing to Neon client
+try {
+  // Try to parse as URL to validate format (postgres:// or postgresql://)
+  new URL(rawConnectionString);
+} catch (error) {
+  throw new Error(
+    `DATABASE_URL is not a valid URL format: "${rawConnectionString.substring(0, 20)}...". Please check your database connection string.`,
+  );
+}
+
 // Enhance connection string with timeout parameters if not already present
-let connectionString = process.env.DATABASE_URL;
+let connectionString = rawConnectionString;
 if (!connectionString.includes('connect_timeout')) {
   const separator = connectionString.includes('?') ? '&' : '?';
   // Add connection timeout (30 seconds) and statement timeout (60 seconds) for schema operations
