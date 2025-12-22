@@ -1,27 +1,28 @@
-name: Neon Database Migration
+name: Push Database Schema to Neon
 
 on:
   push:
     branches:
       - main
-      - staging
     paths:
       - 'platform/shared/schema.ts'
+      - 'platform/shared/schema/**'
       - 'platform/drizzle.config.ts'
-  workflow_dispatch:
+      - '.github/workflows/neon_database_migration.yml'
+  workflow_dispatch: # Manual trigger - useful for fixing sync issues
     inputs:
-      force:
-        description: 'Force push (ignore warnings)'
+      environment:
+        description: 'Which database to update (auto-detected on push to main)'
         required: false
-        default: 'false'
         type: choice
         options:
-          - 'false'
-          - 'true'
+          - production
+          - staging
+        default: 'production'
 
 jobs:
-  migrate:
-    name: Push Schema to Neon Database
+  push-schema:
+    name: Push Schema to ${{ github.event.inputs.environment || 'production' }}
     runs-on: ubuntu-latest
     
     steps:
@@ -31,7 +32,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '20.19.0'
           cache: 'npm'
           cache-dependency-path: platform/package-lock.json
 
@@ -39,57 +40,33 @@ jobs:
         working-directory: platform
         run: npm ci
 
-      - name: Determine environment and set DATABASE_URL
+      - name: Determine environment
         id: set_db_url
         run: |
-          if [ "${{ github.ref }}" == "refs/heads/staging" ]; then
-            ENV="staging"
-            DB_URL="${{ secrets.DATABASE_URL_STAGING }}"
-            SECRET_NAME="DATABASE_URL_STAGING"
+          # Manual trigger: use input, default to production
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            ENV="${{ github.event.inputs.environment || 'production' }}"
+          # Auto trigger on push: main = production
           elif [ "${{ github.ref }}" == "refs/heads/main" ]; then
             ENV="production"
-            DB_URL="${{ secrets.DATABASE_URL }}"
-            SECRET_NAME="DATABASE_URL"
           else
-            # For workflow_dispatch or other branches, default to staging (safer)
-            ENV="staging"
-            DB_URL="${{ secrets.DATABASE_URL_STAGING }}"
-            SECRET_NAME="DATABASE_URL_STAGING"
+            ENV="production" # Default fallback
           fi
           
           echo "environment=$ENV" >> $GITHUB_OUTPUT
-          echo "secret_name=$SECRET_NAME" >> $GITHUB_OUTPUT
-          echo "DATABASE_URL=$DB_URL" >> $GITHUB_ENV
-          
-          if [ -z "$DB_URL" ]; then
-            echo "ERROR: $SECRET_NAME secret is not configured!"
-            echo ""
-            echo "Please set the $SECRET_NAME secret in your repository settings:"
-            echo "Settings > Secrets and variables > Actions > New repository secret"
-            echo ""
-            echo "Environment: $ENV"
-            echo "Branch: ${{ github.ref_name }}"
-            echo "The secret should contain your Neon database connection string for $ENV."
-            exit 1
-          fi
-          
-          echo "✓ $SECRET_NAME is configured for $ENV environment"
-          echo "Branch: ${{ github.ref_name }}"
+          echo "✓ Will update $ENV database"
 
       - name: Push database schema
         working-directory: platform
         env:
-          DATABASE_URL: ${{ env.DATABASE_URL }}
+          DATABASE_URL: ${{ steps.set_db_url.outputs.environment == 'staging' && secrets.DATABASE_URL_STAGING || secrets.DATABASE_URL }}
         run: |
-          if [ "${{ github.event.inputs.force }}" == "true" ]; then
-            npm run db:push -- --force
-          else
-            npm run db:push
-          fi
+          echo "Pushing schema to ${{ steps.set_db_url.outputs.environment }} database..."
+          echo "Schema files changed, running: npm run db:push"
+          npm run db:push
 
-      - name: Verify migration
-        working-directory: platform
-        env:
-          DATABASE_URL: ${{ env.DATABASE_URL }}
+      - name: Verify push completed
         run: |
-          echo "Migration completed successfully for ${{ steps.set_db_url.outputs.environment }} environment"
+          echo "✓ Schema push completed successfully for ${{ steps.set_db_url.outputs.environment }}"
+          echo ""
+          echo "Note: If db:push timed out, you can manually paste schema.sql into the Neon console."
