@@ -25,21 +25,7 @@ export type { IDirectoryStorage } from './directory-storage.interface';
 export type { ISkillsStorage } from './skills-storage.interface';
 export type { IProfileDeletionStorage } from './profile-deletion-storage.interface';
 
-// Compose all interfaces into IStorage
-// This maintains backward compatibility with existing code
-export interface IStorage 
-  extends ICoreStorage,
-          ISupportMatchStorage,
-          ILighthouseStorage,
-          IMechanicMatchStorage,
-          ISocketRelayStorage,
-          IDirectoryStorage,
-          ISkillsStorage,
-          IProfileDeletionStorage {
-  // Additional methods that don't fit into domain-specific interfaces
-  // These will be added as we continue refactoring
-  
-  // Note: The full IStorage interface with all methods is still defined in types.ts
-  // for backward compatibility. This composition approach allows gradual migration.
-}
+// Re-export the complete IStorage interface from the parent types.ts file
+// This ensures the full interface with all methods is available when importing from './types'
+export type { IStorage } from '../types';
 

@@ -68,6 +68,25 @@ android {
             } ?: signingConfigs.getByName("debug")
         }
     }
+    
+    packaging {
+        resources {
+            // Ensure WebRTC native libraries are included in the APK
+            // Exclude duplicate files that might cause conflicts
+            excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "/META-INF/DEPENDENCIES"
+            excludes += "/META-INF/LICENSE"
+            excludes += "/META-INF/LICENSE.txt"
+            excludes += "/META-INF/license.txt"
+            excludes += "/META-INF/NOTICE"
+            excludes += "/META-INF/NOTICE.txt"
+            excludes += "/META-INF/notice.txt"
+            // Don't exclude native libraries - they're needed for WebRTC
+            // Pick first occurrence of duplicate files
+            pickFirsts += "**/libc++_shared.so"
+            pickFirsts += "**/libjingle_peerconnection_so.so"
+        }
+    }
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_1_8
         targetCompatibility = JavaVersion.VERSION_1_8
@@ -122,10 +141,9 @@ dependencies {
     
     // WebRTC for audio streaming (local mic control)
     // The org.webrtc.Environment class is required by PeerConnectionFactory.builder()
-    // Using io.getstream:stream-webrtc-android which is actively maintained and includes
-    // all necessary WebRTC classes including org.webrtc.Environment
-    // This library maintains the standard org.webrtc package structure
-    implementation("io.getstream:stream-webrtc-android:1.0.2")
+    // Using the official Google WebRTC library which includes all required classes
+    // including org.webrtc.Environment. This ensures proper packaging in the APK.
+    implementation("org.webrtc:google-webrtc:1.0.32006")
     
     // Image loading
     implementation("io.coil-kt:coil-compose:2.5.0")

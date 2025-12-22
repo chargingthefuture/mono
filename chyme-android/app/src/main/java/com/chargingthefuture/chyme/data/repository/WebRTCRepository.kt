@@ -51,14 +51,15 @@ class WebRTCRepository(
                     .setOptions(options)
                     .createPeerConnectionFactory()
             } else {
-                // Environment class is missing - this indicates the WebRTC library version
-                // doesn't include it. The builder() method will fail, so we need to use
-                // a library that includes org.webrtc.Environment or update the library version.
+                // Environment class is missing - this indicates the WebRTC library is not
+                // properly packaged in the APK. Check:
+                // 1. That org.webrtc:google-webrtc is included in dependencies
+                // 2. That ProGuard rules keep org.webrtc classes
+                // 3. That packaging options include native libraries
                 throw NoClassDefFoundError(
                     "org.webrtc.Environment class is missing. " +
-                    "Please use a WebRTC library version that includes this class. " +
-                    "The current library (io.getstream:stream-webrtc-android:1.0.2) should include it, " +
-                    "but if this error occurs, the library may need to be updated."
+                    "The WebRTC library dependency may be missing or improperly packaged in the final APK. " +
+                    "Please verify that org.webrtc:google-webrtc is included and properly configured."
                 )
             }
 

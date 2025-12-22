@@ -23,4 +23,10 @@
 # WebRTC - Keep all classes to prevent ClassNotFoundException
 # The org.webrtc.Environment class and other WebRTC classes are required at runtime
 -keep class org.webrtc.** { *; }
+-keep interface org.webrtc.** { *; }
+-keep enum org.webrtc.** { *; }
+-keepclassmembers class org.webrtc.** { *; }
 -dontwarn org.webrtc.**
+# Specifically keep Environment class which is required by PeerConnectionFactory.builder()
+-keep class org.webrtc.Environment { *; }
+-keep class org.webrtc.Environment$* { *; }
