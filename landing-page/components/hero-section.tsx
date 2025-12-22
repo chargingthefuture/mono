@@ -89,7 +89,6 @@ export function HeroSection() {
                 JOIN TOWN HALL
               </Button>
             </a>
-          </div>
         </div>
       </div>
 
