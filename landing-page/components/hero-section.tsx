@@ -22,7 +22,7 @@ export function HeroSection() {
             sizes="(max-width: 1024px) 100vw, 50vw"
           />
           {/* Comic caption box */}
-          <div className="absolute inset-0 flex items-center justify-center z-10">
+          <div className="absolute inset-0 flex items-start justify-start z-10 p-3 sm:p-4 md:p-6">
             <div className="bg-[#fffde7] text-background px-3 py-1.5 sm:px-4 sm:py-2 border-[3px] border-background font-[var(--font-inter)] text-xs sm:text-sm max-w-[180px] sm:max-w-[200px]">
               <p className="font-bold">CHAPTER ONE:</p>
               <p className="text-[10px] sm:text-xs">The people around us changed. But we survived.</p>
