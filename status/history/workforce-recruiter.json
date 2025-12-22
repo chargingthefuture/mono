@@ -2847,5 +2847,12 @@
     "statusCode": 503,
     "responseTime": 313,
     "error": "checkDatabase is not a function"
+  },
+  {
+    "timestamp": "2025-12-22T03:18:48.338Z",
+    "status": "degraded",
+    "statusCode": 200,
+    "responseTime": 296,
+    "error": null
   }
 ]
