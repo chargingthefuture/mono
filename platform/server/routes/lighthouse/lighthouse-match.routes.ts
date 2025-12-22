@@ -9,7 +9,12 @@ import { asyncHandler } from "../../errorHandler";
 import { validateWithZod } from "../../validationErrorFormatter";
 import { withDatabaseErrorHandling } from "../../databaseErrorHandler";
 import { z } from "zod";
-import { insertLighthouseMatchSchema } from "@shared/schema";
+import { 
+  insertLighthouseMatchSchema,
+  type LighthouseProfile,
+  type LighthouseProperty,
+  type LighthouseMatch,
+} from "@shared/schema";
 
 export function registerLighthouseMatchRoutes(app: Express) {
   // Match routes
@@ -18,7 +23,7 @@ export function registerLighthouseMatchRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.getLighthouseProfileByUserId(userId),
       'getLighthouseProfileByUserId'
-    );
+    ) as LighthouseProfile | undefined;
     
     if (!profile) {
       console.warn(`[Lighthouse] Profile not found for user ${userId} in /api/lighthouse/matches`);
@@ -37,7 +42,7 @@ export function registerLighthouseMatchRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.getLighthouseProfileByUserId(userId),
       'getLighthouseProfileByUserId'
-    );
+    ) as LighthouseProfile | undefined;
     
     if (!profile) {
       return res.status(404).json({ message: "Profile not found. Please create a profile first." });
@@ -57,7 +62,7 @@ export function registerLighthouseMatchRoutes(app: Express) {
     const property = await withDatabaseErrorHandling(
       () => storage.getLighthousePropertyById(propertyId),
       'getLighthousePropertyById'
-    );
+    ) as LighthouseProperty | undefined;
     if (!property) {
       return res.status(404).json({ message: "Property not found" });
     }
@@ -66,8 +71,8 @@ export function registerLighthouseMatchRoutes(app: Express) {
     const existingMatches = await withDatabaseErrorHandling(
       () => storage.getMatchesBySeeker(profile.id),
       'getMatchesBySeeker'
-    );
-    const existingMatch = existingMatches.find(m => m.propertyId === propertyId);
+    ) as LighthouseMatch[];
+    const existingMatch = (existingMatches as LighthouseMatch[]).find(m => m.propertyId === propertyId);
     if (existingMatch && existingMatch.status !== 'cancelled') {
       return res.status(409).json({ 
         message: "You have already requested a match for this property",
@@ -99,11 +104,11 @@ export function registerLighthouseMatchRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.getLighthouseProfileByUserId(userId),
       'getLighthouseProfileByUserId'
-    );
+    ) as LighthouseProfile | undefined;
     const match = await withDatabaseErrorHandling(
       () => storage.getLighthouseMatchById(req.params.id),
       'getLighthouseMatchById'
-    );
+    ) as LighthouseMatch | undefined;
     
     if (!match) {
       return res.status(404).json({ message: "Match not found" });
@@ -117,7 +122,7 @@ export function registerLighthouseMatchRoutes(app: Express) {
     const property = await withDatabaseErrorHandling(
       () => storage.getLighthousePropertyById(match.propertyId),
       'getLighthousePropertyById'
-    );
+    ) as LighthouseProperty | undefined;
     if (!property) {
       return res.status(404).json({ message: "Property not found" });
     }

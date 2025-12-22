@@ -22,6 +22,7 @@ import {
   insertDirectorySkillSchema,
   type User,
   type DirectoryProfile,
+  type SkillsJobTitle,
 } from "@shared/schema";
 
 export function registerDirectoryRoutes(app: Express) {
@@ -183,9 +184,9 @@ export function registerDirectoryRoutes(app: Express) {
     const jobTitles = await withDatabaseErrorHandling(
       () => storage.getAllSkillsJobTitles(),
       'getAllSkillsJobTitles'
-    );
+    ) as SkillsJobTitle[];
     // Format as { id, name }[] for Directory app compatibility
-    const formatted = jobTitles.map(jt => ({ id: jt.id, name: jt.name }));
+    const formatted = (jobTitles as SkillsJobTitle[]).map(jt => ({ id: jt.id, name: jt.name }));
     
     // Log if no job titles found (helps debug seeding issues)
     if (formatted.length === 0) {

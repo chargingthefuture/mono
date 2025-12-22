@@ -14,6 +14,8 @@ import { z } from "zod";
 import {
   insertLighthousePropertySchema,
   insertLighthouseMatchSchema,
+  type LighthouseProfile,
+  type User,
 } from "@shared/schema";
 
 export function registerLighthouseAdminRoutes(app: Express) {
@@ -30,16 +32,16 @@ export function registerLighthouseAdminRoutes(app: Express) {
     const profiles = await withDatabaseErrorHandling(
       () => storage.getAllLighthouseProfiles(),
       'getAllLighthouseProfiles'
-    );
+    ) as LighthouseProfile[];
     
     // Enrich profiles with firstName from user table or profile's own firstName for unclaimed
-    const profilesWithNames = await Promise.all(profiles.map(async (profile) => {
+    const profilesWithNames = await Promise.all((profiles as LighthouseProfile[]).map(async (profile) => {
       let userFirstName: string | null = null;
       if (profile.userId) {
         const user = await withDatabaseErrorHandling(
           () => storage.getUser(profile.userId!),
           'getUserForLighthouseAdminProfiles'
-        );
+        ) as User | undefined;
         if (user) {
           userFirstName = user.firstName || null;
         }
@@ -57,7 +59,7 @@ export function registerLighthouseAdminRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.getLighthouseProfileById(req.params.id),
       'getLighthouseProfileById'
-    );
+    ) as LighthouseProfile | undefined;
     if (!profile) {
       return res.status(404).json({ message: "Profile not found" });
     }
@@ -66,7 +68,7 @@ export function registerLighthouseAdminRoutes(app: Express) {
     const user = profile.userId ? await withDatabaseErrorHandling(
       () => storage.getUser(profile.userId!),
       'getUserForLighthouseAdminProfile'
-    ) : null;
+    ) as User | undefined : null;
     const profileWithUser = {
       ...profile,
       user: user ? {
@@ -86,15 +88,15 @@ export function registerLighthouseAdminRoutes(app: Express) {
     const allProfiles = await withDatabaseErrorHandling(
       () => storage.getAllLighthouseProfiles(),
       'getAllLighthouseProfiles'
-    );
-    const seekers = allProfiles.filter(p => p.profileType === 'seeker');
+    ) as LighthouseProfile[];
+    const seekers = (allProfiles as LighthouseProfile[]).filter(p => p.profileType === 'seeker');
     
     // Enrich with user information
     const seekersWithUsers = await Promise.all(seekers.map(async (seeker) => {
       const user = seeker.userId ? await withDatabaseErrorHandling(
         () => storage.getUser(seeker.userId!),
         'getUserForLighthouseAdminSeekers'
-      ) : null;
+      ) as User | undefined : null;
       return {
         ...seeker,
         user: user ? {
@@ -114,15 +116,15 @@ export function registerLighthouseAdminRoutes(app: Express) {
     const allProfiles = await withDatabaseErrorHandling(
       () => storage.getAllLighthouseProfiles(),
       'getAllLighthouseProfiles'
-    );
-    const hosts = allProfiles.filter(p => p.profileType === 'host');
+    ) as LighthouseProfile[];
+    const hosts = (allProfiles as LighthouseProfile[]).filter(p => p.profileType === 'host');
     
     // Enrich with user information
     const hostsWithUsers = await Promise.all(hosts.map(async (host) => {
       const user = host.userId ? await withDatabaseErrorHandling(
         () => storage.getUser(host.userId!),
         'getUserForLighthouseAdminHosts'
-      ) : null;
+      ) as User | undefined : null;
       return {
         ...host,
         user: user ? {
@@ -150,7 +152,7 @@ export function registerLighthouseAdminRoutes(app: Express) {
     const property = await withDatabaseErrorHandling(
       () => storage.getLighthousePropertyById(req.params.id),
       'getLighthousePropertyById'
-    );
+    ) as any;
     
     if (!property) {
       return res.status(404).json({ message: "Property not found" });
@@ -161,7 +163,7 @@ export function registerLighthouseAdminRoutes(app: Express) {
     const updated = await withDatabaseErrorHandling(
       () => storage.updateLighthouseProperty(req.params.id, validatedData),
       'updateLighthouseProperty'
-    );
+    ) as any;
     
     await logAdminAction(
       userId,
@@ -198,7 +200,7 @@ export function registerLighthouseAdminRoutes(app: Express) {
     const updated = await withDatabaseErrorHandling(
       () => storage.updateLighthouseMatch(req.params.id, validatedData),
       'updateLighthouseMatch'
-    );
+    ) as any;
     
     await logAdminAction(
       userId,

@@ -9,7 +9,11 @@ import { asyncHandler } from "../../errorHandler";
 import { validateWithZod } from "../../validationErrorFormatter";
 import { withDatabaseErrorHandling } from "../../databaseErrorHandler";
 import { z } from "zod";
-import { insertLighthousePropertySchema } from "@shared/schema";
+import { 
+  insertLighthousePropertySchema,
+  type LighthouseProperty,
+  type LighthouseProfile,
+} from "@shared/schema";
 
 export function registerLighthousePropertyRoutes(app: Express) {
   // Property browsing routes (for seekers)
@@ -40,7 +44,7 @@ export function registerLighthousePropertyRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.getLighthouseProfileByUserId(userId),
       'getLighthouseProfileByUserId'
-    );
+    ) as LighthouseProfile | undefined;
     
     if (!profile) {
       console.warn(`[Lighthouse] Profile not found for user ${userId} in /api/lighthouse/my-properties`);
@@ -59,7 +63,7 @@ export function registerLighthousePropertyRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.getLighthouseProfileByUserId(userId),
       'getLighthouseProfileByUserId'
-    );
+    ) as LighthouseProfile | undefined;
     
     if (!profile) {
       return res.status(404).json({ message: "Profile not found. Please create a profile first." });
@@ -77,7 +81,7 @@ export function registerLighthousePropertyRoutes(app: Express) {
     const property = await withDatabaseErrorHandling(
       () => storage.createLighthouseProperty(validatedData),
       'createLighthouseProperty'
-    );
+    ) as LighthouseProperty;
     
     res.json(property);
   }));
@@ -87,11 +91,11 @@ export function registerLighthousePropertyRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.getLighthouseProfileByUserId(userId),
       'getLighthouseProfileByUserId'
-    );
+    ) as LighthouseProfile | undefined;
     const property = await withDatabaseErrorHandling(
       () => storage.getLighthousePropertyById(req.params.id),
       'getLighthousePropertyById'
-    );
+    ) as LighthouseProperty | undefined;
     
     if (!property) {
       return res.status(404).json({ message: "Property not found" });
@@ -107,7 +111,7 @@ export function registerLighthousePropertyRoutes(app: Express) {
     const updated = await withDatabaseErrorHandling(
       () => storage.updateLighthouseProperty(req.params.id, validatedData),
       'updateLighthouseProperty'
-    );
+    ) as LighthouseProperty;
     
     res.json(updated);
   }));

@@ -8,7 +8,11 @@ import { isAuthenticated, getUserId } from "../../auth";
 import { asyncHandler } from "../../errorHandler";
 import { validateWithZod } from "../../validationErrorFormatter";
 import { withDatabaseErrorHandling } from "../../databaseErrorHandler";
-import { insertLighthouseProfileSchema } from "@shared/schema";
+import { 
+  insertLighthouseProfileSchema,
+  type LighthouseProfile,
+  type User,
+} from "@shared/schema";
 
 export function registerLighthouseProfileRoutes(app: Express) {
   // Profile routes
@@ -17,7 +21,7 @@ export function registerLighthouseProfileRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.getLighthouseProfileByUserId(userId),
       'getLighthouseProfileByUserId'
-    );
+    ) as LighthouseProfile | undefined;
     if (!profile) {
       return res.json(null);
     }
@@ -25,7 +29,7 @@ export function registerLighthouseProfileRoutes(app: Express) {
     const user = await withDatabaseErrorHandling(
       () => storage.getUser(userId),
       'getUserVerificationForLighthouseProfile'
-    );
+    ) as User | undefined;
     const userIsVerified = user?.isVerified || false;
     const userFirstName = user?.firstName || null;
     res.json({ ...profile, userIsVerified, firstName: userFirstName });
@@ -47,7 +51,7 @@ export function registerLighthouseProfileRoutes(app: Express) {
     const user = await withDatabaseErrorHandling(
       () => storage.getUser(userId),
       'getUserForLighthouseProfile'
-    );
+    ) as User | undefined;
     const userFirstName = (user?.firstName && user.firstName.trim()) || "";
     
     // Validate and create profile - auto-populate displayName from firstName
@@ -60,7 +64,7 @@ export function registerLighthouseProfileRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.createLighthouseProfile(validatedData),
       'createLighthouseProfile'
-    );
+    ) as LighthouseProfile;
     
     res.json(profile);
   }));
@@ -70,7 +74,7 @@ export function registerLighthouseProfileRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.getLighthouseProfileByUserId(userId),
       'getLighthouseProfileByUserId'
-    );
+    ) as LighthouseProfile | undefined;
     
     if (!profile) {
       return res.status(404).json({ message: "Profile not found" });
@@ -80,7 +84,7 @@ export function registerLighthouseProfileRoutes(app: Express) {
     const user = await withDatabaseErrorHandling(
       () => storage.getUser(userId),
       'getUserForLighthouseProfileUpdate'
-    );
+    ) as User | undefined;
     const userFirstName = (user?.firstName && user.firstName.trim()) || "";
     
     // Validate partial update (exclude userId from being updated)

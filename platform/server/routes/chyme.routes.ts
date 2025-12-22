@@ -358,7 +358,7 @@ export function registerChymeRoutes(app: Express) {
     const codeRecord = await withDatabaseErrorHandling(
       () => storage.findOTPCodeByCode(code),
       'findMobileAuthCodeByCode'
-    );
+    ) as OTPCode | null;
     
     if (!codeRecord) {
       logWarning(`[Mobile Auth] No matching code found. Received: "${code}"`, req);
@@ -385,7 +385,7 @@ export function registerChymeRoutes(app: Express) {
     const user = await withDatabaseErrorHandling(
       () => storage.getUser(userId!),
       'getUserForMobileAuthValidation'
-    );
+    ) as User | undefined;
     
     if (!user) {
       return res.status(404).json({ message: "User not found" });

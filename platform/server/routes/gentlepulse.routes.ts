@@ -16,10 +16,13 @@ import { logAdminAction } from "./shared";
 import { z } from "zod";
 import {
   insertGentlepulseMeditationSchema,
-    insertGentlepulseRatingSchema,
-    insertGentlepulseMoodCheckSchema,
-    insertGentlepulseFavoriteSchema,
-    insertGentlepulseAnnouncementSchema,
+  insertGentlepulseRatingSchema,
+  insertGentlepulseMoodCheckSchema,
+  insertGentlepulseFavoriteSchema,
+  insertGentlepulseAnnouncementSchema,
+  type GentlepulseRating,
+  type GentlepulseMoodCheck,
+  type GentlepulseFavorite,
 } from "@shared/schema";
 
 export function registerGentlePulseRoutes(app: Express) {
@@ -109,7 +112,7 @@ export function registerGentlePulseRoutes(app: Express) {
     const average = ratingsArray.length > 0 
       ? ratingsArray.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) / ratingsArray.length 
       : 0;
-    res.json({ average: Number(average.toFixed(2)), count: ratings.length });
+    res.json({ average: Number(average.toFixed(2)), count: (ratings as GentlepulseRating[]).length });
   }));
 
   // GentlePulse Mood Check routes (public, anonymous)
@@ -152,7 +155,7 @@ export function registerGentlePulseRoutes(app: Express) {
     const recentMoods = await withDatabaseErrorHandling(
       () => storage.getGentlepulseMoodChecksByClientId(clientId, 7),
       'getGentlepulseMoodChecksByClientId'
-    );
+    ) as GentlepulseMoodCheck[];
     const lastMood = recentMoods[0];
     
     if (!lastMood) {
@@ -196,8 +199,8 @@ export function registerGentlePulseRoutes(app: Express) {
     const favorites = await withDatabaseErrorHandling(
       () => storage.getGentlepulseFavoritesByClientId(clientId),
       'getGentlepulseFavoritesByClientId'
-    );
-    res.json(favorites.map(f => f.meditationId));
+    ) as GentlepulseFavorite[];
+    res.json((favorites as GentlepulseFavorite[]).map(f => f.meditationId));
   }));
 
   app.get('/api/gentlepulse/favorites/check', asyncHandler(async (req, res) => {

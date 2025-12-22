@@ -30,6 +30,9 @@ export class DefaultAliveOrDeadStorage {
         weekStartDate: entryData.weekStartDate instanceof Date 
           ? formatDate(entryData.weekStartDate)
           : entryData.weekStartDate,
+        operatingExpenses: String(entryData.operatingExpenses),
+        depreciation: entryData.depreciation !== undefined ? String(entryData.depreciation) : '0',
+        amortization: entryData.amortization !== undefined ? String(entryData.amortization) : '0',
         createdBy: userId,
       })
       .returning();
@@ -249,7 +252,8 @@ export class DefaultAliveOrDeadStorage {
     // Calculate burnRate from EBITDA (negative EBITDA = burn rate)
     const burnRate = ebitda < 0 ? Math.abs(ebitda) : 0;
     const currentFunding = Number(currentSnapshot.currentFunding || 0);
-    const runway = currentSnapshot.runway ? Number(currentSnapshot.runway) : null;
+    // Calculate runway from currentFunding and burnRate (weeks until funding runs out)
+    const runway = burnRate > 0 && currentFunding > 0 ? currentFunding / burnRate : null;
 
     // Calculate projections
     let projectedProfitabilityDate: Date | null = null;
@@ -324,8 +328,9 @@ export class DefaultAliveOrDeadStorage {
     const currentEntry = await this.getDefaultAliveOrDeadFinancialEntryByWeek(currentWeekStart);
     const previousEntry = await this.getDefaultAliveOrDeadFinancialEntryByWeek(previousWeekStart);
 
-    const currentRevenue = currentEntry ? Number(currentEntry.revenue || 0) : 0;
-    const previousRevenue = previousEntry ? Number(previousEntry.revenue || 0) : 0;
+    // Revenue comes from EBITDA snapshots, not financial entries
+    const currentRevenue = currentSnapshot ? Number(currentSnapshot.revenue || 0) : 0;
+    const previousRevenue = previousSnapshot ? Number(previousSnapshot.revenue || 0) : 0;
     const currentOperatingExpenses = currentEntry ? Number(currentEntry.operatingExpenses || 0) : 0;
     const previousOperatingExpenses = previousEntry ? Number(previousEntry.operatingExpenses || 0) : 0;
     const currentEbitda = currentSnapshot ? Number(currentSnapshot.ebitda || 0) : 0;

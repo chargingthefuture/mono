@@ -11,7 +11,10 @@ import { validateWithZod } from "../../validationErrorFormatter";
 import { withDatabaseErrorHandling } from "../../databaseErrorHandler";
 import { logAdminAction } from "../shared";
 import { z } from "zod";
-import { insertLighthouseAnnouncementSchema } from "@shared/schema";
+import { 
+  insertLighthouseAnnouncementSchema,
+  type LighthouseAnnouncement,
+} from "@shared/schema";
 
 export function registerLighthouseAnnouncementRoutes(app: Express) {
   // LightHouse Announcement routes (public)
@@ -39,7 +42,7 @@ export function registerLighthouseAnnouncementRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.createLighthouseAnnouncement(validatedData),
       'createLighthouseAnnouncement'
-    );
+    ) as LighthouseAnnouncement;
     
     await logAdminAction(
       userId,
@@ -58,7 +61,7 @@ export function registerLighthouseAnnouncementRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.updateLighthouseAnnouncement(req.params.id, validatedData as any),
       'updateLighthouseAnnouncement'
-    );
+    ) as LighthouseAnnouncement;
     
     await logAdminAction(
       userId,
@@ -76,7 +79,7 @@ export function registerLighthouseAnnouncementRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.deactivateLighthouseAnnouncement(req.params.id),
       'deactivateLighthouseAnnouncement'
-    );
+    ) as LighthouseAnnouncement;
     
     await logAdminAction(
       userId,

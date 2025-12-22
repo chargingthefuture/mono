@@ -15,7 +15,11 @@ import { logAdminAction } from "./shared";
 import { z } from "zod";
 import {
   insertChymeRoomSchema,
-    insertChymeMessageSchema,
+  insertChymeMessageSchema,
+  type ChymeRoom,
+  type ChymeRoomParticipant,
+  type ChymeAnnouncement,
+  type User,
 } from "@shared/schema";
 
 // Map to track scheduled room closures (roomId -> timeout)
@@ -32,11 +36,11 @@ export function registerChymeRoomsRoutes(app: Express) {
     const rooms = await withDatabaseErrorHandling(
       () => storage.getChymeRooms(validRoomType),
       'getChymeRooms'
-    );
+    ) as ChymeRoom[];
 
     // Add currentParticipants count to each room
     const roomsWithCounts = await Promise.all(
-      rooms.map(async (room) => {
+      (rooms as ChymeRoom[]).map(async (room) => {
         const count = await withDatabaseErrorHandling(
           () => storage.getChymeRoomParticipantCount(room.id),
           'getChymeRoomParticipantCount'
@@ -56,7 +60,7 @@ export function registerChymeRoomsRoutes(app: Express) {
     const room = await withDatabaseErrorHandling(
       () => storage.getChymeRoom(req.params.id),
       'getChymeRoom'
-    );
+    ) as ChymeRoom | undefined;
 
     if (!room || !room.isActive) {
       return res.status(404).json({ message: "Room not found" });
@@ -82,7 +86,7 @@ export function registerChymeRoomsRoutes(app: Express) {
     const room = await withDatabaseErrorHandling(
       () => storage.getChymeRoom(roomId),
       'getChymeRoom'
-    );
+    ) as ChymeRoom | undefined;
 
     if (!room || !room.isActive) {
       return res.status(404).json({ message: "Room not found" });
@@ -93,7 +97,7 @@ export function registerChymeRoomsRoutes(app: Express) {
     const currentUser = await withDatabaseErrorHandling(
       () => storage.getUser(currentUserId),
       'getUser'
-    );
+    ) as User | undefined;
     const isAdmin = currentUser?.isAdmin || false;
 
     if (!isCreator && !isAdmin) {
@@ -119,7 +123,7 @@ export function registerChymeRoomsRoutes(app: Express) {
         createdBy: userId,
       }),
       'createChymeRoom'
-    );
+    ) as ChymeRoom;
 
     res.status(201).json({
       ...room,
@@ -138,7 +142,7 @@ export function registerChymeRoomsRoutes(app: Express) {
         createdBy: userId,
       }),
       'createChymeRoom'
-    );
+    ) as ChymeRoom;
 
     res.status(201).json({
       ...room,
@@ -154,7 +158,7 @@ export function registerChymeRoomsRoutes(app: Express) {
     const room = await withDatabaseErrorHandling(
       () => storage.getChymeRoom(roomId),
       'getChymeRoom'
-    );
+    ) as ChymeRoom | undefined;
 
     if (!room) {
       return res.status(404).json({ message: "Room not found" });
@@ -165,7 +169,7 @@ export function registerChymeRoomsRoutes(app: Express) {
     const currentUser = await withDatabaseErrorHandling(
       () => storage.getUser(currentUserId),
       'getUser'
-    );
+    ) as User | undefined;
     const isAdmin = currentUser?.isAdmin || false;
 
     if (!isCreator && !isAdmin) {
@@ -188,7 +192,7 @@ export function registerChymeRoomsRoutes(app: Express) {
     const room = await withDatabaseErrorHandling(
       () => storage.getChymeRoom(roomId),
       'getChymeRoom'
-    );
+    ) as ChymeRoom | undefined;
 
     if (!room || !room.isActive) {
       return res.status(404).json({ message: "Room not found" });
@@ -199,7 +203,7 @@ export function registerChymeRoomsRoutes(app: Express) {
       const currentCount = await withDatabaseErrorHandling(
         () => storage.getChymeRoomParticipantCount(roomId),
         'getChymeRoomParticipantCount'
-      );
+      ) as number;
       if (currentCount >= room.maxParticipants) {
         return res.status(403).json({ message: "Room is full" });
       }
@@ -210,7 +214,7 @@ export function registerChymeRoomsRoutes(app: Express) {
     const activeRooms = await withDatabaseErrorHandling(
       () => storage.getActiveRoomsForUser(userId),
       'getActiveRoomsForUser'
-    );
+    ) as string[];
 
     // Leave all other rooms (excluding the one we're about to join)
     for (const otherRoomId of activeRooms) {
@@ -255,7 +259,7 @@ export function registerChymeRoomsRoutes(app: Express) {
     const room = await withDatabaseErrorHandling(
       () => storage.getChymeRoom(roomId),
       'getChymeRoom'
-    );
+    ) as ChymeRoom | undefined;
 
     if (!room) {
       return res.status(404).json({ message: "Room not found" });
@@ -320,7 +324,7 @@ export function registerChymeRoomsRoutes(app: Express) {
     const room = await withDatabaseErrorHandling(
       () => storage.getChymeRoom(roomId),
       'getChymeRoom'
-    );
+    ) as ChymeRoom | undefined;
 
     if (!room || !room.isActive) {
       return res.status(404).json({ message: "Room not found" });
@@ -329,15 +333,15 @@ export function registerChymeRoomsRoutes(app: Express) {
     const participants = await withDatabaseErrorHandling(
       () => storage.getChymeRoomParticipants(roomId),
       'getChymeRoomParticipants'
-    );
+    ) as ChymeRoomParticipant[];
 
     // Enrich participants with user data
     const participantsWithUsers = await Promise.all(
-      participants.map(async (participant) => {
+      (participants as ChymeRoomParticipant[]).map(async (participant) => {
         const user = await withDatabaseErrorHandling(
           () => storage.getUser(participant.userId),
           'getUser'
-        );
+        ) as User | undefined;
         return {
           ...participant,
           user: user ? {
@@ -363,7 +367,7 @@ export function registerChymeRoomsRoutes(app: Express) {
     const room = await withDatabaseErrorHandling(
       () => storage.getChymeRoom(roomId),
       'getChymeRoom'
-    );
+    ) as ChymeRoom | undefined;
 
     if (!room || !room.isActive) {
       return res.status(404).json({ message: "Room not found" });
@@ -390,7 +394,7 @@ export function registerChymeRoomsRoutes(app: Express) {
     const room = await withDatabaseErrorHandling(
       () => storage.getChymeRoom(roomId),
       'getChymeRoom'
-    );
+    ) as ChymeRoom | undefined;
 
     if (!room || !room.isActive) {
       return res.status(404).json({ message: "Room not found" });
@@ -412,7 +416,7 @@ export function registerChymeRoomsRoutes(app: Express) {
     const room = await withDatabaseErrorHandling(
       () => storage.getChymeRoom(roomId),
       'getChymeRoom'
-    );
+    ) as ChymeRoom | undefined;
 
     if (!room || !room.isActive) {
       return res.status(404).json({ message: "Room not found" });
@@ -446,7 +450,7 @@ export function registerChymeRoomsRoutes(app: Express) {
     const room = await withDatabaseErrorHandling(
       () => storage.getChymeRoom(roomId),
       'getChymeRoom'
-    );
+    ) as ChymeRoom | undefined;
 
     if (!room || !room.isActive) {
       return res.status(404).json({ message: "Room not found" });
@@ -457,7 +461,7 @@ export function registerChymeRoomsRoutes(app: Express) {
     const currentUser = await withDatabaseErrorHandling(
       () => storage.getUser(currentUserId),
       'getUser'
-    );
+    ) as User | undefined;
     const isAdmin = currentUser?.isAdmin || false;
 
     if (!isCreator && !isAdmin) {
@@ -496,7 +500,7 @@ export function registerChymeRoomsRoutes(app: Express) {
     const room = await withDatabaseErrorHandling(
       () => storage.getChymeRoom(roomId),
       'getChymeRoom'
-    );
+    ) as ChymeRoom | undefined;
 
     if (!room || !room.isActive) {
       return res.status(404).json({ message: "Room not found" });
@@ -507,7 +511,7 @@ export function registerChymeRoomsRoutes(app: Express) {
     const currentUser = await withDatabaseErrorHandling(
       () => storage.getUser(currentUserId),
       'getUser'
-    );
+    ) as User | undefined;
     const isAdmin = currentUser?.isAdmin || false;
 
     if (!isCreator && !isAdmin) {
@@ -540,7 +544,7 @@ export function registerChymeRoomsRoutes(app: Express) {
     const targetUser = await withDatabaseErrorHandling(
       () => storage.getUser(targetUserId),
       'getUser'
-    );
+    ) as User | undefined;
 
     if (!targetUser) {
       return res.status(404).json({ message: "User not found" });
@@ -580,7 +584,7 @@ export function registerChymeRoomsRoutes(app: Express) {
     const targetUser = await withDatabaseErrorHandling(
       () => storage.getUser(targetUserId),
       'getUser'
-    );
+    ) as User | undefined;
 
     if (!targetUser) {
       return res.status(404).json({ message: "User not found" });
@@ -665,7 +669,7 @@ export function registerChymeRoomsRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.deactivateChymeAnnouncement(req.params.id),
       'deactivateChymeAnnouncement'
-    );
+    ) as ChymeAnnouncement;
     
     await logAdminAction(
       userId,

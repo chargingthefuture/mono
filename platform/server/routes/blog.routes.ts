@@ -20,8 +20,8 @@ import {
   insertGentlepulseAnnouncementSchema,
   type BlogPost,
   type BlogAnnouncement,
-  type GentlePulseMeditation,
-  type GentlePulseAnnouncement,
+  type GentlepulseMeditation,
+  type GentlepulseAnnouncement,
 } from "@shared/schema";
 
 export function registerBlogRoutes(app: Express) {
@@ -203,7 +203,7 @@ export function registerBlogRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.deactivateBlogAnnouncement(req.params.id),
       'deactivateBlogAnnouncement'
-    );
+    ) as BlogAnnouncement;
 
     await logAdminAction(
       userId,
@@ -233,7 +233,7 @@ export function registerBlogRoutes(app: Express) {
     const meditation = await withDatabaseErrorHandling(
       () => storage.createGentlepulseMeditation(validatedData),
       'createGentlepulseMeditation'
-    ) as GentlePulseMeditation;
+    ) as GentlepulseMeditation;
     
     await logAdminAction(
       userId,
@@ -261,7 +261,7 @@ export function registerBlogRoutes(app: Express) {
     const meditation = await withDatabaseErrorHandling(
       () => storage.updateGentlepulseMeditation(req.params.id, body),
       'updateGentlepulseMeditation'
-    ) as GentlePulseMeditation;
+    ) as GentlepulseMeditation;
     
     await logAdminAction(
       userId,
@@ -290,7 +290,7 @@ export function registerBlogRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.createGentlepulseAnnouncement(validatedData),
       'createGentlepulseAnnouncement'
-    ) as GentlePulseAnnouncement;
+    ) as GentlepulseAnnouncement;
     
     await logAdminAction(
       userId,
@@ -309,7 +309,7 @@ export function registerBlogRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.updateGentlepulseAnnouncement(req.params.id, validatedData),
       'updateGentlepulseAnnouncement'
-    ) as GentlePulseAnnouncement;
+    ) as GentlepulseAnnouncement;
     
     await logAdminAction(
       userId,
@@ -327,7 +327,7 @@ export function registerBlogRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.deactivateGentlepulseAnnouncement(req.params.id),
       'deactivateGentlepulseAnnouncement'
-    );
+    ) as GentlepulseAnnouncement;
     
     await logAdminAction(
       userId,

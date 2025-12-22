@@ -22,6 +22,7 @@ import {
   insertReportSchema,
   insertSupportmatchAnnouncementSchema,
   type User,
+  type Partnership,
 } from "@shared/schema";
 
 export function registerChatGroupsRoutes(app: Express) {
@@ -334,7 +335,7 @@ export function registerChatGroupsRoutes(app: Express) {
         const user = await withDatabaseErrorHandling(
           () => storage.getUser(userId),
           'getUserForSupportMatchAdminProfiles'
-        );
+        ) as User | undefined;
         if (user) {
           userFirstName = user.firstName || null;
         }
@@ -402,7 +403,7 @@ export function registerChatGroupsRoutes(app: Express) {
     const partnership = await withDatabaseErrorHandling(
       () => storage.updatePartnershipStatus(req.params.id, status),
       'updatePartnershipStatus'
-    );
+    ) as Partnership;
     await logAdminAction(
       userId,
       "update_partnership_status",

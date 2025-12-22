@@ -16,8 +16,11 @@ import { logAdminAction } from "./shared";
 import { z } from "zod";
 import {
   insertLostmailIncidentSchema,
-    insertLostmailAnnouncementSchema,
-    insertLostmailAuditTrailSchema,
+  insertLostmailAnnouncementSchema,
+  insertLostmailAuditTrailSchema,
+  type LostmailIncident,
+  type LostmailAnnouncement,
+  type User,
 } from "@shared/schema";
 
 export function registerLostMailRoutes(app: Express) {
@@ -41,7 +44,7 @@ export function registerLostMailRoutes(app: Express) {
     const incident = await withDatabaseErrorHandling(
       () => storage.createLostmailIncident(validatedData),
       'createLostmailIncident'
-    );
+    ) as LostmailIncident;
     
     logInfo(`LostMail incident created: ${incident.id} by ${incident.reporterEmail}`, req);
     
@@ -84,7 +87,7 @@ export function registerLostMailRoutes(app: Express) {
     const incident = await withDatabaseErrorHandling(
       () => storage.getLostmailIncidentById(req.params.id),
       'getLostmailIncidentById'
-    );
+    ) as LostmailIncident | undefined;
     if (!incident) {
       throw new NotFoundError('Incident', req.params.id);
     }
@@ -116,7 +119,7 @@ export function registerLostMailRoutes(app: Express) {
     const adminUser = await withDatabaseErrorHandling(
       () => storage.getUser(userId),
       'getUser'
-    );
+    ) as User | undefined;
     const adminName = adminUser ? `${adminUser.firstName} ${adminUser.lastName}` : "Admin";
     
     // Track status change in audit trail
@@ -204,7 +207,7 @@ export function registerLostMailRoutes(app: Express) {
       const result = await withDatabaseErrorHandling(
         () => storage.getLostmailIncidents({ limit: 1000 }),
         'getLostmailIncidents'
-      );
+      ) as { incidents: LostmailIncident[] };
       incidents = result.incidents;
     }
     
@@ -254,7 +257,7 @@ export function registerLostMailRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.createLostmailAnnouncement(validatedData),
       'createLostmailAnnouncement'
-    );
+    ) as LostmailAnnouncement;
     
     await logAdminAction(
       userId,
@@ -273,7 +276,7 @@ export function registerLostMailRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.updateLostmailAnnouncement(req.params.id, validatedData as any),
       'updateLostmailAnnouncement'
-    );
+    ) as LostmailAnnouncement;
     
     await logAdminAction(
       userId,
@@ -291,7 +294,7 @@ export function registerLostMailRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.deactivateLostmailAnnouncement(req.params.id),
       'deactivateLostmailAnnouncement'
-    );
+    ) as LostmailAnnouncement;
     
     await logAdminAction(
       userId,
