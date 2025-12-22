@@ -54,7 +54,7 @@ app.use((req, res, next) => {
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net https://*.clerk.accounts.dev https://*.clerk.com https://clerk.app.chargingthefuture.com https://*.app.chargingthefuture.com https://*.the-comic.com", // Clerk styles + OpenDyslexic font
     "font-src 'self' https://fonts.gstatic.com https://cdn.jsdelivr.net https://*.clerk.accounts.dev https://*.clerk.com https://clerk.app.chargingthefuture.com https://*.app.chargingthefuture.com https://*.the-comic.com", // Clerk fonts + OpenDyslexic font files
     "img-src 'self' data: https:",
-    "connect-src 'self' wss: ws: https://*.clerk.accounts.dev https://*.clerk.com https://clerk.app.chargingthefuture.com https://*.app.chargingthefuture.com https://*.the-comic.com https://api.stripe.com https://*.basemaps.cartocdn.com", // Clerk API calls + Stripe API + CartoCDN basemaps
+    "connect-src 'self' wss: ws: https://*.clerk.accounts.dev https://*.clerk.com https://clerk.app.chargingthefuture.com https://*.app.chargingthefuture.com https://*.the-comic.com https://api.stripe.com https://*.basemaps.cartocdn.com https://*.ingest.sentry.io", // Clerk API calls + Stripe API + CartoCDN basemaps + Sentry error reporting
     "frame-src 'self' https://*.clerk.accounts.dev https://*.clerk.com https://clerk.app.chargingthefuture.com https://*.app.chargingthefuture.com https://*.the-comic.com https://js.stripe.com", // Clerk iframes for auth + Stripe Elements
     "frame-ancestors 'none'", // Prevents clickjacking
   ].join('; ');
