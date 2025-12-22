@@ -17,10 +17,10 @@ export default defineConfig({
   forbidOnly: !!process.env.CI,
   /* Retry on CI only - reduced to 1 to prevent timeout */
   retries: process.env.CI ? 1 : 0,
-  /* Run tests in parallel on CI - use environment variable or default to 2 */
+  /* Run tests in parallel - increased workers for faster execution */
   workers: process.env.PLAYWRIGHT_WORKERS 
     ? parseInt(process.env.PLAYWRIGHT_WORKERS, 10) 
-    : process.env.CI ? 2 : undefined,
+    : process.env.CI ? 4 : undefined, // Increased from 2 to 4 for CI
   /* Reporter to use. See https://playwright.dev/docs/test-reporters */
   reporter: [
     ['html'],
@@ -32,17 +32,17 @@ export default defineConfig({
     baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:5000',
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
-    /* Increase timeout for CI environments where things may be slower */
-    actionTimeout: process.env.CI ? 30000 : 10000,
-    navigationTimeout: process.env.CI ? 60000 : 30000,
+    /* Optimized timeouts - reduced for faster test execution */
+    actionTimeout: process.env.CI ? 15000 : 5000, // Reduced from 30s/10s to 15s/5s
+    navigationTimeout: process.env.CI ? 30000 : 15000, // Reduced from 60s/30s to 30s/15s
   },
   
-  /* Global timeout for each test */
-  timeout: process.env.CI ? 120000 : 30000,
+  /* Global timeout for each test - reduced for faster feedback */
+  timeout: process.env.CI ? 60000 : 20000, // Reduced from 120s/30s to 60s/20s
   
-  /* Expect timeout */
+  /* Expect timeout - reduced for faster feedback */
   expect: {
-    timeout: process.env.CI ? 10000 : 5000,
+    timeout: process.env.CI ? 5000 : 3000, // Reduced from 10s/5s to 5s/3s
   },
 
   /* Configure projects for major browsers */
