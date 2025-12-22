@@ -533,6 +533,7 @@ CREATE TABLE IF NOT EXISTS nps_responses (
   id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id VARCHAR NOT NULL REFERENCES users(id),
   score INTEGER NOT NULL,
+  feedback TEXT,
   response_month VARCHAR(7) NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );
