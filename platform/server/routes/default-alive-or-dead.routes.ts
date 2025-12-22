@@ -10,7 +10,7 @@ import { publicListingLimiter, publicItemLimiter } from "../rateLimiter";
 import { asyncHandler } from "../errorHandler";
 import { validateWithZod } from "../validationErrorFormatter";
 import { withDatabaseErrorHandling } from "../databaseErrorHandler";
-import { NotFoundError } from "../errors";
+import { NotFoundError, ValidationError } from "../errors";
 import { logAdminAction } from "./shared";
 import { z } from "zod";
 import {
@@ -178,8 +178,4 @@ export function registerDefaultAliveOrDeadRoutes(app: Express) {
     );
     res.json({ message: "Current funding updated successfully", currentFunding });
   }));
-
-  const httpServer = createServer(app);
-  return httpServer;
-
 }
