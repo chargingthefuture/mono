@@ -353,12 +353,16 @@ export {
   lostmailIncidentsRelations,
   lostmailAuditTrail,
   lostmailAuditTrailRelations,
+  lostmailAnnouncements,
   insertLostmailIncidentSchema,
   insertLostmailAuditTrailSchema,
+  insertLostmailAnnouncementSchema,
   type InsertLostmailIncident,
   type LostmailIncident,
   type InsertLostmailAuditTrail,
   type LostmailAuditTrail,
+  type InsertLostmailAnnouncement,
+  type LostmailAnnouncement,
 } from "./schema/lostmail";
 
 // ========================================
