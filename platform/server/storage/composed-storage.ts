@@ -9,7 +9,7 @@
  * full type safety and all functionality.
  */
 
-import { IStorage } from './types';
+import type { IStorage } from './types/index';
 import { CoreStorage } from './core';
 import { CoreStorageComposed } from './composed/core-storage-composed';
 import { MiniAppsStorageComposed } from './composed/mini-apps-storage-composed';

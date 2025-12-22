@@ -7,7 +7,7 @@
 
 // Export the composed storage class and interface
 export { DatabaseStorage, storage } from './composed-storage';
-export { IStorage } from './types';
+export type { IStorage } from './types/index';
 
 // Re-export individual modules for direct access if needed
 export { CoreStorage } from './core';
