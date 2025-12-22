@@ -21,6 +21,7 @@ import {
   insertDirectoryProfileSchema,
   insertDirectorySkillSchema,
   type User,
+  type DirectoryProfile,
 } from "@shared/schema";
 
 export function registerDirectoryRoutes(app: Express) {
@@ -30,7 +31,7 @@ export function registerDirectoryRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.getDirectoryProfileByUserId(userId),
       'getDirectoryProfileByUserId'
-    );
+    ) as DirectoryProfile | null;
     if (!profile) {
       return res.json(null);
     }
@@ -45,7 +46,7 @@ export function registerDirectoryRoutes(app: Express) {
       const user = await withDatabaseErrorHandling(
         () => storage.getUser(userId),
         'getUserForDirectoryProfile'
-      );
+      ) as User | null;
       if (user) {
         // Handle empty strings as null
         userFirstName = (user.firstName && user.firstName.trim()) || null;
@@ -97,7 +98,7 @@ export function registerDirectoryRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.getDirectoryProfileByUserId(userId),
       'getDirectoryProfileByUserId'
-    );
+    ) as DirectoryProfile | null;
     if (!profile) return res.status(404).json({ message: "Profile not found" });
 
     // Do not allow changing userId/isClaimed directly
@@ -127,7 +128,7 @@ export function registerDirectoryRoutes(app: Express) {
       const skills = await withDatabaseErrorHandling(
         () => storage.getAllSkillsFlattened(),
         'getAllSkillsFlattened'
-      );
+      ) as Array<{ id: string; name: string }>;
       // Format as DirectorySkill[] for backward compatibility
       const formatted = skills.map(s => ({ id: s.id, name: s.name }));
       
@@ -155,7 +156,7 @@ export function registerDirectoryRoutes(app: Express) {
       const sectors = await withDatabaseErrorHandling(
         () => storage.getAllSkillsSectors(),
         'getAllSkillsSectors'
-      );
+      ) as Array<{ id: string; name: string }>;
       // Format as { id, name }[] for Directory app compatibility
       const formatted = sectors.map(s => ({ id: s.id, name: s.name }));
       
@@ -199,7 +200,7 @@ export function registerDirectoryRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.getDirectoryProfileById(req.params.id),
       'getDirectoryProfileById'
-    );
+    ) as DirectoryProfile | null;
     if (!profile || !profile.isPublic) {
       return res.status(404).json({ message: "Profile not found" });
     }
@@ -213,7 +214,7 @@ export function registerDirectoryRoutes(app: Express) {
       const user = await withDatabaseErrorHandling(
         () => storage.getUser(profile.userId!),
         'getUserForPublicDirectoryProfile'
-      );
+      ) as User | null;
       if (user) {
         // Handle empty strings as null
         userFirstName = (user.firstName && user.firstName.trim()) || null;
@@ -254,7 +255,7 @@ export function registerDirectoryRoutes(app: Express) {
     const profiles = await withDatabaseErrorHandling(
       () => storage.listPublicDirectoryProfiles(),
       'listPublicDirectoryProfiles'
-    );
+    ) as DirectoryProfile[];
     const withNames = await Promise.all(profiles.map(async (p) => {
       let name: string | null = null;
       let userIsVerified = false;
@@ -267,7 +268,7 @@ export function registerDirectoryRoutes(app: Express) {
         const u = await withDatabaseErrorHandling(
           () => storage.getUser(userId),
           'getUserForPublicDirectoryList'
-        );
+        ) as User | null;
         if (u) {
           // Handle empty strings as null
           userFirstName = (u.firstName && u.firstName.trim()) || null;
@@ -323,7 +324,7 @@ export function registerDirectoryRoutes(app: Express) {
     const profiles = await withDatabaseErrorHandling(
       () => storage.listAllDirectoryProfiles(),
       'listAllDirectoryProfiles'
-    );
+    ) as DirectoryProfile[];
     const withNames = await Promise.all(profiles.map(async (p) => {
       let name: string | null = null;
       let userIsVerified = false;
@@ -331,13 +332,13 @@ export function registerDirectoryRoutes(app: Express) {
       let userLastName: string | null = null;
       
       // Fetch user data once if userId exists
-      let user: any = null;
+      let user: User | null = null;
       if (p.userId) {
         const userId = p.userId;
         user = await withDatabaseErrorHandling(
           () => storage.getUser(userId),
           'getUserForDirectoryList'
-        );
+        ) as User | null;
         if (user) {
           userFirstName = user.firstName || null;
           userLastName = user.lastName || null;
@@ -379,7 +380,7 @@ export function registerDirectoryRoutes(app: Express) {
     const profiles = await withDatabaseErrorHandling(
       () => storage.listAllDirectoryProfiles(),
       'listAllDirectoryProfiles'
-    );
+    ) as DirectoryProfile[];
     // Enrich profiles with user data (firstName, lastName) like /api/directory/list does
     const withNames = await Promise.all(profiles.map(async (p) => {
       let name: string | null = null;
@@ -388,12 +389,12 @@ export function registerDirectoryRoutes(app: Express) {
       let userLastName: string | null = null;
       
       // Fetch user data once if userId exists
-      let user: any = null;
+      let user: User | null = null;
       if (p.userId) {
         user = await withDatabaseErrorHandling(
           () => storage.getUser(p.userId!),
           'getUserForDirectoryAdmin'
-        );
+        ) as User | null;
         if (user) {
           userFirstName = user.firstName || null;
           userLastName = user.lastName || null;
@@ -435,7 +436,7 @@ export function registerDirectoryRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.createDirectoryProfile(validated),
       'createDirectoryProfile'
-    );
+    ) as DirectoryProfile;
     await logAdminAction(adminId, 'create_directory_profile', 'directory_profile', profile.id, { isClaimed: profile.isClaimed });
     res.json(profile);
   }));
@@ -450,7 +451,7 @@ export function registerDirectoryRoutes(app: Express) {
     const updated = await withDatabaseErrorHandling(
       () => storage.updateDirectoryProfile(req.params.id, { userId, isClaimed: true } as any),
       'assignDirectoryProfile'
-    );
+    ) as DirectoryProfile;
     await logAdminAction(adminId, 'assign_directory_profile', 'directory_profile', updated.id, { userId });
     res.json(updated);
   }));
@@ -462,7 +463,7 @@ export function registerDirectoryRoutes(app: Express) {
     const updated = await withDatabaseErrorHandling(
       () => storage.updateDirectoryProfile(req.params.id, validated),
       'updateDirectoryProfile'
-    );
+    ) as DirectoryProfile;
     await logAdminAction(adminId, 'update_directory_profile', 'directory_profile', updated.id);
     res.json(updated);
   }));
@@ -479,7 +480,7 @@ export function registerDirectoryRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.getDirectoryProfileById(profileId),
       'getDirectoryProfileById'
-    );
+    ) as DirectoryProfile | null;
     
     if (!profile) {
       return res.status(404).json({ message: 'Profile not found' });
@@ -512,7 +513,7 @@ export function registerDirectoryRoutes(app: Express) {
     const skills = await withDatabaseErrorHandling(
       () => storage.getAllSkillsFlattened(),
       'getAllSkillsFlattened'
-    );
+    ) as Array<{ id: string; name: string }>;
     // Format as DirectorySkill[] for backward compatibility
     const formatted = skills.map(s => ({ id: s.id, name: s.name }));
     res.json(formatted);

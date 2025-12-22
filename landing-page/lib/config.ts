@@ -13,7 +13,6 @@ export const config = {
     githubReleases: "https://github.com/chargingthefuture/mono/releases/",
     discourse: "https://chargingthefuture.discourse.group",
     signalGroup: "https://signal.group/#CjQKILHj7074l2Kl-oYy0qGSFdydXbtu0Pf66Z_88K9IlSCtEhDDdqV_BFAW2qm2EiTGEaNs",
-    statusPage: "https://chargingthefuture.github.io/mono/",
     terms: "https://app.chargingthefuture.com/terms",
     privacy: "https://app.chargingthefuture.com/privacy",
   },

@@ -18,6 +18,9 @@ import { logInfo, logWarning, logError } from "../errorLogger";
 import { z } from "zod";
 import {
   insertChymeAnnouncementSchema,
+  type ChymeAnnouncement,
+  type User,
+  type OTPCode,
 } from "@shared/schema";
 
 export function registerChymeRoutes(app: Express) {
@@ -48,7 +51,7 @@ export function registerChymeRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.createChymeAnnouncement(validatedData),
       'createChymeAnnouncement'
-    );
+    ) as ChymeAnnouncement;
     
     await logAdminAction(
       userId,
@@ -66,7 +69,7 @@ export function registerChymeRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.updateChymeAnnouncement(req.params.id, req.body),
       'updateChymeAnnouncement'
-    );
+    ) as ChymeAnnouncement;
     
     await logAdminAction(
       userId,
@@ -88,7 +91,7 @@ export function registerChymeRoutes(app: Express) {
     const user = await withDatabaseErrorHandling(
       () => storage.getUser(userId),
       'getUserForOTP'
-    );
+    ) as User | null;
     
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -138,7 +141,7 @@ export function registerChymeRoutes(app: Express) {
     const otpRecord = await withDatabaseErrorHandling(
       () => storage.findOTPCodeByCode(otp),
       'findOTPCodeByCode'
-    );
+    ) as OTPCode | null;
     
     if (!otpRecord) {
       logWarning(`[OTP Validation] No matching OTP found. Received: "${otp}"`, req);
@@ -165,7 +168,7 @@ export function registerChymeRoutes(app: Express) {
     const user = await withDatabaseErrorHandling(
       () => storage.getUser(userId!),
       'getUserForOTPValidation'
-    );
+    ) as User | null;
     
     if (!user) {
       return res.status(404).json({ message: "User not found" });
@@ -247,7 +250,7 @@ export function registerChymeRoutes(app: Express) {
       const user = await withDatabaseErrorHandling(
         () => storage.getUser(userId),
         'getUserForMobileAuthRedirect'
-      );
+      ) as User | null;
       
       if (!user) {
         return next();
@@ -299,7 +302,7 @@ export function registerChymeRoutes(app: Express) {
     const user = await withDatabaseErrorHandling(
       () => storage.getUser(userId),
       'getUserForMobileAuth'
-    );
+    ) as User | null;
     
     if (!user) {
       return res.status(404).json({ message: "User not found" });

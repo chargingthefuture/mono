@@ -21,6 +21,12 @@ import {
   insertSocketrelayProfileSchema,
   insertSocketrelayAnnouncementSchema,
   insertDirectoryAnnouncementSchema,
+  type SocketrelayProfile,
+  type SocketrelayRequest,
+  type SocketrelayFulfillment,
+  type SocketrelayAnnouncement,
+  type DirectoryAnnouncement,
+  type User,
 } from "@shared/schema";
 
 export function registerSocketRelayRoutes(app: Express) {
@@ -32,7 +38,7 @@ export function registerSocketRelayRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.getSocketrelayProfile(userId),
       'getSocketrelayProfile'
-    );
+    ) as SocketrelayProfile | null;
     if (!profile) {
       return res.json(null);
     }
@@ -40,7 +46,7 @@ export function registerSocketRelayRoutes(app: Express) {
     const user = await withDatabaseErrorHandling(
       () => storage.getUser(userId),
       'getUserVerificationForSocketrelayProfile'
-    );
+    ) as User | null;
     const userIsVerified = user?.isVerified || false;
     const userFirstName = user?.firstName || null;
     res.json({ ...profile, userIsVerified, firstName: userFirstName });
@@ -56,7 +62,7 @@ export function registerSocketRelayRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.createSocketrelayProfile(validatedData),
       'createSocketrelayProfile'
-    );
+    ) as SocketrelayProfile;
     res.json(profile);
   }));
 
@@ -153,18 +159,18 @@ export function registerSocketRelayRoutes(app: Express) {
     const requests = await withDatabaseErrorHandling(
       () => storage.listPublicSocketrelayRequests(),
       'listPublicSocketrelayRequests'
-    );
+    ) as SocketrelayRequest[];
     
     // Enrich requests with creator info
     const enrichedRequests = await Promise.all(requests.map(async (request) => {
       const creatorProfile = await withDatabaseErrorHandling(
         () => storage.getSocketrelayProfile(request.userId),
         'getSocketrelayProfile'
-      );
+      ) as SocketrelayProfile | null;
       const creator = await withDatabaseErrorHandling(
         () => storage.getUser(request.userId),
         'getUser'
-      );
+      ) as User | null;
 
       // Build a display name from the creator's first and last name, if available
       let displayName: string | null = null;
@@ -204,7 +210,7 @@ export function registerSocketRelayRoutes(app: Express) {
     const request = await withDatabaseErrorHandling(
       () => storage.getPublicSocketrelayRequestById(req.params.id),
       'getPublicSocketrelayRequestById'
-    );
+    ) as SocketrelayRequest | null;
     if (!request) {
       throw new NotFoundError('Request', req.params.id);
     }
@@ -213,12 +219,12 @@ export function registerSocketRelayRoutes(app: Express) {
     const creatorProfile = await withDatabaseErrorHandling(
       () => storage.getSocketrelayProfile(request.userId),
       'getSocketrelayProfile'
-    );
+    ) as SocketrelayProfile | null;
     const userId = request.userId;
     const creator = await withDatabaseErrorHandling(
       () => storage.getUser(userId),
       'getUser'
-    );
+    ) as User | null;
     
     // Build display name from firstName and lastName
     let displayName: string | null = null;
@@ -255,7 +261,7 @@ export function registerSocketRelayRoutes(app: Express) {
     const request = await withDatabaseErrorHandling(
       () => storage.getSocketrelayRequestById(requestId),
       'getSocketrelayRequestById'
-    );
+    ) as SocketrelayRequest | null;
     if (!request) {
       throw new NotFoundError('Request', requestId);
     }
@@ -277,7 +283,7 @@ export function registerSocketRelayRoutes(app: Express) {
     const fulfillment = await withDatabaseErrorHandling(
       () => storage.createSocketrelayFulfillment(requestId, userId),
       'createSocketrelayFulfillment'
-    );
+    ) as SocketrelayFulfillment;
     res.json(fulfillment);
   }));
 
@@ -289,7 +295,7 @@ export function registerSocketRelayRoutes(app: Express) {
     const request = await withDatabaseErrorHandling(
       () => storage.repostSocketrelayRequest(requestId, userId),
       'repostSocketrelayRequest'
-    );
+    ) as SocketrelayRequest;
     res.json(request);
   }));
 
@@ -299,7 +305,7 @@ export function registerSocketRelayRoutes(app: Express) {
     const fulfillment = await withDatabaseErrorHandling(
       () => storage.getSocketrelayFulfillmentById(req.params.id),
       'getSocketrelayFulfillmentById'
-    );
+    ) as SocketrelayFulfillment | null;
     
     if (!fulfillment) {
       throw new NotFoundError('Fulfillment', req.params.id);
@@ -309,7 +315,7 @@ export function registerSocketRelayRoutes(app: Express) {
     const request = await withDatabaseErrorHandling(
       () => storage.getSocketrelayRequestById(fulfillment.requestId),
       'getSocketrelayRequestById'
-    );
+    ) as SocketrelayRequest | null;
     if (!request) {
       throw new NotFoundError('Request', fulfillment.requestId);
     }
@@ -343,7 +349,7 @@ export function registerSocketRelayRoutes(app: Express) {
     const fulfillment = await withDatabaseErrorHandling(
       () => storage.getSocketrelayFulfillmentById(req.params.id),
       'getSocketrelayFulfillmentById'
-    );
+    ) as SocketrelayFulfillment | null;
     if (!fulfillment) {
       throw new NotFoundError('Fulfillment', req.params.id);
     }
@@ -352,7 +358,7 @@ export function registerSocketRelayRoutes(app: Express) {
     const request = await withDatabaseErrorHandling(
       () => storage.getSocketrelayRequestById(fulfillment.requestId),
       'getSocketrelayRequestById'
-    );
+    ) as SocketrelayRequest | null;
     if (!request) {
       throw new NotFoundError('Request', fulfillment.requestId);
     }
@@ -364,7 +370,7 @@ export function registerSocketRelayRoutes(app: Express) {
     const updated = await withDatabaseErrorHandling(
       () => storage.closeSocketrelayFulfillment(req.params.id, userId, status),
       'closeSocketrelayFulfillment'
-    );
+    ) as SocketrelayFulfillment;
     
     // Update request status to closed
     await withDatabaseErrorHandling(
@@ -500,7 +506,7 @@ export function registerSocketRelayRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.createSocketrelayAnnouncement(validatedData),
       'createSocketrelayAnnouncement'
-    );
+    ) as SocketrelayAnnouncement;
     
     await logAdminAction(
       userId,
@@ -519,7 +525,7 @@ export function registerSocketRelayRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.updateSocketrelayAnnouncement(req.params.id, validatedData),
       'updateSocketrelayAnnouncement'
-    );
+    ) as SocketrelayAnnouncement;
     
     await logAdminAction(
       userId,
@@ -537,7 +543,7 @@ export function registerSocketRelayRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.deactivateSocketrelayAnnouncement(req.params.id),
       'deactivateSocketrelayAnnouncement'
-    );
+    ) as SocketrelayAnnouncement;
     
     await logAdminAction(
       userId,
@@ -574,7 +580,7 @@ export function registerSocketRelayRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.createDirectoryAnnouncement(validatedData),
       'createDirectoryAnnouncement'
-    );
+    ) as DirectoryAnnouncement;
     
     await logAdminAction(
       userId,
@@ -593,7 +599,7 @@ export function registerSocketRelayRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.updateDirectoryAnnouncement(req.params.id, validatedData),
       'updateDirectoryAnnouncement'
-    );
+    ) as DirectoryAnnouncement;
     
     await logAdminAction(
       userId,

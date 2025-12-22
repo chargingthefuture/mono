@@ -35,9 +35,8 @@ export function registerChymeRoomsRoutes(app: Express) {
     );
 
     // Add currentParticipants count to each room
-    const roomsArray = Array.isArray(rooms) ? rooms : [];
     const roomsWithCounts = await Promise.all(
-      roomsArray.map(async (room: any) => {
+      rooms.map(async (room) => {
         const count = await withDatabaseErrorHandling(
           () => storage.getChymeRoomParticipantCount(room.id),
           'getChymeRoomParticipantCount'
@@ -123,7 +122,7 @@ export function registerChymeRoomsRoutes(app: Express) {
     );
 
     res.status(201).json({
-      ...(room as any),
+      ...room,
       currentParticipants: 0,
     });
   }));
@@ -333,21 +332,20 @@ export function registerChymeRoomsRoutes(app: Express) {
     );
 
     // Enrich participants with user data
-    const participantsArray = Array.isArray(participants) ? participants : [];
     const participantsWithUsers = await Promise.all(
-      participantsArray.map(async (participant: any) => {
+      participants.map(async (participant) => {
         const user = await withDatabaseErrorHandling(
-          () => storage.getUser((participant as any).userId),
+          () => storage.getUser(participant.userId),
           'getUser'
-        ) as any;
+        );
         return {
-          ...(participant as any),
+          ...participant,
           user: user ? {
-            id: (user as any).id,
-            email: (user as any).email,
-            firstName: (user as any).firstName,
-            lastName: (user as any).lastName,
-            profileImageUrl: (user as any).profileImageUrl,
+            id: user.id,
+            email: user.email,
+            firstName: user.firstName,
+            lastName: user.lastName,
+            profileImageUrl: user.profileImageUrl,
             displayName: user.displayName,
             username: user.username,
           } : null,
