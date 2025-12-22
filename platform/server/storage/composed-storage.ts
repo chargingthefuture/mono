@@ -13,6 +13,7 @@ import { IStorage } from './types';
 import { CoreStorage } from './core';
 import { CoreStorageComposed } from './composed/core-storage-composed';
 import { MiniAppsStorageComposed } from './composed/mini-apps-storage-composed';
+import { NotFoundError } from '../errors';
 
 /**
  * Helper function to create delegation methods more compactly.
@@ -41,8 +42,8 @@ export class DatabaseStorage implements IStorage {
 
   constructor() {
     // Initialize composed storage modules
-    this.coreStorageComposed = new CoreStorageComposed();
     this.miniAppsStorageComposed = new MiniAppsStorageComposed();
+    this.coreStorageComposed = new CoreStorageComposed(this.miniAppsStorageComposed);
     
     // Initialize remaining storage modules (not yet in composed classes)
     this.coreStorage = new CoreStorage();
@@ -559,7 +560,7 @@ export class DatabaseStorage implements IStorage {
     // Verify user exists
     const user = await this.getUser(userId);
     if (!user) {
-      throw new Error("User not found");
+      throw new NotFoundError("User");
     }
 
     // Delete all mini-app profiles

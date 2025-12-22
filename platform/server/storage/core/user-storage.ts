@@ -162,7 +162,7 @@ export class UserStorage {
     }
     
     // All retries exhausted
-    throw new Error("User not found");
+    throw new NotFoundError("User");
   }
 
   async updateTermsAcceptance(userId: string): Promise<User> {
@@ -220,7 +220,7 @@ export class UserStorage {
     }
     
     // All retries exhausted
-    throw new Error("User not found");
+    throw new NotFoundError("User");
   }
 
   async updateUserName(userId: string, firstName: string | null, lastName: string | null): Promise<User> {
@@ -264,7 +264,7 @@ export class UserStorage {
     }
     
     // All retries exhausted
-    throw new Error("User not found");
+    throw new NotFoundError("User");
   }
 }
 

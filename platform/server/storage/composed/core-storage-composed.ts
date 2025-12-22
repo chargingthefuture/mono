@@ -6,12 +6,15 @@
 
 import type { ICoreStorage } from '../types/core-storage.interface';
 import { CoreStorage } from '../core';
+import type { MiniAppsStorageComposed } from './mini-apps-storage-composed';
 
 export class CoreStorageComposed implements ICoreStorage {
   private coreStorage: CoreStorage;
+  private miniAppsStorageComposed?: MiniAppsStorageComposed;
 
-  constructor() {
+  constructor(miniAppsStorageComposed?: MiniAppsStorageComposed) {
     this.coreStorage = new CoreStorage();
+    this.miniAppsStorageComposed = miniAppsStorageComposed;
   }
 
   // User operations
@@ -166,8 +169,10 @@ export class CoreStorageComposed implements ICoreStorage {
   // Helper methods for Weekly Performance Review
   // These are accessed via closure in getWeeklyPerformanceReview
   private async getDefaultAliveOrDeadEbitdaSnapshot(weekStart: Date) {
-    // This will be provided by the main DatabaseStorage class
-    throw new Error('getDefaultAliveOrDeadEbitdaSnapshot must be provided by DatabaseStorage');
+    if (!this.miniAppsStorageComposed) {
+      throw new Error('getDefaultAliveOrDeadEbitdaSnapshot requires miniAppsStorageComposed to be provided');
+    }
+    return this.miniAppsStorageComposed.getDefaultAliveOrDeadEbitdaSnapshot(weekStart);
   }
 }
 
