@@ -30,6 +30,7 @@ export function Footer() {
                 >
                   Access: Open source code
                 </a>
+              </li>
               <li>
                 <a href={config.links.signalGroup}
                   target="_blank"
