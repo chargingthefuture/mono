@@ -390,7 +390,7 @@ export function registerSocketRelayRoutes(app: Express) {
     const fulfillment = await withDatabaseErrorHandling(
       () => storage.getSocketrelayFulfillmentById(fulfillmentId),
       'getSocketrelayFulfillmentById'
-    );
+    ) as SocketrelayFulfillment | undefined;
     if (!fulfillment) {
       throw new NotFoundError('Fulfillment', fulfillmentId);
     }
@@ -428,7 +428,7 @@ export function registerSocketRelayRoutes(app: Express) {
     const fulfillment = await withDatabaseErrorHandling(
       () => storage.getSocketrelayFulfillmentById(fulfillmentId),
       'getSocketrelayFulfillmentById'
-    );
+    ) as SocketrelayFulfillment | undefined;
     if (!fulfillment) {
       throw new NotFoundError('Fulfillment', fulfillmentId);
     }

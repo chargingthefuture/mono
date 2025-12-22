@@ -20,10 +20,10 @@ import {
   insertReportSchema,
   insertSupportmatchAnnouncementSchema,
   type User,
-  type SupportmatchProfile,
-  type SupportmatchPartnership,
+  type SupportMatchProfile,
+  type Partnership,
   type SupportmatchAnnouncement,
-  type SupportmatchReport,
+  type Report,
 } from "@shared/schema";
 
 export function registerSupportMatchRoutes(app: Express) {
@@ -202,10 +202,10 @@ export function registerSupportMatchRoutes(app: Express) {
     const profiles = await withDatabaseErrorHandling(
       () => storage.getAllSupportMatchProfiles(),
       'getAllSupportMatchProfiles'
-    ) as SupportmatchProfile[];
+    ) as SupportMatchProfile[];
     
     // Enrich profiles with firstName from user table or profile's own firstName for unclaimed
-    const profilesWithNames = await Promise.all(profiles.map(async (profile: SupportmatchProfile) => {
+    const profilesWithNames = await Promise.all(profiles.map(async (profile: SupportMatchProfile) => {
       let userFirstName: string | null = null;
       if (profile.userId) {
         const userId = profile.userId;
@@ -230,7 +230,7 @@ export function registerSupportMatchRoutes(app: Express) {
     const partnerships = await withDatabaseErrorHandling(
       () => storage.getAllPartnerships(),
       'getAllPartnerships'
-    ) as SupportmatchPartnership[];
+    ) as Partnership[];
     
     // Get all unique user IDs
     const userIds = new Set<string>();
@@ -255,7 +255,7 @@ export function registerSupportMatchRoutes(app: Express) {
     const userMap = new Map(allUsers.map(u => [u.id, u]));
     
     // Enrich partnerships with firstName and lastName for both users
-    const partnershipsWithNames = partnerships.map((partnership: SupportmatchPartnership) => {
+    const partnershipsWithNames = partnerships.map((partnership: Partnership) => {
       const user1 = partnership.user1Id ? userMap.get(partnership.user1Id) : null;
       const user2 = partnership.user2Id ? userMap.get(partnership.user2Id) : null;
       
@@ -280,7 +280,7 @@ export function registerSupportMatchRoutes(app: Express) {
     const partnership = await withDatabaseErrorHandling(
       () => storage.updatePartnershipStatus(req.params.id, status),
       'updatePartnershipStatus'
-    ) as SupportmatchPartnership;
+    ) as Partnership;
     await logAdminAction(
       userId,
       "update_partnership_status",
@@ -296,7 +296,7 @@ export function registerSupportMatchRoutes(app: Express) {
     const partnerships = await withDatabaseErrorHandling(
       () => storage.createAlgorithmicMatches(),
       'createAlgorithmicMatches'
-    ) as SupportmatchPartnership[];
+    ) as Partnership[];
     await logAdminAction(
       userId,
       "run_algorithmic_matching",
@@ -327,7 +327,7 @@ export function registerSupportMatchRoutes(app: Express) {
     const report = await withDatabaseErrorHandling(
       () => storage.updateReportStatus(req.params.id, status, resolution),
       'updateReportStatus'
-    ) as SupportmatchReport;
+    ) as Report;
     await logAdminAction(
       userId,
       "update_report_status",

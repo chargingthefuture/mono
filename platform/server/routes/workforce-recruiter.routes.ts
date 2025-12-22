@@ -458,7 +458,7 @@ export function registerWorkforceRecruiterRoutes(app: Express) {
       // Sector breakdown
       csvRows.push('Sector Breakdown');
       csvRows.push('Sector,Target,Recruited,Percent');
-      report.sectorBreakdown.forEach(sector => {
+      report.sectorBreakdown.forEach((sector: { sector: string; target: number; recruited: number; percent: number }) => {
         csvRows.push(`${sector.sector},${sector.target},${sector.recruited},${sector.percent.toFixed(2)}%`);
       });
       csvRows.push('');
@@ -466,7 +466,7 @@ export function registerWorkforceRecruiterRoutes(app: Express) {
       // Skill level breakdown
       csvRows.push('Skill Level Breakdown');
       csvRows.push('Skill Level,Target,Recruited,Percent');
-      report.skillLevelBreakdown.forEach(skill => {
+      report.skillLevelBreakdown.forEach((skill: { skillLevel: string; target: number; recruited: number; percent: number }) => {
         csvRows.push(`${skill.skillLevel},${skill.target},${skill.recruited},${skill.percent.toFixed(2)}%`);
       });
       csvRows.push('');

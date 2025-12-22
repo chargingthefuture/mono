@@ -28,6 +28,7 @@ import {
   insertResearchAnnouncementSchema,
   type ResearchItem,
   type ResearchAnswer,
+  type ResearchComment,
   type ResearchAnnouncement,
   type User,
 } from "@shared/schema";
@@ -335,7 +336,7 @@ export function registerResearchRoutes(app: Express) {
   app.put('/api/comparenotes/comments/:id', isAuthenticated, asyncHandler(async (req: any, res) => {
     const userId = getUserId(req);
     const comment = await withDatabaseErrorHandling(
-      () => storage.getResearchComments({ researchItemId: undefined, answerId: undefined }).then(cs => cs.find(c => c.id === req.params.id)),
+      () => storage.getResearchComments({ researchItemId: undefined, answerId: undefined }).then((cs: ResearchComment[]) => cs.find((c: ResearchComment) => c.id === req.params.id)),
       'getResearchComments'
     ) as { id: string; userId: string } | null | undefined;
     
