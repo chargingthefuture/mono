@@ -98,9 +98,9 @@ export const authTokens = pgTable(
 );
 
 // Import for relations (will be set up after all modules are loaded)
-// Note: These use type imports to avoid circular dependencies at module load time
-import type { payments } from "./payments";
-import type { adminActionLogs } from "./admin";
+// Note: These are imported as values because Drizzle relations need the actual table objects
+import { payments } from "./payments";
+import { adminActionLogs } from "./admin";
 
 // Relations - Note: These reference modules that may not be loaded yet
 // They will be properly connected in the main schema index file
