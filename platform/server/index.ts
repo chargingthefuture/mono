@@ -5,6 +5,25 @@ import { resolve } from "path";
 config({ path: resolve(process.cwd(), ".env.local") });
 config({ path: resolve(process.cwd(), ".env") }); // Fallback to .env
 
+// CRITICAL: Map VITE_CLERK_PUBLISHABLE_KEY to CLERK_PUBLISHABLE_KEY before any Clerk imports
+// This ensures clerkClient and clerkMiddleware can access the publishable key
+// Clerk SDK requires CLERK_PUBLISHABLE_KEY for server-side operations
+if (!process.env.CLERK_PUBLISHABLE_KEY && process.env.VITE_CLERK_PUBLISHABLE_KEY) {
+  process.env.CLERK_PUBLISHABLE_KEY = process.env.VITE_CLERK_PUBLISHABLE_KEY;
+}
+
+// Validate that CLERK_PUBLISHABLE_KEY is set (after mapping)
+console.log("CLERK_PUBLISHABLE_KEY:", process.env.CLERK_PUBLISHABLE_KEY ? "SET" : "NOT SET");
+console.log("VITE_CLERK_PUBLISHABLE_KEY:", process.env.VITE_CLERK_PUBLISHABLE_KEY ? "SET" : "NOT SET");
+
+if (!process.env.CLERK_PUBLISHABLE_KEY) {
+  console.error("ERROR: CLERK_PUBLISHABLE_KEY is not set. Please set it in your environment variables.");
+  console.error("You can either:");
+  console.error("  1. Set CLERK_PUBLISHABLE_KEY directly in Railway");
+  console.error("  2. Set VITE_CLERK_PUBLISHABLE_KEY (which will be used as fallback)");
+  // Don't throw here - let Clerk middleware throw with its own error message
+}
+
 // Initialize Sentry BEFORE any other imports that might throw errors
 import { initSentry, setupConsoleLogging, Sentry } from "./sentry";
 initSentry();
@@ -37,14 +56,10 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser()); // Required for CSRF token cookies
 
 // Clerk middleware - must be before routes
-// Note: clerkMiddleware() reads from environment variables:
+// Note: CLERK_PUBLISHABLE_KEY is already set above (before any Clerk imports)
+// clerkMiddleware() reads from environment variables:
 // - CLERK_SECRET_KEY (required)
-// - CLERK_PUBLISHABLE_KEY (may be required by some Clerk SDK versions)
-// If VITE_CLERK_PUBLISHABLE_KEY is set but CLERK_PUBLISHABLE_KEY is not,
-// use the VITE_ version as fallback for server-side usage
-if (!process.env.CLERK_PUBLISHABLE_KEY && process.env.VITE_CLERK_PUBLISHABLE_KEY) {
-  process.env.CLERK_PUBLISHABLE_KEY = process.env.VITE_CLERK_PUBLISHABLE_KEY;
-}
+// - CLERK_PUBLISHABLE_KEY (required for some Clerk SDK versions)
 app.use(clerkMiddleware());
 
 // Security headers middleware
