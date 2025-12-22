@@ -396,15 +396,7 @@ export async function setupAuth(app: Express) {
       } catch (error: any) {
         // Log sync failures with structured logging
         const normalized = normalizeError(error);
-        logError(normalized, req);("Error syncing Clerk user to database in middleware:", {
-          userId: req.auth.userId,
-          error: error.message,
-          stack: error.stack,
-          code: error.code,
-          name: error.name,
-          timestamp: new Date().toISOString(),
-          path: req.path,
-        });
+        logError(normalized, req);
         
         // If it's a deleted user error, block the request
         if (error.message?.includes("deleted")) {
