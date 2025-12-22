@@ -1,6 +1,9 @@
 import { useState, useMemo } from "react";
 import Map, { Marker, Popup } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 type LocationWithCoords = {
   profile: {
@@ -23,6 +26,8 @@ type MapLibreMapInternalProps = {
 
 export default function MapLibreMapInternal({ locations }: MapLibreMapInternalProps) {
   const [selectedLocation, setSelectedLocation] = useState<LocationWithCoords | null>(null);
+  const [mapError, setMapError] = useState<string | null>(null);
+  const { handleError } = useErrorHandler({ showToast: true, toastTitle: "Map Error" });
 
   // Calculate bounds to fit all markers
   const bounds = useMemo(() => {
@@ -75,6 +80,20 @@ export default function MapLibreMapInternal({ locations }: MapLibreMapInternalPr
     };
   }, [bounds]);
 
+  if (mapError) {
+    return (
+      <div className="w-full h-full flex items-center justify-center p-4">
+        <Alert variant="destructive" className="max-w-md">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Map Error</AlertTitle>
+          <AlertDescription>
+            {mapError}. Please refresh the page or try again later.
+          </AlertDescription>
+        </Alert>
+      </div>
+    );
+  }
+
   return (
     <Map
       {...initialViewState}
@@ -105,7 +124,9 @@ export default function MapLibreMapInternal({ locations }: MapLibreMapInternalPr
       }}
       scrollZoom={true}
       onError={(e: any) => {
-        console.error("Map error:", e);
+        const errorMessage = e?.error?.message || "Failed to load map";
+        setMapError(errorMessage);
+        handleError(new Error(errorMessage), "Map Error");
       }}
       onMove={(evt: any) => {
         // Handle map movement if needed

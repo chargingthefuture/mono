@@ -42,6 +42,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useTheme } from "@/hooks/useTheme";
 import { useExternalLink } from "@/hooks/useExternalLink";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
 import { ExternalLink } from "lucide-react";
 
 const baseAdminMenuItems = [
@@ -298,6 +299,7 @@ export function AppSidebar() {
   const { isAdmin } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { openExternal, ExternalLinkDialog } = useExternalLink();
+  const { handleError } = useErrorHandler({ showToast: true, toastTitle: "Sign Out Error" });
   const clerk = useClerk();
   const { isMobile, setOpenMobile } = useSidebar();
 
@@ -316,7 +318,8 @@ export function AppSidebar() {
       // This ensures it uses the correct domain (custom domain if configured, or baseUrl)
       await clerk.signOut();
     } catch (error) {
-      console.error('Error signing out:', error);
+      // Log error to Sentry and show user-friendly message
+      handleError(error, "Sign Out Error");
       // Fallback: redirect to sign-in page
       const hostname = typeof window !== 'undefined' ? window.location.hostname : '';
       const isProduction = hostname.includes('app.chargingthefuture.com');

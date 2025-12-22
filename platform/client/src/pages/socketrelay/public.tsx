@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { MapPin, Clock, Copy, Check, ExternalLink } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
 import { useExternalLink } from "@/hooks/useExternalLink";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
 
 type PublicRequest = {
   id: string;
@@ -31,6 +32,7 @@ type PublicRequest = {
 export default function PublicSocketRelayRequest() {
   const { toast } = useToast();
   const { openExternal, ExternalLinkDialog } = useExternalLink();
+  const { handleError } = useErrorHandler({ showToast: false }); // UI handles error display
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   const { id } = useParams<{ id: string }>();
   
@@ -46,6 +48,7 @@ export default function PublicSocketRelayRequest() {
       });
       setTimeout(() => setCopiedUrl(null), 2000);
     } catch (error) {
+      handleError(error as Error, "Copy Error");
       toast({
         title: "Error",
         description: "Failed to copy link",
@@ -57,10 +60,22 @@ export default function PublicSocketRelayRequest() {
     queryKey: ["/api/socketrelay/public", id],
     queryFn: async () => {
       const res = await fetch(`/api/socketrelay/public/${id}`);
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        const errorText = await res.text();
+        const error = new Error(errorText || `Failed to load request: ${res.status} ${res.statusText}`);
+        handleError(error, "SocketRelay Error");
+        throw error;
+      }
       return await res.json();
     }
   });
+
+  // Log errors to Sentry when they occur
+  useEffect(() => {
+    if (error) {
+      handleError(error, "SocketRelay Error");
+    }
+  }, [error, handleError]);
 
   if (isLoading) {
     return (

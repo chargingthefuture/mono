@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { VerifiedBadge } from "@/components/verified-badge";
 import { MapPin, ArrowRight, Building2, ExternalLink } from "lucide-react";
 import { useExternalLink } from "@/hooks/useExternalLink";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
 import { DirectoryMap } from "@/components/directory/directory-map";
 
 type PublicDirectoryProfile = {
@@ -47,16 +49,29 @@ function getPublicFirstName(profile: PublicDirectoryProfile): string {
 export default function PublicDirectoryList() {
   const [, setLocation] = useLocation();
   const { openExternal, ExternalLinkDialog } = useExternalLink();
+  const { handleError } = useErrorHandler({ showToast: false }); // UI handles error display
 
   const { data: profiles = [], isLoading, error } = useQuery<PublicDirectoryProfile[]>({
     queryKey: ["/api/directory/public"],
     queryFn: async () => {
       const res = await fetch("/api/directory/public");
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        const errorText = await res.text();
+        const error = new Error(errorText || `Failed to load directory: ${res.status} ${res.statusText}`);
+        handleError(error, "Directory Error");
+        throw error;
+      }
       const data = await res.json();
       return data;
     }
   });
+
+  // Log errors to Sentry when they occur
+  useEffect(() => {
+    if (error) {
+      handleError(error, "Directory Error");
+    }
+  }, [error, handleError]);
 
   const handleSignUp = () => {
     setLocation("/");

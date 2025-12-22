@@ -4,13 +4,14 @@
 
 import express, { type Express } from "express";
 import { storage } from "../storage";
-import { isAuthenticated, isAdmin, isAdminWithCsrf, getUserId } from "../auth";
+import { isAuthenticated, isAdmin, isAdminWithCsrf, getUserId, isUserAdmin } from "../auth";
 import { validateCsrfToken } from "../csrf";
 import { publicListingLimiter, publicItemLimiter } from "../rateLimiter";
 import { asyncHandler } from "../errorHandler";
 import { validateWithZod } from "../validationErrorFormatter";
 import { withDatabaseErrorHandling } from "../databaseErrorHandler";
 import { NotFoundError } from "../errors";
+import { logInfo, logWarning } from "../errorLogger";
 import { logAdminAction } from "./shared";
 import { z } from "zod";
 import {

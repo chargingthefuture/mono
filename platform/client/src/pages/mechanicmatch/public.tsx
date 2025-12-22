@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +8,7 @@ import { ExternalLink, Copy, Check, MapPin, Star, DollarSign, Wrench, Clock, Awa
 import { VerifiedBadge } from "@/components/verified-badge";
 import { useToast } from "@/hooks/use-toast";
 import { useExternalLink } from "@/hooks/useExternalLink";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
 import type { MechanicmatchProfile } from "@shared/schema";
 
 type PublicMechanicMatchProfile = MechanicmatchProfile & {
@@ -18,6 +19,7 @@ type PublicMechanicMatchProfile = MechanicmatchProfile & {
 export default function PublicMechanicMatchProfile() {
   const { toast } = useToast();
   const { openExternal, ExternalLinkDialog } = useExternalLink();
+  const { handleError } = useErrorHandler({ showToast: false }); // UI handles error display
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   
   const publicMechanicMatchUrl = `${window.location.origin}/apps/mechanicmatch/public`;
@@ -32,6 +34,7 @@ export default function PublicMechanicMatchProfile() {
       });
       setTimeout(() => setCopiedUrl(null), 2000);
     } catch (error) {
+      handleError(error as Error, "Copy Error");
       toast({
         title: "Error",
         description: "Failed to copy link",
@@ -45,10 +48,22 @@ export default function PublicMechanicMatchProfile() {
     queryKey: ["/api/mechanicmatch/public", id],
     queryFn: async () => {
       const res = await fetch(`/api/mechanicmatch/public/${id}`);
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        const errorText = await res.text();
+        const error = new Error(errorText || `Failed to load mechanic: ${res.status} ${res.statusText}`);
+        handleError(error, "MechanicMatch Error");
+        throw error;
+      }
       return await res.json();
     }
   });
+
+  // Log errors to Sentry when they occur
+  useEffect(() => {
+    if (error) {
+      handleError(error, "MechanicMatch Error");
+    }
+  }, [error, handleError]);
 
   if (isLoading) {
     return (

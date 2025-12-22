@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation, Link } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { MapPin, Clock, Share2, ArrowRight, Package, Copy, Check, ExternalLink }
 import { formatDistanceToNow } from "date-fns";
 import { useExternalLink } from "@/hooks/useExternalLink";
 import { useToast } from "@/hooks/use-toast";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
 
 type PublicRequest = {
   id: string;
@@ -32,6 +33,7 @@ export default function PublicSocketRelayList() {
   const [, setLocation] = useLocation();
   const { openExternal, ExternalLinkDialog } = useExternalLink();
   const { toast } = useToast();
+  const { handleError } = useErrorHandler({ showToast: false }); // UI handles error display
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   
   const publicSocketRelayUrl = `${window.location.origin}/apps/socketrelay/public`;
@@ -46,6 +48,7 @@ export default function PublicSocketRelayList() {
       });
       setTimeout(() => setCopiedUrl(null), 2000);
     } catch (error) {
+      handleError(error as Error, "Copy Error");
       toast({
         title: "Error",
         description: "Failed to copy link",
@@ -58,10 +61,22 @@ export default function PublicSocketRelayList() {
     queryKey: ["/api/socketrelay/public"],
     queryFn: async () => {
       const res = await fetch("/api/socketrelay/public");
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        const errorText = await res.text();
+        const error = new Error(errorText || `Failed to load requests: ${res.status} ${res.statusText}`);
+        handleError(error, "SocketRelay Error");
+        throw error;
+      }
       return await res.json();
     }
   });
+
+  // Log errors to Sentry when they occur
+  useEffect(() => {
+    if (error) {
+      handleError(error, "SocketRelay Error");
+    }
+  }, [error, handleError]);
 
   const handleSignUp = () => {
     setLocation("/");

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +9,7 @@ import { ExternalLink, Copy, Check } from "lucide-react";
 import { VerifiedBadge } from "@/components/verified-badge";
 import { useToast } from "@/hooks/use-toast";
 import { useExternalLink } from "@/hooks/useExternalLink";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
 
 /**
  * Privacy: public Directory views should show **first name only**.
@@ -32,6 +33,7 @@ function getPublicFirstName(profile: any): string {
 export default function PublicDirectoryProfile() {
   const { toast } = useToast();
   const { openExternal, ExternalLinkDialog } = useExternalLink();
+  const { handleError } = useErrorHandler({ showToast: false }); // UI handles error display
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   
   const publicDirectoryUrl = `${window.location.origin}/apps/directory/public`;
@@ -46,6 +48,7 @@ export default function PublicDirectoryProfile() {
       });
       setTimeout(() => setCopiedUrl(null), 2000);
     } catch (error) {
+      handleError(error as Error, "Copy Error");
       toast({
         title: "Error",
         description: "Failed to copy link",
@@ -58,10 +61,22 @@ export default function PublicDirectoryProfile() {
     queryKey: ["/api/directory/public", id],
     queryFn: async () => {
       const res = await fetch(`/api/directory/public/${id}`);
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        const errorText = await res.text();
+        const error = new Error(errorText || `Failed to load profile: ${res.status} ${res.statusText}`);
+        handleError(error, "Directory Error");
+        throw error;
+      }
       return await res.json();
     }
   });
+
+  // Log errors to Sentry when they occur
+  useEffect(() => {
+    if (error) {
+      handleError(error, "Directory Error");
+    }
+  }, [error, handleError]);
 
   if (isLoading) {
     return (

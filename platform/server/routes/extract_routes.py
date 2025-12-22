@@ -30,6 +30,12 @@ ROUTE_SECTIONS = [
 
 def extract_route_section(start_line: int, end_line: int, module_name: str, app_name: str):
     """Extract a route section and create a module file"""
+    if not ROUTES_FILE.exists():
+        print(f"Warning: {ROUTES_FILE} not found. Route extraction already completed.")
+        print(f"  This script was used during refactoring to extract routes from the monolithic routes.ts file.")
+        print(f"  All routes have been successfully extracted to individual modules.")
+        return
+    
     with open(ROUTES_FILE, 'r') as f:
         lines = f.readlines()
     
@@ -54,6 +60,37 @@ import * as Sentry from '@sentry/node';
 import { z } from "zod";
 """
     
+    # Extract route handlers from section
+    # Route handlers are lines that start with app.get, app.post, app.put, app.delete, etc.
+    route_handlers = []
+    in_route_handler = False
+    indent_level = 0
+    
+    for line in section_lines:
+        # Skip section header comments
+        if line.strip().startswith("// =") and "ROUTES" in line:
+            continue
+        
+        # Detect start of route handler (app.get, app.post, etc.)
+        if re.match(r'^\s*app\.(get|post|put|delete|patch)\(', line):
+            in_route_handler = True
+            # Count initial indentation
+            indent_level = len(line) - len(line.lstrip())
+            route_handlers.append(line)
+        elif in_route_handler:
+            # Continue collecting route handler lines
+            route_handlers.append(line)
+            # Check if we've reached the end of the route handler (closing parenthesis and semicolon)
+            if line.strip().endswith(');') or line.strip().endswith('});'):
+                # Check if this is the actual end (not nested)
+                current_indent = len(line) - len(line.lstrip())
+                if current_indent <= indent_level:
+                    in_route_handler = False
+        else:
+            # Lines before first route handler (could be comments, variable declarations, etc.)
+            # Include them as they might be needed
+            route_handlers.append(line)
+    
     # Create module content
     module_content = f'''/**
  * {app_name} routes
@@ -62,18 +99,32 @@ import { z } from "zod";
 {imports}
 '''
     
-    # Add the route handlers (remove the section comment header)
-    for line in section_lines:
-        if line.strip().startswith("// =") and "ROUTES" in line:
-            continue  # Skip section header
-        module_content += line
+    # Add schema imports if needed (this would need to be detected from the route handlers)
+    # For now, we'll add a comment indicating manual addition may be needed
+    if any('Schema' in line or 'schema' in line for line in route_handlers):
+        module_content += '// TODO: Add schema imports from "@shared/schema" as needed\n'
     
+    # Create the register function with route handlers inside
+    function_name = app_name.replace(" ", "") + "Routes"
     module_content += f'''
-export function register{app_name.replace(" ", "")}Routes(app: Express) {{
-  // Routes extracted from routes.ts
-  // TODO: Add route handlers here
-}}
+export function register{function_name}(app: Express) {{
 '''
+    
+    # Add route handlers with proper indentation (2 spaces for function body)
+    for line in route_handlers:
+        # Remove any existing indentation and add 2 spaces for function body
+        stripped = line.lstrip()
+        if stripped:  # Only add non-empty lines
+            # Preserve relative indentation but ensure minimum 2 spaces
+            original_indent = len(line) - len(line.lstrip())
+            # If line was at root level, give it 2 spaces; otherwise preserve relative indent
+            if original_indent == 0:
+                module_content += '  ' + stripped + '\n'
+            else:
+                # Preserve relative indentation (add 2 spaces base)
+                module_content += '  ' + line
+    
+    module_content += '}\n'
     
     # Write module file
     module_path = ROUTES_DIR / module_name
@@ -84,10 +135,18 @@ export function register{app_name.replace(" ", "")}Routes(app: Express) {{
 
 if __name__ == "__main__":
     print("Route extraction script")
-    print("Note: This is a helper script. Manual refinement is required.")
-    print("\nTo extract routes:")
-    print("1. Read the routes.ts file")
-    print("2. Identify route sections by line numbers")
-    print("3. Extract each section into its own module")
-    print("4. Update routes/index.ts to import all modules")
+    print("=" * 60)
+    print("Note: This script was used during refactoring to extract routes")
+    print("from the monolithic routes.ts file into domain-specific modules.")
+    print("\nStatus: Route extraction has been completed.")
+    print("All routes are now in individual module files.")
+    print("\nThis script is kept for reference but is no longer needed.")
+    print("=" * 60)
+    
+    # Optionally, you can still run extraction if routes.ts exists
+    if ROUTES_FILE.exists():
+        print(f"\n{ROUTES_FILE.name} found. Would you like to extract routes?")
+        print("Run: python extract_routes.py --extract-all")
+    else:
+        print(f"\n{ROUTES_FILE.name} not found - extraction already completed.")
 

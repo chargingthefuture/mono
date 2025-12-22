@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -6,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { VerifiedBadge } from "@/components/verified-badge";
 import { MapPin, ArrowRight, Wrench, Star, DollarSign, ExternalLink, Briefcase } from "lucide-react";
 import { useExternalLink } from "@/hooks/useExternalLink";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
 import type { MechanicmatchProfile } from "@shared/schema";
 
 type PublicMechanicMatchProfile = MechanicmatchProfile & {
@@ -16,15 +18,28 @@ type PublicMechanicMatchProfile = MechanicmatchProfile & {
 export default function PublicMechanicMatchList() {
   const [, setLocation] = useLocation();
   const { openExternal, ExternalLinkDialog } = useExternalLink();
+  const { handleError } = useErrorHandler({ showToast: false }); // UI handles error display
 
   const { data: profiles = [], isLoading, error } = useQuery<PublicMechanicMatchProfile[]>({
     queryKey: ["/api/mechanicmatch/public"],
     queryFn: async () => {
       const res = await fetch("/api/mechanicmatch/public");
-      if (!res.ok) throw new Error(await res.text());
+      if (!res.ok) {
+        const errorText = await res.text();
+        const error = new Error(errorText || `Failed to load mechanics: ${res.status} ${res.statusText}`);
+        handleError(error, "MechanicMatch Error");
+        throw error;
+      }
       return await res.json();
     }
   });
+
+  // Log errors to Sentry when they occur
+  useEffect(() => {
+    if (error) {
+      handleError(error, "MechanicMatch Error");
+    }
+  }, [error, handleError]);
 
   const handleSignUp = () => {
     setLocation("/");

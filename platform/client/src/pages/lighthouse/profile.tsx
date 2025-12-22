@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { PrivacyField } from "@/components/ui/privacy-field";
 import { useToast } from "@/hooks/use-toast";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { insertLighthouseProfileSchema, type LighthouseProfile } from "@shared/schema";
 import { useEffect, useState, useRef } from "react";
@@ -25,6 +26,7 @@ import { VerifiedBadge } from "@/components/verified-badge";
 
 export default function LighthouseProfilePage() {
   const { toast } = useToast();
+  const { handleError } = useErrorHandler({ showToast: false }); // We show custom toasts
   const { isAdmin } = useAuth();
   const [, setLocation] = useLocation();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -144,10 +146,10 @@ export default function LighthouseProfilePage() {
       setLocation("/apps/lighthouse");
     },
     onError: (error: any) => {
-      console.error("Delete profile error:", error);
+      const parsed = handleError(error, "Delete Profile Error");
       toast({
         title: "Error",
-        description: error.message || "Failed to delete profile",
+        description: parsed.message || "Failed to delete profile",
         variant: "destructive",
       });
     },

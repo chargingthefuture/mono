@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertSocketrelayProfileSchema } from "@shared/schema";
@@ -27,6 +28,7 @@ type ProfileFormData = z.infer<typeof profileFormSchema>;
 
 export default function SocketRelayProfile() {
   const { toast } = useToast();
+  const { handleError } = useErrorHandler({ showToast: false }); // We show custom toasts
   const [, setLocation] = useLocation();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [stateOpen, setStateOpen] = useState(false);
@@ -142,10 +144,10 @@ export default function SocketRelayProfile() {
       setLocation("/apps/socketrelay");
     },
     onError: (error: any) => {
-      console.error("Delete profile error:", error);
+      const parsed = handleError(error, "Delete Profile Error");
       toast({
         title: "Error",
-        description: error.message || "Failed to delete profile",
+        description: parsed.message || "Failed to delete profile",
         variant: "destructive",
       });
     },

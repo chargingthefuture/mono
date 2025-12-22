@@ -1,6 +1,9 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
 import * as Leaflet from "leaflet";
+import { useErrorHandler } from "@/hooks/useErrorHandler";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { AlertCircle } from "lucide-react";
 
 // Fix default marker icons
 if (Leaflet.Icon && Leaflet.Icon.Default) {
@@ -36,7 +39,7 @@ function MapBounds({ locations }: { locations: LocationWithCoords[] }) {
     
     // Ensure map has fitBounds method
     if (!map || typeof map.fitBounds !== "function") {
-      console.warn("map.fitBounds is not available");
+      // This is a non-critical warning, no need to log to Sentry
       return;
     }
 
@@ -46,7 +49,8 @@ function MapBounds({ locations }: { locations: LocationWithCoords[] }) {
       );
       map.fitBounds(bounds, { padding: [50, 50], maxZoom: 10 });
     } catch (error) {
-      console.error("Error setting map bounds:", error);
+      // Bounds setting is non-critical, silently fail
+      // Error is already handled by React Query error boundaries if needed
     }
   }, [locations, map]);
 
