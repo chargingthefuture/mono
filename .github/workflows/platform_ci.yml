@@ -12,7 +12,8 @@ on:
       - main
     paths:
       - 'platform/**'
-      - '.github/workflows/platform-ci.yml'
+      - '.github/workflows/platform_ci.yml'
+  workflow_dispatch: # Allows manual triggering
 
 jobs:
   test:
@@ -36,6 +37,10 @@ jobs:
       - name: Install dependencies
         working-directory: platform
         run: npm ci
+
+      - name: Run type check
+        working-directory: platform
+        run: npm run check
 
       - name: Create test results directory
         working-directory: platform
@@ -98,3 +103,91 @@ jobs:
       - name: Upload test results to Sentry Prevent
         if: ${{ !cancelled() }}
         uses: getsentry/prevent-action@v0
+
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20.19.0'
+          cache: 'npm'
+          cache-dependency-path: platform/package-lock.json
+
+      - name: Install dependencies
+        working-directory: platform
+        run: npm ci
+
+      - name: Build application
+        working-directory: platform
+        env:
+          VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
+          VITE_PAYMENT_EMAIL: ${{ secrets.VITE_PAYMENT_EMAIL }}
+          VITE_VENMO_USERNAME: ${{ secrets.VITE_VENMO_USERNAME }}
+          VITE_PAYPAL_USERNAME: ${{ secrets.VITE_PAYPAL_USERNAME }}
+          VITE_WALMART_USERNAME: ${{ secrets.VITE_WALMART_USERNAME }}
+          VITE_CHIME_USERNAME: ${{ secrets.VITE_CHIME_USERNAME }}
+          VITE_WISE_USERNAME: ${{ secrets.VITE_WISE_USERNAME }}
+          VITE_ZELLE_EMAIL: ${{ secrets.VITE_ZELLE_EMAIL }}
+        run: npm run build
+
+      - name: Get version
+        id: version
+        working-directory: platform
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+      - name: Create Sentry release
+        uses: getsentry/action-release@v3
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: javascript-react
+        with:
+          environment: production
+          release: ${{ steps.version.outputs.version }}
+          sourcemaps: "./platform/dist/public"
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: platform-build
+          path: platform/dist/**
+          retention-days: 30
+
+      - name: Create Docker image
+        working-directory: platform
+        env:
+          VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
+          VITE_PAYMENT_EMAIL: ${{ secrets.VITE_PAYMENT_EMAIL }}
+          VITE_VENMO_USERNAME: ${{ secrets.VITE_VENMO_USERNAME }}
+          VITE_PAYPAL_USERNAME: ${{ secrets.VITE_PAYPAL_USERNAME }}
+          VITE_WALMART_USERNAME: ${{ secrets.VITE_WALMART_USERNAME }}
+          VITE_CHIME_USERNAME: ${{ secrets.VITE_CHIME_USERNAME }}
+          VITE_WISE_USERNAME: ${{ secrets.VITE_WISE_USERNAME }}
+          VITE_ZELLE_EMAIL: ${{ secrets.VITE_ZELLE_EMAIL }}
+        run: |
+          docker build \
+            --build-arg VITE_CLERK_PUBLISHABLE_KEY="$VITE_CLERK_PUBLISHABLE_KEY" \
+            --build-arg VITE_PAYMENT_EMAIL="$VITE_PAYMENT_EMAIL" \
+            --build-arg VITE_VENMO_USERNAME="$VITE_VENMO_USERNAME" \
+            --build-arg VITE_PAYPAL_USERNAME="$VITE_PAYPAL_USERNAME" \
+            --build-arg VITE_WALMART_USERNAME="$VITE_WALMART_USERNAME" \
+            --build-arg VITE_CHIME_USERNAME="$VITE_CHIME_USERNAME" \
+            --build-arg VITE_WISE_USERNAME="$VITE_WISE_USERNAME" \
+            --build-arg VITE_ZELLE_EMAIL="$VITE_ZELLE_EMAIL" \
+            -t platform-webapp:${{ steps.version.outputs.version }} .
+          docker save platform-webapp:${{ steps.version.outputs.version }} -o platform-image.tar
+
+      - name: Upload Docker image
+        uses: actions/upload-artifact@v4
+        with:
+          name: platform-docker-image
+          path: platform/platform-image.tar
+          retention-days: 30
