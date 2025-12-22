@@ -17,6 +17,7 @@ import {
   numeric,
   date,
   index,
+  jsonb,
 } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod";
