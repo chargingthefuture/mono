@@ -9,7 +9,7 @@ import {
   type PricingTier,
   type InsertPricingTier,
 } from "@shared/schema";
-import { db } from "../../../db";
+import { db } from "../../db";
 import { eq, desc } from "drizzle-orm";
 
 export class PricingStorage {

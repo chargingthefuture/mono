@@ -554,7 +554,6 @@ export class DatabaseStorage implements IStorage {
   deleteSocketrelayProfile = delegate(this.miniAppsStorageComposed, 'deleteSocketrelayProfile');
   deleteDirectoryProfileWithCascade = delegate(this.miniAppsStorageComposed, 'deleteDirectoryProfileWithCascade');
   deleteTrusttransportProfile = delegate(this.miniAppsStorageComposed, 'deleteTrusttransportProfile');
-  deleteMechanicmatchProfile = delegate(this.miniAppsStorageComposed, 'deleteMechanicmatchProfile');
 
   async deleteUserAccount(userId: string, reason?: string): Promise<void> {
     // Verify user exists

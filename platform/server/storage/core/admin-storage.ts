@@ -10,7 +10,7 @@ import {
   type AdminActionLog,
   type InsertAdminActionLog,
 } from "@shared/schema";
-import { db } from "../../../db";
+import { db } from "../../db";
 import { eq, desc } from "drizzle-orm";
 
 export class AdminStorage {

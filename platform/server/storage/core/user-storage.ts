@@ -9,10 +9,10 @@ import {
   type User,
   type UpsertUser,
 } from "@shared/schema";
-import { db } from "../../../db";
+import { db } from "../../db";
 import { eq, desc } from "drizzle-orm";
-import { NotFoundError } from "../../../errors";
-import { logError } from "../../../errorLogger";
+import { NotFoundError } from "../../errors";
+import { logError } from "../../errorLogger";
 
 export class UserStorage {
   async getUser(id: string): Promise<User | undefined> {

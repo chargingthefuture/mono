@@ -11,9 +11,9 @@ import {
   type InsertPayment,
   type User,
 } from "@shared/schema";
-import { db } from "../../../db";
+import { db } from "../../db";
 import { eq, desc } from "drizzle-orm";
-import { NotFoundError } from "../../../errors";
+import { NotFoundError } from "../../errors";
 
 export class PaymentStorage {
   constructor(private getUser: (id: string) => Promise<User | undefined>, private getAllUsers: () => Promise<User[]>) {}

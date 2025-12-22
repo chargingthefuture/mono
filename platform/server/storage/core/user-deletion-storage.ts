@@ -14,7 +14,7 @@ import {
   npsResponses,
   gentlepulseMoodChecks,
 } from "@shared/schema";
-import { db } from "../../../db";
+import { db } from "../../db";
 import { eq } from "drizzle-orm";
 import { generateAnonymizedUserId } from "./utils";
 

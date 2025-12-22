@@ -12,10 +12,10 @@ import {
   gentlepulseMoodChecks,
   type NpsResponse,
 } from "@shared/schema";
-import { db } from "../../../db";
+import { db } from "../../db";
 import { eq, and, desc, gte, lte } from "drizzle-orm";
-import { normalizeError } from "../../../errors";
-import { logError } from "../../../errorLogger";
+import { normalizeError } from "../../errors";
+import { logError } from "../../errorLogger";
 import { getWeekStart, getWeekEnd, formatDate, getDaysInWeek } from "./utils";
 
 export class AnalyticsStorage {

@@ -11,7 +11,7 @@ import {
   type InsertOTPCode,
   type AuthToken,
 } from "@shared/schema";
-import { db } from "../../../db";
+import { db } from "../../db";
 import { eq, lt } from "drizzle-orm";
 
 export class AuthStorage {

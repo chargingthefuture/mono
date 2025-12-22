@@ -9,8 +9,8 @@ import {
   type NpsResponse,
   type InsertNpsResponse,
 } from "@shared/schema";
-import { db } from "../../../db";
-import { eq, desc, gte, lte } from "drizzle-orm";
+import { db } from "../../db";
+import { eq, desc, gte, lte, and } from "drizzle-orm";
 
 export class NpsStorage {
   async createNpsResponse(response: InsertNpsResponse): Promise<NpsResponse> {
