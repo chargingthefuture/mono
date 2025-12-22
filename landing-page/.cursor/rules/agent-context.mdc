@@ -1,5 +1,0 @@
----
-alwaysApply: true
----
-
-**Accessibility always** - Test keyboard nav and screen readers for every UI component

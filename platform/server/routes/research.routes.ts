@@ -18,14 +18,18 @@ import * as Sentry from '@sentry/node';
 import { z } from "zod";
 import {
   insertResearchItemSchema,
-    insertResearchAnswerSchema,
-    insertResearchCommentSchema,
-    insertResearchVoteSchema,
-    insertResearchLinkProvenanceSchema,
-    insertResearchBookmarkSchema,
-    insertResearchFollowSchema,
-    insertResearchReportSchema,
-    insertResearchAnnouncementSchema,
+  insertResearchAnswerSchema,
+  insertResearchCommentSchema,
+  insertResearchVoteSchema,
+  insertResearchLinkProvenanceSchema,
+  insertResearchBookmarkSchema,
+  insertResearchFollowSchema,
+  insertResearchReportSchema,
+  insertResearchAnnouncementSchema,
+  type ResearchItem,
+  type ResearchAnswer,
+  type ResearchAnnouncement,
+  type User,
 } from "@shared/schema";
 
 export function registerResearchRoutes(app: Express) {
@@ -75,7 +79,7 @@ export function registerResearchRoutes(app: Express) {
     const item = await withDatabaseErrorHandling(
       () => storage.createResearchItem(validatedData),
       'createResearchItem'
-    );
+    ) as ResearchItem;
     
     logInfo(`CompareNotes question created: ${item.id} by ${userId}`, req);
     res.json(item);
@@ -117,7 +121,7 @@ export function registerResearchRoutes(app: Express) {
     const item = await withDatabaseErrorHandling(
       () => storage.getResearchItemById(req.params.id),
       'getResearchItemById'
-    );
+    ) as ResearchItem | null;
     if (!item) {
       throw new NotFoundError('Question', req.params.id);
     }
@@ -158,7 +162,7 @@ export function registerResearchRoutes(app: Express) {
     const item = await withDatabaseErrorHandling(
       () => storage.getResearchItemById(req.params.id),
       'getResearchItemById'
-    );
+    ) as ResearchItem | null;
     
     if (!item) {
       throw new NotFoundError('Question', req.params.id);
@@ -215,7 +219,7 @@ export function registerResearchRoutes(app: Express) {
     const answer = await withDatabaseErrorHandling(
       () => storage.createResearchAnswer(validatedData),
       'createResearchAnswer'
-    );
+    ) as ResearchAnswer;
     
     // Trigger link verification for any links provided
     if (validatedData.links && validatedData.links.length > 0) {
@@ -260,7 +264,7 @@ export function registerResearchRoutes(app: Express) {
     const answer = await withDatabaseErrorHandling(
       () => storage.getResearchAnswerById(req.params.id),
       'getResearchAnswerById'
-    );
+    ) as ResearchAnswer | null;
     
     if (!answer) {
       throw new NotFoundError('Answer', req.params.id);
@@ -292,7 +296,7 @@ export function registerResearchRoutes(app: Express) {
     const item = await withDatabaseErrorHandling(
       () => storage.getResearchItemById(req.params.itemId),
       'getResearchItemById'
-    );
+    ) as ResearchItem | null;
     
     if (!item || item.userId !== userId) {
       throw new ForbiddenError("Forbidden");
@@ -333,7 +337,7 @@ export function registerResearchRoutes(app: Express) {
     const comment = await withDatabaseErrorHandling(
       () => storage.getResearchComments({ researchItemId: undefined, answerId: undefined }).then(cs => cs.find(c => c.id === req.params.id)),
       'getResearchComments'
-    );
+    ) as { id: string; userId: string } | null | undefined;
     
     if (!comment || comment.userId !== userId) {
       throw new ForbiddenError("Forbidden");
@@ -412,7 +416,7 @@ export function registerResearchRoutes(app: Express) {
     const bookmarks = await withDatabaseErrorHandling(
       () => storage.getResearchBookmarks(userId),
       'getResearchBookmarks'
-    );
+    ) as Array<{ researchItemId: string }>;
     
     // Fetch full questions for each bookmark
     const items = await Promise.all(
@@ -420,7 +424,7 @@ export function registerResearchRoutes(app: Express) {
         const item = await withDatabaseErrorHandling(
           () => storage.getResearchItemById(bookmark.researchItemId),
           'getResearchItemById'
-        );
+        ) as ResearchItem | null;
         return item;
       })
     );

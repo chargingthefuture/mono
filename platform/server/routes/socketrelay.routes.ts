@@ -24,6 +24,7 @@ import {
   type SocketrelayProfile,
   type SocketrelayRequest,
   type SocketrelayFulfillment,
+  type SocketrelayMessage,
   type SocketrelayAnnouncement,
   type DirectoryAnnouncement,
   type User,

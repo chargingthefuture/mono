@@ -2,32 +2,112 @@
 alwaysApply: true
 ---
 
-This is the top level of a mono-repo. This entire product serves vulnerable users. Every line of code should prioritize safety, privacy, and dignity. **Accessibility always** - Test keyboard nav and screen readers for every UI component
+---
+alwaysApply: true
+---
 
-## File Size Guidelines for Maintainable Code
+# Context Prompt for Cursor AI - Psyop-Free Ecosystem
 
-### Recommended Line Count Limits
+This is the top level of a mono-repo. This product serves vulnerable users. Every line of code should prioritize safety, privacy, and dignity. This is a invite-only platform for survivors of human trafficking.
 
-| File Type | <b>Recommended Maximum Lines</b> | Rationale |
-|-----------|----------------------------------|-----------|
-| Component Files | <b>200-250 lines</b> | Promotes readability and single responsibility |
-| Utility/Helper Files | <b>300-350 lines</b> | Allows for comprehensive utility functions |
-| Store/State Management | <b>400-500 lines</b> | Keeps complex logic manageable |
-| Hook Files | <b>150-200 lines</b> | Maintains clear, focused custom hook logic |
-| Service/API Files | <b>250-300 lines</b> | Prevents overly complex data handling |
-| Model/Interface Files | <b>100-150 lines</b> | Keeps type definitions clean |
+**Key Values:** Safety, privacy, dignity, accessibility (WCAG AAA), trauma-informed design
+
+# There are three project folders in this mono repo.
+
+- landing-page: user facing website showcasing and promoting the features of the 'chyme-andorid' folder and the 'platform' folder
+- chyme-android: a social audio andriod app
+- platform: the web app with several mini-apps
+
+# File organization and placement applicable to all three project folders
+
+## Documentation Files
+
+- **ALWAYS** place documentation files (`.md`, `.txt`, guides, troubleshooting docs) in the `docs/` folder of the respective project folder
+- **NEVER** place documentation files in the project root or alongside source code files
+- Documentation files that should go in `docs/` include:
+  - Troubleshooting guides
+  - Installation guides
+  - Configuration guides
+  - Helper scripts (`.sh`, `.bat`, etc.) that are for documentation/development purposes
+  - Any markdown files that are not part of the deployment/build process
+
+### Files That Should Be Committed
+
+- Only files needed for deployment should be committed to git
+- This includes:
+  - Source code files
+  - Build configuration files (`build.gradle.kts`, `package.json`, etc.)
+  - Configuration templates (`local.properties.example`, etc.)
+  - Essential project structure files
+
+### Files That Should NOT Be Committed
+
+- Documentation files (go in `docs/` which is typically gitignored)
+- Local configuration files (`local.properties`, `.env.local`, etc.)
+- Build outputs
+- Temporary files
+
+## Project Structure
+
+- Documentation → `docs/`
+- Helper scripts → `docs/`
+- Build configs → `app/build.gradle.kts` (app level) or `build.gradle.kts` (project level)
+- Example configs → `local.properties.example` (root level as template)
+
+### General Rule
+
+When creating any file that is:
+
+- A guide, tutorial, or troubleshooting document
+- A helper script for development/documentation purposes
+- Not required for the build or deployment process
+
+Place it in the `docs/` folder.
+
+**When creating documentation files:**
+
+- ✅ Migration guides → `docs/MIGRATION_GUIDE.md`
+- ✅ Setup instructions → `docs/SETUP_*.md`
+- ✅ Troubleshooting → `docs/TROUBLESHOOTING_*.md`
+- ✅ Cost analysis → `docs/COST_ANALYSIS.md`
+- ✅ Comparison docs → `docs/COMPARISON_*.md`
+- ❌ NOT in root directory (unless it's core project doc)
+
+**Examples of docs/ folder contents:**
+
+- `docs/MIGRATION_COMPLETE.md`
+- `docs/RAILWAY_SETUP.md`
+- `docs/AUTH_COMPARISON.md`
+- `docs/SETUP_NEON_ACCOUNT.md`
+- etc.
+
+# File size guidelines for maintainable code
+
+## Recommended Line Count Limits
+
+| File Type              | <b>Recommended Maximum Lines</b> | Rationale                                      |
+| ---------------------- | -------------------------------- | ---------------------------------------------- |
+| Component Files        | <b>200-250 lines</b>             | Promotes readability and single responsibility |
+| Utility/Helper Files   | <b>300-350 lines</b>             | Allows for comprehensive utility functions     |
+| Store/State Management | <b>400-500 lines</b>             | Keeps complex logic manageable                 |
+| Hook Files             | <b>150-200 lines</b>             | Maintains clear, focused custom hook logic     |
+| Service/API Files      | <b>250-300 lines</b>             | Prevents overly complex data handling          |
+| Model/Interface Files  | <b>100-150 lines</b>             | Keeps type definitions clean                   |
 
 ### Refactoring Triggers
 
 When a file exceeds these guidelines, consider the following refactoring strategies:
 
 #### 1. Separation of Concerns
+
 <b>Break large files into smaller, more focused modules</b>
+
 - Extract complex logic into separate functions
 - Create sub-components for large React components
 - Split complex hooks into multiple specialized hooks
 
 #### 2. Composition Over Size
+
 ```typescript
 // Before (too large)
 function MegaComponent() {
@@ -49,6 +129,7 @@ function MegaComponent() {
 ### Warning Signs to Refactor
 
 <b>Immediate refactoring indicators:</b>
+
 - File is more than 500 lines long
 - Multiple responsibilities in a single file
 - Difficulty understanding the file's purpose at a glance
@@ -65,12 +146,12 @@ function MegaComponent() {
 
 ### Language-Specific Nuances
 
-| Language | Typical Soft Limit | Hard Limit |
-|----------|-------------------|------------|
-| TypeScript/React | <b>250-300 lines</b> | 500 lines |
-| Python | <b>200-250 lines</b> | 400 lines |
-| JavaScript | <b>250-300 lines</b> | 500 lines |
-| Java | <b>200-250 lines</b> | 400 lines |
+| Language         | Typical Soft Limit   | Hard Limit |
+| ---------------- | -------------------- | ---------- |
+| TypeScript/React | <b>250-300 lines</b> | 500 lines  |
+| Python           | <b>200-250 lines</b> | 400 lines  |
+| JavaScript       | <b>250-300 lines</b> | 500 lines  |
+| Java             | <b>200-250 lines</b> | 400 lines  |
 
 ### Tools to Help
 
@@ -82,9 +163,1771 @@ function MegaComponent() {
 <hr>
 
 ## Pro Tips
+
 - These are <b>guidelines, not strict rules</b>
 - Context matters more than exact line count
 - Some files legitimately need more complexity
 - Regular refactoring is key to maintainability
 
-Would you like me to elaborate on any of these guidelines or provide specific strategies for breaking down large files?
+# 'platform' folder specific guidelines
+
+## **Mini-App (Super App) Architecture**
+
+Each service is a self-contained mini-app with its own:
+
+- Database tables
+- Storage metho
+- API routes
+- Frontend pages
+- Sidebar navigation
+
+**🚨 CRITICAL:** Never mix concerns between mini-apps. Each operates independently.
+
+## 🔧 How to Add a New Feature
+
+### **Adding a New Mini-App**
+
+**🚨 REQUIRED:** Every new mini-app MUST have:
+
+1. **User profile** - Every mini-app requires a user profile with edit and delete functionality
+2. **User-facing pages** - Where regular users interact with the app
+3. **Admin page** - A dedicated admin interface under the Administration section for managing the app's content/data
+4. **Announcement system** - Every mini-app must have its own announcement table and admin interface for managing announcements specific to that app
+
+**🚨 IMPORTANT:** Always use `varchar("id").primaryKey().default(sql\`gen_random_uuid()\`)` for IDs to match existing pattern.
+
+**🚨 CRITICAL:** After adding tables to `schema.ts`, you MUST also update `schema.sql` with the corresponding SQL `CREATE TABLE` statements. See the **Database Migration Workflow** section for details on keeping `schema.sql` synchronized.
+
+**🚨 REQUIRED:** Profile deletion method must:
+
+- Accept `userId` (not profile id) and optional `reason`
+- Anonymize related data by replacing user IDs with `deleted_user_[random_string]`
+- Log the deletion using `logProfileDeletion()`
+- Delete the profile itself
+
+**🚨 CRITICAL - Account Deletion Integration:**
+
+When adding a new mini-app, you MUST ensure it's included in the complete account deletion process. The `deleteUserAccount()` method in `DatabaseStorage` class automatically calls all profile deletion methods.
+
+1. **Add your profile deletion method to the account deletion process** in `server/storage.ts`:
+
+   - Find the `deleteUserAccount()` method (around line 5278+)
+   - Add your mini-app's deletion method to the `profileDeletions` array:
+
+2. **Verify anonymization coverage:**
+
+   - Ensure all tables that reference `users.id` are handled
+   - Check if your mini-app has any additional user-related data that needs anonymization
+   - If your mini-app has user-related data beyond the profile (e.g., research items, ratings, etc.), add anonymization in `deleteUserAccount()` method
+
+3. **Test complete account deletion:**
+   - Test that your mini-app profile is deleted when `deleteUserAccount()` is called
+   - Test that all related data is properly anonymized
+   - Verify the deletion is logged correctly
+
+**🚨 Pattern:** Always validate with Zod schemas, use `getUserId(req)`, wrap in try/catch
+
+#### **Step 4: Frontend Pages (`client/src/pages/myapp/`)**
+
+**🚨 REQUIRED:** Every mini-app MUST have a profile page with Edit and Delete buttons.
+
+Create folder: `client/src/pages/myapp/`
+
+**🚨 REQUIRED Profile Page (`profile.tsx`):**
+
+Every mini-app MUST have a profile page with:
+
+- Edit profile form (create/update)
+- **Delete Profile button** (only visible when profile exists)
+- **Delete confirmation dialog** using `DeleteProfileDialog` component
+
+**🚨 TanStack Query Rules:**
+
+- Use `queryKey: ['/api/endpoint']` for GET requests
+- For hierarchical keys: `['/api/resource', id]` not `['/api/resource/${id}']`
+- Always show loading states
+- Use `apiRequest` from `@lib/queryClient` for mutations
+
+#### **Step 5: Routing (`client/src/App.tsx`)**
+
+1. Import your pages:
+
+#### **Step 6: Sidebar Navigation (`client/src/components/app-sidebar.tsx`)**
+
+1. Import icon:
+
+```typescript
+import { MyIcon } from "lucide-react";
+```
+
+2. Add to `userMenuItems` array (around line 92):
+
+```typescript
+const userMenuItems = [
+  // ... existing items
+  {
+    title: "MyApp",
+    url: "/apps/myapp",
+    icon: MyIcon,
+    testId: "link-myapp",
+  },
+];
+```
+
+3. **REQUIRED:** Add admin page to `adminMenuItems` array:
+
+```typescript
+const adminMenuItems = [
+  // ... existing items
+  {
+    title: "MyApp Admin",
+    url: "/apps/myapp/admin",
+    icon: MyIcon,
+    testId: "link-myapp-admin",
+  },
+];
+```
+
+4. **🚨 REQUIRED:** Update Available Services page (`client/src/pages/services.tsx`):
+   - Add the new mini-app to the `services` array
+   - Include `title`, `description`, `icon`, `href`, and `testId` properties
+   - Follow the existing pattern for consistency
+
+Example:
+
+```typescript
+const services = [
+  // ... existing services
+  {
+    title: "MyApp",
+    description: "Brief description of what MyApp does for survivors",
+    icon: MyIcon,
+    href: "/apps/myapp",
+    testId: "card-service-myapp",
+  },
+];
+```
+
+#### **Step 7: Admin Page (`client/src/pages/myapp/admin.tsx`)**
+
+**🚨 REQUIRED:** Create an admin interface for managing the mini-app's content/data. This should include:
+
+- List all items/records in the app
+- Create new items/records
+- Edit existing items/records
+- Delete items/records
+- Toggle active/inactive status (if applicable)
+- Any other management operations needed
+
+Example admin page:
+
+```typescript
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import { Link } from "wouter";
+
+export default function MyAppAdmin() {
+  const { data: items = [], isLoading } = useQuery({
+    queryKey: ["/api/myapp/admin"],
+  });
+
+  const createMutation = useMutation({
+    mutationFn: async (data) =>
+      apiRequest("/api/myapp/admin", { method: "POST", body: data }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/myapp/admin"] });
+    },
+  });
+
+  // ... edit, delete mutations, etc.
+
+  return (
+    <div className="p-4 sm:p-6 md:p-8">
+      <h1 className="text-2xl sm:text-3xl font-semibold mb-6">
+        MyApp Administration
+      </h1>
+
+      {/* Admin interface */}
+
+      {/* 🚨 REQUIRED: Link to announcement management */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Announcements</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Create and manage announcements for this mini-app.
+          </p>
+          <Link href="/apps/myapp/admin/announcements">
+            <Button
+              className="w-full"
+              data-testid="button-manage-announcements"
+            >
+              Manage Announcements
+            </Button>
+          </Link>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+```
+
+**Add admin routes in `client/src/App.tsx`:**
+
+```typescript
+<Route path="/apps/myapp/admin" component={MyAppAdmin} />
+<Route path="/apps/myapp/admin/announcements" component={MyAppAdminAnnouncements} />
+```
+
+#### **Step 8: Announcement Management (`client/src/pages/myapp/admin-announcements.tsx`)**
+
+**🚨 REQUIRED:** Every mini-app MUST have an admin announcement management page.
+
+Create the admin announcements page following this pattern (see `client/src/pages/supportmatch/admin-announcements.tsx` for reference):
+
+```typescript
+import { useState } from "react";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/hooks/use-toast";
+import { apiRequest, queryClient } from "@/lib/queryClient";
+import type { MyappAnnouncement } from "@shared/schema";
+import { format } from "date-fns";
+import { ArrowLeft } from "lucide-react";
+import { Link } from "wouter";
+
+const announcementFormSchema = z.object({
+  title: z.string().min(1, "Title is required"),
+  content: z.string().min(1, "Content is required"),
+  type: z.enum(["info", "warning", "maintenance", "update", "promotion"]),
+  expiresAt: z.string().optional(),
+});
+
+type AnnouncementFormValues = z.infer<typeof announcementFormSchema>;
+
+export default function MyAppAdminAnnouncements() {
+  const { toast } = useToast();
+  const [editingId, setEditingId] = useState<string | null>(null);
+
+  const { data: announcements, isLoading } = useQuery<MyappAnnouncement[]>({
+    queryKey: ["/api/myapp/admin/announcements"],
+  });
+
+  const form = useForm<AnnouncementFormValues>({
+    resolver: zodResolver(announcementFormSchema),
+    defaultValues: {
+      title: "",
+      content: "",
+      type: "info",
+      expiresAt: "",
+    },
+  });
+
+  // Create, update, delete mutations following the same pattern as profile operations
+  // See supportmatch/admin-announcements.tsx for complete implementation
+
+  return (
+    <div className="p-6 md:p-8 space-y-8">
+      <div className="flex items-center gap-4">
+        <Link href="/apps/myapp/admin">
+          <Button variant="ghost" size="icon" data-testid="button-back">
+            <ArrowLeft className="w-5 h-5" />
+          </Button>
+        </Link>
+        <div>
+          <h1 className="text-3xl md:text-4xl font-semibold">
+            Manage Announcements
+          </h1>
+          <p className="text-muted-foreground">
+            Create and manage MyApp announcements
+          </p>
+        </div>
+      </div>
+
+      {/* Form for creating/editing announcements */}
+      {/* List of existing announcements with edit/delete buttons */}
+    </div>
+  );
+}
+```
+
+**Key requirements:**
+
+- Use the `insertMyappAnnouncementSchema` for validation
+- Support all announcement types: info, warning, maintenance, update, promotion
+- Include optional expiration date field
+- Display active and inactive announcements
+- Allow editing and deactivating announcements
+- Use `AnnouncementDisplay` component for consistent styling
+
+#### **Step 9: Display Announcements on User Pages**
+
+**🚨 REQUIRED:** Add `AnnouncementBanner` component to the main dashboard/page of each mini-app.
+
+Update the dashboard to display active announcements:
+
+```typescript
+import { AnnouncementBanner } from "@/components/announcement-banner";
+
+export default function MyAppDashboard() {
+  return (
+    <div className="container mx-auto p-6 max-w-7xl">
+      <h1 className="text-3xl font-semibold mb-6">MyApp Dashboard</h1>
+
+      {/* Display active announcements at the top */}
+      <AnnouncementBanner
+        apiEndpoint="/api/myapp/announcements"
+        queryKey="/api/myapp/announcements"
+      />
+
+      {/* Rest of dashboard content */}
+    </div>
+  );
+}
+```
+
+Create an announcement history page for users to view past announcements:
+
+```typescript
+import { useQuery } from "@tanstack/react-query";
+import { AnnouncementDisplay } from "@/components/announcement-display";
+import type { MyappAnnouncement } from "@shared/schema";
+
+export default function MyAppAnnouncements() {
+  const { data: announcements, isLoading } = useQuery<MyappAnnouncement[]>({
+    queryKey: ["/api/myapp/admin/announcements"], // Admin endpoint shows all (including inactive)
+  });
+
+  if (isLoading) return <div>Loading...</div>;
+
+  return (
+    <div className="p-4 sm:p-6 md:p-8 space-y-6">
+      <h1 className="text-2xl sm:text-3xl font-semibold mb-2">Announcements</h1>
+      <p className="text-muted-foreground">View all announcements for MyApp</p>
+
+      {announcements?.map((announcement) => (
+        <AnnouncementDisplay
+          key={announcement.id}
+          id={announcement.id}
+          title={announcement.title}
+          content={announcement.content}
+          type={announcement.type}
+          createdAt={announcement.createdAt}
+          expiresAt={announcement.expiresAt}
+          showExpiration={true}
+        />
+      ))}
+    </div>
+  );
+}
+```
+
+#### **Step 10: Seeding Script (`scripts/`)**
+
+- Add a seed script for the mini-app, e.g. `scripts/seedMyApp.ts`
+- Use `db` and shared `schema` to insert deterministic dummy data
+- Do NOT expose seeding via API routes; seeds run via script only
+
+#### **Step 11: Storage Implementation**
+
+**🚨 REQUIRED:** Implement all announcement storage methods in the `DatabaseStorage` class.
+
+Add implementation following this pattern:
+
+```typescript
+// MyApp Announcement operations
+async createMyappAnnouncement(announcementData: InsertMyappAnnouncement): Promise<MyappAnnouncement> {
+  const [announcement] = await db
+    .insert(myappAnnouncements)
+    .values(announcementData)
+    .returning();
+  return announcement;
+}
+
+async getActiveMyappAnnouncements(): Promise<MyappAnnouncement[]> {
+  const now = new Date();
+  return await db
+    .select()
+    .from(myappAnnouncements)
+    .where(
+      and(
+        eq(myappAnnouncements.isActive, true),
+        or(
+          sql`${myappAnnouncements.expiresAt} IS NULL`,
+          gte(myappAnnouncements.expiresAt, now)
+        )
+      )
+    )
+    .orderBy(desc(myappAnnouncements.createdAt));
+}
+
+async getAllMyappAnnouncements(): Promise<MyappAnnouncement[]> {
+  return await db
+    .select()
+    .from(myappAnnouncements)
+    .orderBy(desc(myappAnnouncements.createdAt));
+}
+
+async updateMyappAnnouncement(id: string, announcementData: Partial<InsertMyappAnnouncement>): Promise<MyappAnnouncement> {
+  const [announcement] = await db
+    .update(myappAnnouncements)
+    .set({
+      ...announcementData,
+      updatedAt: new Date(),
+    })
+    .where(eq(myappAnnouncements.id, id))
+    .returning();
+  return announcement;
+}
+
+async deactivateMyappAnnouncement(id: string): Promise<MyappAnnouncement> {
+  const [announcement] = await db
+    .update(myappAnnouncements)
+    .set({
+      isActive: false,
+      updatedAt: new Date(),
+    })
+    .where(eq(myappAnnouncements.id, id))
+    .returning();
+  return announcement;
+}
+```
+
+#### **Step 12: Testing** 🧪
+
+**🚨 REQUIRED:** Create comprehensive tests for the new mini-app before merging. Every new mini-app MUST include ALL of the following test types:
+
+1. **API Tests** (`test/api/myapp.test.ts`):
+
+   - Profile CRUD operations (GET, POST, PUT, DELETE)
+   - All feature-specific endpoints (requests, items, etc.)
+   - Announcement endpoints (user and admin)
+   - Admin endpoints (if applicable)
+   - Authentication and authorization checks
+   - Input validation tests
+   - Error handling tests
+
+   **Example structure:**
+
+   ```typescript
+   describe("API - MyApp Profile", () => {
+     describe("GET /api/myapp/profile", () => {
+       /* ... */
+     });
+     describe("POST /api/myapp/profile", () => {
+       /* ... */
+     });
+     describe("PUT /api/myapp/profile", () => {
+       /* ... */
+     });
+     describe("DELETE /api/myapp/profile", () => {
+       /* ... */
+     });
+   });
+   ```
+
+2. **Component Tests** (`test/client/pages/myapp/profile.test.tsx`):
+
+   - Profile page component (if mini-app has profiles)
+   - Create form rendering when no profile exists
+   - Edit form rendering when profile exists
+   - Delete button visibility (only when profile exists)
+   - Form submission and validation
+   - Error state handling
+   - Loading state handling
+
+   **Required for profile-based mini-apps:** SupportMatch, LightHouse, SocketRelay, Directory, TrustTransport, MechanicMatch
+
+3. **E2E Tests** (`test/e2e/myapp.spec.ts`):
+
+   - Complete profile creation flow
+   - Profile update flow
+   - Profile deletion flow with confirmation
+   - Feature-specific workflows (e.g., ride requests, service requests, incident reports)
+   - Navigation between pages
+   - User interactions (buttons, forms, dialogs)
+
+   **Required for all mini-apps** - Use Playwright following existing patterns in `test/e2e/`
+
+4. **Integration Tests** (if needed):
+
+   - Database operations end-to-end
+   - Cascade anonymization on profile deletion
+   - API-Frontend integration
+
+5. **Run tests** locally and ensure they pass:
+
+   ```bash
+   npm run test          # Unit/integration/component tests
+   npm run test:e2e      # E2E tests
+   npm run test:coverage # Generate coverage report
+   ```
+
+6. **Verify coverage** meets requirements:
+   - Critical paths: 90%+ coverage (authentication, profile CRUD, admin actions, security)
+   - Overall codebase: 70%+ coverage
+
+**Test File Structure for New Mini-App:**
+
+```
+test/
+├── api/
+│   └── myapp.test.ts              ← API endpoint tests (REQUIRED)
+├── client/
+│   └── pages/
+│       └── myapp/
+│           └── profile.test.tsx   ← Component tests (REQUIRED if has profiles)
+└── e2e/
+    └── myapp.spec.ts              ← E2E tests (REQUIRED)
+```
+
+**Reference existing tests:**
+
+- API tests: `test/api/supportmatch.test.ts`, `test/api/trusttransport.test.ts`
+- Component tests: `test/client/pages/supportmatch/profile.test.tsx`
+- E2E tests: `test/e2e/profile-crud.spec.ts`, `test/e2e/trusttransport.spec.ts`
+
+See the **Testing Requirements** section above for detailed testing guidelines and examples.
+
+## 🔍 Search & Filtering Patterns
+
+### **Fuzzy Search (REQUIRED for all search boxes)**
+
+**🚨 CRITICAL:** All search boxes app-wide MUST use fuzzy search to handle typos, partial matches, and character order variations. This improves accessibility and user experience, especially for users under stress or with disabilities.
+
+#### **Implementation:**
+
+**1. For client-side filtering:**
+Use the `useFuzzySearch` hook from `@/hooks/useFuzzySearch`:
+
+```typescript
+import { useFuzzySearch } from "@/hooks/useFuzzySearch";
+
+// In your component
+const filteredItems = useFuzzySearch(items, searchQuery, {
+  searchFields: ["name", "description", "title"], // Fields to search
+  threshold: 0.3, // Match quality threshold (0-1), default 0.3
+});
+```
+
+**2. For Command component (dropdown/searchable selects):**
+The Command component (`@/components/ui/command`) automatically uses fuzzy search by default. No additional configuration needed - it handles typos and partial matches out of the box.
+
+```typescript
+import {
+  Command,
+  CommandInput,
+  CommandList,
+  CommandItem,
+} from "@/components/ui/command";
+
+<Command>
+  <CommandInput placeholder="Search..." />
+  <CommandList>
+    {items.map((item) => (
+      <CommandItem key={item.id} value={item.name}>
+        {item.name}
+      </CommandItem>
+    ))}
+  </CommandList>
+</Command>;
+```
+
+**3. For server-side search endpoints:**
+While backend searches use SQL ILIKE for pattern matching, consider enhancing with fuzzy matching for better results. The client-side fuzzy search is primary for user-facing filtering.
+
+**4. Fuzzy search utility functions:**
+
+- `fuzzySearch(items, query, options)` - Filter array of items
+- `fuzzyScore(query, text, options)` - Calculate match score (0-1)
+- `useFuzzySearch(items, query, options)` - React hook wrapper
+
+**Available options:**
+
+- `threshold` (0-1): Minimum match quality, default 0.3
+- `ignoreCase`: Case-insensitive matching, default true
+- `allowPartial`: Allow substring matches, default true
+- `searchFields`: Array of field names to search (for objects)
+- `getFieldValue`: Custom function to extract searchable text
+
+**Example - Client-side search:**
+
+```typescript
+// ❌ BAD - Simple includes() doesn't handle typos
+const filtered = items.filter((item) =>
+  item.name.toLowerCase().includes(search.toLowerCase())
+);
+
+// ✅ GOOD - Fuzzy search handles typos and partial matches
+const filtered = useFuzzySearch(items, search, {
+  searchFields: ["name", "description"],
+  threshold: 0.3,
+});
+```
+
+**Example - Multiple fields:**
+
+```typescript
+const filteredRequests = useFuzzySearch(requests, searchTerm, {
+  searchFields: [
+    "pickupLocation",
+    "dropoffLocation",
+    "pickupCity",
+    "riderMessage",
+  ],
+  threshold: 0.3,
+});
+```
+
+**When NOT to use fuzzy search:**
+
+- Email address matching (use exact match)
+- ID lookups (use exact match)
+- URL matching (use exact match)
+
+**All other search boxes MUST use fuzzy search.**
+
+## 📄 Pagination Standards
+
+**🚨 REQUIRED:** All list views and data tables MUST use **pagination** (NOT infinite scroll) app-wide.
+
+### Rationale
+
+Pagination is required for:
+
+1. **Trauma-informed design** - Predictable, controlled navigation reduces anxiety
+2. **Accessibility** - Better keyboard navigation and screen reader support
+3. **Bandwidth efficiency** - Lower data transfer, critical for users with limited connectivity
+4. **Performance** - Faster initial load times and better mobile experience
+5. **User control** - Users can navigate to specific pages, jump ahead/back easily
+
+### Implementation
+
+**Use the standardized `PaginationControls` component** from `@/components/pagination-controls`:
+
+```typescript
+import { PaginationControls } from "@/components/pagination-controls";
+
+// State management
+const [page, setPage] = useState(0); // 0-indexed page number
+const limit = 20; // Items per page
+
+// Query with pagination
+const { data, isLoading } = useQuery<{ items: Item[]; total: number }>({
+  queryKey: [`/api/endpoint?limit=${limit}&offset=${page * limit}`],
+});
+
+const items = data?.items || [];
+const total = data?.total || 0;
+
+// Render pagination controls
+<PaginationControls
+  currentPage={page}
+  totalItems={total}
+  itemsPerPage={limit}
+  onPageChange={setPage}
+  className="mt-6"
+/>;
+```
+
+### Backend Requirements
+
+All list/listing endpoints MUST support:
+
+- `limit` query parameter (number of items per page)
+- `offset` query parameter (number of items to skip)
+- Return both `items` array and `total` count
+
+```typescript
+// Example backend response
+{
+  items: Item[],
+  total: number // Total count for pagination calculation
+}
+```
+
+### Default Pagination Sizes
+
+- **Admin lists/tables**: 50 items per page (more data for management)
+- **User-facing lists**: 20 items per page (better UX, faster loading)
+- **Small lists (< 10 items)**: No pagination needed (hide controls automatically)
+
+### URL State (Optional)
+
+For bookmarkable pagination, consider using URL query parameters:
+
+```typescript
+const [searchParams, setSearchParams] = useSearchParams();
+const page = parseInt(searchParams.get("page") || "0", 10);
+
+const handlePageChange = (newPage: number) => {
+  setPage(newPage);
+  setSearchParams({
+    ...Object.fromEntries(searchParams),
+    page: newPage.toString(),
+  });
+};
+```
+
+### When NOT to Paginate
+
+- **Single-item views** - Detail pages don't need pagination
+- **Small lists (< 10 items)** - PaginationControls automatically hides if not needed
+- **Dashboard widgets** - Fixed-size preview lists
+- **Dropdown/select menus** - Use search/filter instead
+
+### Migration from Infinite Scroll
+
+If you find infinite scroll implementations:
+
+1. Replace with `PaginationControls` component
+2. Add `page` state (0-indexed)
+3. Add `limit` constant
+4. Update query to include `offset=${page * limit}`
+5. Remove scroll detection logic
+
+**🚨 NEVER use infinite scroll** - It violates trauma-informed design principles and accessibility standards.
+
+## 🎨 Design System Rules
+
+**READ `design_guidelines.md` BEFORE CODING UI!**
+
+### Critical Rules:
+
+1. **WCAG AAA compliance** - 7:1 contrast, keyboard nav, semantic HTML
+2. **No animations** - No parallax, scroll effects, or transitions (trauma-informed)
+3. **Use shadcn components** - Button, Card, Badge, Form, etc. from `@/components/ui/`
+4. **Tailwind spacing** - Stick to 2, 4, 6, 8, 12, 16 scale
+5. **data-testid required** - Every interactive element needs unique test ID
+6. **Design spec source of truth** - Follow `design_guidelines.md` for colors, spacing, components, and accessibility. Never override without updating the guidelines.
+7. **Links opening in new tabs MUST use confirmation dialog** - **REQUIRED**: Any link that opens in a new tab (whether internal or external) MUST use the `useExternalLink` hook from `@/hooks/useExternalLink` which provides a standardized confirmation dialog before opening links. This includes:
+   - Links to other pages within the app that open in new tabs
+   - External links to other websites
+   - Any clickable element that triggers `window.open()` or opens a new tab
+   - The hook provides `openExternal(url)` function and `<ExternalLinkDialog />` component that must be included in the component
+
+### Shared Field Standards
+
+- **Country field (ALL profiles/apps):** Implement as a dropdown/select with a single, shared options source and identical ordering across the app.
+  - Use a shared list of countries (single source of truth) and a shared UI control so UX and data stay consistent if users update their country in different mini-apps.
+  - Do not use free-text inputs for country fields.
+  - Ensure backend schemas use consistent validation for allowed country values.
+
+### Color Scheme:
+
+- Primary: Green (`#4ade80`)
+- Background: Warm tan/canvas (`HSL 40 25% 97%`)
+- Text hierarchy: Default → Secondary → Tertiary (muted)
+
+### Component Patterns:
+
+```typescript
+// Good - Uses shadcn Button with test ID
+<Button data-testid="button-submit" variant="default">Submit</Button>
+
+// Good - Card with proper spacing
+<Card className="p-6">
+  <CardHeader className="space-y-2">
+    <CardTitle>Title</CardTitle>
+  </CardHeader>
+  <CardContent className="space-y-4">
+    {/* content */}
+  </CardContent>
+</Card>
+
+// Good - Form with react-hook-form
+const form = useForm({
+  resolver: zodResolver(insertMyProfileSchema),
+  defaultValues: { name: "" },
+});
+```
+
+---
+
+## 🔒 Authentication & Authorization
+
+### Auth Levels (enforced by middleware):
+
+1. **Unauthenticated** → Landing page only
+2. **Authenticated (no invite)** → Invite redemption page only
+3. **Authenticated (with invite)** → Full user features
+4. **Admin** → All features + admin dashboard
+
+### Usage:
+
+```typescript
+// Frontend - useAuth hook
+import { useAuth } from "@/hooks/useAuth";
+
+const { user, isAdmin, loading } = useAuth();
+
+// Backend - Middleware
+app.get("/api/protected", isAuthenticated, async (req: any, res) => {
+  const userId = getUserId(req); // req.user.claims.sub
+});
+
+app.get("/api/admin-only", isAdmin, async (req: any, res) => {
+  // Admin only
+});
+```
+
+---
+
+## 🛡️ CSRF Protection for Admin Endpoints
+
+**🚨 REQUIRED:** All state-changing admin operations (POST, PUT, DELETE, PATCH) MUST be protected against Cross-Site Request Forgery (CSRF) attacks.
+
+### Implementation
+
+The platform uses **double-submit cookie pattern** combined with **SameSite cookie attributes** for CSRF protection:
+
+1. **Double-Submit Cookie Pattern:**
+
+   - Server sets CSRF token in cookie (httpOnly: false, so JavaScript can read it)
+   - Client reads token from cookie and includes it in request header
+   - Server validates that cookie token matches request header token
+   - If tokens don't match, request is rejected
+
+2. **SameSite Cookie Protection:**
+   - Session cookies use `sameSite: 'strict'` to prevent cross-site cookie transmission
+   - CSRF token cookies also use `sameSite: 'strict'`
+
+### Usage
+
+**For state-changing admin operations:**
+
+```typescript
+import { isAuthenticated, isAdminWithCsrf } from "./replitAuth";
+
+// Use isAdminWithCsrf instead of isAdmin for POST, PUT, DELETE, PATCH
+app.post(
+  "/api/admin/endpoint",
+  isAuthenticated,
+  ...isAdminWithCsrf,
+  async (req, res) => {
+    // Route handler
+  }
+);
+```
+
+**Or manually add validateCsrfToken:**
+
+```typescript
+import { isAuthenticated, isAdmin } from "./replitAuth";
+import { validateCsrfToken } from "./csrf";
+
+app.post(
+  "/api/admin/endpoint",
+  isAuthenticated,
+  isAdmin,
+  validateCsrfToken,
+  async (req, res) => {
+    // Route handler
+  }
+);
+```
+
+**For GET requests to admin pages:**
+CSRF tokens are automatically generated via middleware. The frontend can read the token from the `X-CSRF-Token` cookie.
+
+### Frontend Integration
+
+The `apiRequest` function in `client/src/lib/queryClient.ts` automatically:
+
+- Detects admin endpoints
+- Reads CSRF token from cookie
+- Includes token in `X-CSRF-Token` header for state-changing methods
+
+No additional frontend code is required - CSRF protection is transparent to React components.
+
+### Key Points
+
+- **GET requests**: Automatically generate CSRF token cookie
+- **POST/PUT/DELETE/PATCH requests**: Require CSRF token validation
+- **Token source**: Cookie (set by server) + Header (sent by client)
+- **Validation**: Tokens must match exactly
+- **Error handling**: Returns 403 with clear error message if validation fails
+
+### Files
+
+- `server/csrf.ts` - CSRF protection implementation
+- `server/replitAuth.ts` - `isAdminWithCsrf` helper middleware
+- `client/src/lib/queryClient.ts` - Automatic CSRF token inclusion
+
+## 🛡️ Anti-Scraping Protection for Public Endpoints
+
+**🚨 REQUIRED:** All public endpoints (endpoints accessible without authentication) MUST implement comprehensive anti-scraping protection to prevent bulk data harvesting and protect user privacy.
+
+### Protection Requirements:
+
+1. **Rate Limiting** - Apply appropriate rate limiters from `server/rateLimiter.ts`:
+
+   - **Listing endpoints** (`/api/{app}/public`): Use `publicListingLimiter` (10 requests/15min per IP)
+   - **Individual item endpoints** (`/api/{app}/public/:id`): Use `publicItemLimiter` (50 requests/15min per IP)
+
+2. **Request Fingerprinting** - Automatically enabled via `fingerprintRequests` middleware in `server/antiScraping.ts`:
+
+   - Tracks IP, user-agent, headers, referer, and request patterns
+   - Detects suspicious behavior (rapid requests, missing headers, repetitive patterns)
+
+3. **Data Obfuscation** - Implement in public listing endpoints:
+   - **Rotate display order**: Use `rotateDisplayOrder()` from `server/dataObfuscation.ts` to periodically shuffle results
+   - **Add delays**: Use `addAntiScrapingDelay()` based on request suspicion level
+   - **Bot detection**: Use `isLikelyBot()` to identify automated requests
+
+### Implementation Pattern:
+
+```typescript
+import { publicListingLimiter, publicItemLimiter } from "./rateLimiter";
+import {
+  rotateDisplayOrder,
+  addAntiScrapingDelay,
+  isLikelyBot,
+} from "./dataObfuscation";
+
+// Listing endpoint example
+app.get("/api/myapp/public", publicListingLimiter, async (req, res) => {
+  try {
+    // Add delay for suspicious requests
+    const isSuspicious = (req as any).isSuspicious || false;
+    const userAgent = req.headers["user-agent"];
+    const accept = req.headers["accept"];
+    const acceptLang = req.headers["accept-language"];
+    const likelyBot = isLikelyBot(userAgent, accept, acceptLang);
+
+    if (isSuspicious || likelyBot) {
+      await addAntiScrapingDelay(true, 200, 800);
+    } else {
+      await addAntiScrapingDelay(false, 50, 200);
+    }
+
+    const items = await storage.listPublicItems();
+
+    // Rotate display order to make scraping harder
+    const rotated = rotateDisplayOrder(items);
+
+    res.json(rotated);
+  } catch (error) {
+    console.error("Error fetching public items:", error);
+    res.status(500).json({ message: "Failed to fetch items" });
+  }
+});
+
+// Individual item endpoint example
+app.get("/api/myapp/public/:id", publicItemLimiter, async (req, res) => {
+  try {
+    const item = await storage.getPublicItemById(req.params.id);
+    if (!item || !item.isPublic) {
+      return res.status(404).json({ message: "Item not found" });
+    }
+    res.json(item);
+  } catch (error) {
+    console.error("Error fetching public item:", error);
+    res.status(500).json({ message: "Failed to fetch item" });
+  }
+});
+```
+
+### Key Points:
+
+- **`fingerprintRequests` middleware is already applied globally** - All requests are automatically fingerprinted
+- **Rate limiters must be applied BEFORE route handlers** - Place them as the first middleware
+- **Display order rotation uses time-based seeding** - Results shuffle every 5 minutes automatically
+- **Delays are subtle** - Legitimate users won't notice, but bots/scrapers will be slowed
+- **Monitoring available** - Admins can view suspicious patterns via `/api/admin/anti-scraping/patterns`
+
+### Monitoring:
+
+Admin endpoints for monitoring suspicious activity:
+
+- `GET /api/admin/anti-scraping/patterns` - View all suspicious patterns
+- `GET /api/admin/anti-scraping/patterns?ip=X` - View patterns for specific IP
+- `DELETE /api/admin/anti-scraping/patterns` - Clear all patterns
+- `DELETE /api/admin/anti-scraping/patterns?ip=X` - Clear patterns for specific IP
+
+**🚨 CRITICAL:** Never create public endpoints without these protection measures. User privacy and safety depend on preventing bulk data harvesting.
+
+---
+
+## 📋 Database Migration Workflow
+
+**🚨 PRODUCTION RULES (Schema changes):**
+
+1. **Whenever you change `shared/schema.ts` and `schema.sql` for an existing product database, you MUST also create an idempotent SQL migration in `platform/migrations/`.**
+2. **Migrations MUST be idempotent** – safe to run multiple times:
+   - Use `information_schema.columns` checks before `ALTER TABLE` / `ALTER COLUMN` / `DROP COLUMN`
+   - Use `pg_constraint` checks before adding or dropping constraints and indexes
+   - Wrap logic in `DO $$ BEGIN ... END $$;` blocks with conditional checks
+3. **NEVER drop or recreate the production database** to apply schema changes. Always evolve it via migrations.
+4. **Keep IDs stable:** **NEVER change ID column types** (serial ↔ varchar) – this breaks existing data.
+
+**Local development / non-production:**
+
+1. Update `shared/schema.ts`
+2. Optionally run: `npm run db:push` to sync a local/dev database
+3. Regenerate and commit `schema.sql` (see below)
+4. Add a matching, idempotent SQL migration under `platform/migrations/` that brings production into alignment with the new schema
+
+### **🚨 CRITICAL: Keep `schema.sql` Updated**
+
+**IMPORTANT:** The `npm run db:push` command may timeout when working with large schemas or remote databases. As a fallback, the project maintains a `schema.sql` file that can be pasted directly into the Neon console (or any PostgreSQL database).
+
+**When to update `schema.sql`:**
+
+- **ALWAYS** when you add, modify, or remove tables in `shared/schema.ts`
+- **ALWAYS** when you change column types, constraints, or defaults
+- **ALWAYS** when you add new foreign key relationships
+- **ALWAYS** when you modify indexes
+
+**How to update `schema.sql`:**
+
+1. After making changes to `shared/schema.ts`, regenerate the SQL schema
+2. Convert all Drizzle schema definitions to PostgreSQL `CREATE TABLE` statements
+3. Include all:
+   - Table definitions with proper column types
+   - Primary keys with `gen_random_uuid()` defaults
+   - Foreign key constraints
+   - Default values and NOT NULL constraints
+   - Indexes (e.g., `IDX_session_expire`)
+   - Deferred foreign key constraints for circular dependencies (e.g., `research_items.accepted_answer_id`)
+4. Use `CREATE TABLE IF NOT EXISTS` for idempotency
+5. Maintain proper table ordering (dependencies first)
+6. Update the `schema.sql` file in the project root
+
+**Format requirements:**
+
+- Use PostgreSQL-compatible SQL syntax
+- Column types: `VARCHAR`, `TEXT`, `INTEGER`, `BOOLEAN`, `TIMESTAMP`, `DECIMAL(precision, scale)`, `NUMERIC(precision, scale)`, `DATE`, `JSONB`, `TEXT[]`
+- Primary keys: `VARCHAR PRIMARY KEY DEFAULT gen_random_uuid()`
+- Foreign keys: `REFERENCES table_name(column_name)`
+- Defaults: Use `DEFAULT NOW()`, `DEFAULT false`, etc.
+- Arrays: Use `TEXT[]` for array columns
+
+**Example conversion:**
+
+```typescript
+// Drizzle schema (shared/schema.ts)
+export const myTable = pgTable("my_table", {
+  id: varchar("id")
+    .primaryKey()
+    .default(sql`gen_random_uuid()`),
+  userId: varchar("user_id")
+    .notNull()
+    .references(() => users.id),
+  name: varchar("name", { length: 100 }).notNull(),
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+});
+```
+
+```sql
+-- SQL schema (schema.sql)
+CREATE TABLE IF NOT EXISTS my_table (
+  id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id VARCHAR NOT NULL REFERENCES users(id),
+  name VARCHAR(100) NOT NULL,
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+```
+
+**Testing the SQL:**
+
+- The `schema.sql` file should be executable in the Neon console
+- All tables should be created successfully
+- Foreign key constraints should be valid
+- Circular dependencies should be handled with deferred constraints
+
+**🚨 REQUIRED:** Every time you modify `shared/schema.ts`, you MUST also update `schema.sql` to keep them in sync. This ensures the database can be set up even when the CLI migration tool times out.
+
+### **🚨 CRITICAL: Keep `DELETE_SYNC_ISSUE_USERS.sql` Updated**
+
+**IMPORTANT:** The `DELETE_SYNC_ISSUE_USERS.sql` file in the project root contains SQL statements for deleting users and all their related data. This script must be kept synchronized with `schema.sql` to ensure all foreign key relationships are correctly handled during user deletion.
+
+**When to update `DELETE_SYNC_ISSUE_USERS.sql`:**
+
+- **ALWAYS** when you add new tables that reference `users.id` (directly or through profiles)
+- **ALWAYS** when you modify foreign key relationships involving user IDs
+- **ALWAYS** when you add new foreign key columns that reference user-related tables
+- **ALWAYS** when you change how user data is structured (e.g., moving from profile-based to direct user references)
+
+**How to update `DELETE_SYNC_ISSUE_USERS.sql`:**
+
+1. Review all foreign key relationships in `schema.sql` that involve `users.id` or user profile tables
+2. For each new table/relationship, add appropriate DELETE statements in the correct order (respecting foreign key dependencies)
+3. Ensure deletion order follows foreign key constraints (delete child records before parent records)
+4. Test the deletion script in a transaction before committing
+5. Update both user deletion sections (USER 1 and USER 2) if the pattern applies to both
+
+**Key considerations:**
+
+- Some tables reference `users.id` directly (e.g., `payments.user_id`, `socketrelay_requests.user_id`)
+- Some tables reference user profiles (e.g., `messages.sender_id` references `support_match_profiles.user_id`)
+- Deletion order matters: delete dependent records before parent records
+- Use the same user IDs in both deletion sections for consistency
+
+**🚨 REQUIRED:** Every time you modify `schema.sql` (which happens whenever `shared/schema.ts` changes), you MUST also review and update `DELETE_SYNC_ISSUE_USERS.sql` to ensure it correctly handles all foreign key relationships. This prevents foreign key constraint errors during user deletion operations.
+
+---
+
+## 🧪 Testing Requirements
+
+**🚨 CRITICAL:** Every new feature MUST include appropriate tests. Testing ensures safety, security, and reliability for vulnerable users.
+
+### **Comprehensive Testing Plan**
+
+See `TESTING_PLAN.md` for the complete testing strategy covering:
+
+- Functional Testing
+- Usability Testing
+- Performance Testing
+- Security Testing
+- AI Model Evaluation (if applicable)
+- Regression Testing
+- Integration Testing
+
+### **Testing Requirements for New Features**
+
+When adding any new feature, you MUST create tests for:
+
+#### **1. Functional Tests**
+
+**For API Endpoints:**
+
+```typescript
+// Example: test/api/myapp.test.ts
+import { describe, it, expect } from "vitest";
+import { storage } from "../server/storage";
+import { db } from "../server/db";
+
+describe("MyApp API", () => {
+  it("should create profile", async () => {
+    const profile = await storage.createMyAppProfile({
+      userId: "test-user-id",
+      // ... other fields
+    });
+    expect(profile).toBeDefined();
+    expect(profile.userId).toBe("test-user-id");
+  });
+
+  it("should enforce authentication", async () => {
+    // Test that unauthenticated requests are rejected
+  });
+
+  it("should validate input with Zod schema", async () => {
+    // Test that invalid input is rejected
+  });
+});
+```
+
+**For Frontend Components:**
+
+```typescript
+// Example: test/client/pages/myapp/profile.test.tsx
+import { describe, it, expect } from "vitest";
+import { render, screen } from "@testing-library/react";
+import MyAppProfile from "@/pages/myapp/profile";
+
+describe("MyAppProfile", () => {
+  it("should render create form when no profile exists", () => {
+    render(<MyAppProfile />);
+    expect(screen.getByTestId("button-submit")).toHaveTextContent(
+      "Create Profile"
+    );
+  });
+
+  it("should render edit form when profile exists", () => {
+    // Test with existing profile
+  });
+
+  it("should show delete button only when profile exists", () => {
+    // Test delete button visibility
+  });
+});
+```
+
+#### **2. Security Tests**
+
+**🚨 REQUIRED for all endpoints:**
+
+- **Authorization tests**: Verify users can only access their own data
+- **Input validation tests**: Test SQL injection, XSS prevention
+- **Authentication tests**: Verify protected endpoints require auth
+- **Privacy tests**: Verify private data not exposed
+
+```typescript
+describe("Security", () => {
+  it("should prevent unauthorized access to other users data", async () => {
+    // User A should not access User B's profile
+  });
+
+  it("should sanitize user input to prevent XSS", () => {
+    // Test that script tags are escaped
+  });
+
+  it("should prevent SQL injection", async () => {
+    // Test that malicious SQL is handled safely
+  });
+});
+```
+
+#### **3. Accessibility Tests**
+
+**🚨 REQUIRED for all UI components:**
+
+- **Keyboard navigation**: All functionality accessible via keyboard
+- **Screen reader compatibility**: Test with NVDA/JAWS/VoiceOver
+- **Color contrast**: Verify WCAG AAA compliance (7:1 ratio)
+- **Focus management**: Verify focus indicators visible
+
+```typescript
+import { axe, toHaveNoViolations } from "jest-axe";
+
+describe("Accessibility", () => {
+  it("should have no accessibility violations", async () => {
+    const { container } = render(<MyAppProfile />);
+    const results = await axe(container);
+    expect(results).toHaveNoViolations();
+  });
+
+  it("should be keyboard navigable", () => {
+    // Test Tab navigation, Enter/Space activation
+  });
+});
+```
+
+#### **4. Integration Tests**
+
+**For database operations:**
+
+```typescript
+describe('Storage Integration', () => {
+  it('should create profile and retrieve it', async () => {
+    const created = await storage.createMyAppProfile({...});
+    const retrieved = await storage.getMyAppProfile(created.userId);
+    expect(retrieved).toEqual(created);
+  });
+
+  it('should anonymize related data on profile deletion', async () => {
+    // Test cascade anonymization
+  });
+});
+```
+
+**For API-Frontend integration:**
+
+```typescript
+// E2E test with Playwright
+import { test, expect } from "@playwright/test";
+
+test("complete profile creation flow", async ({ page }) => {
+  await page.goto("/apps/myapp/profile");
+  await page.fill('[data-testid="input-name"]', "Test User");
+  await page.click('[data-testid="button-submit"]');
+  await expect(page.locator('[data-testid="toast-success"]')).toBeVisible();
+});
+```
+
+#### **5. Performance Tests**
+
+**For API endpoints:**
+
+- Test response times (target: < 500ms p95)
+- Test under load (50+ concurrent users)
+- Test database query performance
+
+**For frontend:**
+
+- Test bundle size (< 200KB gzipped)
+- Test Time to Interactive (< 3s)
+- Test First Contentful Paint (< 1.5s)
+
+#### **6. Regression Tests**
+
+**Required for:**
+
+- Profile CRUD operations
+- Authentication flows
+- Admin actions
+- Public endpoint access
+- Profile deletion with cascade
+
+### **Test File Structure**
+
+```
+project-root/
+├── test/
+│   ├── api/              ← API endpoint tests (Vitest)
+│   │   ├── auth.test.ts
+│   │   └── myapp.test.ts
+│   ├── client/           ← Frontend component tests (Vitest + React Testing Library)
+│   │   ├── components/
+│   │   └── pages/
+│   ├── e2e/              ← End-to-end tests (Playwright)
+│   │   ├── auth.spec.ts
+│   │   └── myapp.spec.ts
+│   ├── integration/      ← Integration tests (Vitest)
+│   │   └── storage.test.ts
+│   ├── security/         ← Security-specific tests
+│   │   └── injection.test.ts
+│   └── fixtures/         ← Test data and helpers
+│       └── testData.ts
+```
+
+### **Test Execution**
+
+**Pre-commit (via Husky):**
+
+- Run linting
+- Run type checking
+- Run unit tests
+
+**CI/CD Pipeline:**
+
+- Run full test suite on PRs
+- Run E2E tests on PRs
+- Block merge if tests fail
+- Generate coverage reports
+
+**Before Release:**
+
+- Run smoke tests (< 5 minutes)
+- Run regression test checklist (manual)
+- Verify all critical paths tested
+
+### **Test Coverage Requirements**
+
+- **Critical paths**: 90%+ coverage
+
+  - Authentication/authorization
+  - Profile CRUD operations
+  - Admin actions
+  - Profile deletion
+  - Public endpoint protection
+
+- **Overall codebase**: 70%+ coverage
+
+### **Testing Tools**
+
+- **Unit/Integration**: Vitest
+- **E2E**: Playwright
+- **Accessibility**: axe-core (via Playwright)
+- **API Testing**: k6 or Artillery (for load testing)
+- **Coverage**: Vitest coverage
+
+### **Test Naming Conventions**
+
+- Test files: `*.test.ts` or `*.spec.ts`
+- Test descriptions: `should [expected behavior]`
+- Group related tests with `describe` blocks
+- Use clear, descriptive test names
+
+### **Common Testing Patterns**
+
+**Forms:**
+
+```typescript
+const form = useForm({
+  resolver: zodResolver(insertSchema),
+  defaultValues: { field: "" },
+});
+
+const onSubmit = async (data: InsertType) => {
+  mutation.mutate(data);
+};
+```
+
+**Mutations:**
+
+```typescript
+const mutation = useMutation({
+  mutationFn: async (data: InsertType) =>
+    apiRequest("/api/endpoint", { method: "POST", body: data }),
+  onSuccess: () => {
+    queryClient.invalidateQueries({ queryKey: ["/api/endpoint"] });
+    toast({ title: "Success!" });
+  },
+});
+```
+
+**Testing with TanStack Query:**
+
+```typescript
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const createTestQueryClient = () =>
+  new QueryClient({
+    defaultOptions: {
+      queries: { retry: false },
+      mutations: { retry: false },
+    },
+  });
+
+// Use in tests
+render(
+  <QueryClientProvider client={createTestQueryClient()}>
+    <Component />
+  </QueryClientProvider>
+);
+```
+
+### **🚨 Testing Checklist for New Features**
+
+When adding a new feature, ensure:
+
+- [ ] **Unit tests** for storage methods (create, read, update, delete)
+- [ ] **API tests** for all endpoints (GET, POST, PUT, DELETE)
+- [ ] **Authorization tests** (users can only access own data)
+- [ ] **Input validation tests** (Zod schema validation)
+- [ ] **Security tests** (SQL injection, XSS prevention)
+- [ ] **Accessibility tests** (keyboard nav, screen reader, contrast)
+- [ ] **Integration tests** (end-to-end workflows)
+- [ ] **Error handling tests** (invalid input, not found, unauthorized)
+- [ ] **Edge case tests** (empty data, null values, boundary conditions)
+- [ ] **Performance tests** (response times, load handling)
+- [ ] **Regression tests** (existing features not broken)
+
+**For UI components:**
+
+- [ ] Component renders correctly
+- [ ] Loading states work
+- [ ] Error states display properly
+- [ ] Forms validate input
+- [ ] Success/error toasts appear
+- [ ] Navigation works correctly
+- [ ] All `data-testid` attributes present
+
+**For public endpoints:**
+
+- [ ] Rate limiting enforced
+- [ ] Anti-scraping protection works
+- [ ] Display order rotation functions
+- [ ] Bot detection triggers delays
+
+### **Writing Maintainable Tests**
+
+1. **Use descriptive names**: Test names should clearly describe what they test
+2. **Arrange-Act-Assert pattern**: Structure tests clearly
+3. **Test one thing**: Each test should verify one behavior
+4. **Use fixtures**: Reuse test data helpers
+5. **Mock external services**: Don't call real APIs/databases in unit tests
+6. **Clean up**: Remove test data after tests
+7. **Keep tests fast**: Unit tests should run in < 100ms each
+8. **Document complex tests**: Add comments for non-obvious test logic
+
+### **When to Write Tests**
+
+- **Always**: Before merging new features
+- **Always**: For security-critical code
+- **Always**: For authentication/authorization
+- **Always**: For data deletion/anonymization
+- **Recommended**: For all API endpoints
+- **Recommended**: For complex business logic
+- **Optional**: For simple CRUD operations (if covered by integration tests)
+
+---
+
+## 🗑️ Account Deletion System
+
+The platform supports two levels of deletion:
+
+### **1. Mini-App Profile Deletion (Individual)**
+
+Users can delete their profile from a specific mini-app without affecting other mini-apps. This is handled at the mini-app level.
+
+**Implementation:**
+
+- Each mini-app has a `delete{AppName}Profile(userId, reason?)` method in `server/storage.ts`
+- Profile deletion anonymizes related data (messages, requests, partnerships, etc.)
+- Deletion is logged via `logProfileDeletion()` for audit purposes
+- Frontend uses `DeleteProfileDialog` component for confirmation
+
+**Example:** User deletes SupportMatch profile but keeps LightHouse profile active.
+
+### **2. Complete Account Deletion (All Mini-Apps)**
+
+Users can delete their entire account, which removes them from ALL mini-apps and anonymizes all platform data.
+
+**Implementation Location:**
+
+- **Storage Method:** `deleteUserAccount(userId, reason?)` in `server/storage.ts`
+- **API Endpoint:** `DELETE /api/account/delete` in `server/routes.ts`
+- **UI Page:** `client/src/pages/account/delete.tsx`
+- **Script:** `scripts/deleteUserAccount.ts` (for manual admin deletion)
+
+**Process:**
+
+1. Deletes all mini-app profiles (calls each `delete{AppName}Profile()` method)
+2. Anonymizes platform-wide user data:
+   - NPS survey responses
+   - Payment records (both as user and recorder)
+   - Invite codes created by user
+   - Admin action logs (if user was admin)
+   - Research items and contributions
+3. Anonymizes the user record itself (email → null, name → "Deleted User")
+4. Logs the complete account deletion
+
+**🚨 REQUIRED When Adding New Mini-App:**
+
+When you add a new mini-app, you MUST:
+
+1. **Add to `deleteUserAccount()` method** in `server/storage.ts`:
+
+   ```typescript
+   const profileDeletions = [
+     // ... existing apps ...
+     {
+       name: "MyApp",
+       deleteFn: () =>
+         this.deleteMyAppProfile(userId, reason).catch((err) =>
+           console.warn(`Failed to delete MyApp profile: ${err.message}`)
+         ),
+     },
+   ];
+   ```
+
+2. **Verify all user-related data is handled:**
+
+   - Check if your mini-app has tables that reference `users.id` directly
+   - If yes, ensure they're either:
+     - Handled by your profile deletion method (preferred)
+     - Added to the anonymization section in `deleteUserAccount()` if they're platform-wide
+
+3. **Test complete account deletion:**
+   - Create a test user with profiles in multiple mini-apps including your new one
+   - Run `deleteUserAccount()` via script or API
+   - Verify your mini-app profile is deleted
+   - Verify all related data is anonymized
+   - Check deletion logs
+
+**Manual Deletion Script:**
+
+For admin use when users can't find the UI button:
+
+```bash
+tsx scripts/deleteUserAccount.ts <user-id> [reason]
+```
+
+**UI Access:**
+
+- Users can access account deletion at `/account/delete`
+- Button available on home page (`/pages/home.tsx`)
+- Two-step confirmation dialog prevents accidental deletion
+
+**Data Privacy Compliance:**
+
+- All deletions follow anonymization patterns (not hard deletion)
+- User IDs replaced with `deleted_user_[random_string]`
+- Personal information (email, name) set to null or "Deleted User"
+- Audit logs maintained for compliance
+- Related data preserved but anonymized for data integrity
+
+---
+
+## 🚨 Common Mistakes to Avoid
+
+1. **Don't modify these files:**
+
+   - `vite.config.ts` (already configured)
+   - `server/vite.ts` (already configured)
+   - `drizzle.config.ts` (already configured)
+
+2. **Don't create separate route files** - All routes go in `server/routes.ts`
+
+3. **Don't bypass storage layer** - Always use `storage.methodName()`, never `db.query()` in routes
+
+4. **Don't use `process.env` in frontend** - Use `import.meta.env.VITE_*`
+
+5. **Don't forget Zod validation** - Always validate request bodies with schemas
+
+6. **Don't skip test IDs** - Every interactive element needs `data-testid`
+
+7. **Don't mix mini-app concerns** - Keep each mini-app's code separate
+
+8. **Don't use simple `includes()` for search boxes** - Always use `useFuzzySearch` hook or Command component (which has fuzzy search built-in). Simple string matching doesn't handle typos and hurts accessibility.
+
+---
+
+## 📚 Existing Mini-Apps Reference
+
+Study these for patterns:
+
+1. **SupportMatch** (`/apps/supportmatch`)
+
+   - Profiles with edit/delete functionality
+   - Partnerships, messaging, exclusions, reports
+   - Complex matching algorithm
+   - Admin moderation tools
+   - Profile deletion with cascade anonymization
+   - ✅ Announcement system with admin management
+
+2. **LightHouse** (`/apps/lighthouse`)
+
+   - Profiles with edit/delete functionality
+   - Dual-role system (seeker/host)
+   - Property listings
+   - Match requests
+   - Conditional dashboard
+   - Profile deletion with cascade anonymization
+   - ✅ Announcement system with admin management
+
+3. **SocketRelay** (`/apps/socketrelay`)
+
+   - Profiles with edit/delete functionality
+   - Request/fulfillment system
+   - Messaging
+   - Profile deletion with cascade anonymization
+   - ✅ Announcement system with admin management
+
+4. **Directory** (`/apps/directory`)
+
+   - Profiles with edit/delete functionality
+   - Public/private profiles
+   - Admin/public views
+   - Profile deletion with logging
+   - ✅ Announcement system with admin management
+
+5. **ChatGroups** (`/apps/chatgroups`)
+   - Signal.org group links
+   - Public listing of active groups
+   - Admin management interface
+   - Note: Does not require user profiles (public group listing app)
+   - ✅ Announcement system with admin management
+
+**🚨 Profile Requirements:**
+
+- SupportMatch: ✅ Has profile with edit/delete
+- LightHouse: ✅ Has profile with edit/delete
+- SocketRelay: ✅ Has profile with edit/delete
+- Directory: ✅ Has profile with edit/delete
+- SleepStories: ❌ No profile (content-only)
+- ChatGroups: ❌ No profile (public listing only)
+
+---
+
+## ✅ Checklist for New Features
+
+### **Implementation Checklist**
+
+- [ ] Schema added to `shared/schema.ts` with proper relations & types (including profile table)
+- [ ] **Announcement table added to schema** - REQUIRED for every mini-app (`{app}Announcements` table)
+- [ ] Storage methods added to interface & implemented (including profile CRUD and delete with cascade)
+- [ ] **Announcement storage methods added** - REQUIRED (create, getActive, getAll, update, deactivate)
+- [ ] API routes added with Zod validation & error handling (GET, POST, PUT, DELETE for profile)
+- [ ] **Announcement API routes added** - REQUIRED (`/api/{app}/announcements` and `/api/{app}/admin/announcements`)
+- [ ] **Profile page created with Edit and Delete buttons** - REQUIRED for every mini-app
+- [ ] **Delete Profile button uses `DeleteProfileDialog` component** - REQUIRED
+- [ ] **Delete profile method anonymizes related data** (replaces user IDs with `deleted_user_[random_string]`)
+- [ ] **Delete profile method logs deletion** using `logProfileDeletion()`
+- [ ] **Mini-app added to `deleteUserAccount()` method** - REQUIRED (add to profileDeletions array in `server/storage.ts`)
+- [ ] **Complete account deletion tested** - Verify mini-app profile is deleted when entire account is deleted
+- [ ] **Public endpoints implement anti-scraping protection** (rate limiting, fingerprinting, data obfuscation)
+- [ ] Frontend pages created following design guidelines
+- [ ] **AnnouncementBanner component added to dashboard** - REQUIRED (displays active announcements)
+- [ ] **Admin announcement management page created** - REQUIRED (`admin-announcements.tsx`)
+- [ ] Routes registered in `App.tsx` (including profile route and announcement admin route)
+- [ ] Sidebar navigation updated
+- [ ] **Available Services page updated** - REQUIRED (`client/src/pages/services.tsx`) - Add new mini-app to services array
+- [ ] **Link to announcement management added to admin page** - REQUIRED
+- [ ] Seed script created in `scripts/` for the mini-app
+- [ ] Country fields use the shared dropdown and options list
+- [ ] External links use the `useExternalLink` hook with confirmation dialog
+- [ ] All interactive elements have `data-testid` attributes
+- [ ] WCAG AAA compliance verified (contrast, keyboard nav)
+- [ ] Loading states implemented
+- [ ] Error handling implemented
+- [ ] Database schema pushed: `npm run db:push` (or update `schema.sql` if CLI times out)
+- [ ] **`schema.sql` file updated** - REQUIRED: Keep `schema.sql` in sync with `shared/schema.ts` for manual database setup
+- [ ] **`DELETE_SYNC_ISSUE_USERS.sql` file updated** - REQUIRED: Keep `DELETE_SYNC_ISSUE_USERS.sql` in sync with `schema.sql` to ensure all foreign key relationships are handled correctly during user deletion
+- [ ] **Status page configuration updated** - REQUIRED: Add mini-app to status monitoring
+  - [ ] App name added to `VALID_APPS` array in `server/routes.ts` (use kebab-case)
+  - [ ] Monitoring entry added to `.upptimerc.yml` (alphabetical order, proper format)
+  - [ ] Health check endpoint verified: `curl https://app.chargingthefuture.com/api/health/{app-name}`
+
+### **Testing Checklist** 🧪
+
+**🚨 REQUIRED:** All features must include appropriate tests before merging.
+
+- [ ] **Unit tests** for storage methods (create, read, update, delete operations)
+- [ ] **API endpoint tests** for all routes (GET, POST, PUT, DELETE)
+  - [ ] Test authentication requirements
+  - [ ] Test authorization (users can only access own data)
+  - [ ] Test input validation (Zod schema)
+  - [ ] Test error handling (invalid input, not found, unauthorized)
+- [ ] **Security tests**
+  - [ ] Test SQL injection prevention
+  - [ ] Test XSS prevention
+  - [ ] Test unauthorized access prevention
+  - [ ] Test privacy settings enforcement
+- [ ] **Accessibility tests**
+  - [ ] Test keyboard navigation
+  - [ ] Test screen reader compatibility (axe-core)
+  - [ ] Test color contrast (WCAG AAA - 7:1 ratio)
+  - [ ] Test focus management
+- [ ] **Integration tests**
+  - [ ] Test database operations (create → retrieve → update → delete)
+  - [ ] Test cascade anonymization on profile deletion
+  - [ ] Test API-Frontend integration
+- [ ] **API tests** created (`test/api/myapp.test.ts`) - REQUIRED
+  - [ ] Profile CRUD endpoints tested
+  - [ ] Feature-specific endpoints tested
+  - [ ] Announcement endpoints tested
+  - [ ] Admin endpoints tested (if applicable)
+  - [ ] Authentication/authorization tested
+  - [ ] Input validation tested
+- [ ] **Component tests** created (`test/client/pages/myapp/profile.test.tsx`) - REQUIRED if mini-app has profiles
+  - [ ] Create form rendering tested
+  - [ ] Edit form rendering tested
+  - [ ] Delete button visibility tested
+  - [ ] Form submission tested
+- [ ] **E2E tests** created (`test/e2e/myapp.spec.ts`) - REQUIRED
+  - [ ] Test complete profile creation flow
+  - [ ] Test profile update flow
+  - [ ] Test profile deletion flow
+  - [ ] Test feature-specific workflows
+  - [ ] Test navigation and user interactions
+- [ ] **Performance tests** (if applicable)
+  - [ ] Test API response times (< 500ms p95)
+  - [ ] Test under load (50+ concurrent users)
+- [ ] **Regression tests** - Verify existing features still work
+- [ ] **Test coverage** meets requirements (90%+ for critical paths, 70%+ overall)
+- [ ] All tests pass locally before committing
+- [ ] Test files follow naming conventions (`*.test.ts` or `*.spec.ts`)
+
+---
+
+## 🎯 When in Doubt
+
+1. **Look at existing code** - Study SupportMatch/LightHouse patterns
+2. **Read design_guidelines.md** - For all UI/UX decisions
+3. **Read TESTING_PLAN.md** - For comprehensive testing strategy
+4. **Follow the sequence** - Schema → Storage → Routes → Pages → Navigation → Tests
+5. **Keep it modular** - Each mini-app is independent
+6. **Test as you build** - Write tests alongside implementation, use `data-testid` for testability
+7. **Security first** - Always test authentication, authorization, and input validation
+8. **Accessibility always** - Test keyboard nav and screen readers for every UI component
+9. **Use fuzzy search** - For any search box, use `useFuzzySearch` hook or Command component
