@@ -3022,5 +3022,12 @@
     "statusCode": 200,
     "responseTime": 534,
     "error": null
+  },
+  {
+    "timestamp": "2025-12-22T12:36:41.421Z",
+    "status": "degraded",
+    "statusCode": 200,
+    "responseTime": 400,
+    "error": null
   }
 ]
