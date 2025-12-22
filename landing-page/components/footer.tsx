@@ -30,16 +30,6 @@ export function Footer() {
                 >
                   Access: Open source code
                 </a>
-              </li>
-              <li>
-                <a href={config.links.discourse}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="Visit Townsquare support forum"
-                >
-                  Support: Townsquare
-                </a>
-              </li>
               <li>
                 <a href={config.links.signalGroup}
                   target="_blank"
@@ -47,15 +37,6 @@ export function Footer() {
                   aria-label="Join Signal group chat"
                 >
                   Chat: Signal group
-                </a>
-              </li>
-              <li>
-                <a href={config.links.statusPage}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label="View platform status page"
-                >
-                  Status: Platform status
                 </a>
               </li>
             </ul>

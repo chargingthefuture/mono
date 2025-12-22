@@ -56,11 +56,38 @@ jobs:
           echo "environment=$ENV" >> $GITHUB_OUTPUT
           echo "✓ Will update $ENV database"
 
+      - name: Validate database secrets
+        id: validate_secrets
+        run: |
+          ENV="${{ steps.set_db_url.outputs.environment }}"
+          if [ "$ENV" == "staging" ]; then
+            if [ -z "${{ secrets.DATABASE_URL_STAGING }}" ]; then
+              echo "❌ ERROR: DATABASE_URL_STAGING secret is missing or empty"
+              echo "Cannot push to staging database without staging credentials"
+              exit 1
+            fi
+            echo "✓ Staging database secret validated"
+          elif [ "$ENV" == "production" ]; then
+            if [ -z "${{ secrets.DATABASE_URL }}" ]; then
+              echo "❌ ERROR: DATABASE_URL secret is missing or empty"
+              echo "Cannot push to production database without production credentials"
+              exit 1
+            fi
+            echo "✓ Production database secret validated"
+          else
+            echo "❌ ERROR: Unknown environment: $ENV"
+            exit 1
+          fi
+
       - name: Push database schema
         working-directory: platform
         env:
-          DATABASE_URL: ${{ steps.set_db_url.outputs.environment == 'staging' && secrets.DATABASE_URL_STAGING || secrets.DATABASE_URL }}
+          DATABASE_URL: ${{ steps.set_db_url.outputs.environment == 'staging' && secrets.DATABASE_URL_STAGING || (steps.set_db_url.outputs.environment == 'production' && secrets.DATABASE_URL || '') }}
         run: |
+          if [ -z "$DATABASE_URL" ]; then
+            echo "❌ ERROR: DATABASE_URL is empty. This should not happen after validation."
+            exit 1
+          fi
           echo "Pushing schema to ${{ steps.set_db_url.outputs.environment }} database..."
           echo "Schema files changed, running: npm run db:push"
           npm run db:push
