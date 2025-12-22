@@ -10,9 +10,11 @@ import { publicListingLimiter, publicItemLimiter } from "../rateLimiter";
 import { asyncHandler } from "../errorHandler";
 import { validateWithZod } from "../validationErrorFormatter";
 import { withDatabaseErrorHandling } from "../databaseErrorHandler";
-import { NotFoundError } from "../errors";
-import { logInfo, logWarning } from "../errorLogger";
+import { NotFoundError, ForbiddenError, ValidationError } from "../errors";
+import { logInfo, logWarning, logError } from "../errorLogger";
 import { logAdminAction } from "./shared";
+import { verifyLink } from "../linkVerification";
+import * as Sentry from '@sentry/node';
 import { z } from "zod";
 import {
   insertResearchItemSchema,

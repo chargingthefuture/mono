@@ -5,10 +5,18 @@
  * This maintains backward compatibility while allowing for modular code organization.
  */
 
-// Core storage interface
-export type { ICoreStorage } from './core-storage.interface';
+// Import interfaces for use in extends clause
+import type { ICoreStorage } from './core-storage.interface';
+import type { ISupportMatchStorage } from './supportmatch-storage.interface';
+import type { ILighthouseStorage } from './lighthouse-storage.interface';
+import type { IMechanicMatchStorage } from './mechanicmatch-storage.interface';
+import type { ISocketRelayStorage } from './socketrelay-storage.interface';
+import type { IDirectoryStorage } from './directory-storage.interface';
+import type { ISkillsStorage } from './skills-storage.interface';
+import type { IProfileDeletionStorage } from './profile-deletion-storage.interface';
 
-// Mini-app storage interfaces
+// Re-export for external use
+export type { ICoreStorage } from './core-storage.interface';
 export type { ISupportMatchStorage } from './supportmatch-storage.interface';
 export type { ILighthouseStorage } from './lighthouse-storage.interface';
 export type { IMechanicMatchStorage } from './mechanicmatch-storage.interface';

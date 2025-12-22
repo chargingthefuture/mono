@@ -12,9 +12,11 @@ import { withDatabaseErrorHandling } from "../databaseErrorHandler";
 import { 
   insertPaymentSchema,
   insertPricingTierSchema,
+  type User,
+  type Payment,
+  type PricingTier,
 } from "@shared/schema";
 import { logAdminAction } from "./shared";
-import { storage } from "../storage";
 import { getSuspiciousPatterns, getSuspiciousPatternsForIP, clearSuspiciousPatterns } from "../antiScraping";
 import { logInfo } from "../errorLogger";
 
@@ -124,7 +126,7 @@ export function registerAdminRoutes(app: Express) {
     const users = await withDatabaseErrorHandling(
       () => storage.getAllUsers(),
       'getAllUsers'
-    );
+    ) as User[];
     logInfo(`[Admin Users API] Fetched ${users.length} users from database`, req);
     if (users.length > 0) {
       logInfo(`[Admin Users API] Sample user IDs`, req, {
@@ -140,7 +142,7 @@ export function registerAdminRoutes(app: Express) {
     const user = await withDatabaseErrorHandling(
       () => storage.updateUserVerification(req.params.id, !!isVerified),
       'updateUserVerification'
-    );
+    ) as User;
     await logAdminAction(adminId, 'verify_user', 'user', user.id, { isVerified: user.isVerified });
     res.json(user);
   }));
@@ -151,7 +153,7 @@ export function registerAdminRoutes(app: Express) {
     const user = await withDatabaseErrorHandling(
       () => storage.updateUserApproval(req.params.id, !!isApproved),
       'updateUserApproval'
-    );
+    ) as User;
     await logAdminAction(adminId, 'approve_user', 'user', user.id, { isApproved: user.isApproved });
     res.json(user);
   }));
@@ -192,7 +194,7 @@ export function registerAdminRoutes(app: Express) {
     const payment = await withDatabaseErrorHandling(
       () => storage.createPayment(validatedData),
       'createPayment'
-    );
+    ) as Payment;
     
     await logAdminAction(
       userId,

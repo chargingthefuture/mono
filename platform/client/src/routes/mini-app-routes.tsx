@@ -642,3 +642,7 @@ export function MiniAppRoutes() {
   );
 }
 
+export function registerMiniAppRoutes() {
+  return <MiniAppRoutes />;
+}
+

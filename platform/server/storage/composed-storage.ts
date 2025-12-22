@@ -114,6 +114,16 @@ export class DatabaseStorage implements IStorage {
   getNpsResponsesForWeek = delegate(() => this.coreStorageComposed, 'getNpsResponsesForWeek');
   getAllNpsResponses = delegate(() => this.coreStorageComposed, 'getAllNpsResponses');
 
+  // User deletion operations
+  // Explicitly declare methods to satisfy IStorage interface
+  async anonymizeUserData(userId: string): Promise<void> {
+    return this.coreStorageComposed.anonymizeUserData(userId);
+  }
+  
+  async deleteUser(userId: string): Promise<void> {
+    return this.coreStorageComposed.deleteUser(userId);
+  }
+
   // ========================================
   // SUPPORTMATCH OPERATIONS (delegated to MiniAppsStorageComposed)
   // ========================================

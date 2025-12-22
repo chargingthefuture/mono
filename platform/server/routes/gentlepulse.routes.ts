@@ -10,7 +10,8 @@ import { publicListingLimiter, publicItemLimiter } from "../rateLimiter";
 import { asyncHandler } from "../errorHandler";
 import { validateWithZod } from "../validationErrorFormatter";
 import { withDatabaseErrorHandling } from "../databaseErrorHandler";
-import { NotFoundError } from "../errors";
+import { NotFoundError, ValidationError } from "../errors";
+import { logInfo } from "../errorLogger";
 import { logAdminAction } from "./shared";
 import { z } from "zod";
 import {
@@ -104,8 +105,9 @@ export function registerGentlePulseRoutes(app: Express) {
       'getGentlepulseRatingsByMeditationId'
     );
     // Return only aggregated data, not individual ratings
-    const average = ratings.length > 0 
-      ? ratings.reduce((sum, r) => sum + r.rating, 0) / ratings.length 
+    const ratingsArray = Array.isArray(ratings) ? ratings : [];
+    const average = ratingsArray.length > 0 
+      ? ratingsArray.reduce((sum: number, r: any) => sum + (r.rating || 0), 0) / ratingsArray.length 
       : 0;
     res.json({ average: Number(average.toFixed(2)), count: ratings.length });
   }));
@@ -129,12 +131,13 @@ export function registerGentlePulseRoutes(app: Express) {
       () => storage.getGentlepulseMoodChecksByClientId(validatedData.clientId, 7),
       'getGentlepulseMoodChecksByClientId'
     );
-    const extremelyNegative = recentMoods.filter(m => m.moodValue === 1).length;
+    const moodsArray = Array.isArray(recentMoods) ? recentMoods : [];
+    const extremelyNegative = moodsArray.filter((m: any) => m.moodValue === 1).length;
     
     logInfo(`GentlePulse mood check submitted: client ${validatedData.clientId}, mood ${validatedData.moodValue}`, req);
     
     res.json({
-      ...moodCheck,
+      ...(moodCheck as any),
       showSafetyMessage: extremelyNegative >= 3,
     });
   }));

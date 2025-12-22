@@ -10,14 +10,15 @@ import { publicListingLimiter, publicItemLimiter } from "../rateLimiter";
 import { asyncHandler } from "../errorHandler";
 import { validateWithZod } from "../validationErrorFormatter";
 import { withDatabaseErrorHandling } from "../databaseErrorHandler";
-import { NotFoundError } from "../errors";
+import { NotFoundError, ValidationError, ForbiddenError, UnauthorizedError } from "../errors";
 import { logAdminAction } from "./shared";
 import { z } from "zod";
 import {
   insertTrusttransportProfileSchema,
-    insertTrusttransportRideRequestSchema,
-    insertTrusttransportAnnouncementSchema,
-    type InsertTrusttransportRideRequest,
+  insertTrusttransportRideRequestSchema,
+  insertTrusttransportAnnouncementSchema,
+  insertNpsResponseSchema,
+  type InsertTrusttransportRideRequest,
 } from "@shared/schema";
 
 export function registerTrustTransportRoutes(app: Express) {

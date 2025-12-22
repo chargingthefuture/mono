@@ -10,8 +10,9 @@ import { publicListingLimiter, publicItemLimiter } from "../rateLimiter";
 import { asyncHandler } from "../errorHandler";
 import { validateWithZod } from "../validationErrorFormatter";
 import { withDatabaseErrorHandling } from "../databaseErrorHandler";
-import { NotFoundError } from "../errors";
+import { NotFoundError, ValidationError, ForbiddenError } from "../errors";
 import { logAdminAction } from "./shared";
+import { isLikelyBot, addAntiScrapingDelay, rotateDisplayOrder } from "../dataObfuscation";
 import { z } from "zod";
 import {
   insertSocketrelayRequestSchema,
@@ -19,6 +20,7 @@ import {
   insertSocketrelayMessageSchema,
   insertSocketrelayProfileSchema,
   insertSocketrelayAnnouncementSchema,
+  insertDirectoryAnnouncementSchema,
 } from "@shared/schema";
 
 export function registerSocketRelayRoutes(app: Express) {

@@ -15,7 +15,9 @@ import { logAdminAction } from "./shared";
 import { z } from "zod";
 import {
   insertBlogPostSchema,
-    insertBlogAnnouncementSchema,
+  insertBlogAnnouncementSchema,
+  insertGentlepulseMeditationSchema,
+  insertGentlepulseAnnouncementSchema,
 } from "@shared/schema";
 
 export function registerBlogRoutes(app: Express) {
@@ -70,7 +72,7 @@ export function registerBlogRoutes(app: Express) {
     }
 
     // If this post was not imported from Discourse or has no topic ID, return empty comments
-    if (!post.discourseTopicId) {
+    if (!post || !('discourseTopicId' in post) || !post.discourseTopicId) {
       return res.json({ items: [], total: 0 });
     }
 

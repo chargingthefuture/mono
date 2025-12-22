@@ -36,3 +36,7 @@ export function PublicRoutes() {
     </>
   );
 }
+
+export function registerPublicRoutes() {
+  return <PublicRoutes />;
+}

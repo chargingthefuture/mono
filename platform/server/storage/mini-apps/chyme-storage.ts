@@ -94,7 +94,7 @@ export class ChymeStorage {
   // CHYME ROOM OPERATIONS
   // ========================================
 
-  async createChymeRoom(roomData: InsertChymeRoom): Promise<ChymeRoom> {
+  async createChymeRoom(roomData: InsertChymeRoom & { createdBy: string }): Promise<ChymeRoom> {
     const [room] = await db
       .insert(chymeRooms)
       .values(roomData)

@@ -126,10 +126,10 @@ export async function performHealthCheck(
       dbCheckResult = await checkDatabase();
       
       // Overall status is at least as bad as database status
-      if (dbCheckResult.status === 'down') {
+      if (dbCheckResult && dbCheckResult.status === 'down') {
         overallStatus = 'down';
         overallError = dbCheckResult.error;
-      } else if (dbCheckResult.status === 'degraded' && overallStatus === 'up') {
+      } else if (dbCheckResult && dbCheckResult.status === 'degraded' && overallStatus === 'up') {
         overallStatus = 'degraded';
       }
     }

@@ -15,7 +15,13 @@ import { logAdminAction } from "./shared";
 import { z } from "zod";
 import {
   insertChatGroupSchema,
-    insertChatgroupsAnnouncementSchema,
+  insertChatgroupsAnnouncementSchema,
+  insertSupportMatchProfileSchema,
+  insertMessageSchema,
+  insertExclusionSchema,
+  insertReportSchema,
+  insertSupportmatchAnnouncementSchema,
+  type User,
 } from "@shared/schema";
 
 export function registerChatGroupsRoutes(app: Express) {
@@ -43,8 +49,8 @@ export function registerChatGroupsRoutes(app: Express) {
     const group = await withDatabaseErrorHandling(
       () => storage.createChatGroup(validated),
       'createChatGroup'
-    );
-    await logAdminAction(adminId, 'create_chat_group', 'chat_group', group.id);
+    ) as any;
+    await logAdminAction(adminId, 'create_chat_group', 'chat_group', (group as any).id);
     res.json(group);
   }));
 
@@ -54,8 +60,8 @@ export function registerChatGroupsRoutes(app: Express) {
     const group = await withDatabaseErrorHandling(
       () => storage.updateChatGroup(req.params.id, validated as any),
       'updateChatGroup'
-    );
-    await logAdminAction(adminId, 'update_chat_group', 'chat_group', group.id);
+    ) as any;
+    await logAdminAction(adminId, 'update_chat_group', 'chat_group', (group as any).id);
     res.json(group);
   }));
 
@@ -93,14 +99,14 @@ export function registerChatGroupsRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.createChatgroupsAnnouncement(validatedData),
       'createChatgroupsAnnouncement'
-    );
+    ) as any;
     
     await logAdminAction(
       userId,
       "create_chatgroups_announcement",
       "announcement",
-      announcement.id,
-      { title: announcement.title, type: announcement.type }
+      (announcement as any).id,
+      { title: (announcement as any).title, type: (announcement as any).type }
     );
 
     res.json(announcement);
@@ -112,14 +118,14 @@ export function registerChatGroupsRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.updateChatgroupsAnnouncement(req.params.id, validatedData),
       'updateChatgroupsAnnouncement'
-    );
+    ) as any;
     
     await logAdminAction(
       userId,
       "update_chatgroups_announcement",
       "announcement",
-      announcement.id,
-      { title: announcement.title }
+      (announcement as any).id,
+      { title: (announcement as any).title }
     );
 
     res.json(announcement);
@@ -130,14 +136,14 @@ export function registerChatGroupsRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.deactivateChatgroupsAnnouncement(req.params.id),
       'deactivateChatgroupsAnnouncement'
-    );
+    ) as any;
     
     await logAdminAction(
       userId,
       "deactivate_chatgroups_announcement",
       "announcement",
-      announcement.id,
-      { title: announcement.title }
+      (announcement as any).id,
+      { title: (announcement as any).title }
     );
 
     res.json(announcement);
@@ -157,9 +163,9 @@ export function registerChatGroupsRoutes(app: Express) {
     const user = await withDatabaseErrorHandling(
       () => storage.getUser(userId),
       'getUserVerificationForSupportMatchProfile'
-    );
-    const userIsVerified = user?.isVerified || false;
-    const userFirstName = user?.firstName || null;
+    ) as any;
+    const userIsVerified = (user as any)?.isVerified || false;
+    const userFirstName = (user as any)?.firstName || null;
     res.json({ ...profile, userIsVerified, firstName: userFirstName });
   }));
 
@@ -318,10 +324,10 @@ export function registerChatGroupsRoutes(app: Express) {
     const profiles = await withDatabaseErrorHandling(
       () => storage.getAllSupportMatchProfiles(),
       'getAllSupportMatchProfiles'
-    );
+    ) as any[];
     
     // Enrich profiles with firstName from user table or profile's own firstName for unclaimed
-    const profilesWithNames = await Promise.all(profiles.map(async (profile) => {
+    const profilesWithNames = await Promise.all(profiles.map(async (profile: any) => {
       let userFirstName: string | null = null;
       if (profile.userId) {
         const userId = profile.userId;
@@ -346,11 +352,11 @@ export function registerChatGroupsRoutes(app: Express) {
     const partnerships = await withDatabaseErrorHandling(
       () => storage.getAllPartnerships(),
       'getAllPartnerships'
-    );
+    ) as any[];
     
     // Get all unique user IDs
     const userIds = new Set<string>();
-    partnerships.forEach(p => {
+    partnerships.forEach((p: any) => {
       if (p.user1Id) userIds.add(p.user1Id);
       if (p.user2Id) userIds.add(p.user2Id);
     });
@@ -412,7 +418,7 @@ export function registerChatGroupsRoutes(app: Express) {
     const partnerships = await withDatabaseErrorHandling(
       () => storage.createAlgorithmicMatches(),
       'createAlgorithmicMatches'
-    );
+    ) as any[];
     await logAdminAction(
       userId,
       "run_algorithmic_matching",
@@ -443,12 +449,12 @@ export function registerChatGroupsRoutes(app: Express) {
     const report = await withDatabaseErrorHandling(
       () => storage.updateReportStatus(req.params.id, status, resolution),
       'updateReportStatus'
-    );
+    ) as any;
     await logAdminAction(
       userId,
       "update_report_status",
       "report",
-      report.id,
+      (report as any).id,
       { status, resolution }
     );
     res.json(report);
@@ -469,14 +475,14 @@ export function registerChatGroupsRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.createSupportmatchAnnouncement(validatedData),
       'createSupportmatchAnnouncement'
-    );
+    ) as any;
     
     await logAdminAction(
       userId,
       "create_supportmatch_announcement",
       "announcement",
-      announcement.id,
-      { title: announcement.title, type: announcement.type }
+      (announcement as any).id,
+      { title: (announcement as any).title, type: (announcement as any).type }
     );
 
     res.json(announcement);
@@ -488,14 +494,14 @@ export function registerChatGroupsRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.updateSupportmatchAnnouncement(req.params.id, validatedData),
       'updateSupportmatchAnnouncement'
-    );
+    ) as any;
     
     await logAdminAction(
       userId,
       "update_supportmatch_announcement",
       "announcement",
-      announcement.id,
-      { title: announcement.title }
+      (announcement as any).id,
+      { title: (announcement as any).title }
     );
 
     res.json(announcement);
@@ -506,13 +512,13 @@ export function registerChatGroupsRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.deactivateSupportmatchAnnouncement(req.params.id),
       'deactivateSupportmatchAnnouncement'
-    );
+    ) as any;
     
     await logAdminAction(
       userId,
       "deactivate_announcement",
       "announcement",
-      announcement.id
+      (announcement as any).id
     );
 
     res.json(announcement);

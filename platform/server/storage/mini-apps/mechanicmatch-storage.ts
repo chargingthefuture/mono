@@ -721,8 +721,8 @@ export class MechanicMatchStorage {
         .where(eq(mechanicmatchReviews.reviewerId, userId));
       await db
         .update(mechanicmatchReviews)
-        .set({ reviewedId: anonymizedUserId })
-        .where(eq(mechanicmatchReviews.reviewedId, userId));
+        .set({ revieweeId: anonymizedUserId })
+        .where(eq(mechanicmatchReviews.revieweeId, userId));
 
       // Anonymize messages where user is sender or recipient
       await db

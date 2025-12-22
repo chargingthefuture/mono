@@ -6,7 +6,7 @@ import { validateCsrfToken } from "./csrf";
 import { withDatabaseErrorHandling } from "./databaseErrorHandler";
 import { ExternalServiceError, UnauthorizedError, ForbiddenError, normalizeError, AppError } from "./errors";
 import { logError, logWarning, logInfo } from "./errorLogger";
-import { loginEvents } from "@shared/schema";
+import { loginEvents, type User, type PricingTier } from "@shared/schema";
 import { db } from "./db";
 
 // Clerk Configuration
@@ -150,7 +150,7 @@ export async function syncClerkUserToDatabase(userId: string, sessionClaims?: an
             const currentTier = await withDatabaseErrorHandling(
               () => storage.getCurrentPricingTier(),
               'getCurrentPricingTierForFallback'
-            );
+            ) as PricingTier | undefined;
             pricingTier = currentTier?.amount || '1.00';
           } catch (tierError: any) {
             logWarning(`Failed to get pricing tier, using default: ${tierError.message}`, undefined, {
@@ -310,12 +310,13 @@ async function upsertUser(clerkUser: any) {
     // Preserve approval status and admin status
     // IMPORTANT: Only update firstName/lastName if Clerk has actual values (not empty strings)
     // This prevents Clerk sync from overwriting manually set names when Clerk doesn't have them
+    const existingUserTyped = existingUser as User;
     const firstNameToUse = mappedUser.first_name && mappedUser.first_name.trim() !== "" 
       ? mappedUser.first_name 
-      : existingUser.firstName;
+      : existingUserTyped.firstName;
     const lastNameToUse = mappedUser.last_name && mappedUser.last_name.trim() !== "" 
       ? mappedUser.last_name 
-      : existingUser.lastName;
+      : existingUserTyped.lastName;
     
     const updatedUser = await withDatabaseErrorHandling(
       () => storage.upsertUser({
@@ -324,14 +325,14 @@ async function upsertUser(clerkUser: any) {
         firstName: firstNameToUse,
         lastName: lastNameToUse,
         profileImageUrl: mappedUser.profile_image_url,
-        quoraProfileUrl: existingUser.quoraProfileUrl, // Preserve Quora profile URL
-        pricingTier: existingUser.pricingTier, // Preserve existing pricing tier (grandfathered)
-        isAdmin: existingUser.isAdmin, // Preserve admin status
-        isApproved: existingUser.isApproved, // Preserve approval status
-        subscriptionStatus: existingUser.subscriptionStatus, // Preserve subscription status
+        quoraProfileUrl: existingUserTyped.quoraProfileUrl, // Preserve Quora profile URL
+        pricingTier: existingUserTyped.pricingTier, // Preserve existing pricing tier (grandfathered)
+        isAdmin: existingUserTyped.isAdmin, // Preserve admin status
+        isApproved: existingUserTyped.isApproved, // Preserve approval status
+        subscriptionStatus: existingUserTyped.subscriptionStatus, // Preserve subscription status
       }),
       'upsertExistingUser'
-    );
+    ) as User;
     return updatedUser;
   } else {
     // For new users, get current pricing tier
@@ -341,7 +342,7 @@ async function upsertUser(clerkUser: any) {
         () => storage.getCurrentPricingTier(),
         'getCurrentPricingTierForNewUser'
       );
-      pricingTier = currentTier?.amount || '1.00';
+      pricingTier = (currentTier as any)?.amount || '1.00';
     } catch (tierError: any) {
       console.warn(`Failed to get pricing tier for new user, using default: ${tierError.message}`);
       // Use default pricing tier if database is unavailable
@@ -530,7 +531,7 @@ export async function isUserAdmin(req: any): Promise<boolean> {
     return false;
   }
   
-  return !!(user && user.isAdmin);
+  return !!((user as any) && (user as any).isAdmin);
 }
 
 // Admin middleware - checks if user is admin in our database
@@ -556,7 +557,7 @@ export const isAdmin: RequestHandler = async (req: any, res, next) => {
     return next(new ForbiddenError("Admin access required"));
   }
   
-  if (!user || !user.isAdmin) {
+  if (!user || !(user as any).isAdmin) {
     return next(new ForbiddenError("Admin access required"));
   }
 
