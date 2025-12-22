@@ -249,7 +249,8 @@ process.on('uncaughtException', (error: Error) => {
               if (err) {
                 // ECONNABORTED errors occur when the client aborts the connection
                 // This is expected behavior and should not be logged as an error
-                if (err.code === 'ECONNABORTED' || err.message?.includes('aborted')) {
+                const nodeErr = err as NodeJS.ErrnoException;
+                if (nodeErr.code === 'ECONNABORTED' || err.message?.includes('aborted')) {
                   // Client aborted - silently ignore, don't log or call error handler
                   return;
                 }

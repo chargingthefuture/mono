@@ -231,7 +231,7 @@ export function registerAdminRoutes(app: Express) {
     const tier = await withDatabaseErrorHandling(
       () => storage.createPricingTier(validatedData),
       'createPricingTier'
-    );
+    ) as PricingTier;
     
     await logAdminAction(
       userId,
@@ -249,7 +249,7 @@ export function registerAdminRoutes(app: Express) {
     const tier = await withDatabaseErrorHandling(
       () => storage.setCurrentPricingTier(req.params.id),
       'setCurrentPricingTier'
-    );
+    ) as PricingTier;
     
     await logAdminAction(
       userId,

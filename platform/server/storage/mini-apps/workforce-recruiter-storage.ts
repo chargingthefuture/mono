@@ -416,9 +416,13 @@ export class WorkforceRecruiterStorage {
   }
 
   async updateWorkforceRecruiterMeetupEventSignup(id: string, signupData: Partial<InsertWorkforceRecruiterMeetupEventSignup>): Promise<WorkforceRecruiterMeetupEventSignup> {
+    const updateData: any = { ...signupData };
+    if (updateData.preferredMeetupDate instanceof Date) {
+      updateData.preferredMeetupDate = updateData.preferredMeetupDate.toISOString().split('T')[0];
+    }
     const [updated] = await db
       .update(workforceRecruiterMeetupEventSignups)
-      .set({ ...signupData, updatedAt: new Date() })
+      .set({ ...updateData, updatedAt: new Date() })
       .where(eq(workforceRecruiterMeetupEventSignups.id, id))
       .returning();
     return updated;

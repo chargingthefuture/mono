@@ -15,7 +15,7 @@ import {
 } from "@shared/schema";
 import { db } from "../../db";
 import { eq, and, desc, gte, lte, sql } from "drizzle-orm";
-import { getWeekStart } from "../core/utils";
+import { getWeekStart, formatDate } from "../core/utils";
 
 export class DefaultAliveOrDeadStorage {
   // ========================================
@@ -27,6 +27,9 @@ export class DefaultAliveOrDeadStorage {
       .insert(defaultAliveOrDeadFinancialEntries)
       .values({
         ...entryData,
+        weekStartDate: entryData.weekStartDate instanceof Date 
+          ? formatDate(entryData.weekStartDate)
+          : entryData.weekStartDate,
         createdBy: userId,
       })
       .returning();
@@ -51,7 +54,10 @@ export class DefaultAliveOrDeadStorage {
     const conditions: any[] = [];
 
     if (filters?.weekStartDate) {
-      conditions.push(eq(defaultAliveOrDeadFinancialEntries.weekStartDate, filters.weekStartDate));
+      const weekStartStr = filters.weekStartDate instanceof Date
+        ? formatDate(filters.weekStartDate)
+        : filters.weekStartDate;
+      conditions.push(eq(defaultAliveOrDeadFinancialEntries.weekStartDate, weekStartStr));
     }
 
     const whereClause = conditions.length > 0 ? and(...conditions) : undefined;
@@ -76,10 +82,14 @@ export class DefaultAliveOrDeadStorage {
   }
 
   async updateDefaultAliveOrDeadFinancialEntry(id: string, entryData: Partial<InsertDefaultAliveOrDeadFinancialEntry>): Promise<DefaultAliveOrDeadFinancialEntry> {
+    const updateData: any = { ...entryData };
+    if (updateData.weekStartDate instanceof Date) {
+      updateData.weekStartDate = formatDate(updateData.weekStartDate);
+    }
     const [entry] = await db
       .update(defaultAliveOrDeadFinancialEntries)
       .set({
-        ...entryData,
+        ...updateData,
         updatedAt: new Date(),
       })
       .where(eq(defaultAliveOrDeadFinancialEntries.id, id))
@@ -93,10 +103,11 @@ export class DefaultAliveOrDeadStorage {
 
   async getDefaultAliveOrDeadFinancialEntryByWeek(weekStartDate: Date): Promise<DefaultAliveOrDeadFinancialEntry | undefined> {
     const weekStart = getWeekStart(weekStartDate);
+    const weekStartStr = formatDate(weekStart);
     const [entry] = await db
       .select()
       .from(defaultAliveOrDeadFinancialEntries)
-      .where(eq(defaultAliveOrDeadFinancialEntries.weekStartDate, weekStart));
+      .where(eq(defaultAliveOrDeadFinancialEntries.weekStartDate, weekStartStr));
     return entry;
   }
 
@@ -113,19 +124,24 @@ export class DefaultAliveOrDeadStorage {
       throw new Error(`No financial entry found for week starting ${weekStart.toISOString()}`);
     }
 
-    // Calculate EBITDA: Revenue - Operating Expenses
-    const revenue = Number(financialEntry.revenue || 0);
+    // Get revenue from existing snapshot or calculate from payments (for now, use 0 or get from existing)
+    const existingSnapshot = await this.getDefaultAliveOrDeadEbitdaSnapshot(weekStart);
+    const revenue = existingSnapshot ? Number(existingSnapshot.revenue || 0) : 0;
     const operatingExpenses = Number(financialEntry.operatingExpenses || 0);
-    const ebitda = revenue - operatingExpenses;
+    const depreciation = Number(financialEntry.depreciation || 0);
+    const amortization = Number(financialEntry.amortization || 0);
+    // EBITDA = Revenue - Operating Expenses + Depreciation + Amortization
+    const ebitda = revenue - operatingExpenses + depreciation + amortization;
 
     // Calculate burn rate (negative EBITDA means burning cash)
     const burnRate = ebitda < 0 ? Math.abs(ebitda) : 0;
 
     // Get current funding or use existing snapshot's funding
     let funding = currentFunding;
-    if (funding === undefined) {
-      const existingSnapshot = await this.getDefaultAliveOrDeadEbitdaSnapshot(weekStart);
-      funding = existingSnapshot ? Number(existingSnapshot.currentFunding || 0) : 0;
+    if (funding === undefined && existingSnapshot) {
+      funding = Number(existingSnapshot.currentFunding || 0);
+    } else if (funding === undefined) {
+      funding = 0;
     }
 
     // Calculate runway (weeks until out of cash)
@@ -140,10 +156,12 @@ export class DefaultAliveOrDeadStorage {
       const [snapshot] = await db
         .update(defaultAliveOrDeadEbitdaSnapshots)
         .set({
+          revenue: revenue.toString(),
+          operatingExpenses: operatingExpenses.toString(),
+          depreciation: depreciation.toString(),
+          amortization: amortization.toString(),
           ebitda: ebitda.toString(),
-          burnRate: burnRate.toString(),
           currentFunding: funding?.toString() || null,
-          runway: runway?.toString() || null,
           isDefaultAlive,
           updatedAt: new Date(),
         })
@@ -154,11 +172,13 @@ export class DefaultAliveOrDeadStorage {
       const [snapshot] = await db
         .insert(defaultAliveOrDeadEbitdaSnapshots)
         .values({
-          weekStartDate: weekStart,
+          weekStartDate: formatDate(weekStart),
+          revenue: revenue.toString(),
+          operatingExpenses: operatingExpenses.toString(),
+          depreciation: depreciation.toString(),
+          amortization: amortization.toString(),
           ebitda: ebitda.toString(),
-          burnRate: burnRate.toString(),
           currentFunding: funding?.toString() || null,
-          runway: runway?.toString() || null,
           isDefaultAlive,
         })
         .returning();
@@ -168,10 +188,11 @@ export class DefaultAliveOrDeadStorage {
 
   async getDefaultAliveOrDeadEbitdaSnapshot(weekStartDate: Date): Promise<DefaultAliveOrDeadEbitdaSnapshot | undefined> {
     const weekStart = getWeekStart(weekStartDate);
+    const weekStartStr = formatDate(weekStart);
     const [snapshot] = await db
       .select()
       .from(defaultAliveOrDeadEbitdaSnapshots)
-      .where(eq(defaultAliveOrDeadEbitdaSnapshots.weekStartDate, weekStart));
+      .where(eq(defaultAliveOrDeadEbitdaSnapshots.weekStartDate, weekStartStr));
     return snapshot;
   }
 
@@ -225,7 +246,8 @@ export class DefaultAliveOrDeadStorage {
 
     const isDefaultAlive = currentSnapshot.isDefaultAlive || false;
     const ebitda = Number(currentSnapshot.ebitda || 0);
-    const burnRate = Number(currentSnapshot.burnRate || 0);
+    // Calculate burnRate from EBITDA (negative EBITDA = burn rate)
+    const burnRate = ebitda < 0 ? Math.abs(ebitda) : 0;
     const currentFunding = Number(currentSnapshot.currentFunding || 0);
     const runway = currentSnapshot.runway ? Number(currentSnapshot.runway) : null;
 
@@ -379,11 +401,13 @@ export class DefaultAliveOrDeadStorage {
       await db
         .insert(defaultAliveOrDeadEbitdaSnapshots)
         .values({
-          weekStartDate: weekStart,
+          weekStartDate: formatDate(weekStart),
+          revenue: "0",
+          operatingExpenses: "0",
+          depreciation: "0",
+          amortization: "0",
           ebitda: "0",
-          burnRate: "0",
           currentFunding: amount.toString(),
-          runway: null,
           isDefaultAlive: false,
         });
     }

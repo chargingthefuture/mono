@@ -79,7 +79,7 @@ export function registerAuthRoutes(app: Express) {
         
         if (isConnectionError) {
           logError(new Error("Database connection error - returning 503 Service Unavailable"), req, 'error');
-          throw new ExternalServiceError("Database temporarily unavailable. Please try again in a moment.", 503);
+          throw new ExternalServiceError("Database", "Database temporarily unavailable. Please try again in a moment.", 503);
         }
         
         // For other errors, return 500 error instead of null
@@ -153,7 +153,7 @@ export function registerAuthRoutes(app: Express) {
         // If it's a database connection error, return 503
         if (syncError.message?.includes("Database temporarily unavailable") ||
             syncError instanceof ExternalServiceError && syncError.statusCode === 503) {
-          throw new ExternalServiceError("Database temporarily unavailable. Please try again in a moment.", 503);
+          throw new ExternalServiceError("Database", "Database temporarily unavailable. Please try again in a moment.", 503);
         }
         
         // For other sync errors, return 500 with helpful message
@@ -194,7 +194,7 @@ export function registerAuthRoutes(app: Express) {
     const user = await withDatabaseErrorHandling(
       () => storage.updateTermsAcceptance(userId),
       'updateTermsAcceptance'
-    );
+    ) as { termsAcceptedAt: Date | null };
     
     res.json({ message: "Terms accepted successfully", termsAcceptedAt: user.termsAcceptedAt });
   }));

@@ -87,7 +87,7 @@ export class DirectoryStorage {
         sectors: (profileData.sectors ?? []).slice(0, 3),
         jobTitles: (profileData.jobTitles ?? []).slice(0, 3),
         // Add geocoded coordinates
-        ...(coordinates && {
+        ...(coordinates && coordinates.latitude !== null && coordinates.longitude !== null && {
           latitude: coordinates.latitude.toString(),
           longitude: coordinates.longitude.toString(),
         }),

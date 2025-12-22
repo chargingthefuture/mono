@@ -50,7 +50,7 @@ const HEALTH_CHECK_THRESHOLDS = {
  * Check database connectivity
  * Performs a lightweight query to verify database is accessible
  */
-async function checkDatabase(): Promise<{
+async function checkDatabaseConnectivity(): Promise<{
   status: HealthStatus;
   responseTime: number;
   error?: string;
@@ -123,7 +123,7 @@ export async function performHealthCheck(
   try {
     // Check database if requested
     if (checkDatabase) {
-      dbCheckResult = await checkDatabase();
+      dbCheckResult = await checkDatabaseConnectivity();
       
       // Overall status is at least as bad as database status
       if (dbCheckResult && dbCheckResult.status === 'down') {

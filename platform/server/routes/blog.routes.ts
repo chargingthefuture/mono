@@ -18,6 +18,10 @@ import {
   insertBlogAnnouncementSchema,
   insertGentlepulseMeditationSchema,
   insertGentlepulseAnnouncementSchema,
+  type BlogPost,
+  type BlogAnnouncement,
+  type GentlePulseMeditation,
+  type GentlePulseAnnouncement,
 } from "@shared/schema";
 
 export function registerBlogRoutes(app: Express) {
@@ -65,7 +69,7 @@ export function registerBlogRoutes(app: Express) {
     const post = await withDatabaseErrorHandling(
       () => storage.getBlogPostBySlug(slug),
       'getBlogPostBySlug'
-    );
+    ) as BlogPost | null;
 
     if (!post) {
       throw new NotFoundError('BlogPost', slug);
@@ -99,7 +103,7 @@ export function registerBlogRoutes(app: Express) {
     const post = await withDatabaseErrorHandling(
       () => storage.createBlogPost(validatedData),
       'createBlogPost'
-    );
+    ) as BlogPost;
 
     await logAdminAction(
       userId,
@@ -117,7 +121,7 @@ export function registerBlogRoutes(app: Express) {
     const post = await withDatabaseErrorHandling(
       () => storage.updateBlogPost(req.params.id, req.body),
       'updateBlogPost'
-    );
+    ) as BlogPost;
 
     await logAdminAction(
       userId,
@@ -163,7 +167,7 @@ export function registerBlogRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.createBlogAnnouncement(validatedData),
       'createBlogAnnouncement'
-    );
+    ) as BlogAnnouncement;
 
     await logAdminAction(
       userId,
@@ -181,7 +185,7 @@ export function registerBlogRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.updateBlogAnnouncement(req.params.id, req.body),
       'updateBlogAnnouncement'
-    );
+    ) as BlogAnnouncement;
 
     await logAdminAction(
       userId,
@@ -229,7 +233,7 @@ export function registerBlogRoutes(app: Express) {
     const meditation = await withDatabaseErrorHandling(
       () => storage.createGentlepulseMeditation(validatedData),
       'createGentlepulseMeditation'
-    );
+    ) as GentlePulseMeditation;
     
     await logAdminAction(
       userId,
@@ -257,7 +261,7 @@ export function registerBlogRoutes(app: Express) {
     const meditation = await withDatabaseErrorHandling(
       () => storage.updateGentlepulseMeditation(req.params.id, body),
       'updateGentlepulseMeditation'
-    );
+    ) as GentlePulseMeditation;
     
     await logAdminAction(
       userId,
@@ -286,7 +290,7 @@ export function registerBlogRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.createGentlepulseAnnouncement(validatedData),
       'createGentlepulseAnnouncement'
-    );
+    ) as GentlePulseAnnouncement;
     
     await logAdminAction(
       userId,
@@ -305,7 +309,7 @@ export function registerBlogRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.updateGentlepulseAnnouncement(req.params.id, validatedData),
       'updateGentlepulseAnnouncement'
-    );
+    ) as GentlePulseAnnouncement;
     
     await logAdminAction(
       userId,
