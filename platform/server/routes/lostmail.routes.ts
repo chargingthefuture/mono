@@ -110,7 +110,7 @@ export function registerLostMailRoutes(app: Express) {
     const oldIncident = await withDatabaseErrorHandling(
       () => storage.getLostmailIncidentById(incidentId),
       'getLostmailIncidentById'
-    );
+    ) as LostmailIncident | undefined;
     if (!oldIncident) {
       throw new NotFoundError('Incident', incidentId);
     }

@@ -15,6 +15,9 @@ import { z } from "zod";
 import {
   insertMechanicmatchProfileSchema,
   insertMechanicmatchAnnouncementSchema,
+  type MechanicmatchProfile,
+  type MechanicmatchAnnouncement,
+  type User,
 } from "@shared/schema";
 
 export function registerMechanicMatchAdminRoutes(app: Express) {
@@ -41,10 +44,10 @@ export function registerMechanicMatchAdminRoutes(app: Express) {
         isClaimed,
       }),
       'listMechanicmatchProfiles'
-    );
+    ) as { items: MechanicmatchProfile[]; total: number };
     
     // Enrich profiles with user data (firstName, lastName) like the public route does
-    const withNames = await Promise.all(profiles.items.map(async (p) => {
+    const withNames = await Promise.all(profiles.items.map(async (p: MechanicmatchProfile) => {
       let userIsVerified = false;
       let userFirstName: string | null = null;
       let userLastName: string | null = null;
@@ -54,7 +57,7 @@ export function registerMechanicMatchAdminRoutes(app: Express) {
         const user = await withDatabaseErrorHandling(
           () => storage.getUser(p.userId!),
           'getUserForMechanicmatchAdmin'
-        );
+        ) as User | undefined;
         if (user) {
           userFirstName = (user.firstName && user.firstName.trim()) || null;
           userLastName = (user.lastName && user.lastName.trim()) || null;
@@ -100,7 +103,7 @@ export function registerMechanicMatchAdminRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.createMechanicmatchProfile(validated),
       'createMechanicmatchProfile'
-    );
+    ) as MechanicmatchProfile;
 
     await logAdminAction(
       adminId,
@@ -123,7 +126,7 @@ export function registerMechanicMatchAdminRoutes(app: Express) {
     const profile = await withDatabaseErrorHandling(
       () => storage.getMechanicmatchProfileById(req.params.id),
       'getMechanicmatchProfileById'
-    );
+    ) as MechanicmatchProfile | undefined;
 
     if (!profile) {
       return res.status(404).json({ message: "Profile not found" });
@@ -136,7 +139,7 @@ export function registerMechanicMatchAdminRoutes(app: Express) {
     const updated = await withDatabaseErrorHandling(
       () => storage.updateMechanicmatchProfileById(profile.id, { userId, isClaimed: true }),
       'assignMechanicmatchProfile'
-    );
+    ) as MechanicmatchProfile;
 
     await logAdminAction(
       adminId,
@@ -231,7 +234,7 @@ export function registerMechanicMatchAdminRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.createMechanicmatchAnnouncement(validatedData),
       'createMechanicmatchAnnouncement'
-    );
+    ) as MechanicmatchAnnouncement;
     
     await logAdminAction(
       userId,
@@ -250,7 +253,7 @@ export function registerMechanicMatchAdminRoutes(app: Express) {
     const announcement = await withDatabaseErrorHandling(
       () => storage.updateMechanicmatchAnnouncement(req.params.id, validatedData),
       'updateMechanicmatchAnnouncement'
-    );
+    ) as MechanicmatchAnnouncement;
     
     await logAdminAction(
       userId,

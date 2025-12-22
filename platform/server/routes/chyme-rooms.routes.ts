@@ -350,8 +350,10 @@ export function registerChymeRoomsRoutes(app: Express) {
             firstName: user.firstName,
             lastName: user.lastName,
             profileImageUrl: user.profileImageUrl,
-            displayName: user.displayName,
-            username: user.username,
+            displayName: user.firstName && user.lastName 
+              ? `${user.firstName} ${user.lastName}` 
+              : user.firstName || user.lastName || null,
+            username: null,
           } : null,
         };
       })
@@ -634,7 +636,7 @@ export function registerChymeRoomsRoutes(app: Express) {
         ? `${user.firstName} ${user.lastName}` 
         : user.firstName || user.lastName || null,
       profileImageUrl: user.profileImageUrl || null,
-      username: user.username || null
+      username: null
     });
   }));
 
