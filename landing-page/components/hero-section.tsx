@@ -1,3 +1,4 @@
+import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Shield, Lock, Users } from "lucide-react"
 import { config } from "@/lib/config"
@@ -10,12 +11,22 @@ export function HeroSection() {
 
       {/* Main hero grid - comic panel layout */}
       <div className="grid lg:grid-cols-2 min-h-screen">
-        {/* Left panel - Content placeholder */}
-        <div className="relative h-[40vh] sm:h-[50vh] lg:h-auto border-b-[6px] lg:border-b-0 lg:border-r-[6px] border-foreground overflow-hidden bg-secondary flex items-center justify-center">
+        {/* Left panel - Hero image */}
+        <div className="relative h-[40vh] sm:h-[50vh] lg:h-auto border-b-[6px] lg:border-b-0 lg:border-r-[6px] border-foreground overflow-hidden bg-secondary">
+          <Image
+            src="/images/dara014634-comic-book-panel-in-robert-kirkmans-walking-dead-s-81524c71-3ea6-4499-a1b8-6b92cf353928-0.png"
+            alt="Comic book panel illustration"
+            fill
+            className="object-cover"
+            priority
+            sizes="(max-width: 1024px) 100vw, 50vw"
+          />
           {/* Comic caption box */}
-          <div className="bg-[#fffde7] text-background px-3 py-1.5 sm:px-4 sm:py-2 border-[3px] border-background font-[var(--font-inter)] text-xs sm:text-sm max-w-[180px] sm:max-w-[200px]">
-            <p className="font-bold">CHAPTER ONE:</p>
-            <p className="text-[10px] sm:text-xs">The people around us changed. But we survived.</p>
+          <div className="absolute inset-0 flex items-center justify-center z-10">
+            <div className="bg-[#fffde7] text-background px-3 py-1.5 sm:px-4 sm:py-2 border-[3px] border-background font-[var(--font-inter)] text-xs sm:text-sm max-w-[180px] sm:max-w-[200px]">
+              <p className="font-bold">CHAPTER ONE:</p>
+              <p className="text-[10px] sm:text-xs">The people around us changed. But we survived.</p>
+            </div>
           </div>
         </div>
 
