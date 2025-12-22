@@ -27,7 +27,13 @@ export function initSentry() {
   const profilesSampleRate = environment === 'production' ? 0.1 : 1.0;
 
   if (!dsn) {
-    console.warn('SENTRY_DSN not set - Sentry error tracking is disabled');
+    // Only show warning in non-test/non-CI environments
+    // In CI (Railway), env vars may not be available during E2E test server startup
+    // In test environments, Sentry isn't needed
+    const isTestEnv = environment === 'test' || process.env.CI || process.env.PLAYWRIGHT_TEST_BASE_URL;
+    if (!isTestEnv) {
+      console.warn('SENTRY_DSN not set - Sentry error tracking is disabled');
+    }
     return;
   }
 
