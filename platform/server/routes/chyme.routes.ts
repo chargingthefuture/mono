@@ -261,7 +261,14 @@ export function registerChymeRoutes(app: Express) {
       }
       
       // Generate a secure 8-character alphanumeric code
-      const code = randomBytes(4).toString('hex').toUpperCase(); // 8 characters
+      let code = randomBytes(4).toString('hex').toUpperCase(); // Should be exactly 8 characters
+      // Ensure code is exactly 8 characters (safety check)
+      if (code.length > 8) {
+        code = code.substring(0, 8);
+      } else if (code.length < 8) {
+        // Pad with zeros if somehow shorter (shouldn't happen)
+        code = code.padEnd(8, '0');
+      }
       const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
       
       // Store code in database
@@ -313,7 +320,14 @@ export function registerChymeRoutes(app: Express) {
     }
     
     // Generate a secure 8-character alphanumeric code
-    const code = randomBytes(4).toString('hex').toUpperCase(); // 8 characters
+    let code = randomBytes(4).toString('hex').toUpperCase(); // Should be exactly 8 characters
+    // Ensure code is exactly 8 characters (safety check)
+    if (code.length > 8) {
+      code = code.substring(0, 8);
+    } else if (code.length < 8) {
+      // Pad with zeros if somehow shorter (shouldn't happen)
+      code = code.padEnd(8, '0');
+    }
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
     
     // Store code in database (reuse OTP code storage)

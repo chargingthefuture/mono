@@ -23,10 +23,19 @@ export class AuthStorage {
     // Delete any existing OTP for this user first
     await db.delete(otpCodes).where(eq(otpCodes.userId, userId));
     
+    // Ensure code is exactly 8 characters (database constraint)
+    // Truncate if longer, pad if shorter (shouldn't happen but safety check)
+    let normalizedCode = code.trim().toUpperCase();
+    if (normalizedCode.length > 8) {
+      normalizedCode = normalizedCode.substring(0, 8);
+    } else if (normalizedCode.length < 8) {
+      normalizedCode = normalizedCode.padEnd(8, '0');
+    }
+    
     // Create new OTP
     const [otp] = await db.insert(otpCodes).values({
       userId,
-      code,
+      code: normalizedCode,
       expiresAt,
     }).returning();
     
