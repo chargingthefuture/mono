@@ -40,10 +40,12 @@ CREATE TABLE IF NOT EXISTS login_events (
 CREATE INDEX IF NOT EXISTS IDX_login_events_user_created_at ON login_events(user_id, created_at);
 
 -- OTP codes table - stores OTP codes for Android app authentication
+-- Note: code column is VARCHAR(16) as safety buffer, but codes are always normalized to 8 chars
+-- This prevents "text value too long" database errors if normalization fails upstream
 CREATE TABLE IF NOT EXISTS otp_codes (
   id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id VARCHAR NOT NULL REFERENCES users(id),
-  code VARCHAR(8) NOT NULL,
+  code VARCHAR(16) NOT NULL,
   expires_at TIMESTAMP NOT NULL,
   created_at TIMESTAMP NOT NULL DEFAULT NOW()
 );

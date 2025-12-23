@@ -62,12 +62,14 @@ import MechanicMatchAvailability from "@/pages/mechanicmatch/availability";
 import MechanicMatchAdmin from "@/pages/mechanicmatch/admin";
 import MechanicMatchAdminProfiles from "@/pages/mechanicmatch/admin-profiles";
 import MechanicMatchAdminAnnouncements from "@/pages/mechanicmatch/admin-announcements";
+import MechanicMatchAnnouncements from "@/pages/mechanicmatch/announcements";
 import LostMailDashboard from "@/pages/lostmail/dashboard";
 import LostMailReport from "@/pages/lostmail/report";
 import LostMailIncidentDetail from "@/pages/lostmail/incident-detail";
 import LostMailAdmin from "@/pages/lostmail/admin";
 import LostMailAdminAnnouncements from "@/pages/lostmail/admin-announcements";
 import LostMailAdminIncidentDetail from "@/pages/lostmail/admin-incident-detail";
+import LostMailAnnouncements from "@/pages/lostmail/announcements";
 import ResearchDashboard from "@/pages/research/dashboard";
 import ResearchTimeline from "@/pages/research/timeline";
 import ResearchMyItems from "@/pages/research/my-items";
@@ -77,17 +79,20 @@ import NewResearchItem from "@/pages/research/new-item";
 import ResearchAdmin from "@/pages/research/admin";
 import ResearchAdminAnnouncements from "@/pages/research/admin-announcements";
 import ResearchAdminReports from "@/pages/research/admin-reports";
+import CompareNotesAnnouncements from "@/pages/research/announcements";
 import GentlePulseLibrary from "@/pages/gentlepulse/library";
 import GentlePulseSupport from "@/pages/gentlepulse/support";
 import GentlePulseSettings from "@/pages/gentlepulse/settings";
 import GentlePulseAdmin from "@/pages/gentlepulse/admin";
 import GentlePulseAdminAnnouncements from "@/pages/gentlepulse/admin-announcements";
+import GentlePulseAnnouncements from "@/pages/gentlepulse/announcements";
 import { GentlePulseBottomNav } from "@/components/gentlepulse/bottom-nav";
 import BlogAdmin from "@/pages/blog/admin";
 import BlogAdminAnnouncements from "@/pages/blog/admin-announcements";
 import ChymeDashboard from "@/pages/chyme/dashboard";
 import ChymeAdmin from "@/pages/chyme/admin";
 import ChymeAdminAnnouncements from "@/pages/chyme/admin-announcements";
+import ChymeAnnouncements from "@/pages/chyme/announcements";
 import WorkforceRecruiterDashboard from "@/pages/workforce-recruiter/dashboard";
 import WorkforceRecruiterProfile from "@/pages/workforce-recruiter/profile";
 import WorkforceRecruiterOccupations from "@/pages/workforce-recruiter/occupations";
@@ -415,6 +420,11 @@ export function MiniAppRoutes() {
           <MechanicMatchAdminAnnouncements />
         </ProtectedRoute>
       </Route>
+      <Route path="/apps/mechanicmatch/announcements">
+        <ProtectedRoute>
+          <MechanicMatchAnnouncements />
+        </ProtectedRoute>
+      </Route>
 
       {/* LostMail routes */}
       <Route path="/apps/lostmail">
@@ -445,6 +455,11 @@ export function MiniAppRoutes() {
       <Route path="/apps/lostmail/admin/incident/:id">
         <ProtectedRoute>
           <LostMailAdminIncidentDetail />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/apps/lostmail/announcements">
+        <ProtectedRoute>
+          <LostMailAnnouncements />
         </ProtectedRoute>
       </Route>
 
@@ -494,6 +509,11 @@ export function MiniAppRoutes() {
           <ResearchAdminReports />
         </ProtectedRoute>
       </Route>
+      <Route path="/apps/comparenotes/announcements">
+        <ProtectedRoute>
+          <CompareNotesAnnouncements />
+        </ProtectedRoute>
+      </Route>
 
       {/* GentlePulse routes */}
       <Route path="/apps/gentlepulse">
@@ -530,6 +550,14 @@ export function MiniAppRoutes() {
           <GentlePulseAdminAnnouncements />
         </ProtectedRoute>
       </Route>
+      <Route path="/apps/gentlepulse/announcements">
+        <ProtectedRoute>
+          <>
+            <GentlePulseAnnouncements />
+            <GentlePulseBottomNav />
+          </>
+        </ProtectedRoute>
+      </Route>
 
       {/* Blog admin routes */}
       <Route path="/apps/blog/admin">
@@ -557,6 +585,11 @@ export function MiniAppRoutes() {
       <Route path="/apps/chyme/admin/announcements">
         <ProtectedRoute>
           <ChymeAdminAnnouncements />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/apps/chyme/announcements">
+        <ProtectedRoute>
+          <ChymeAnnouncements />
         </ProtectedRoute>
       </Route>
 

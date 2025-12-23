@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Link } from "wouter";
-import { Wrench, Car, Plus, Settings, Search, Calendar, MessageSquare, ExternalLink, Copy, Check } from "lucide-react";
+import { Wrench, Car, Plus, Settings, Search, Calendar, MessageSquare, ExternalLink, Copy, Check, Bell } from "lucide-react";
 import type { MechanicmatchProfile, MechanicmatchJob, MechanicmatchServiceRequest } from "@shared/schema";
 import { AnnouncementBanner } from "@/components/announcement-banner";
 import { useAuth } from "@/hooks/useAuth";
@@ -227,6 +227,28 @@ export default function MechanicMatchDashboard() {
         apiEndpoint="/api/mechanicmatch/announcements"
         queryKey="/api/mechanicmatch/announcements"
       />
+
+      {/* Announcements Widget */}
+      <Card className="hover-elevate">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+            </div>
+            <CardTitle className="text-base sm:text-lg">Announcements</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
+            View platform updates and notifications
+          </p>
+          <Link href="/apps/mechanicmatch/announcements">
+            <Button variant="outline" className="w-full text-xs sm:text-sm" data-testid="button-view-announcements">
+              View Announcements
+            </Button>
+          </Link>
+        </CardContent>
+      </Card>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full max-w-md grid-cols-3">

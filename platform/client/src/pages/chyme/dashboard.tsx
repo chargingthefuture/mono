@@ -4,10 +4,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest } from "@/lib/queryClient";
-import { Smartphone, Copy, Check, ExternalLink } from "lucide-react";
+import { Smartphone, Copy, Check, ExternalLink, Bell } from "lucide-react";
 import { AnnouncementBanner } from "@/components/announcement-banner";
 import { useExternalLink } from "@/hooks/useExternalLink";
 import { useState } from "react";
+import { Link } from "wouter";
 
 export default function ChymeDashboard() {
   const { user } = useAuth();
@@ -85,6 +86,28 @@ export default function ChymeDashboard() {
       {user && (user.isApproved || user.isAdmin) && (
         <MobileAuthCard />
       )}
+
+      {/* Announcements Widget */}
+      <Card className="hover-elevate">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+            </div>
+            <CardTitle className="text-base sm:text-lg">Announcements</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
+            View platform updates and notifications
+          </p>
+          <Link href="/apps/chyme/announcements">
+            <Button variant="outline" className="w-full text-xs sm:text-sm" data-testid="button-view-announcements">
+              View Announcements
+            </Button>
+          </Link>
+        </CardContent>
+      </Card>
 
       <ExternalLinkDialog />
     </div>

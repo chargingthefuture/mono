@@ -3,7 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
-import { Plus, FileText, Bookmark, Clock, TrendingUp } from "lucide-react";
+import { Plus, FileText, Bookmark, Clock, TrendingUp, Bell } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { AnnouncementBanner } from "@/components/announcement-banner";
 import type { ResearchItem } from "@shared/schema";
@@ -203,6 +203,27 @@ export default function CompareNotesDashboard() {
             <Link href="/apps/comparenotes/timeline">
               <Button variant="outline" className="w-full" data-testid="button-browse-timeline">
                 Browse Timeline
+              </Button>
+            </Link>
+          </CardContent>
+        </Card>
+
+        <Card className="hover-elevate">
+          <CardHeader>
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+              </div>
+              <CardTitle className="text-base sm:text-lg">Announcements</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
+              View platform updates and notifications
+            </p>
+            <Link href="/apps/comparenotes/announcements">
+              <Button variant="outline" className="w-full text-xs sm:text-sm" data-testid="button-view-announcements">
+                View Announcements
               </Button>
             </Link>
           </CardContent>

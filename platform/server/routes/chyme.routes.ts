@@ -320,13 +320,24 @@ export function registerChymeRoutes(app: Express) {
     }
     
     // Generate a secure 8-character alphanumeric code
-    let code = randomBytes(4).toString('hex').toUpperCase(); // Should be exactly 8 characters
-    // Ensure code is exactly 8 characters (safety check)
+    // randomBytes(4) produces 8 hex characters (4 bytes = 8 hex digits)
+    let code = randomBytes(4).toString('hex').toUpperCase();
+    
+    // 🚨 CRITICAL: Enforce exact 8-character length to prevent database errors
+    // This should always be 8, but defensive checks prevent issues
     if (code.length > 8) {
+      logWarning(`[Mobile Auth] Generated code too long (${code.length} chars), truncating`, req);
       code = code.substring(0, 8);
     } else if (code.length < 8) {
-      // Pad with zeros if somehow shorter (shouldn't happen)
+      // Pad with zeros if somehow shorter (shouldn't happen with randomBytes(4))
+      logWarning(`[Mobile Auth] Generated code too short (${code.length} chars), padding`, req);
       code = code.padEnd(8, '0');
+    }
+    
+    // Final validation before storage
+    if (code.length !== 8 || !/^[A-F0-9]{8}$/.test(code)) {
+      logError(`[Mobile Auth] Generated code failed validation: length=${code.length}, code=${code}`, req);
+      return res.status(500).json({ message: "Failed to generate authentication code" });
     }
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
     
@@ -359,12 +370,29 @@ export function registerChymeRoutes(app: Express) {
   app.post('/api/chyme/validate-mobile-code', asyncHandler(async (req: any, res) => {
     let { code } = req.body;
     
-    // Normalize code: convert to string, trim whitespace, uppercase
+    // 🚨 CRITICAL: Normalize and validate code BEFORE database operations
+    // This prevents "text value too long" database errors
     if (code != null) {
       code = String(code).trim().toUpperCase();
+      // Remove any non-alphanumeric characters (safety for URL-encoded or malformed codes)
+      code = code.replace(/[^A-F0-9]/g, '');
     }
     
-    if (!code || code.length !== 8 || !/^[A-F0-9]{8}$/.test(code)) {
+    // Enforce exact 8-character length - truncate if longer, reject if invalid format
+    if (!code || code.length === 0) {
+      logWarning(`[Mobile Auth] Empty or null code received`, req);
+      return res.status(400).json({ message: "Invalid code format" });
+    }
+    
+    // Truncate if longer than 8 characters (defensive)
+    if (code.length > 8) {
+      logWarning(`[Mobile Auth] Code too long (${code.length} chars), truncating to 8. Original: ${code.substring(0, 20)}...`, req);
+      code = code.substring(0, 8);
+    }
+    
+    // Validate format: must be exactly 8 alphanumeric characters
+    if (code.length !== 8 || !/^[A-F0-9]{8}$/.test(code)) {
+      logWarning(`[Mobile Auth] Invalid code format. Length: ${code.length}, Code: ${code.substring(0, 8)}`, req);
       return res.status(400).json({ message: "Invalid code format" });
     }
     

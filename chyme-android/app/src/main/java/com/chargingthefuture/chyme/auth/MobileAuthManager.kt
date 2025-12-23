@@ -27,28 +27,54 @@ class MobileAuthManager(private val context: Context) {
      * @return Result containing token info or error message
      */
     suspend fun validateMobileCode(code: String): Result<ValidateMobileCodeResponse> {
-        // Normalize code: trim whitespace and uppercase
-        val normalizedCode = code.trim().uppercase()
+        // 🚨 CRITICAL: Normalize code to prevent "text value too long" errors
+        // Remove any non-alphanumeric characters (safety for URL-encoded or malformed codes)
+        var normalizedCode = code.trim().uppercase()
+        
+        // Remove any non-hex characters (mobile auth codes are hex: A-F0-9)
+        normalizedCode = normalizedCode.replace(Regex("[^A-F0-9]"), "")
         
         SentryHelper.addBreadcrumb(
             message = "Starting mobile code validation",
             category = "mobile_auth",
             level = SentryLevel.INFO,
             data = mapOf(
-                "code_length" to normalizedCode.length.toString()
+                "code_length" to normalizedCode.length.toString(),
+                "original_length" to code.length.toString()
             )
         )
         
         return try {
-            if (normalizedCode.length != 8 || !normalizedCode.all { it.isLetterOrDigit() }) {
-                val error = Exception("Invalid code format")
+            // Enforce exact 8-character length - truncate if longer (defensive)
+            if (normalizedCode.length > 8) {
+                Log.w("MobileAuthManager", "Code too long (${normalizedCode.length} chars), truncating to 8. Original: ${code.take(20)}...")
+                SentryHelper.captureException(
+                    throwable = Exception("Code too long, truncating"),
+                    level = SentryLevel.WARNING,
+                    tags = mapOf("mobile_auth" to "code_too_long"),
+                    extra = mapOf(
+                        "original_length" to code.length,
+                        "normalized_length" to normalizedCode.length,
+                        "code_preview" to code.take(20)
+                    )
+                )
+                normalizedCode = normalizedCode.substring(0, 8)
+            }
+            
+            // Validate format: must be exactly 8 hex characters
+            if (normalizedCode.length != 8 || !normalizedCode.all { it.isLetterOrDigit() && it in '0'..'9' || it in 'A'..'F' }) {
+                val error = Exception("Invalid code format: expected 8 hex characters, got ${normalizedCode.length}")
                 SentryHelper.captureException(
                     throwable = error,
                     level = SentryLevel.WARNING,
                     tags = mapOf("mobile_auth" to "invalid_format"),
-                    extra = mapOf("code_length" to normalizedCode.length)
+                    extra = mapOf(
+                        "code_length" to normalizedCode.length,
+                        "code_preview" to normalizedCode.take(8),
+                        "original_code_length" to code.length
+                    )
                 )
-                Log.w("MobileAuthManager", "Mobile code validation failed: invalid format ${normalizedCode.length}")
+                Log.w("MobileAuthManager", "Mobile code validation failed: invalid format. Length: ${normalizedCode.length}, Code: ${normalizedCode.take(8)}")
                 return Result.failure(error)
             }
             

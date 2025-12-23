@@ -67,7 +67,9 @@ export const otpCodes = pgTable(
     userId: varchar("user_id")
       .notNull()
       .references(() => users.id),
-    code: varchar("code", { length: 8 }).notNull(),
+    // Use VARCHAR(16) as safety buffer, but always normalize to 8 chars
+    // This prevents "text value too long" errors if normalization fails
+    code: varchar("code", { length: 16 }).notNull(),
     expiresAt: timestamp("expires_at").notNull(),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },

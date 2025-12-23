@@ -79,8 +79,24 @@ class MainActivity : AppCompatActivity() {
             
             // Handle chyme://auth deep links
             if (uri.scheme == "chyme" && uri.host == "auth") {
-                val code = uri.getQueryParameter("code")
+                var code = uri.getQueryParameter("code")
                 if (code != null) {
+                    // 🚨 CRITICAL: Normalize code immediately to prevent issues
+                    // Remove any URL encoding artifacts or extra parameters
+                    code = code.trim()
+                    // If code contains unexpected characters, log warning
+                    if (code.length > 8 || !code.all { it.isLetterOrDigit() }) {
+                        Log.w("MainActivity", "Received potentially malformed code: length=${code.length}, code=${code.take(20)}")
+                        SentryHelper.addBreadcrumb(
+                            message = "Potentially malformed code in deep link",
+                            category = "deep_link",
+                            level = SentryLevel.WARNING,
+                            data = mapOf(
+                                "code_length" to code.length.toString(),
+                                "code_preview" to code.take(20)
+                            )
+                        )
+                    }
                     Log.d("MainActivity", "Received deep link with code: ${code.take(2)}**** (length: ${code.length})")
                     
                     SentryHelper.addBreadcrumb(
@@ -180,8 +196,23 @@ class MainActivity : AppCompatActivity() {
                 )
                 
                 // Check if there's a code parameter in the URL
-                val code = uri.getQueryParameter("code")
+                var code = uri.getQueryParameter("code")
                 if (code != null) {
+                    // 🚨 CRITICAL: Normalize code immediately to prevent issues
+                    code = code.trim()
+                    // If code contains unexpected characters, log warning
+                    if (code.length > 8 || !code.all { it.isLetterOrDigit() }) {
+                        Log.w("MainActivity", "Received potentially malformed code in HTTPS URL: length=${code.length}, code=${code.take(20)}")
+                        SentryHelper.addBreadcrumb(
+                            message = "Potentially malformed code in HTTPS URL",
+                            category = "deep_link",
+                            level = SentryLevel.WARNING,
+                            data = mapOf(
+                                "code_length" to code.length.toString(),
+                                "code_preview" to code.take(20)
+                            )
+                        )
+                    }
                     // If there's a code, try to validate it
                     Log.d("MainActivity", "Found code parameter in HTTPS URL: ${code.take(2)}**** (length: ${code.length})")
                     
