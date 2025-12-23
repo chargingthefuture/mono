@@ -485,7 +485,9 @@ export function WeeklyPerformanceMetrics({
               <div className="flex items-center gap-2 mt-2">
                 <Badge
                   variant={
-                    (data.metrics?.averageMood ?? 0) >= 4
+                    (data.metrics?.moodResponses ?? 0) === 0
+                      ? "secondary"
+                      : (data.metrics?.averageMood ?? 0) >= 4
                       ? "default"
                       : (data.metrics?.averageMood ?? 0) >= 3
                       ? "secondary"
@@ -493,7 +495,9 @@ export function WeeklyPerformanceMetrics({
                   }
                   className="text-xs"
                 >
-                  {(data.metrics?.averageMood ?? 0) >= 4
+                  {(data.metrics?.moodResponses ?? 0) === 0
+                    ? "No Data"
+                    : (data.metrics?.averageMood ?? 0) >= 4
                     ? "Positive"
                     : (data.metrics?.averageMood ?? 0) >= 3
                     ? "Neutral"
