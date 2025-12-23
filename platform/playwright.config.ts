@@ -3,10 +3,15 @@ import { config } from 'dotenv';
 import { resolve } from 'path';
 import * as path from 'path';
 import * as fs from 'fs';
+import { fileURLToPath } from 'url';
 
 // Load environment variables from .env files (same as db.ts does)
 config({ path: resolve(process.cwd(), '.env.local') });
 config({ path: resolve(process.cwd(), '.env') });
+
+// ES module equivalent of __dirname
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * See https://playwright.dev/docs/test-configuration.
@@ -14,7 +19,7 @@ config({ path: resolve(process.cwd(), '.env') });
 export default defineConfig({
   testDir: './test/e2e',
   /* Global setup - authenticates test user before tests run */
-  globalSetup: require.resolve('./test/e2e/global-setup.ts'),
+  globalSetup: path.resolve(__dirname, './test/e2e/global-setup.ts'),
   /* Skip E2E tests if SKIP_E2E_TESTS is set (useful when tests are flaky due to auth/env issues) */
   testIgnore: process.env.SKIP_E2E_TESTS === 'true' ? ['**/*'] : undefined,
   /* Run tests in files in parallel */
