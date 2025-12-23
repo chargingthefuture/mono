@@ -190,8 +190,14 @@ test.describe('SocketRelay Public Listing', () => {
     
     // Wait for requests to load or empty state
     await page.waitForTimeout(2000);
-    const hasRequests = await page.locator('[data-testid^="card-request-"]').count() > 0;
-    const hasEmptyState = await page.locator('text=No requests').isVisible().catch(() => false);
+    const requestsCount = await page.locator('[data-testid^="card-request-"]').count();
+    const hasRequests = requestsCount > 0;
+
+    // Empty state uses "No active requests yet" copy, not "No requests"
+    const hasEmptyState = await page
+      .locator('text=No active requests yet')
+      .isVisible()
+      .catch(() => false);
     
     expect(hasRequests || hasEmptyState).toBe(true);
   });
