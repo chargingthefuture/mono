@@ -1,8 +1,11 @@
 /**
  * Main router component - combines all route groups
+ * 
+ * Note: Using fragments directly without Switch. wouter's Route components
+ * work fine with fragments - Switch was causing the white screen issue.
  */
 
-import { Switch, Route } from "wouter";
+import { Route } from "wouter";
 import { RootRoute } from "./route-wrappers";
 import { PublicRoutes } from "./public-routes";
 import { ProtectedRoutes } from "./protected-routes";
@@ -12,10 +15,17 @@ import NotFound from "@/pages/not-found";
 
 export function Router() {
   return (
-    <Switch>
+    <>
+      {/* Public routes */}
       <PublicRoutes />
+      
+      {/* Protected routes */}
       <ProtectedRoutes />
+      
+      {/* Admin routes */}
       <AdminRoutes />
+      
+      {/* Mini-app routes */}
       <MiniAppRoutes />
       
       {/* Root route - handles landing vs redirect (must be last) */}
@@ -23,8 +33,9 @@ export function Router() {
         <RootRoute />
       </Route>
       
+      {/* 404 - must be last */}
       <Route component={NotFound} />
-    </Switch>
+    </>
   );
 }
 
