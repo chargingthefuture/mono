@@ -228,28 +228,6 @@ export default function MechanicMatchDashboard() {
         queryKey="/api/mechanicmatch/announcements"
       />
 
-      {/* Announcements Widget */}
-      <Card className="hover-elevate">
-        <CardHeader>
-          <div className="flex items-center gap-3">
-            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-              <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-            </div>
-            <CardTitle className="text-base sm:text-lg">Announcements</CardTitle>
-          </div>
-        </CardHeader>
-        <CardContent>
-          <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
-            View platform updates and notifications
-          </p>
-          <Link href="/apps/mechanicmatch/announcements">
-            <Button variant="outline" className="w-full text-xs sm:text-sm" data-testid="button-view-announcements">
-              View Announcements
-            </Button>
-          </Link>
-        </CardContent>
-      </Card>
-
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
         <TabsList className="grid w-full max-w-md grid-cols-3">
           <TabsTrigger value="overview">Overview</TabsTrigger>
@@ -490,6 +468,28 @@ export default function MechanicMatchDashboard() {
 
         <ExternalLinkDialog />
       </Tabs>
+
+      {/* Announcements Widget */}
+      <Card className="hover-elevate">
+        <CardHeader>
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+              <Bell className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+            </div>
+            <CardTitle className="text-base sm:text-lg">Announcements</CardTitle>
+          </div>
+        </CardHeader>
+        <CardContent>
+          <p className="text-xs sm:text-sm text-muted-foreground mb-3 sm:mb-4">
+            View platform updates and notifications
+          </p>
+          <Link href="/apps/mechanicmatch/announcements">
+            <Button variant="outline" className="w-full text-xs sm:text-sm" data-testid="button-view-announcements">
+              View Announcements
+            </Button>
+          </Link>
+        </CardContent>
+      </Card>
     </div>
   );
 }
