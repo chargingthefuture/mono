@@ -22,9 +22,11 @@ jobs:
       id-token: write
     env:
       DATABASE_URL: ${{ github.ref == 'refs/heads/main' && secrets.DATABASE_URL || secrets.DATABASE_URL_STAGING }}
-      CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY }}
-      VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
-      CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY }}
+      # Use test/dev Clerk keys for all tests to prevent creating users in production
+      # Only fall back to production key if test keys are not available (should not happen in CI)
+      CLERK_SECRET_KEY: ${{ secrets.CLERK_SECRET_KEY_TEST || secrets.CLERK_SECRET_KEY_DEV || secrets.CLERK_SECRET_KEY }}
+      VITE_CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY_TEST || secrets.VITE_CLERK_PUBLISHABLE_KEY_DEV || secrets.VITE_CLERK_PUBLISHABLE_KEY }}
+      CLERK_PUBLISHABLE_KEY: ${{ secrets.VITE_CLERK_PUBLISHABLE_KEY_TEST || secrets.VITE_CLERK_PUBLISHABLE_KEY_DEV || secrets.VITE_CLERK_PUBLISHABLE_KEY }}
     steps:
       - name: Checkout code
         uses: actions/checkout@v4

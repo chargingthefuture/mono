@@ -141,8 +141,8 @@ dependencies {
     
     // WebRTC for audio streaming (local mic control)
     // The org.webrtc.Environment class is required by PeerConnectionFactory.builder()
-    // Using the official Google WebRTC library which includes all required classes
-    // including org.webrtc.Environment. This ensures proper packaging in the APK.
+    // Using org.webrtc:google-webrtc from community-maintained repository
+    // This version is no longer available on JCenter (deprecated) but is available via GitHub Maven repo
     implementation("org.webrtc:google-webrtc:1.0.32006")
     
     // Image loading

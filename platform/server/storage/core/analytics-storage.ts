@@ -18,6 +18,42 @@ import { normalizeError } from "../../errors";
 import { logError } from "../../errorLogger";
 import { getWeekStart, getWeekEnd, formatDate, getDaysInWeek } from "./utils";
 
+/**
+ * Helper function to identify test users by email pattern or user ID
+ * Test users are created during E2E tests and security tests
+ */
+function isTestUser(user: { id?: string; email: string | null } | null | undefined): boolean {
+  if (!user) return false;
+  
+  // Check user ID pattern: test-user-{timestamp}-{random}
+  if (user.id && typeof user.id === 'string' && user.id.startsWith('test-user-')) {
+    return true;
+  }
+  
+  // Check email patterns
+  if (!user.email) return false;
+  
+  const email = user.email;
+  
+  // SQL injection test email pattern (from security tests)
+  if (email === "test' OR '1'='1" || email === "test' OR '1'='1'") {
+    return true;
+  }
+  
+  const emailLower = email.toLowerCase();
+  
+  // Common test email patterns (for seed scripts and other test data)
+  const testPatterns = [
+    /@example\.com$/i,                    // Any @example.com email
+    /^e2e-test@/i,                       // E2E test user
+    /^payment-test-\d+@example\.com$/i,  // Payment test users
+    /^test.*@example\.com$/i,            // Generic test@example.com
+    /^seed-.*@example\.com$/i,            // Seed script users
+  ];
+  
+  return testPatterns.some(pattern => pattern.test(emailLower));
+}
+
 export class AnalyticsStorage {
   async getWeeklyPerformanceReview(
     weekStart: Date,
@@ -94,7 +130,7 @@ export class AnalyticsStorage {
     let verifiedUsersPercentage = 0;
     let verifiedUsersPercentageChange = 0;
 
-    // Get new users for current week (excluding deleted users)
+    // Get new users for current week (excluding deleted users and test users)
     const currentWeekNewUsersRaw = await db
       .select()
       .from(users)
@@ -105,14 +141,18 @@ export class AnalyticsStorage {
         )
       );
     
-    // Filter out deleted users (those with IDs starting with "deleted_user_")
+    // Filter out deleted users (those with IDs starting with "deleted_user_") and test users
     const currentWeekNewUsers = currentWeekNewUsersRaw.filter(user => {
       if (!user || !user.id) return false;
       const id = String(user.id);
-      return !id.startsWith("deleted_user_");
+      // Exclude deleted users
+      if (id.startsWith("deleted_user_")) return false;
+      // Exclude test users
+      if (isTestUser(user)) return false;
+      return true;
     });
     
-    // Get new users for previous week (excluding deleted users)
+    // Get new users for previous week (excluding deleted users and test users)
     const previousWeekNewUsersRaw = await db
       .select()
       .from(users)
@@ -123,11 +163,15 @@ export class AnalyticsStorage {
         )
       );
     
-    // Filter out deleted users
+    // Filter out deleted users and test users
     const previousWeekNewUsers = previousWeekNewUsersRaw.filter(user => {
       if (!user || !user.id) return false;
       const id = String(user.id);
-      return !id.startsWith("deleted_user_");
+      // Exclude deleted users
+      if (id.startsWith("deleted_user_")) return false;
+      // Exclude test users
+      if (isTestUser(user)) return false;
+      return true;
     });
 
     // Get payments for current week
