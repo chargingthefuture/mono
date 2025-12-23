@@ -141,9 +141,10 @@ dependencies {
     
     // WebRTC for audio streaming (local mic control)
     // The org.webrtc.Environment class is required by PeerConnectionFactory.builder()
-    // Using org.webrtc:google-webrtc from community-maintained repository
-    // This version is no longer available on JCenter (deprecated) but is available via GitHub Maven repo
-    implementation("org.webrtc:google-webrtc:1.0.32006")
+    // Using com.dafruits:webrtc which is maintained and available on Maven Central
+    // This library provides the same org.webrtc package structure as google-webrtc
+    // Version 123.0.0 corresponds to WebRTC M123 (December 2024)
+    implementation("com.dafruits:webrtc:123.0.0")
     
     // Image loading
     implementation("io.coil-kt:coil-compose:2.5.0")
