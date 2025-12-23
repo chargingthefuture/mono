@@ -1,6 +1,6 @@
 # Comprehensive Testing Plan
 
-This document outlines a comprehensive testing strategy for the secure platform serving survivors of human trafficking. Given the critical nature of this application, testing must be thorough, covering all aspects of functionality, security, usability, and reliability.
+This document outlines a comprehensive testing strategy for the platform serving survivors of human trafficking. Given the critical nature of this application, testing must be thorough, covering all aspects of functionality, security, usability, and reliability.
 
 ---
 

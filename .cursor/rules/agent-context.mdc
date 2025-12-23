@@ -18,7 +18,8 @@ This is the top level of a mono-repo. This product serves vulnerable users. Ever
 
 ## Documentation Files
 
-- **ALWAYS** place documentation files (`.md`, `.txt`, guides, troubleshooting docs) in the `docs/` folder of the respective project folder
+- **ALWAYS** place documentation files (`.md`, `.txt`, guides, troubleshooting docs) in the `docs/` folder of the respective project folder. For example: chyme-android/docs or platform/docs.
+- **ALWAYS** place guides in the guides/ folder. For example: chyme-android/guides or platform/guides.
 - **NEVER** place documentation files in the project root or alongside source code files
 - Documentation files that should go in `docs/` include:
   - Troubleshooting guides
@@ -49,6 +50,7 @@ This is the top level of a mono-repo. This product serves vulnerable users. Ever
 - Helper scripts → `docs/`
 - Build configs → `app/build.gradle.kts` (app level) or `build.gradle.kts` (project level)
 - Example configs → `local.properties.example` (root level as template)
+- Migrations → `migrations/`
 
 ### General Rule
 
@@ -165,7 +167,7 @@ function MegaComponent() {
 - Some files legitimately need more complexity
 - Regular refactoring is key to maintainability
 
-# 'platform' folder specific guidelines
+# 'platform' folder/project specific guidelines
 
 ## **Mini-App (Super App) Architecture**
 

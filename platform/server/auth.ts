@@ -10,8 +10,26 @@ import { loginEvents, type User, type PricingTier } from "@shared/schema";
 import { db } from "./db";
 
 // Clerk Configuration
-if (!process.env.CLERK_SECRET_KEY) {
-  throw new Error("Environment variable CLERK_SECRET_KEY not provided");
+// In production, CLERK_SECRET_KEY is REQUIRED and missing key should crash startup.
+// In development/test environments, we fall back to a dummy key so that:
+// - The server can start (for Playwright/Vitest and local dev without secrets)
+// - Protected routes will still behave as unauthenticated unless a real Clerk setup is present
+const clerkSecret = process.env.CLERK_SECRET_KEY;
+const nodeEnv = process.env.NODE_ENV || "development";
+
+if (!clerkSecret) {
+  if (nodeEnv === "production") {
+    throw new Error("Environment variable CLERK_SECRET_KEY not provided");
+  } else {
+    // Dev/test fallback: log a clear warning and use a dummy secret so Clerk middleware can initialize.
+    // This is safe because dev/test environments should not be exposed publicly and use separate databases.
+    // Any auth-dependent flows in tests should either inject a real secret or explicitly handle this mode.
+    // NOTE: This does NOT provide real authentication; it only prevents hard crashes during startup.
+    console.warn(
+      "[auth] CLERK_SECRET_KEY is not set. Running in development/test fallback mode with a dummy secret."
+    );
+    process.env.CLERK_SECRET_KEY = "dev_dummy_clerk_secret_key_do_not_use_in_production";
+  }
 }
 
 /**
