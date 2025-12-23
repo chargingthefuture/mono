@@ -128,10 +128,29 @@ export function WeeklyPerformanceComparison({
                   </div>
                 </td>
                 <td className="text-right py-2 px-4" data-testid="table-mrr-previous">
-                  <span className="text-muted-foreground">—</span>
+                  <div className="flex items-center justify-end gap-2">
+                    <PrivacyField
+                      value={formatCurrency(data.metrics?.previousWeekMonthMRR ?? 0)}
+                      type="text"
+                      testId="privacy-table-mrr-previous"
+                      className="text-sm"
+                    />
+                  </div>
                 </td>
                 <td className="text-right py-2 px-4">
-                  <Badge variant="secondary">N/A</Badge>
+                  <Badge
+                    variant={
+                      ((data.metrics?.mrr ?? 0) - (data.metrics?.previousWeekMonthMRR ?? 0)) >= 0
+                        ? "default"
+                        : "destructive"
+                    }
+                  >
+                    {formatPercentage(
+                      (data.metrics?.previousWeekMonthMRR ?? 0) === 0
+                        ? ((data.metrics?.mrr ?? 0) > 0 ? 100 : 0)
+                        : (((data.metrics?.mrr ?? 0) - (data.metrics?.previousWeekMonthMRR ?? 0)) / (data.metrics?.previousWeekMonthMRR ?? 1)) * 100
+                    )}
+                  </Badge>
                 </td>
               </tr>
               <tr className="border-b">
@@ -147,10 +166,29 @@ export function WeeklyPerformanceComparison({
                   </div>
                 </td>
                 <td className="text-right py-2 px-4" data-testid="table-arr-previous">
-                  <span className="text-muted-foreground">—</span>
+                  <div className="flex items-center justify-end gap-2">
+                    <PrivacyField
+                      value={formatCurrency(data.metrics?.previousWeekMonthARR ?? 0)}
+                      type="text"
+                      testId="privacy-table-arr-previous"
+                      className="text-sm"
+                    />
+                  </div>
                 </td>
                 <td className="text-right py-2 px-4">
-                  <Badge variant="secondary">N/A</Badge>
+                  <Badge
+                    variant={
+                      ((data.metrics?.arr ?? 0) - (data.metrics?.previousWeekMonthARR ?? 0)) >= 0
+                        ? "default"
+                        : "destructive"
+                    }
+                  >
+                    {formatPercentage(
+                      (data.metrics?.previousWeekMonthARR ?? 0) === 0
+                        ? ((data.metrics?.arr ?? 0) > 0 ? 100 : 0)
+                        : (((data.metrics?.arr ?? 0) - (data.metrics?.previousWeekMonthARR ?? 0)) / (data.metrics?.previousWeekMonthARR ?? 1)) * 100
+                    )}
+                  </Badge>
                 </td>
               </tr>
               <tr className="border-b">
@@ -159,11 +197,21 @@ export function WeeklyPerformanceComparison({
                   {formatPercentage(data.metrics?.churnRate ?? 0)}
                 </td>
                 <td className="text-right py-2 px-4" data-testid="table-churn-previous">
-                  <span className="text-muted-foreground">—</span>
+                  {formatPercentage(data.metrics?.previousWeekMonthChurnRate ?? 0)}
                 </td>
                 <td className="text-right py-2 px-4">
-                  <Badge variant={(data.metrics?.churnRate ?? 0) > 0 ? "destructive" : "default"}>
-                    {formatPercentage(data.metrics?.churnRate ?? 0)}
+                  <Badge
+                    variant={
+                      ((data.metrics?.churnRate ?? 0) - (data.metrics?.previousWeekMonthChurnRate ?? 0)) <= 0
+                        ? "default"
+                        : "destructive"
+                    }
+                  >
+                    {formatPercentage(
+                      (data.metrics?.previousWeekMonthChurnRate ?? 0) === 0
+                        ? ((data.metrics?.churnRate ?? 0) > 0 ? 100 : 0)
+                        : (((data.metrics?.churnRate ?? 0) - (data.metrics?.previousWeekMonthChurnRate ?? 0)) / (data.metrics?.previousWeekMonthChurnRate || 1)) * 100
+                    )}
                   </Badge>
                 </td>
               </tr>
@@ -180,10 +228,29 @@ export function WeeklyPerformanceComparison({
                   </div>
                 </td>
                 <td className="text-right py-2 px-4" data-testid="table-clv-previous">
-                  <span className="text-muted-foreground">—</span>
+                  <div className="flex items-center justify-end gap-2">
+                    <PrivacyField
+                      value={formatCurrency(data.metrics?.previousWeekMonthCLV ?? 0)}
+                      type="text"
+                      testId="privacy-table-clv-previous"
+                      className="text-sm"
+                    />
+                  </div>
                 </td>
                 <td className="text-right py-2 px-4">
-                  <Badge variant="secondary">N/A</Badge>
+                  <Badge
+                    variant={
+                      ((data.metrics?.clv ?? 0) - (data.metrics?.previousWeekMonthCLV ?? 0)) >= 0
+                        ? "default"
+                        : "destructive"
+                    }
+                  >
+                    {formatPercentage(
+                      (data.metrics?.previousWeekMonthCLV ?? 0) === 0
+                        ? ((data.metrics?.clv ?? 0) > 0 ? 100 : 0)
+                        : (((data.metrics?.clv ?? 0) - (data.metrics?.previousWeekMonthCLV ?? 0)) / (data.metrics?.previousWeekMonthCLV ?? 1)) * 100
+                    )}
+                  </Badge>
                 </td>
               </tr>
               <tr className="border-b">
@@ -252,10 +319,22 @@ export function WeeklyPerformanceComparison({
                   {data.metrics?.mau ?? 0}
                 </td>
                 <td className="text-right py-2 px-4" data-testid="table-mau-previous">
-                  <span className="text-muted-foreground">—</span>
+                  {data.metrics?.previousWeekMonthMAU ?? 0}
                 </td>
                 <td className="text-right py-2 px-4">
-                  <Badge variant="secondary">N/A</Badge>
+                  <Badge
+                    variant={
+                      ((data.metrics?.mau ?? 0) - (data.metrics?.previousWeekMonthMAU ?? 0)) >= 0
+                        ? "default"
+                        : "destructive"
+                    }
+                  >
+                    {formatPercentage(
+                      (data.metrics?.previousWeekMonthMAU ?? 0) === 0
+                        ? ((data.metrics?.mau ?? 0) > 0 ? 100 : 0)
+                        : (((data.metrics?.mau ?? 0) - (data.metrics?.previousWeekMonthMAU ?? 0)) / (data.metrics?.previousWeekMonthMAU ?? 1)) * 100
+                    )}
+                  </Badge>
                 </td>
               </tr>
               <tr className="border-b">

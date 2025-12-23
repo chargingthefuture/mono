@@ -53,6 +53,11 @@ export interface WeeklyPerformanceData {
     averageMood: number;
     moodChange: number;
     moodResponses: number;
+    previousWeekMonthMRR: number;
+    previousWeekMonthARR: number;
+    previousWeekMonthMAU: number;
+    previousWeekMonthChurnRate: number;
+    previousWeekMonthCLV: number;
   };
 }
 

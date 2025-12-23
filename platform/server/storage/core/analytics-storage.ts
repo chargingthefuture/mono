@@ -108,6 +108,11 @@ export class AnalyticsStorage {
       averageMood: number;
       moodChange: number;
       moodResponses: number;
+      previousWeekMonthMRR: number;
+      previousWeekMonthARR: number;
+      previousWeekMonthMAU: number;
+      previousWeekMonthChurnRate: number;
+      previousWeekMonthCLV: number;
     };
   }> {
     // Calculate current week boundaries (Saturday to Friday)
@@ -331,6 +336,13 @@ export class AnalyticsStorage {
     let retentionRate = 0;
     let mrrGrowth = 0;
 
+    // Previous week's month metrics (for comparison table)
+    let previousWeekMonthMRR = 0;
+    let previousWeekMonthARR = 0;
+    let previousWeekMonthMAU = 0;
+    let previousWeekMonthChurnRate = 0;
+    let previousWeekMonthCLV = 0;
+
     try {
       // Calculate MRR (Monthly Recurring Revenue)
       const currentMonth = new Date(weekStart);
@@ -340,6 +352,13 @@ export class AnalyticsStorage {
       
       // Current month in YYYY-MM format for comparison
       const currentMonthStr = `${monthStart.getFullYear()}-${String(monthStart.getMonth() + 1).padStart(2, '0')}`;
+
+      // Calculate previous week's month (the month that contains the previous week)
+      const previousWeekMonth = new Date(previousWeekStart);
+      const previousWeekMonthStart = new Date(previousWeekMonth.getFullYear(), previousWeekMonth.getMonth(), 1);
+      previousWeekMonthStart.setHours(0, 0, 0, 0);
+      const previousWeekMonthEnd = new Date(previousWeekMonth.getFullYear(), previousWeekMonth.getMonth() + 1, 0, 23, 59, 59, 999);
+      const previousWeekMonthStr = `${previousWeekMonthStart.getFullYear()}-${String(previousWeekMonthStart.getMonth() + 1).padStart(2, '0')}`;
       
       // MRR: All active monthly subscriptions for the current month
       // A monthly subscription is active if billingMonth matches the current month
@@ -456,6 +475,93 @@ export class AnalyticsStorage {
       );
       const previousMRR = previousMonthMonthlyPayments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
       mrrGrowth = previousMRR === 0 ? (mrr > 0 ? 100 : 0) : ((mrr - previousMRR) / previousMRR) * 100;
+
+      // Calculate previous week's month metrics (for comparison table)
+      // Only calculate if previous week's month is different from current month
+      if (previousWeekMonthStr !== currentMonthStr) {
+        // Previous week's month MRR
+        const previousWeekMonthMonthlyPayments = allPaymentsForChurn.filter(p => 
+          p.billingPeriod === 'monthly' && p.billingMonth === previousWeekMonthStr
+        );
+        previousWeekMonthMRR = previousWeekMonthMonthlyPayments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
+
+        // Previous week's month ARR
+        const previousWeekMonthYearlyPayments = allPaymentsForChurn.filter(p => {
+          if (p.billingPeriod !== 'yearly' || !p.yearlyStartMonth || !p.yearlyEndMonth) {
+            return false;
+          }
+          return previousWeekMonthStr >= p.yearlyStartMonth && previousWeekMonthStr <= p.yearlyEndMonth;
+        });
+        previousWeekMonthARR = previousWeekMonthYearlyPayments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
+
+        // Previous week's month MAU
+        const previousWeekMonthLoginEvents = await db
+          .select()
+          .from(loginEvents)
+          .where(
+            and(
+              gte(loginEvents.createdAt, previousWeekMonthStart),
+              lte(loginEvents.createdAt, previousWeekMonthEnd),
+            )
+          );
+        const previousWeekMonthActiveUserIds = new Set(previousWeekMonthLoginEvents.map(e => e.userId));
+        previousWeekMonthMAU = previousWeekMonthActiveUserIds.size;
+
+        // Previous week's month Churn Rate
+        // Calculate the month before the previous week's month
+        const prevWeekMonthBefore = new Date(previousWeekMonthStart);
+        prevWeekMonthBefore.setMonth(prevWeekMonthBefore.getMonth() - 1);
+        const prevWeekMonthBeforeStart = new Date(prevWeekMonthBefore.getFullYear(), prevWeekMonthBefore.getMonth(), 1);
+        prevWeekMonthBeforeStart.setHours(0, 0, 0, 0);
+        const prevWeekMonthBeforeEnd = new Date(prevWeekMonthBefore.getFullYear(), prevWeekMonthBefore.getMonth() + 1, 0, 23, 59, 59, 999);
+        const prevWeekMonthBeforeStr = `${prevWeekMonthBeforeStart.getFullYear()}-${String(prevWeekMonthBeforeStart.getMonth() + 1).padStart(2, '0')}`;
+
+        // Users active in the month before previous week's month
+        const prevWeekMonthBeforeActiveUserIds = new Set<string>();
+        allPaymentsForChurn
+          .filter(p => p.billingPeriod === 'monthly' && p.billingMonth === prevWeekMonthBeforeStr)
+          .forEach(p => prevWeekMonthBeforeActiveUserIds.add(p.userId));
+        allPaymentsForChurn
+          .filter(p => {
+            if (p.billingPeriod !== 'yearly' || !p.yearlyStartMonth || !p.yearlyEndMonth) {
+              return false;
+            }
+            return prevWeekMonthBeforeStr >= p.yearlyStartMonth && prevWeekMonthBeforeStr <= p.yearlyEndMonth;
+          })
+          .forEach(p => prevWeekMonthBeforeActiveUserIds.add(p.userId));
+
+        // Users active in previous week's month
+        const prevWeekMonthActiveUserIds = new Set<string>();
+        previousWeekMonthMonthlyPayments.forEach(p => prevWeekMonthActiveUserIds.add(p.userId));
+        previousWeekMonthYearlyPayments.forEach(p => prevWeekMonthActiveUserIds.add(p.userId));
+
+        // Churned users: were active in month before but not in previous week's month
+        const prevWeekMonthChurnedUsers = Array.from(prevWeekMonthBeforeActiveUserIds).filter(id => !prevWeekMonthActiveUserIds.has(id)).length;
+        const prevWeekMonthTotalBefore = prevWeekMonthBeforeActiveUserIds.size;
+        previousWeekMonthChurnRate = prevWeekMonthTotalBefore === 0 ? 0 : (prevWeekMonthChurnedUsers / prevWeekMonthTotalBefore) * 100;
+
+        // Previous week's month CLV (same calculation as current, but calculated at that point in time)
+        // For CLV, we calculate based on all payments up to the end of previous week's month
+        const prevWeekMonthAllPayments = await db
+          .select()
+          .from(payments)
+          .where(lte(payments.paymentDate, previousWeekMonthEnd));
+        const prevWeekMonthUserTotalRevenue = new Map<string, number>();
+        prevWeekMonthAllPayments.forEach(p => {
+          const current = prevWeekMonthUserTotalRevenue.get(p.userId) || 0;
+          prevWeekMonthUserTotalRevenue.set(p.userId, current + parseFloat(p.amount));
+        });
+        const prevWeekMonthTotalUsersWithPayments = prevWeekMonthUserTotalRevenue.size;
+        const prevWeekMonthTotalLifetimeRevenue = Array.from(prevWeekMonthUserTotalRevenue.values()).reduce((sum, rev) => sum + rev, 0);
+        previousWeekMonthCLV = prevWeekMonthTotalUsersWithPayments === 0 ? 0 : prevWeekMonthTotalLifetimeRevenue / prevWeekMonthTotalUsersWithPayments;
+      } else {
+        // If previous week is in the same month, use current month's values
+        previousWeekMonthMRR = mrr;
+        previousWeekMonthARR = arr;
+        previousWeekMonthMAU = mau;
+        previousWeekMonthChurnRate = churnRate;
+        previousWeekMonthCLV = clv;
+      }
     } catch (error) {
       const normalized = normalizeError(error);
       logError(normalized, { path: 'calculateWeeklyPerformanceMetrics' } as any);
@@ -671,6 +777,12 @@ export class AnalyticsStorage {
         averageMood: averageMood,
         moodChange: moodChange,
         moodResponses: moodResponsesCount,
+        // Previous week's month metrics (for comparison table)
+        previousWeekMonthMRR: parseFloat(previousWeekMonthMRR.toFixed(2)),
+        previousWeekMonthARR: parseFloat(previousWeekMonthARR.toFixed(2)),
+        previousWeekMonthMAU: previousWeekMonthMAU,
+        previousWeekMonthChurnRate: parseFloat(previousWeekMonthChurnRate.toFixed(2)),
+        previousWeekMonthCLV: parseFloat(previousWeekMonthCLV.toFixed(2)),
       },
     };
   }
