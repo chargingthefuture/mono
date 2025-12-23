@@ -294,32 +294,38 @@ export class AnalyticsStorage {
       monthStart.setHours(0, 0, 0, 0);
       const monthEnd = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0, 23, 59, 59, 999);
       
-      const monthlyPayments = await db
+      // Current month in YYYY-MM format for comparison
+      const currentMonthStr = `${monthStart.getFullYear()}-${String(monthStart.getMonth() + 1).padStart(2, '0')}`;
+      
+      // MRR: All active monthly subscriptions for the current month
+      // A monthly subscription is active if billingMonth matches the current month
+      const allMonthlyPayments = await db
         .select()
         .from(payments)
-        .where(
-          and(
-            gte(payments.paymentDate, monthStart),
-            lte(payments.paymentDate, monthEnd),
-            eq(payments.billingPeriod, 'monthly')
-          )
-        );
+        .where(eq(payments.billingPeriod, 'monthly'));
       
-      mrr = monthlyPayments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
+      // Filter to only payments where billingMonth matches current month
+      const activeMonthlyPayments = allMonthlyPayments.filter(p => p.billingMonth === currentMonthStr);
+      mrr = activeMonthlyPayments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
       
       // Calculate ARR (Annual Recurring Revenue)
-      const yearlyPayments = await db
+      // ARR: All active yearly subscriptions where current month falls within the subscription period
+      const allYearlyPayments = await db
         .select()
         .from(payments)
-        .where(
-          and(
-            gte(payments.paymentDate, monthStart),
-            lte(payments.paymentDate, monthEnd),
-            eq(payments.billingPeriod, 'yearly')
-          )
-        );
+        .where(eq(payments.billingPeriod, 'yearly'));
       
-      const yearlyRevenue = yearlyPayments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
+      // Filter to only payments where current month is within the subscription period
+      const activeYearlyPayments = allYearlyPayments.filter(p => {
+        if (!p.yearlyStartMonth || !p.yearlyEndMonth) {
+          // If yearly subscription doesn't have start/end months, exclude it
+          return false;
+        }
+        // Current month must be >= start month and <= end month
+        return currentMonthStr >= p.yearlyStartMonth && currentMonthStr <= p.yearlyEndMonth;
+      });
+      
+      const yearlyRevenue = activeYearlyPayments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
       arr = yearlyRevenue;
 
       // Calculate MAU (Monthly Active Users)
@@ -343,42 +349,42 @@ export class AnalyticsStorage {
       previousMonthStart.setHours(0, 0, 0, 0);
       const previousMonthEnd = new Date(previousMonth.getFullYear(), previousMonth.getMonth() + 1, 0, 23, 59, 59, 999);
       
-      const previousMonthPayments = await db
-        .select()
-        .from(payments)
-        .where(
-          and(
-            gte(payments.paymentDate, previousMonthStart),
-            lte(payments.paymentDate, previousMonthEnd)
-          )
-        );
+      // Previous month in YYYY-MM format
+      const previousMonthStr = `${previousMonthStart.getFullYear()}-${String(previousMonthStart.getMonth() + 1).padStart(2, '0')}`;
       
-      const previousMonthMonthlyPayments = previousMonthPayments.filter(p => p.billingPeriod === 'monthly');
-      const previousMonthYearlyPayments = previousMonthPayments.filter(p => p.billingPeriod === 'yearly');
+      // Get all payments to determine active subscriptions
+      const allPaymentsForChurn = await db.select().from(payments);
       
-      const currentMonthStr = `${monthStart.getFullYear()}-${String(monthStart.getMonth() + 1).padStart(2, '0')}`;
+      // Previous month active users: users with active subscriptions in previous month
+      const previousMonthActiveUserIds = new Set<string>();
       
-      const activeYearlySubscribers = new Set<string>();
-      previousMonthYearlyPayments.forEach(payment => {
-        if (payment.yearlyEndMonth && payment.yearlyEndMonth >= currentMonthStr) {
-          activeYearlySubscribers.add(payment.userId);
-        }
-      });
+      // Monthly subscriptions active in previous month
+      allPaymentsForChurn
+        .filter(p => p.billingPeriod === 'monthly' && p.billingMonth === previousMonthStr)
+        .forEach(p => previousMonthActiveUserIds.add(p.userId));
       
-      const previousMonthMonthlyUserIds = new Set(previousMonthMonthlyPayments.map(p => p.userId));
-      const expiredYearlyUserIds = new Set(
-        previousMonthYearlyPayments
-          .filter(p => !p.yearlyEndMonth || p.yearlyEndMonth < currentMonthStr)
-          .map(p => p.userId)
-      );
+      // Yearly subscriptions active in previous month
+      allPaymentsForChurn
+        .filter(p => {
+          if (p.billingPeriod !== 'yearly' || !p.yearlyStartMonth || !p.yearlyEndMonth) {
+            return false;
+          }
+          return previousMonthStr >= p.yearlyStartMonth && previousMonthStr <= p.yearlyEndMonth;
+        })
+        .forEach(p => previousMonthActiveUserIds.add(p.userId));
       
-      const previousMonthActiveUsers = new Set([
-        ...previousMonthMonthlyUserIds,
-        ...expiredYearlyUserIds
-      ]);
+      // Current month active users: users with active subscriptions in current month
+      const currentMonthActiveUserIds = new Set<string>();
       
-      const churnedUsers = Array.from(previousMonthActiveUsers).filter(id => !activeUserIds.has(id)).length;
-      const totalPreviousMonthActiveUsers = previousMonthActiveUsers.size;
+      // Monthly subscriptions active in current month
+      activeMonthlyPayments.forEach(p => currentMonthActiveUserIds.add(p.userId));
+      
+      // Yearly subscriptions active in current month
+      activeYearlyPayments.forEach(p => currentMonthActiveUserIds.add(p.userId));
+      
+      // Churned users: were active in previous month but not in current month
+      const churnedUsers = Array.from(previousMonthActiveUserIds).filter(id => !currentMonthActiveUserIds.has(id)).length;
+      const totalPreviousMonthActiveUsers = previousMonthActiveUserIds.size;
       churnRate = totalPreviousMonthActiveUsers === 0 ? 0 : (churnedUsers / totalPreviousMonthActiveUsers) * 100;
 
       // Calculate CLV (Customer Lifetime Value)
@@ -393,13 +399,17 @@ export class AnalyticsStorage {
       clv = totalUsersWithPayments === 0 ? 0 : totalLifetimeRevenue / totalUsersWithPayments;
 
       // Calculate Retention Rate
-      const allPreviousMonthUserIds = new Set(previousMonthPayments.map(p => p.userId));
-      const retainedUsers = Array.from(allPreviousMonthUserIds).filter(id => 
-        activeUserIds.has(id) || activeYearlySubscribers.has(id)
+      // Retained users: were active in previous month and still active in current month
+      const retainedUsers = Array.from(previousMonthActiveUserIds).filter(id => 
+        currentMonthActiveUserIds.has(id)
       ).length;
-      retentionRate = allPreviousMonthUserIds.size === 0 ? 0 : (retainedUsers / allPreviousMonthUserIds.size) * 100;
+      retentionRate = previousMonthActiveUserIds.size === 0 ? 0 : (retainedUsers / previousMonthActiveUserIds.size) * 100;
 
       // Calculate previous month MRR for comparison
+      // Previous month MRR: monthly subscriptions active in previous month
+      const previousMonthMonthlyPayments = allPaymentsForChurn.filter(p => 
+        p.billingPeriod === 'monthly' && p.billingMonth === previousMonthStr
+      );
       const previousMRR = previousMonthMonthlyPayments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
       mrrGrowth = previousMRR === 0 ? (mrr > 0 ? 100 : 0) : ((mrr - previousMRR) / previousMRR) * 100;
     } catch (error) {
