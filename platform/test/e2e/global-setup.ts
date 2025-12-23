@@ -2,6 +2,11 @@ import { chromium, type FullConfig } from '@playwright/test';
 import { clerkClient } from '@clerk/clerk-sdk-node';
 import * as fs from 'fs';
 import * as path from 'path';
+import { fileURLToPath } from 'url';
+
+// Get __dirname equivalent for ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 /**
  * Global setup for E2E tests
@@ -43,8 +48,12 @@ async function globalSetup(config: FullConfig) {
   try {
     console.log('[E2E Setup] Starting authentication setup...');
     
-    // Initialize Clerk client
-    const clerk = clerkClient(clerkSecretKey);
+    // Clerk client is already initialized and reads from CLERK_SECRET_KEY environment variable
+    // Ensure the secret key is set before using clerkClient
+    if (!process.env.CLERK_SECRET_KEY) {
+      process.env.CLERK_SECRET_KEY = clerkSecretKey;
+    }
+    const clerk = clerkClient;
     
     // Find test user
     let testUser;
