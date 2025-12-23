@@ -161,7 +161,7 @@ export default function LostMailReport() {
                         <FormLabel>Incident Type *</FormLabel>
                         <Select onValueChange={field.onChange} value={field.value}>
                           <FormControl>
-                            <SelectTrigger data-testid="select-incident-type">
+                            <SelectTrigger data-testid="select-incidentType">
                               <SelectValue />
                             </SelectTrigger>
                           </FormControl>
@@ -282,7 +282,7 @@ export default function LostMailReport() {
                           {...field}
                           placeholder="Describe the incident in detail..."
                           rows={6}
-                          data-testid="textarea-description"
+                          data-testid="input-description"
                         />
                       </FormControl>
                       <FormMessage />

@@ -65,6 +65,7 @@ export default function LostMailIncidentList({ email }: LostMailIncidentListProp
             <div
               key={incident.id}
               className="p-4 border rounded-lg hover:bg-accent transition-colors"
+              data-testid="incident-card"
             >
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1 space-y-2">

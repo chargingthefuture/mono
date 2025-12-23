@@ -102,7 +102,9 @@ export default function LostMailDashboard() {
       </div>
 
       {displayEmail && (
-        <LostMailIncidentList email={displayEmail} />
+        <div data-testid="incidents-list">
+          <LostMailIncidentList email={displayEmail} />
+        </div>
       )}
     </div>
   );
