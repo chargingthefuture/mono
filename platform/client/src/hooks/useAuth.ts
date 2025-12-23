@@ -11,26 +11,55 @@ import { useEffect, useState, useRef } from "react";
 export function useAuth() {
   const [clerkError, setClerkError] = useState<string | null>(null);
   const [clerkLoadTimeout, setClerkLoadTimeout] = useState(false);
-  
-  // Read Clerk hook values - hooks must be called unconditionally
-  // If ClerkProvider isn't mounted or fails, these will throw or return undefined
-  const clerkUserHook = useClerkUser();
-  const clerkAuthHook = useClerkAuth();
+  const clerkHookErrorRef = useRef<Error | null>(null);
+
+  // Read Clerk hook values - hooks must be called unconditionally.
+  // If ClerkProvider isn't mounted or fails, these may throw. We catch
+  // that so the entire app doesn't crash and instead gracefully falls
+  // back to "unauthenticated" mode.
+  let clerkUserHook: any = null;
+  let clerkAuthHook: any = null;
+
+  try {
+    clerkUserHook = useClerkUser();
+    clerkAuthHook = useClerkAuth();
+  } catch (err) {
+    if (!clerkHookErrorRef.current) {
+      clerkHookErrorRef.current = err as Error;
+      // Log once for diagnostics, but don't surface a fatal UI error.
+      // This commonly happens in local/test environments where Clerk
+      // isn't configured or the provider isn't mounted.
+      // eslint-disable-next-line no-console
+      console.error("Clerk hooks failed inside useAuth; falling back to unauthenticated mode:", err);
+    }
+  }
+
+  // If the Clerk hooks failed, treat Clerk as "loaded but not signed in"
+  // so the rest of the app can render and public/landing pages work.
+  const clerkHooksFailed = Boolean(clerkHookErrorRef.current);
 
   // clerkUserHook shape: { isLoaded, isSignedIn, user }
   // Use optional chaining to safely access properties
   // Check both hooks for isLoaded to ensure we catch the state correctly
-  const clerkLoaded = Boolean(
-    (clerkUserHook as any)?.isLoaded ?? 
-    (clerkAuthHook as any)?.isLoaded ??
-    false
-  );
-  const isSignedIn = Boolean(
-    (clerkUserHook as any)?.isSignedIn ?? 
-    (clerkAuthHook as any)?.isSignedIn ??
-    false
-  );
-  const clerkUser = (clerkUserHook as any)?.user ?? (clerkAuthHook as any)?.user ?? null;
+  const clerkLoaded = clerkHooksFailed
+    ? true
+    : Boolean(
+        (clerkUserHook as any)?.isLoaded ??
+          (clerkAuthHook as any)?.isLoaded ??
+          false,
+      );
+
+  const isSignedIn = clerkHooksFailed
+    ? false
+    : Boolean(
+        (clerkUserHook as any)?.isSignedIn ??
+          (clerkAuthHook as any)?.isSignedIn ??
+          false,
+      );
+
+  const clerkUser = clerkHooksFailed
+    ? null
+    : (clerkUserHook as any)?.user ?? (clerkAuthHook as any)?.user ?? null;
 
   // Detect Clerk loading errors and check configuration
   useEffect(() => {
