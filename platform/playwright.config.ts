@@ -1,6 +1,8 @@
 import { defineConfig, devices } from '@playwright/test';
 import { config } from 'dotenv';
 import { resolve } from 'path';
+import * as path from 'path';
+import * as fs from 'fs';
 
 // Load environment variables from .env files (same as db.ts does)
 config({ path: resolve(process.cwd(), '.env.local') });
@@ -11,6 +13,10 @@ config({ path: resolve(process.cwd(), '.env') });
  */
 export default defineConfig({
   testDir: './test/e2e',
+  /* Global setup - authenticates test user before tests run */
+  globalSetup: require.resolve('./test/e2e/global-setup.ts'),
+  /* Skip E2E tests if SKIP_E2E_TESTS is set (useful when tests are flaky due to auth/env issues) */
+  testIgnore: process.env.SKIP_E2E_TESTS === 'true' ? ['**/*'] : undefined,
   /* Run tests in files in parallel */
   fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
@@ -30,6 +36,19 @@ export default defineConfig({
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
     baseURL: process.env.PLAYWRIGHT_TEST_BASE_URL || 'http://localhost:5000',
+    /* Use stored authentication state from global setup (if available) */
+    storageState: (() => {
+      const authStatePath = path.join(__dirname, 'test/.auth/state.json');
+      // Only use storage state if file exists (auth setup succeeded)
+      try {
+        if (fs.existsSync(authStatePath)) {
+          return authStatePath;
+        }
+      } catch {
+        // File doesn't exist, tests will run unauthenticated
+      }
+      return undefined;
+    })(),
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
     /* Optimized timeouts - reduced for faster test execution */

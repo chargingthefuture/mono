@@ -11,6 +11,93 @@ import { NotFoundError, ForbiddenError, UnauthorizedError, ExternalServiceError 
 import { logError, logInfo, logWarning } from "../errorLogger";
 
 export function registerAuthRoutes(app: Express) {
+  // Test-only authentication endpoint for E2E tests
+  // Creates a real Clerk session for testing
+  // Only available when E2E_TEST_MODE is enabled
+  if (process.env.E2E_TEST_MODE === 'true') {
+    app.post('/api/auth/test-login', asyncHandler(async (req: any, res) => {
+      const { userId } = req.body;
+      
+      if (!userId) {
+        return res.status(400).json({ message: 'userId is required' });
+      }
+
+      // Verify user exists in our database
+      try {
+        const user = await storage.getUser(userId);
+        if (!user) {
+          return res.status(404).json({ message: 'User not found' });
+        }
+
+        // Use Clerk API to create a session for this user
+        // This creates a real Clerk session that will work with Clerk middleware
+        const { clerkClient } = await import('@clerk/clerk-sdk-node');
+        const clerkSecret = process.env.CLERK_SECRET_KEY;
+        
+        if (!clerkSecret || clerkSecret === 'dev_dummy_clerk_secret_key_do_not_use_in_production') {
+          return res.status(500).json({ 
+            message: 'Clerk not properly configured for E2E tests. CLERK_SECRET_KEY must be set.' 
+          });
+        }
+
+        const clerk = clerkClient(clerkSecret);
+        
+        // Create a session for the user
+        let session;
+        try {
+          session = await clerk.sessions.createSession({
+            userId: userId,
+          });
+        } catch (sessionError: any) {
+          logError(sessionError, req);
+          return res.status(500).json({ 
+            message: 'Failed to create Clerk session: ' + sessionError.message 
+          });
+        }
+
+        // Create a session token (if the method exists)
+        // Note: Clerk's API may vary - this is the expected method name
+        let sessionToken: string;
+        try {
+          // Try the createSessionToken method
+          if (typeof (clerk.sessions as any).createSessionToken === 'function') {
+            sessionToken = await (clerk.sessions as any).createSessionToken(session.id, {
+              expiresInSeconds: 3600, // 1 hour
+            });
+          } else {
+            // Fallback: use session ID as token (may not work, but worth trying)
+            sessionToken = session.id;
+            logWarning('createSessionToken method not available, using session ID', req);
+          }
+        } catch (tokenError: any) {
+          // If token creation fails, try using session ID directly
+          logWarning(`Session token creation failed: ${tokenError.message}, using session ID`, req);
+          sessionToken = session.id;
+        }
+
+        // Set the Clerk session cookie
+        // Clerk expects the session token in the __session cookie
+        res.cookie('__session', sessionToken, {
+          httpOnly: true,
+          secure: process.env.NODE_ENV === 'production',
+          sameSite: 'lax',
+          maxAge: 3600 * 1000, // 1 hour
+          path: '/',
+        });
+
+        res.json({ 
+          success: true, 
+          userId,
+          sessionId: session.id,
+          message: 'Test authentication successful (E2E_TEST_MODE only)' 
+        });
+      } catch (error: any) {
+        logError(error, req);
+        res.status(500).json({ message: 'Failed to authenticate test user: ' + error.message });
+      }
+    }));
+  }
+
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, asyncHandler(async (req: any, res) => {
     // Log request details for debugging
