@@ -113,10 +113,13 @@ class MainActivity : AppCompatActivity() {
                     // Clear any previous errors
                     authViewModel?.clearError()
                     
+                    // Create immutable copy for use in closure
+                    val normalizedCode = code
+                    
                     // Validate code in background
                     CoroutineScope(Dispatchers.IO).launch {
                         try {
-                            val result = authManager.validateMobileCode(code)
+                            val result = authManager.validateMobileCode(normalizedCode)
                             result.fold(
                                 onSuccess = {
                                     Log.i("MainActivity", "Mobile auth successful")
@@ -219,9 +222,12 @@ class MainActivity : AppCompatActivity() {
                     // Clear any previous errors
                     authViewModel?.clearError()
                     
+                    // Create immutable copy for use in closure
+                    val normalizedCode = code
+                    
                     CoroutineScope(Dispatchers.IO).launch {
                         try {
-                            val result = authManager.validateMobileCode(code)
+                            val result = authManager.validateMobileCode(normalizedCode)
                             result.fold(
                                 onSuccess = {
                                     Log.i("MainActivity", "Mobile auth successful via HTTPS URL")

@@ -336,7 +336,7 @@ export function registerChymeRoutes(app: Express) {
     
     // Final validation before storage
     if (code.length !== 8 || !/^[A-F0-9]{8}$/.test(code)) {
-      logError(`[Mobile Auth] Generated code failed validation: length=${code.length}, code=${code}`, req);
+      logError(new Error(`[Mobile Auth] Generated code failed validation: length=${code.length}, code=${code}`), req);
       return res.status(500).json({ message: "Failed to generate authentication code" });
     }
     const expiresAt = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
