@@ -40,7 +40,8 @@ export function registerAuthRoutes(app: Express) {
           });
         }
 
-        const clerk = clerkClient(clerkSecret);
+        // clerkClient is already configured via CLERK_SECRET_KEY environment variable
+        const clerk = clerkClient;
         
         // Create a session for the user
         let session;

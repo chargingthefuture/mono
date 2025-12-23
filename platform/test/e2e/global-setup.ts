@@ -26,6 +26,17 @@ async function globalSetup(config: FullConfig) {
     return;
   }
 
+  // Safety check: Warn if using production Clerk key (should use test/dev key)
+  if (clerkSecretKey.startsWith('sk_live_')) {
+    console.warn('[E2E Setup] ⚠️  WARNING: Using PRODUCTION Clerk key for E2E tests!');
+    console.warn('[E2E Setup] This is not recommended. Use CLERK_SECRET_KEY_TEST or CLERK_SECRET_KEY_DEV instead.');
+    console.warn('[E2E Setup] Production keys start with "sk_live_", test keys start with "sk_test_"');
+  } else if (clerkSecretKey.startsWith('sk_test_')) {
+    console.log('[E2E Setup] ✓ Using test/dev Clerk key (sk_test_*) - this is correct');
+  } else if (clerkSecretKey === 'dev_dummy_clerk_secret_key_do_not_use_in_production') {
+    console.warn('[E2E Setup] Using dummy Clerk key - authentication will not work');
+  }
+
   // Test user email - should be created in Clerk dashboard
   const testUserEmail = process.env.E2E_TEST_USER_EMAIL || 'e2e-test@example.com';
 
