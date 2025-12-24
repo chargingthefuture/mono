@@ -209,7 +209,7 @@ class SignalingClient(
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
                 Log.d("SignalingClient", "WebSocket closed code=$code reason=$reason")
-                webSocket = null
+                this@SignalingClient.webSocket = null
                 
                 if (!isManuallyClosed) {
                     // Unexpected close - attempt reconnection
