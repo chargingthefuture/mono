@@ -3,19 +3,19 @@
 /**
  * Export Discourse blog content to markdown files for GitHub wiki
  * 
- * This script reads a Discourse SQL dump and exports all topics/posts
+ * This script reads a Discourse SQL dump (either .sql.gz or .tar.gz) and exports all topics/posts
  * as markdown files in the wiki folder. Images are downloaded and saved
  * locally in an images/ subfolder.
  * 
- * Usage: tsx scripts/exportDiscourseToWiki.ts [path-to-dump.sql.gz] [wiki-folder] [dump-directory] [discourse-base-url]
+ * Usage: tsx scripts/exportDiscourseToWiki.ts [path-to-dump.sql.gz|.tar.gz] [wiki-folder] [dump-directory] [discourse-base-url]
  * 
  * Examples:
  *   tsx scripts/exportDiscourseToWiki.ts ../discourse-dump.sql.gz ../wiki
- *   tsx scripts/exportDiscourseToWiki.ts ../dump.sql.gz ../wiki ../discourse-export
- *   tsx scripts/exportDiscourseToWiki.ts ../dump.sql.gz ../wiki ../discourse-export https://your-discourse-site.com
+ *   tsx scripts/exportDiscourseToWiki.ts ../dump.tar.gz ../wiki ../discourse-export
+ *   tsx scripts/exportDiscourseToWiki.ts ../dump.tar.gz ../wiki ../discourse-export https://your-discourse-site.com
  * 
  * Arguments:
- *   path-to-dump.sql.gz - Path to the compressed SQL dump file
+ *   path-to-dump - Path to the compressed SQL dump file (.sql.gz or .tar.gz)
  *   wiki-folder - Output folder for markdown files (default: ../wiki)
  *   dump-directory - Directory containing image files from Discourse export (default: same as dump file directory)
  *   discourse-base-url - Base URL for downloading external images (optional)
@@ -28,6 +28,8 @@ import fs from "fs";
 import path from "path";
 import zlib from "zlib";
 import { URL } from "url";
+import { execSync } from "child_process";
+import os from "os";
 
 type TopicRow = {
   id: number;
@@ -67,11 +69,56 @@ type ExportedTopic = {
 };
 
 /**
+ * Extract tar.gz archive to a temporary directory and return the path
+ */
+async function extractTarGz(tarGzPath: string): Promise<string> {
+  const tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "discourse-export-"));
+  console.log(`📦 Extracting tar.gz archive to: ${tempDir}`);
+  
+  try {
+    // Use system tar command to extract
+    execSync(`tar -xzf "${tarGzPath}" -C "${tempDir}"`, { stdio: "inherit" });
+    console.log(`✅ Extracted archive successfully`);
+    return tempDir;
+  } catch (error: any) {
+    // Clean up on error
+    fs.rmSync(tempDir, { recursive: true, force: true });
+    throw new Error(`Failed to extract tar.gz archive: ${error.message}`);
+  }
+}
+
+/**
+ * Find SQL dump file(s) in a directory (recursively)
+ * Looks for both .sql and .sql.gz files
+ */
+function findSqlDumpFiles(directory: string): string[] {
+  const sqlFiles: string[] = [];
+  
+  function searchDir(dir: string) {
+    const entries = fs.readdirSync(dir, { withFileTypes: true });
+    
+    for (const entry of entries) {
+      const fullPath = path.join(dir, entry.name);
+      
+      if (entry.isDirectory()) {
+        searchDir(fullPath);
+      } else if (entry.isFile() && (entry.name.endsWith(".sql") || entry.name.endsWith(".sql.gz"))) {
+        sqlFiles.push(fullPath);
+      }
+    }
+  }
+  
+  searchDir(directory);
+  return sqlFiles;
+}
+
+/**
  * Parse Discourse SQL dump and extract topics, posts, and uploads
  */
 async function parseDiscourseDump(dumpPath: string): Promise<{
   topics: ExportedTopic[];
   uploads: Map<number, UploadRow>;
+  tempDir?: string; // Return temp directory for cleanup if tar.gz was extracted
 }> {
   console.log(`📦 Parsing Discourse dump from: ${dumpPath}`);
 
@@ -79,8 +126,50 @@ async function parseDiscourseDump(dumpPath: string): Promise<{
     throw new Error(`Discourse dump not found at ${dumpPath}`);
   }
 
-  const gunzip = zlib.createGunzip();
-  const stream = fs.createReadStream(dumpPath).pipe(gunzip);
+  let sqlFilePath: string;
+  let tempDir: string | undefined;
+  let isTarGz = false;
+
+  // Check if it's a tar.gz file
+  if (dumpPath.endsWith(".tar.gz")) {
+    isTarGz = true;
+    tempDir = await extractTarGz(dumpPath);
+    const sqlFiles = findSqlDumpFiles(tempDir);
+    
+    if (sqlFiles.length === 0) {
+      fs.rmSync(tempDir, { recursive: true, force: true });
+      throw new Error(`No SQL dump files found in tar.gz archive`);
+    }
+    
+    if (sqlFiles.length > 1) {
+      console.log(`⚠️  Found ${sqlFiles.length} SQL files, using the first one: ${sqlFiles[0]}`);
+    }
+    
+    sqlFilePath = sqlFiles[0];
+    console.log(`📄 Using SQL file: ${sqlFilePath}`);
+  } else if (dumpPath.endsWith(".sql.gz")) {
+    // For .sql.gz, we'll stream it directly
+    sqlFilePath = dumpPath;
+  } else {
+    throw new Error(`Unsupported file format. Expected .sql.gz or .tar.gz, got: ${dumpPath}`);
+  }
+
+  // For .sql.gz, stream directly; for extracted .sql, read the file
+  let stream: NodeJS.ReadableStream;
+  
+  if (isTarGz) {
+    // Read the extracted SQL file (may or may not be gzipped)
+    if (sqlFilePath.endsWith(".gz")) {
+      const gunzip = zlib.createGunzip();
+      stream = fs.createReadStream(sqlFilePath).pipe(gunzip);
+    } else {
+      stream = fs.createReadStream(sqlFilePath);
+    }
+  } else {
+    // Original .sql.gz streaming
+    const gunzip = zlib.createGunzip();
+    stream = fs.createReadStream(sqlFilePath).pipe(gunzip);
+  }
 
   const topics = new Map<number, TopicRow>();
   const firstPosts = new Map<number, PostRow>();
@@ -215,7 +304,7 @@ async function parseDiscourseDump(dumpPath: string): Promise<{
     return dateB - dateA;
   });
 
-  return { topics: exportedTopics, uploads };
+  return { topics: exportedTopics, uploads, tempDir };
 }
 
 /**
@@ -764,7 +853,7 @@ async function main() {
     ? path.resolve(process.cwd(), dumpArg)
     : path.resolve(
         process.cwd(),
-        "../charging-the-future-2025-12-18-151148-v20251216094828.sql.gz",
+        "../charging-the-future-2025-12-18-190057-v20251216094828.tar.gz",
       );
 
   const wikiFolder = wikiArg
@@ -772,18 +861,42 @@ async function main() {
     : path.resolve(process.cwd(), "../wiki");
 
   // Default dump directory is the same directory as the dump file
-  const dumpDirectory = dumpDirArg
+  // For tar.gz files, we'll use the extracted directory if dumpDirArg is not provided
+  let dumpDirectory = dumpDirArg
     ? path.resolve(process.cwd(), dumpDirArg)
     : path.dirname(dumpPath);
 
   const discourseBaseUrl = baseUrlArg || process.env.DISCOURSE_BASE_URL || undefined;
 
+  let tempDir: string | undefined;
+
   try {
-    const { topics, uploads } = await parseDiscourseDump(dumpPath);
+    const { topics, uploads, tempDir: extractedTempDir } = await parseDiscourseDump(dumpPath);
+    tempDir = extractedTempDir;
+    
+    // If we extracted a tar.gz, update dumpDirectory to point to the extracted directory
+    // This allows finding images in the extracted archive
+    if (tempDir && !dumpDirArg) {
+      dumpDirectory = tempDir;
+      console.log(`📁 Using extracted directory for images: ${dumpDirectory}`);
+    }
+    
     await exportToMarkdown(topics, uploads, wikiFolder, dumpDirectory, discourseBaseUrl);
     console.log("\n✅ Export complete!");
+    
+    // Clean up temporary directory if we extracted a tar.gz
+    if (tempDir) {
+      console.log(`🧹 Cleaning up temporary directory: ${tempDir}`);
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
+    
     process.exit(0);
   } catch (err: any) {
+    // Clean up temporary directory on error
+    if (tempDir) {
+      console.log(`🧹 Cleaning up temporary directory: ${tempDir}`);
+      fs.rmSync(tempDir, { recursive: true, force: true });
+    }
     console.error("❌ Failed to export Discourse dump:", err);
     process.exit(1);
   }
