@@ -61,7 +61,8 @@ data class RoomUiState(
     val webRTCConnectionError: String? = null,
     val isOnline: Boolean = true,
     val isSendingMessage: Boolean = false,
-    val pendingMessages: List<String> = emptyList()
+    val pendingMessages: List<String> = emptyList(),
+    val autoRetryAttempted: Boolean = false // Track if we've already auto-retried
 )
 
 @HiltViewModel
@@ -219,25 +220,51 @@ class RoomViewModel @Inject constructor(
         }
     }
     
-    fun loadRoom(roomId: String) {
+    fun loadRoom(roomId: String, isAutoRetry: Boolean = false) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, roomLoadError = null)
+            _uiState.value = _uiState.value.copy(
+                isLoading = true, 
+                roomLoadError = null,
+                // Reset autoRetryAttempted on manual retry or new room load
+                autoRetryAttempted = if (!isAutoRetry) false else _uiState.value.autoRetryAttempted
+            )
             
             roomRepository.getRoom(roomId).fold(
                 onSuccess = { room ->
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
                         room = room,
-                        roomLoadError = null
+                        roomLoadError = null,
+                        autoRetryAttempted = false // Reset on success
                     )
                     loadParticipants(roomId)
                     loadMessages(roomId)
                 },
                 onFailure = { error ->
+                    val errorMessage = error.message ?: "Failed to load room"
+                    
+                    // Check if it's a transient network error that might succeed on retry
+                    val isTransientError = errorMessage.contains("timeout", ignoreCase = true) ||
+                            errorMessage.contains("network", ignoreCase = true) ||
+                            errorMessage.contains("connection", ignoreCase = true) ||
+                            errorMessage.contains("Server error", ignoreCase = true)
+                    
+                    val hasAutoRetried = _uiState.value.autoRetryAttempted
+                    
                     _uiState.value = _uiState.value.copy(
                         isLoading = false,
-                        roomLoadError = error.message ?: "Failed to load room"
+                        roomLoadError = errorMessage,
+                        autoRetryAttempted = isAutoRetry || hasAutoRetried
                     )
+                    
+                    // For transient errors, automatically retry once after a delay (if not already retried)
+                    if (isTransientError && !hasAutoRetried && !isAutoRetry) {
+                        kotlinx.coroutines.delay(2000) // Wait 2 seconds before retry
+                        // Only retry if we're still trying to load the same room and haven't succeeded
+                        if (_uiState.value.roomLoadError != null && _uiState.value.room == null) {
+                            loadRoom(roomId, isAutoRetry = true)
+                        }
+                    }
                 }
             )
         }
@@ -703,7 +730,8 @@ class RoomViewModel @Inject constructor(
             chatErrorMessage = null,
             pinnedLinkError = null,
             participantActionError = null,
-            roomActionError = null
+            roomActionError = null,
+            autoRetryAttempted = false
         )
     }
     
