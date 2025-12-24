@@ -93,6 +93,7 @@ import ChymeDashboard from "@/pages/chyme/dashboard";
 import ChymeAdmin from "@/pages/chyme/admin";
 import ChymeAdminAnnouncements from "@/pages/chyme/admin-announcements";
 import ChymeAnnouncements from "@/pages/chyme/announcements";
+import ChymeRoomDetail from "@/pages/chyme/room";
 import WorkforceRecruiterDashboard from "@/pages/workforce-recruiter/dashboard";
 import WorkforceRecruiterProfile from "@/pages/workforce-recruiter/profile";
 import WorkforceRecruiterOccupations from "@/pages/workforce-recruiter/occupations";
@@ -590,6 +591,11 @@ export function MiniAppRoutes() {
       <Route path="/apps/chyme/announcements">
         <ProtectedRoute>
           <ChymeAnnouncements />
+        </ProtectedRoute>
+      </Route>
+      <Route path="/apps/chyme/room/:roomId">
+        <ProtectedRoute>
+          <ChymeRoomDetail />
         </ProtectedRoute>
       </Route>
 
