@@ -14,7 +14,6 @@ import { skillsData } from "./data/skills-data";
 // The data structure is defined in that file
 
 async function seedSkills() {
-async function seedSkills() {
   console.log("Seeding Skills Database (Sectors → Job Titles → Skills)...");
 
   let sectorsCreated = 0;

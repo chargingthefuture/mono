@@ -5,19 +5,7 @@
  * Extracted from seedSkills.ts for better organization.
  */
 
-
-  sector: {
-    name: string;
-    estimatedWorkforceShare?: number;
-    estimatedWorkforceCount?: number;
-    displayOrder: number;
-  };
-  jobTitles: {
-    name: string;
-    displayOrder: number;
-    skills: string[];
-  }[];
-}[] = export const skillsData: {
+export const skillsData: {
   sector: {
     name: string;
     estimatedWorkforceShare?: number;
@@ -1338,6 +1326,22 @@
           "Music software and DAW operation",
           "Music mastering",
           "Music collaboration and session work",
+        ],
+      },
+      {
+        name: "Apparel/Fashion Designer",
+        displayOrder: 11,
+        skills: [
+          "Pattern making",
+          "Textile selection and sourcing",
+          "Garment construction",
+          "Fashion illustration",
+          "Fit and sizing",
+          "Trend analysis",
+          "Color theory",
+          "Sustainable fashion practices",
+          "CAD for fashion design",
+          "Fabric manipulation techniques",
         ],
       },
     ],

@@ -1,5 +1,5 @@
 import { storage } from "../server/storage";
-import { skillsData } from "./seedSkills";
+import { skillsData } from "./data/skills-data";
 
 async function findDeletedSkills() {
   console.log("Comparing seed data with database to find deleted skills...\n");

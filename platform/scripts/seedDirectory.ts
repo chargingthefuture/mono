@@ -1,6 +1,6 @@
 import { db } from "../server/db";
 import { directoryProfiles, users, directoryAnnouncements, directorySkills, type InsertDirectoryProfile, type InsertDirectorySkill } from "../shared/schema";
-import { ALL_SKILLS } from "../client/src/lib/skills";
+import { storage } from "../server/storage";
 
 async function seedDirectory() {
   console.log("Seeding Directory app profiles...");
@@ -8,8 +8,9 @@ async function seedDirectory() {
   const countries = [
     "United States","United Kingdom","Canada","Australia","Germany","France","India","Brazil","Japan","Kenya"
   ];
-  // Use ALL_SKILLS from client/src/lib/skills.ts (manually maintained list)
-  const skillsPool = ALL_SKILLS;
+  // Get skills from the hierarchical skills database
+  const skillsFromDb = await storage.getAllSkillsFlattened();
+  const skillsPool = skillsFromDb.map(s => s.name);
 
   // Seed directory_skills table (REQUIRED for admin dropdown)
   console.log("Seeding directory skills...");
@@ -106,7 +107,7 @@ async function seedDirectory() {
   }
 
   console.log("Directory seed complete.");
-  console.log(`- ${skillsPool.length} skills available (from ALL_SKILLS)`);
+  console.log(`- ${skillsPool.length} skills available (from skills database)`);
   console.log(`- ${count} profiles created`);
   console.log(`- ${announcementsData.length} announcements created`);
   process.exit(0);

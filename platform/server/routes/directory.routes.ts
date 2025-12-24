@@ -14,12 +14,10 @@ import { NotFoundError } from "../errors";
 import { logInfo } from "../errorLogger";
 import { logAdminAction } from "./shared";
 import { rotateDisplayOrder, addAntiScrapingDelay, isLikelyBot } from "../dataObfuscation";
-import { readSkillsFromFile, addSkillToFile, removeSkillFromFile } from "../skillsFileManager";
 import * as Sentry from '@sentry/node';
 import { z } from "zod";
 import {
   insertDirectoryProfileSchema,
-  insertDirectorySkillSchema,
   type User,
   type DirectoryProfile,
   type SkillsJobTitle,
@@ -509,7 +507,9 @@ export function registerDirectoryRoutes(app: Express) {
     res.json({ message: 'Profile deleted successfully' });
   }));
 
-  // Admin routes for Directory Skills (admin only) - Legacy, now uses hierarchical skills database
+  // Admin routes for Directory Skills (admin only) - Uses hierarchical skills database
+  // Skills are now managed via /api/skills/* endpoints (see skills.routes.ts)
+  // This endpoint provides a flattened list for Directory admin UI compatibility
   app.get('/api/directory/admin/skills', isAuthenticated, isAdmin, asyncHandler(async (req, res) => {
     const skills = await withDatabaseErrorHandling(
       () => storage.getAllSkillsFlattened(),
@@ -518,65 +518,6 @@ export function registerDirectoryRoutes(app: Express) {
     // Format as DirectorySkill[] for backward compatibility
     const formatted = skills.map(s => ({ id: s.id, name: s.name }));
     res.json(formatted);
-  }));
-
-  app.post('/api/directory/admin/skills', isAuthenticated, ...isAdminWithCsrf, asyncHandler(async (req: any, res) => {
-    const adminId = getUserId(req);
-    const validated = validateWithZod(insertDirectorySkillSchema, req.body, 'Invalid skill data');
-    
-    try {
-      addSkillToFile(validated.name);
-      const skill = { name: validated.name };
-      
-      await logAdminAction(adminId, 'create_directory_skill', 'skill_file', validated.name, { name: validated.name });
-      res.json(skill);
-    } catch (error: any) {
-      console.error('Error adding skill to file:', error);
-      if (error.message?.includes('already exists')) {
-        res.status(409).json({ message: error.message });
-      } else {
-        res.status(500).json({ message: error.message || 'Failed to add skill' });
-      }
-    }
-  }));
-
-  app.delete('/api/directory/admin/skills', isAuthenticated, ...isAdminWithCsrf, asyncHandler(async (req: any, res) => {
-    const adminId = getUserId(req);
-    const { name: skillNameParam } = req.body;
-    
-    if (!skillNameParam || typeof skillNameParam !== 'string') {
-      return res.status(400).json({ message: 'Skill name is required in request body' });
-    }
-    
-    const trimmedName = skillNameParam.trim();
-    
-    try {
-      // Get all skills and find the exact match (case-insensitive)
-      const skills = readSkillsFromFile();
-      const skillLower = trimmedName.toLowerCase();
-      const exactSkill = skills.find(s => s.trim().toLowerCase() === skillLower);
-      
-      if (!exactSkill) {
-        console.error(`Skill not found: "${trimmedName}"`);
-        console.error(`Searching for (lowercase): "${skillLower}"`);
-        console.error(`Total skills in file: ${skills.length}`);
-        console.error(`Sample skills:`, skills.slice(0, 10).map(s => `"${s}"`));
-        return res.status(404).json({ message: `Skill "${trimmedName}" not found` });
-      }
-      
-      // Use the exact skill name from the file for deletion
-      removeSkillFromFile(exactSkill);
-      
-      await logAdminAction(adminId, 'delete_directory_skill', 'skill_file', exactSkill, { name: exactSkill });
-      res.json({ message: 'Skill deleted successfully' });
-    } catch (error: any) {
-      console.error('Error removing skill from file:', error);
-      if (error.message?.includes('not found')) {
-        res.status(404).json({ message: error.message });
-      } else {
-        res.status(500).json({ message: error.message || 'Failed to delete skill' });
-      }
-    }
   }));
 
 }
