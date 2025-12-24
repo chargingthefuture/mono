@@ -84,6 +84,9 @@ class WebRTCManager(
     
     // Track per-peer connection states
     private val peerConnectionStates = ConcurrentHashMap<String, PeerConnection.PeerConnectionState>()
+    
+    // Track signaling connection state separately
+    private var signalingState: SignalingConnectionState = SignalingConnectionState.DISCONNECTED
 
     fun start() {
         _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.CONNECTING
@@ -262,8 +265,30 @@ class WebRTCManager(
         
         when {
             states.isEmpty() -> {
-                _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.DISCONNECTED
-                _connectionError.value = null
+                // No peers - use signaling connection state
+                when (signalingState) {
+                    SignalingConnectionState.CONNECTED -> {
+                        // Signaling is connected, just no peers yet
+                        _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.CONNECTED
+                        _connectionError.value = null
+                    }
+                    SignalingConnectionState.CONNECTING -> {
+                        _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.CONNECTING
+                        _connectionError.value = null
+                    }
+                    SignalingConnectionState.RECONNECTING -> {
+                        _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.RECONNECTING
+                        _connectionError.value = null
+                    }
+                    SignalingConnectionState.FAILED -> {
+                        _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.FAILED
+                        _connectionError.value = "Signaling connection failed"
+                    }
+                    SignalingConnectionState.DISCONNECTED -> {
+                        _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.DISCONNECTED
+                        _connectionError.value = null
+                    }
+                }
             }
             connectedCount > 0 -> {
                 // At least one peer is connected - we're in a good state
@@ -320,26 +345,9 @@ class WebRTCManager(
     private fun observeConnectionState() {
         scope.launch {
             signalingClient.connectionState.collectLatest { state ->
-                when (state) {
-                    SignalingConnectionState.CONNECTED -> {
-                        // Signaling connected - WebRTC peer connections may still be connecting
-                        if (_connectionState.value == com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.DISCONNECTED) {
-                            _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.CONNECTING
-                        }
-                    }
-                    SignalingConnectionState.CONNECTING -> {
-                        _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.CONNECTING
-                    }
-                    SignalingConnectionState.RECONNECTING -> {
-                        _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.RECONNECTING
-                    }
-                    SignalingConnectionState.FAILED -> {
-                        _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.FAILED
-                    }
-                    SignalingConnectionState.DISCONNECTED -> {
-                        _connectionState.value = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.DISCONNECTED
-                    }
-                }
+                signalingState = state
+                // Update overall state based on both signaling and peer states
+                updateOverallConnectionState()
             }
         }
         

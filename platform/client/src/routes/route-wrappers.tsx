@@ -88,7 +88,7 @@ export function ChymeRoomRoute({ children }: { children: React.ReactNode }) {
   const roomId = roomIdMatch ? roomIdMatch[1] : null;
   
   // Fetch room data to check if it's public
-  const { data: room } = useQuery<{ roomType: "public" | "private" }>({
+  const { data: room, isLoading: roomLoading, error: roomError } = useQuery<{ roomType: "public" | "private" }>({
     queryKey: ["/api/chyme/rooms", roomId],
     enabled: !!roomId,
     retry: false,
@@ -106,20 +106,42 @@ export function ChymeRoomRoute({ children }: { children: React.ReactNode }) {
     );
   }
   
-  // If room is public, allow unauthenticated access
+  // If room is public, allow unauthenticated access immediately
   if (room?.roomType === "public") {
     return <>{children}</>;
   }
   
-  // For private rooms or if room data not loaded yet, require authentication
-  if (!_clerk.isSignedIn) {
-    return <Redirect to="/" />;
+  // If room data is still loading, show loading (don't redirect yet)
+  if (roomLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="text-sm text-muted-foreground">Loading room...</p>
+        </div>
+      </div>
+    );
   }
   
-  // If needs approval, show waiting message
-  const needsApproval = user && !user.isApproved && !user.isAdmin;
-  if (needsApproval) {
-    return <PendingApproval />;
+  // If there's an error fetching room (e.g., 404), let the page component handle it
+  // Don't redirect - the page will show the error message
+  if (roomError || !room) {
+    // Allow the page to render so it can show the error
+    // The page component will handle displaying "Room not found" or similar
+    return <>{children}</>;
+  }
+  
+  // Room exists and is private - require authentication
+  if (room.roomType === "private") {
+    if (!_clerk.isSignedIn) {
+      return <Redirect to="/" />;
+    }
+    
+    // If needs approval, show waiting message
+    const needsApproval = user && !user.isApproved && !user.isAdmin;
+    if (needsApproval) {
+      return <PendingApproval />;
+    }
   }
   
   return <>{children}</>;

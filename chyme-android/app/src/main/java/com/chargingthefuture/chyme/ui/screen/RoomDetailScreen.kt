@@ -162,7 +162,7 @@ fun RoomDetailScreen(
                     // Share room link button
                     IconButton(onClick = {
                         val currentRoomId = uiState.room?.id ?: return@IconButton
-                        val roomLink = "https://app.chargingthefuture.com/app/chyme/room/$currentRoomId"
+                        val roomLink = "https://app.chargingthefuture.com/apps/chyme/room/$currentRoomId"
                         shareRoomLink(context, roomLink)
                     }) {
                         Icon(Icons.Default.Share, contentDescription = "Share Room")
@@ -938,7 +938,7 @@ fun RoomControls(
                         modifier = Modifier.size(56.dp)
                     ) {
                         Icon(
-                            if (isMuted) Icons.Default.Close else Icons.Default.Check,
+                            if (isMuted) Icons.Default.MicOff else Icons.Default.Mic,
                             contentDescription = if (isMuted) "Unmute" else "Mute",
                             modifier = Modifier.size(32.dp)
                         )

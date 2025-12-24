@@ -222,6 +222,16 @@ export function registerChymeRoutes(app: Express) {
     });
   }));
 
+  // Handle room share link redirects from Android app
+  // Android app generates links like /app/chyme/room/:roomId
+  // Redirect to /apps/chyme/room/:roomId (with 's' in apps)
+  // Note: This route must be registered before the base /app/chyme handler
+  app.get('/app/chyme/room/:roomId', asyncHandler(async (req: any, res) => {
+    const roomId = req.params.roomId;
+    // Redirect to the correct path with 'apps' (plural)
+    return res.redirect(`/apps/chyme/room/${roomId}`);
+  }));
+
   // Handle Android app deep link redirects for /app/chyme and /apps/chyme
   // If user is authenticated and on Android, auto-generate mobile auth code and redirect
   // Note: This route must be registered before the SPA catch-all handler
