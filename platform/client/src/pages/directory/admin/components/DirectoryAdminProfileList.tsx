@@ -50,7 +50,7 @@ export function DirectoryAdminProfileList({
   editingId,
   renderEditForm,
 }: DirectoryAdminProfileListProps) {
-  const { openExternal } = useExternalLink();
+  const { openExternal, ExternalLinkDialog } = useExternalLink();
 
   return (
     <Card>
@@ -187,6 +187,7 @@ export function DirectoryAdminProfileList({
           </>
         )}
       </CardContent>
+      <ExternalLinkDialog />
     </Card>
   );
 }

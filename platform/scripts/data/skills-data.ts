@@ -1329,7 +1329,7 @@ export const skillsData: {
         ],
       },
       {
-        name: "Apparel/Fashion Designer",
+        name: "Apparel / Fashion Designer",
         displayOrder: 11,
         skills: [
           "Pattern making",
