@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import Map, { Marker, Popup } from "react-map-gl/maplibre";
+import { useState, useMemo, useCallback } from "react";
+import Map, { Marker, Popup, ViewState } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -27,6 +27,7 @@ type MapLibreMapInternalProps = {
 export default function MapLibreMapInternal({ locations }: MapLibreMapInternalProps) {
   const [selectedLocation, setSelectedLocation] = useState<LocationWithCoords | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
+  const [viewState, setViewState] = useState<ViewState | null>(null);
   const { handleError } = useErrorHandler({ showToast: true, toastTitle: "Map Error" });
 
   // Calculate bounds to fit all markers
@@ -80,6 +81,48 @@ export default function MapLibreMapInternal({ locations }: MapLibreMapInternalPr
     };
   }, [bounds]);
 
+  // Filter markers to only show those in the current viewport
+  // This significantly improves performance when there are many markers
+  // For initial load or when viewState is not available, show all markers
+  // Once the map is loaded and user interacts, filter to visible markers only
+  const visibleLocations = useMemo(() => {
+    // If we have many markers (>100), use viewport filtering once map is loaded
+    // Otherwise, show all markers for better UX
+    if (locations.length <= 100 || !viewState) {
+      return locations;
+    }
+
+    // Simple viewport bounds calculation based on zoom level
+    // At zoom level z, one tile covers 360 / 2^z degrees longitude
+    // We approximate latitude range similarly
+    const zoom = viewState.zoom || 2;
+    const latRange = 180 / Math.pow(2, Math.max(0, zoom - 1));
+    const lngRange = 360 / Math.pow(2, zoom);
+    const buffer = 0.2; // 20% buffer to show markers near edges
+    
+    const viewportNorth = (viewState.latitude || 0) + (latRange / 2) * (1 + buffer);
+    const viewportSouth = (viewState.latitude || 0) - (latRange / 2) * (1 + buffer);
+    const viewportEast = (viewState.longitude || 0) + (lngRange / 2) * (1 + buffer);
+    const viewportWest = (viewState.longitude || 0) - (lngRange / 2) * (1 + buffer);
+
+    return locations.filter((loc) => {
+      // Simple bounds check with longitude wrapping support
+      const inLat = loc.lat >= viewportSouth && loc.lat <= viewportNorth;
+      if (!inLat) return false;
+      
+      // Handle longitude wrapping (e.g., crossing -180/180)
+      if (viewportWest > viewportEast) {
+        return loc.lng >= viewportWest || loc.lng <= viewportEast;
+      }
+      return loc.lng >= viewportWest && loc.lng <= viewportEast;
+    });
+  }, [locations, viewState]);
+
+  // Handle map movement to update viewport
+  const handleMove = useCallback((evt: { viewState: ViewState }) => {
+    setViewState(evt.viewState);
+  }, []);
+
   if (mapError) {
     return (
       <div className="w-full h-full flex items-center justify-center p-4">
@@ -128,11 +171,9 @@ export default function MapLibreMapInternal({ locations }: MapLibreMapInternalPr
         setMapError(errorMessage);
         handleError(new Error(errorMessage), "Map Error");
       }}
-      onMove={(evt: any) => {
-        // Handle map movement if needed
-      }}
+      onMove={handleMove}
     >
-      {locations.map((location) => (
+      {visibleLocations.map((location) => (
         <Marker
           key={location.profile.id}
           longitude={location.lng}

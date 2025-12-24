@@ -251,42 +251,38 @@ export function registerDirectoryRoutes(app: Express) {
       await addAntiScrapingDelay(false, 50, 200);
     }
 
-    const profiles = await withDatabaseErrorHandling(
-      () => storage.listPublicDirectoryProfiles(),
-      'listPublicDirectoryProfiles'
-    ) as DirectoryProfile[];
-    const withNames = await Promise.all(profiles.map(async (p) => {
+    // Use optimized JOIN query to avoid N+1 query problem
+    const profilesWithUsers = await withDatabaseErrorHandling(
+      () => storage.listPublicDirectoryProfilesWithUsers(),
+      'listPublicDirectoryProfilesWithUsers'
+    );
+    
+    // Transform to match expected API response format
+    const withNames = profilesWithUsers.map((p) => {
       let name: string | null = null;
       let userIsVerified = false;
       let userFirstName: string | null = null;
       let userLastName: string | null = null;
       
-      // Get user data if userId exists
-      if (p.userId) {
-        const userId = p.userId;
-        const u = await withDatabaseErrorHandling(
-          () => storage.getUser(userId),
-          'getUserForPublicDirectoryList'
-        ) as User | null;
-        if (u) {
-          // Handle empty strings as null
-          userFirstName = (u.firstName && u.firstName.trim()) || null;
-          userLastName = (u.lastName && u.lastName.trim()) || null;
-          userIsVerified = u.isVerified || false;
-          // Build display name from firstName and lastName
-          if (userFirstName && userLastName) {
-            name = `${userFirstName} ${userLastName}`;
-          } else if (userFirstName) {
-            name = userFirstName;
-          } else if (userLastName) {
-            name = userLastName;
-          }
+      // Use user data from JOIN if available, otherwise fall back to profile data
+      if (p.userId && p.userFirstName !== null) {
+        // Profile has userId and user data was found in JOIN
+        userFirstName = p.userFirstName;
+        userLastName = p.userLastName;
+        userIsVerified = p.userIsVerified;
+        // Build display name from firstName and lastName
+        if (userFirstName && userLastName) {
+          name = `${userFirstName} ${userLastName}`;
+        } else if (userFirstName) {
+          name = userFirstName;
+        } else if (userLastName) {
+          name = userLastName;
         }
       } else {
         // For admin-created profiles without userId, use profile's own isVerified field
         userIsVerified = p.isVerified || false;
         // For unclaimed profiles, fall back to the profile's own firstName field if set
-        userFirstName = (p as any).firstName || null;
+        userFirstName = p.firstName || null;
       }
       
       // Ensure we always return displayName, firstName, and lastName (even if null)
@@ -310,7 +306,7 @@ export function registerDirectoryRoutes(app: Express) {
         });
       }
       return result;
-    }));
+    });
     
     // Rotate display order to make scraping harder
     const rotated = rotateDisplayOrder(withNames);

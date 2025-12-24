@@ -9,6 +9,7 @@ import {
   directoryProfiles,
   directoryAnnouncements,
   directorySkills,
+  users,
   type DirectoryProfile,
   type InsertDirectoryProfile,
   type DirectoryAnnouncement,
@@ -55,6 +56,76 @@ export class DirectoryStorage {
       .from(directoryProfiles)
       .where(eq(directoryProfiles.isPublic, true))
       .orderBy(desc(directoryProfiles.createdAt));
+  }
+
+  /**
+   * Optimized method to list public directory profiles with user data in a single query.
+   * This avoids the N+1 query problem by using a LEFT JOIN.
+   * Returns profiles with enriched user data (firstName, lastName, isVerified).
+   */
+  async listPublicDirectoryProfilesWithUsers(): Promise<Array<DirectoryProfile & {
+    userFirstName: string | null;
+    userLastName: string | null;
+    userIsVerified: boolean;
+  }>> {
+    const results = await db
+      .select({
+        // Profile fields
+        id: directoryProfiles.id,
+        userId: directoryProfiles.userId,
+        description: directoryProfiles.description,
+        skills: directoryProfiles.skills,
+        sectors: directoryProfiles.sectors,
+        jobTitles: directoryProfiles.jobTitles,
+        signalUrl: directoryProfiles.signalUrl,
+        quoraUrl: directoryProfiles.quoraUrl,
+        firstName: directoryProfiles.firstName,
+        city: directoryProfiles.city,
+        state: directoryProfiles.state,
+        country: directoryProfiles.country,
+        latitude: directoryProfiles.latitude,
+        longitude: directoryProfiles.longitude,
+        isVerified: directoryProfiles.isVerified,
+        isPublic: directoryProfiles.isPublic,
+        isClaimed: directoryProfiles.isClaimed,
+        createdAt: directoryProfiles.createdAt,
+        updatedAt: directoryProfiles.updatedAt,
+        // User fields
+        userFirstName: users.firstName,
+        userLastName: users.lastName,
+        userIsVerified: users.isVerified,
+      })
+      .from(directoryProfiles)
+      .leftJoin(users, eq(directoryProfiles.userId, users.id))
+      .where(eq(directoryProfiles.isPublic, true))
+      .orderBy(desc(directoryProfiles.createdAt));
+
+    // Transform results to match expected format
+    return results.map((row) => ({
+      id: row.id,
+      userId: row.userId,
+      description: row.description,
+      skills: row.skills,
+      sectors: row.sectors,
+      jobTitles: row.jobTitles,
+      signalUrl: row.signalUrl,
+      quoraUrl: row.quoraUrl,
+      firstName: row.firstName,
+      city: row.city,
+      state: row.state,
+      country: row.country,
+      latitude: row.latitude,
+      longitude: row.longitude,
+      isVerified: row.isVerified,
+      isPublic: row.isPublic,
+      isClaimed: row.isClaimed,
+      createdAt: row.createdAt,
+      updatedAt: row.updatedAt,
+      // Enriched user data
+      userFirstName: row.userFirstName ? row.userFirstName.trim() : null,
+      userLastName: row.userLastName ? row.userLastName.trim() : null,
+      userIsVerified: row.userIsVerified ?? false,
+    }));
   }
 
   async createDirectoryProfile(profileData: InsertDirectoryProfile): Promise<DirectoryProfile> {
