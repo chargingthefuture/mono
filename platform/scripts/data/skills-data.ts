@@ -1098,7 +1098,7 @@ export const skillsData: {
         ],
       },
       {
-        name: "Human Resources Professionals",
+        name: "Human Resources Professionals / HR Generalists",
         displayOrder: 4,
         skills: [
           "Recruitment and onboarding",
@@ -1106,11 +1106,28 @@ export const skillsData: {
           "Learning & development",
           "Compensation & benefits design",
           "Labor-relations and compliance",
+          "Employee relations and conflict resolution",
+          "HR policy development and implementation",
+          "Benefits administration",
+        ],
+      },
+      {
+        name: "Ethics Officers / Compliance Officers",
+        displayOrder: 5,
+        skills: [
+          "Ethics policy development and implementation",
+          "Compliance monitoring and auditing",
+          "Ethics training and education",
+          "Whistleblower program management",
+          "Conflict of interest assessment",
+          "Regulatory compliance oversight",
+          "Ethics investigations and reporting",
+          "Code of conduct enforcement",
         ],
       },
       {
         name: "Business Analysts",
-        displayOrder: 5,
+        displayOrder: 6,
         skills: [
           "Requirements gathering and process mapping",
           "Data analysis and KPI definition",
@@ -1120,7 +1137,7 @@ export const skillsData: {
       },
       {
         name: "Project Managers",
-        displayOrder: 6,
+        displayOrder: 7,
         skills: [
           "Project planning and scheduling (Gantt, CPM)",
           "Risk management and mitigation",
@@ -1131,7 +1148,7 @@ export const skillsData: {
       },
       {
         name: "Administrative & Office Support",
-        displayOrder: 7,
+        displayOrder: 8,
         skills: [
           "Office Management",
           "Executive assistance",
