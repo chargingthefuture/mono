@@ -17,8 +17,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.platform.LocalLifecycleOwner
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.chargingthefuture.chyme.components.Avatar
 import com.chargingthefuture.chyme.data.model.ChymeRoom
 import com.chargingthefuture.chyme.data.model.ChymeUser
@@ -34,6 +38,31 @@ fun HomeScreen(
     val uiState by viewModel.uiState.collectAsState()
     val authState by authViewModel.uiState.collectAsState()
     var showCreateRoom by remember { mutableStateOf(false) }
+    val lifecycleOwner = LocalLifecycleOwner.current
+    
+    // Track navigation state to refresh when returning to home screen
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+    
+    // Refresh rooms when screen becomes visible (e.g., when navigating back from room detail)
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            if (event == Lifecycle.Event.ON_RESUME) {
+                viewModel.refresh()
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
+    }
+    
+    // Also refresh when navigation state indicates we're on home screen
+    LaunchedEffect(currentRoute) {
+        if (currentRoute == "home") {
+            viewModel.refresh()
+        }
+    }
     
     // Get user display text
     val userDisplayText = when {
@@ -54,8 +83,8 @@ fun HomeScreen(
             TopAppBar(
                 title = { Text("Chyme") },
                 actions = {
-                    IconButton(onClick = { showCreateRoom = true }) {
-                        Icon(Icons.Default.Add, contentDescription = "Create Room")
+                    IconButton(onClick = { viewModel.refresh() }) {
+                        Icon(Icons.Default.Refresh, contentDescription = "Refresh Rooms")
                     }
                     // User profile button with name/avatar
                     if (userDisplayText != null) {
