@@ -938,7 +938,7 @@ fun RoomControls(
                         modifier = Modifier.size(56.dp)
                     ) {
                         Icon(
-                            if (isMuted) Icons.Default.MicOff else Icons.Default.Mic,
+                            if (isMuted) Icons.Default.VolumeOff else Icons.Default.Mic,
                             contentDescription = if (isMuted) "Unmute" else "Mute",
                             modifier = Modifier.size(32.dp)
                         )
