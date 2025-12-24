@@ -11,8 +11,6 @@ data class ChymeMessage(
     val userId: String,
     @SerializedName("content")
     val content: String,
-    @SerializedName("isAnonymous")
-    val isAnonymous: Boolean,
     @SerializedName("createdAt")
     val createdAt: String
 )

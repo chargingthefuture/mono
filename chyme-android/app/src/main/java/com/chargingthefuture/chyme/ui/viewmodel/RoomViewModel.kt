@@ -183,7 +183,7 @@ class RoomViewModel @Inject constructor(
             
             // Process valid messages
             for (queuedMessage in validMessages) {
-                val result = roomRepository.sendMessage(queuedMessage.roomId, queuedMessage.content, isAnonymous = true)
+                val result = roomRepository.sendMessage(queuedMessage.roomId, queuedMessage.content)
                 result.fold(
                     onSuccess = { 
                         // Message sent successfully, remove from queue
@@ -375,7 +375,6 @@ class RoomViewModel @Inject constructor(
                                 roomId = json.optString("roomId", ""),
                                 userId = json.optString("userId", ""),
                                 content = json.optString("content", ""),
-                                isAnonymous = json.optBoolean("isAnonymous", true),
                                 createdAt = json.optString("createdAt", "")
                             )
                             addMessageFromWebSocket(message)
@@ -447,7 +446,7 @@ class RoomViewModel @Inject constructor(
         }
     }
 
-    fun sendMessage(roomId: String, content: String, isAnonymous: Boolean = true) {
+    fun sendMessage(roomId: String, content: String) {
         if (content.isBlank()) return
         
         currentRoomId = roomId
@@ -471,14 +470,13 @@ class RoomViewModel @Inject constructor(
         }
         
         viewModelScope.launch {
-            sendMessageWithRetry(roomId, trimmedContent, isAnonymous)
+            sendMessageWithRetry(roomId, trimmedContent)
         }
     }
     
     private suspend fun sendMessageWithRetry(
         roomId: String,
         content: String,
-        isAnonymous: Boolean = true,
         maxRetries: Int = 3
     ) {
         _uiState.value = _uiState.value.copy(isSendingMessage = true)
@@ -487,7 +485,7 @@ class RoomViewModel @Inject constructor(
         var lastError: Exception? = null
         
         while (attempt < maxRetries) {
-            val result = roomRepository.sendMessage(roomId, content, isAnonymous)
+            val result = roomRepository.sendMessage(roomId, content)
             
             result.fold(
                 onSuccess = { message ->
@@ -612,7 +610,6 @@ class RoomViewModel @Inject constructor(
                             roomId = json.optString("roomId", ""),
                             userId = json.optString("userId", ""),
                             content = json.optString("content", ""),
-                            isAnonymous = json.optBoolean("isAnonymous", true),
                             createdAt = json.optString("createdAt", "")
                         )
                         addMessageFromWebSocket(message)

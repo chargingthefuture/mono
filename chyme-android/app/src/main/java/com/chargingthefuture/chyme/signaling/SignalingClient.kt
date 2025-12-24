@@ -109,12 +109,32 @@ class SignalingClient(
             SignalingConnectionState.RECONNECTING
         }
 
+        // Parse the WebSocket URL - OkHttp's HttpUrl can handle wss:// and ws:// directly
+        // However, some versions may require converting to https:///http:// for parsing
+        // We'll try both approaches
         val baseUrl = endpointUrl.toHttpUrlOrNull() ?: run {
-            val error = SignalingError("Invalid endpoint URL: $endpointUrl")
-            handleConnectionFailure(error, null)
-            return
+            // If direct parsing fails, try converting wss:// to https:// for parsing
+            // OkHttp will still use WebSocket protocol when calling newWebSocket
+            val normalizedUrl = when {
+                endpointUrl.startsWith("wss://") -> endpointUrl.replace("wss://", "https://")
+                endpointUrl.startsWith("ws://") -> endpointUrl.replace("ws://", "http://")
+                else -> {
+                    val error = SignalingError("Invalid endpoint URL: $endpointUrl (must start with wss:// or ws://)")
+                    Log.e("SignalingClient", "Invalid WebSocket URL format: $endpointUrl")
+                    handleConnectionFailure(error, null)
+                    return
+                }
+            }
+            
+            normalizedUrl.toHttpUrlOrNull() ?: run {
+                val error = SignalingError("Invalid endpoint URL: $endpointUrl")
+                Log.e("SignalingClient", "Failed to parse WebSocket URL: $endpointUrl (normalized: $normalizedUrl)")
+                handleConnectionFailure(error, null)
+                return
+            }
         }
 
+        // Build URL with query parameters
         val urlBuilder = baseUrl.newBuilder()
             .addQueryParameter("roomId", roomId)
         
@@ -123,61 +143,82 @@ class SignalingClient(
             urlBuilder.addQueryParameter("userId", it)
         }
 
+        // Build the final URL and ensure it uses WebSocket protocol
+        val finalUrl = urlBuilder.build()
+        val websocketUrlString = finalUrl.toString()
+        val websocketUrl = when {
+            endpointUrl.startsWith("wss://") && websocketUrlString.startsWith("https://") -> {
+                websocketUrlString.replace("https://", "wss://")
+            }
+            endpointUrl.startsWith("ws://") && websocketUrlString.startsWith("http://") -> {
+                websocketUrlString.replace("http://", "ws://")
+            }
+            else -> websocketUrlString
+        }
+        
+        // Parse the final WebSocket URL
+        val websocketHttpUrl = websocketUrl.toHttpUrlOrNull() ?: finalUrl
+
         val request = Request.Builder()
-            .url(urlBuilder.build())
+            .url(websocketHttpUrl)
             .addHeader("Authorization", "Bearer $authToken")
             .build()
 
         try {
-            webSocket = client.newWebSocket(request, object : WebSocketListener() {
-                override fun onOpen(ws: WebSocket, response: Response) {
-                    Log.d("SignalingClient", "WebSocket connected roomId=$roomId")
-                    _connectionState.value = SignalingConnectionState.CONNECTED
-                    reconnectAttempt = 0
-                    
-                    SentryHelper.addBreadcrumb(
-                        message = "Signaling WebSocket connected",
-                        category = "signaling",
-                        level = SentryLevel.INFO,
-                        data = mapOf(
-                            "roomId" to roomId,
-                            "userId" to (userId ?: "unknown")
-                        )
-                    )
-                }
-
-                override fun onMessage(ws: WebSocket, text: String) {
-                    scope.launch { _events.emit(text) }
-                }
-
-                override fun onFailure(ws: WebSocket, t: Throwable, response: Response?) {
-                    val responseCode = response?.code
-                    val errorMessage = when {
-                        responseCode != null -> "WebSocket connection failed: HTTP $responseCode"
-                        t.message != null -> "WebSocket connection failed: ${t.message}"
-                        else -> "WebSocket connection failed: Unknown error"
-                    }
-                    
-                    val error = SignalingError(errorMessage, t, responseCode)
-                    handleConnectionFailure(error, response)
-                }
-
-                override fun onClosed(ws: WebSocket, code: Int, reason: String) {
-                    Log.d("SignalingClient", "WebSocket closed code=$code reason=$reason")
-                    webSocket = null
-                    
-                    if (!isManuallyClosed) {
-                        // Unexpected close - attempt reconnection
-                        _connectionState.value = SignalingConnectionState.DISCONNECTED
-                        scheduleReconnect()
-                    } else {
-                        _connectionState.value = SignalingConnectionState.DISCONNECTED
-                    }
-                }
-            })
+            webSocket = client.newWebSocket(request, createWebSocketListener())
         } catch (e: Exception) {
             val error = SignalingError("Failed to create WebSocket connection: ${e.message}", e)
+            Log.e("SignalingClient", "WebSocket creation failed", e)
             handleConnectionFailure(error, null)
+        }
+    }
+    
+    private fun createWebSocketListener(): WebSocketListener {
+        return object : WebSocketListener() {
+            override fun onOpen(ws: WebSocket, response: Response) {
+                Log.d("SignalingClient", "WebSocket connected roomId=$roomId")
+                _connectionState.value = SignalingConnectionState.CONNECTED
+                reconnectAttempt = 0
+                
+                SentryHelper.addBreadcrumb(
+                    message = "Signaling WebSocket connected",
+                    category = "signaling",
+                    level = SentryLevel.INFO,
+                    data = mapOf(
+                        "roomId" to roomId,
+                        "userId" to (userId ?: "unknown")
+                    )
+                )
+            }
+
+            override fun onMessage(ws: WebSocket, text: String) {
+                scope.launch { _events.emit(text) }
+            }
+
+            override fun onFailure(ws: WebSocket, t: Throwable, response: Response?) {
+                val responseCode = response?.code
+                val errorMessage = when {
+                    responseCode != null -> "WebSocket connection failed: HTTP $responseCode"
+                    t.message != null -> "WebSocket connection failed: ${t.message}"
+                    else -> "WebSocket connection failed: Unknown error"
+                }
+                
+                val error = SignalingError(errorMessage, t, responseCode)
+                handleConnectionFailure(error, response)
+            }
+
+            override fun onClosed(ws: WebSocket, code: Int, reason: String) {
+                Log.d("SignalingClient", "WebSocket closed code=$code reason=$reason")
+                webSocket = null
+                
+                if (!isManuallyClosed) {
+                    // Unexpected close - attempt reconnection
+                    _connectionState.value = SignalingConnectionState.DISCONNECTED
+                    scheduleReconnect()
+                } else {
+                    _connectionState.value = SignalingConnectionState.DISCONNECTED
+                }
+            }
         }
     }
 

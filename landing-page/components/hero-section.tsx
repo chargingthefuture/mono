@@ -45,17 +45,17 @@ export function HeroSection() {
             survivors with dignity, privacy, and respect.
           </p>
 
-          {/* Key stats in comic style */}
-          <div className="flex flex-wrap gap-2 sm:gap-3 md:gap-4 mb-4 sm:mb-6 md:mb-10" role="list" aria-label="Platform features">
-            <div className="border-[3px] border-foreground bg-secondary px-3 py-2 sm:px-4 sm:py-2.5 md:px-6 md:py-3 flex items-center gap-1.5 sm:gap-2" role="listitem">
+          {/* Key stats in comic style - informational badges, not buttons */}
+          <div className="flex flex-wrap gap-3 sm:gap-4 md:gap-6 mb-4 sm:mb-6 md:mb-10" role="list" aria-label="Platform features">
+            <div className="flex items-center gap-2 sm:gap-2.5 text-muted-foreground" role="listitem">
               <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-accent flex-shrink-0" aria-hidden="true" />
               <span className="font-[var(--font-bangers)] text-sm sm:text-base md:text-lg lg:text-xl">12+ SERVICES</span>
             </div>
-            <div className="border-[3px] border-foreground bg-secondary px-3 py-2 sm:px-4 sm:py-2.5 md:px-6 md:py-3 flex items-center gap-1.5 sm:gap-2" role="listitem">
+            <div className="flex items-center gap-2 sm:gap-2.5 text-muted-foreground" role="listitem">
               <Lock className="w-4 h-4 sm:w-5 sm:h-5 text-accent flex-shrink-0" aria-hidden="true" />
               <span className="font-[var(--font-bangers)] text-sm sm:text-base md:text-lg lg:text-xl">INVITE ONLY</span>
             </div>
-            <div className="border-[3px] border-foreground bg-secondary px-3 py-2 sm:px-4 sm:py-2.5 md:px-6 md:py-3 flex items-center gap-1.5 sm:gap-2" role="listitem">
+            <div className="flex items-center gap-2 sm:gap-2.5 text-muted-foreground" role="listitem">
               <Users className="w-4 h-4 sm:w-5 sm:h-5 text-accent flex-shrink-0" aria-hidden="true" />
               <span className="font-[var(--font-bangers)] text-sm sm:text-base md:text-lg lg:text-xl">WCAG AAA</span>
             </div>

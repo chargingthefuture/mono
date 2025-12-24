@@ -300,15 +300,10 @@ fun RoomDetailScreen(
                                 }
                             }
                             items(uiState.messages) { message ->
-                                val authorName = when {
-                                    message.isAnonymous -> "Anonymous"
-                                    else -> {
-                                        uiState.participants
-                                            .find { it.userId == message.userId }
-                                            ?.user?.displayName
-                                            ?: "User"
-                                    }
-                                }
+                                val participant = uiState.participants.find { it.userId == message.userId }
+                                val authorName = participant?.user?.displayName
+                                    ?: participant?.user?.firstName
+                                    ?: "User"
                                 val isSelf = message.userId == uiState.currentUserId
                                 MessageRow(
                                     authorName = authorName,

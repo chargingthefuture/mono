@@ -144,9 +144,9 @@ class RoomRepository {
             }
         }
 
-    suspend fun sendMessage(roomId: String, content: String, isAnonymous: Boolean = true): Result<ChymeMessage> {
+    suspend fun sendMessage(roomId: String, content: String): Result<ChymeMessage> {
         return try {
-            val request = SendMessageRequest(content = content, isAnonymous = isAnonymous)
+            val request = SendMessageRequest(content = content)
             val response = apiService.sendRoomMessage(roomId, request)
             if (response.isSuccessful && response.body() != null) {
                 Result.success(response.body()!!)
