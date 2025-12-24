@@ -7,7 +7,9 @@ import { Smartphone, Users, Radio, ExternalLink, ArrowLeft } from "lucide-react"
 import { Link } from "wouter";
 import { apiRequest } from "@/lib/queryClient";
 import { useExternalLink } from "@/hooks/useExternalLink";
+import { useAuth } from "@/hooks/useAuth";
 import { AnnouncementBanner } from "@/components/announcement-banner";
+import { AudioListener } from "@/components/chyme/audio-listener";
 
 interface ChymeRoom {
   id: string;
@@ -26,7 +28,13 @@ interface ChymeRoom {
 export default function ChymeRoomDetail() {
   const [match, params] = useRoute<{ roomId: string }>("/apps/chyme/room/:roomId");
   const { openExternal, ExternalLinkDialog } = useExternalLink();
+  const { _clerk } = useAuth();
   const roomId = params?.roomId;
+  
+  // Get signaling endpoint - use same origin with wss protocol
+  const signalingEndpoint = typeof window !== "undefined" 
+    ? `${window.location.protocol === "https:" ? "wss:" : "ws:"}//${window.location.host}/api/chyme/signaling`
+    : "";
 
   const { data: room, isLoading, error } = useQuery<ChymeRoom>({
     queryKey: [`/api/chyme/rooms`, roomId],
@@ -125,6 +133,14 @@ export default function ChymeRoomDetail() {
         apiEndpoint="/api/chyme/announcements"
         queryKey="/api/chyme/announcements"
       />
+
+      {/* Show audio listener for public rooms when unauthenticated */}
+      {room.roomType === "public" && !_clerk.isSignedIn && room.isActive && (
+        <AudioListener 
+          roomId={roomId!} 
+          signalingEndpoint={signalingEndpoint}
+        />
+      )}
 
       <div className="grid gap-6 md:grid-cols-2">
         {/* Room Info Card */}

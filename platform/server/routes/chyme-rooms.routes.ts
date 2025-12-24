@@ -56,7 +56,9 @@ export function registerChymeRoomsRoutes(app: Express) {
   }));
 
   // GET /api/chyme/rooms/:id
-  app.get('/api/chyme/rooms/:id', isAuthenticated, asyncHandler(async (req: any, res) => {
+  // Public rooms: accessible without authentication (for web listeners)
+  // Private rooms: require authentication
+  app.get('/api/chyme/rooms/:id', publicItemLimiter, asyncHandler(async (req: any, res) => {
     const room = await withDatabaseErrorHandling(
       () => storage.getChymeRoom(req.params.id),
       'getChymeRoom'
@@ -64,6 +66,15 @@ export function registerChymeRoomsRoutes(app: Express) {
 
     if (!room || !room.isActive) {
       return res.status(404).json({ message: "Room not found" });
+    }
+
+    // Check if room is private - require authentication for private rooms
+    if (room.roomType === "private") {
+      // Check if user is authenticated
+      const userId = getUserId(req);
+      if (!userId) {
+        return res.status(401).json({ message: "Authentication required for private rooms" });
+      }
     }
 
     const currentParticipants = await withDatabaseErrorHandling(

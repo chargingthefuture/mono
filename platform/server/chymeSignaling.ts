@@ -265,30 +265,58 @@ export function attachChymeSignaling(server: Server) {
       return;
     }
 
-    // Authenticate the connection using same pattern as REST routes
-    const auth = await authenticateWebSocket(req);
-    if (!auth) {
-      log(`[SECURITY] WebSocket authentication failed: ip=${ipAddress} roomId=${roomId}`);
-      socket.close(1008, "Authentication required");
+    // Check if room is public - allow unauthenticated listeners for public rooms
+    let room;
+    try {
+      room = await storage.getChymeRoom(roomId);
+    } catch (error) {
+      log(`[ERROR] Failed to fetch room: ${error}`);
+      socket.close(1008, "Room not found");
       return;
     }
 
-    const { userId } = auth;
+    if (!room || !room.isActive) {
+      socket.close(1008, "Room not found or inactive");
+      return;
+    }
 
-    // Verify user is a participant in the room and get their role
-    // This enforces room membership before accepting connection
+    // Authenticate the connection using same pattern as REST routes
+    const auth = await authenticateWebSocket(req);
+    
+    // For public rooms, allow unauthenticated listeners (read-only)
+    // For private rooms, require authentication
+    if (room.roomType === "private" && !auth) {
+      log(`[SECURITY] WebSocket authentication failed for private room: ip=${ipAddress} roomId=${roomId}`);
+      socket.close(1008, "Authentication required for private rooms");
+      return;
+    }
+
+    // For unauthenticated listeners in public rooms, use a special "anonymous" userId
+    const userId = auth?.userId || `anonymous_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+    // For anonymous listeners in public rooms, skip participant check
+    // They can only receive audio, not send offers
     let participant;
-    try {
-      participant = await storage.getChymeRoomParticipant(roomId, userId);
-      if (!participant || participant.leftAt) {
-        log(`[SECURITY] WebSocket connection rejected - not a participant: userId=${userId} roomId=${roomId}`);
-        socket.close(1008, "Not a participant in this room");
+    const isAnonymous = !auth;
+    
+    if (isAnonymous) {
+      // Anonymous listeners have a special "listener" role with limited permissions
+      participant = null; // No database participant record for anonymous users
+    } else {
+      // Verify authenticated user is a participant in the room and get their role
+      // This enforces room membership before accepting connection
+      try {
+        participant = await storage.getChymeRoomParticipant(roomId, userId);
+        if (!participant || participant.leftAt) {
+          log(`[SECURITY] WebSocket connection rejected - not a participant: userId=${userId} roomId=${roomId}`);
+          socket.close(1008, "Not a participant in this room");
+          return;
+        }
+      } catch (error) {
+        log(`Error checking room participation: ${error}`);
+        socket.close(1011, "Internal server error");
         return;
       }
-    } catch (error) {
-      log(`Error checking room participation: ${error}`);
-      socket.close(1011, "Internal server error");
-      return;
     }
 
     // Check connection limits per IP
@@ -311,7 +339,7 @@ export function attachChymeSignaling(server: Server) {
       socket,
       userId,
       roomId,
-      role: participant.role as "creator" | "speaker" | "listener",
+      role: isAnonymous ? "listener" : (participant.role as "creator" | "speaker" | "listener"),
       lastMessageTime: Date.now(),
       messageCount: 0,
       ipAddress,

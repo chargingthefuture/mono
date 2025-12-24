@@ -3,7 +3,7 @@
  */
 
 import { Route } from "wouter";
-import { ProtectedRoute } from "./route-wrappers";
+import { ProtectedRoute, ChymeRoomRoute } from "./route-wrappers";
 import SupportMatchDashboard from "@/pages/supportmatch/dashboard";
 import SupportMatchProfile from "@/pages/supportmatch/profile";
 import SupportMatchPartnership from "@/pages/supportmatch/partnership";
@@ -594,9 +594,9 @@ export function MiniAppRoutes() {
         </ProtectedRoute>
       </Route>
       <Route path="/apps/chyme/room/:roomId">
-        <ProtectedRoute>
+        <ChymeRoomRoute>
           <ChymeRoomDetail />
-        </ProtectedRoute>
+        </ChymeRoomRoute>
       </Route>
 
       {/* Workforce Recruiter routes */}

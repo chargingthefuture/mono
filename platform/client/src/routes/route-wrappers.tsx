@@ -3,8 +3,9 @@
  */
 
 import React from "react";
-import { Redirect } from "wouter";
+import { Redirect, useLocation } from "wouter";
 import { useAuth } from "@/hooks/useAuth";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { TermsAcceptanceDialog, useTermsAcceptanceCheck } from "@/components/terms-acceptance-dialog";
@@ -73,6 +74,54 @@ export function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
+  return <>{children}</>;
+}
+
+// Conditional route wrapper for Chyme rooms
+// Allows public access for public rooms, requires auth for private rooms
+export function ChymeRoomRoute({ children }: { children: React.ReactNode }) {
+  const { _clerk, user, isLoading } = useAuth();
+  const [location] = useLocation();
+  
+  // Extract roomId from URL
+  const roomIdMatch = location.match(/\/apps\/chyme\/room\/([^/]+)/);
+  const roomId = roomIdMatch ? roomIdMatch[1] : null;
+  
+  // Fetch room data to check if it's public
+  const { data: room } = useQuery<{ roomType: "public" | "private" }>({
+    queryKey: ["/api/chyme/rooms", roomId],
+    enabled: !!roomId,
+    retry: false,
+  });
+  
+  // If Clerk is still loading, show loading indicator
+  if (!_clerk.clerkLoaded) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center space-y-4">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto"></div>
+          <p className="text-sm text-muted-foreground">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // If room is public, allow unauthenticated access
+  if (room?.roomType === "public") {
+    return <>{children}</>;
+  }
+  
+  // For private rooms or if room data not loaded yet, require authentication
+  if (!_clerk.isSignedIn) {
+    return <Redirect to="/" />;
+  }
+  
+  // If needs approval, show waiting message
+  const needsApproval = user && !user.isApproved && !user.isAdmin;
+  if (needsApproval) {
+    return <PendingApproval />;
+  }
+  
   return <>{children}</>;
 }
 
