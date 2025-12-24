@@ -81,11 +81,13 @@ export const otpCodes = pgTable(
 );
 
 // Auth tokens table - stores OTP-based auth tokens for Android app
+// Note: token column stores SHA-256 hash of JWT tokens (64 hex characters) instead of full token
+// This prevents "value too long" errors and keeps storage size consistent regardless of JWT size
 export const authTokens = pgTable(
   "auth_tokens",
   {
     id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-    token: varchar("token", { length: 64 }).notNull().unique(),
+    token: varchar("token", { length: 64 }).notNull().unique(), // SHA-256 hash (64 hex chars)
     userId: varchar("user_id")
       .notNull()
       .references(() => users.id),

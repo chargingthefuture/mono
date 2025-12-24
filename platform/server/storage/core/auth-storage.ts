@@ -13,6 +13,7 @@ import {
 } from "@shared/schema";
 import { db } from "../../db";
 import { eq, lt } from "drizzle-orm";
+import { hashToken } from "../../chymeJwt";
 
 export class AuthStorage {
   // ========================================
@@ -103,9 +104,17 @@ export class AuthStorage {
   // AUTH TOKEN OPERATIONS
   // ========================================
 
+  /**
+   * Create an auth token record
+   * Stores a SHA-256 hash of the JWT token (64 hex characters) instead of the full token
+   * This prevents "value too long" database errors and keeps storage size consistent
+   */
   async createAuthToken(token: string, userId: string, expiresAt: Date): Promise<AuthToken> {
+    // Hash the token before storing (SHA-256 produces 64 hex characters)
+    const tokenHash = hashToken(token);
+    
     const [authToken] = await db.insert(authTokens).values({
-      token,
+      token: tokenHash,
       userId,
       expiresAt,
     }).returning();
@@ -113,17 +122,29 @@ export class AuthStorage {
     return authToken;
   }
   
+  /**
+   * Find an auth token by hashing the provided token and looking up the hash
+   * This allows us to check if a JWT token has been revoked without storing the full token
+   */
   async findAuthTokenByToken(token: string): Promise<AuthToken | undefined> {
+    // Hash the token to match what's stored in the database
+    const tokenHash = hashToken(token);
+    
     const [authToken] = await db
       .select()
       .from(authTokens)
-      .where(eq(authTokens.token, token))
+      .where(eq(authTokens.token, tokenHash))
       .limit(1);
     return authToken;
   }
   
+  /**
+   * Delete an auth token by hashing the provided token and deleting the hash
+   */
   async deleteAuthToken(token: string): Promise<void> {
-    await db.delete(authTokens).where(eq(authTokens.token, token));
+    // Hash the token to match what's stored in the database
+    const tokenHash = hashToken(token);
+    await db.delete(authTokens).where(eq(authTokens.token, tokenHash));
   }
   
   async deleteExpiredAuthTokens(): Promise<void> {

@@ -6,6 +6,7 @@
  */
 
 import jwt from 'jsonwebtoken';
+import { createHash } from 'crypto';
 import { logError } from './errorLogger';
 import * as Sentry from '@sentry/node';
 
@@ -85,5 +86,14 @@ export function verifyChymeToken(token: string): ChymeTokenPayload | null {
  */
 export function getTokenExpirationDate(): Date {
   return new Date(Date.now() + TOKEN_EXPIRATION_SECONDS * 1000);
+}
+
+/**
+ * Hash a JWT token for database storage
+ * Uses SHA-256 to produce a fixed 64-character hex string
+ * This prevents "value too long" errors and keeps storage size consistent
+ */
+export function hashToken(token: string): string {
+  return createHash('sha256').update(token).digest('hex');
 }
 

@@ -57,6 +57,8 @@ CREATE INDEX IF NOT EXISTS IDX_otp_codes_expires_at ON otp_codes(expires_at);
 -- Auth tokens table - stores OTP-based auth tokens for Android app
 CREATE TABLE IF NOT EXISTS auth_tokens (
   id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+  -- Note: token column stores SHA-256 hash of JWT tokens (64 hex characters) instead of full token
+  -- This prevents "value too long" errors and keeps storage size consistent regardless of JWT size
   token VARCHAR(64) NOT NULL UNIQUE,
   user_id VARCHAR NOT NULL REFERENCES users(id),
   expires_at TIMESTAMP NOT NULL,
