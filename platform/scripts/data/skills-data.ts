@@ -456,8 +456,36 @@ export const skillsData: {
         ],
       },
       {
-        name: "Bus/Train Operators",
+        name: "Delivery Drivers / Couriers",
         displayOrder: 2,
+        skills: [
+          "Last-mile delivery operations",
+          "Package handling and sorting",
+          "Customer service and signature collection",
+          "Route optimization for multiple stops",
+          "Vehicle safety and maintenance checks",
+          "Delivery tracking and documentation",
+          "Hazardous materials handling (where applicable)",
+          "Time-sensitive delivery management",
+        ],
+      },
+      {
+        name: "Package Handlers / Warehouse Workers",
+        displayOrder: 3,
+        skills: [
+          "Package sorting and scanning",
+          "Warehouse operations and organization",
+          "Loading and unloading vehicles",
+          "Inventory management and tracking",
+          "Material handling equipment operation",
+          "Quality control and damage prevention",
+          "Shipping and receiving procedures",
+          "Safety protocols and compliance",
+        ],
+      },
+      {
+        name: "Bus/Train Operators",
+        displayOrder: 4,
         skills: [
           "Vehicle control and passenger safety",
           "Timetable adherence",
@@ -466,7 +494,7 @@ export const skillsData: {
       },
       {
         name: "Mechanics",
-        displayOrder: 3,
+        displayOrder: 5,
         skills: [
           "Mechanic",
           "Vehicle diagnostics and repair",
@@ -477,7 +505,7 @@ export const skillsData: {
       },
       {
         name: "Logistics Planners",
-        displayOrder: 4,
+        displayOrder: 6,
         skills: [
           "Supply-chain optimization",
           "Inventory management",
@@ -486,7 +514,7 @@ export const skillsData: {
       },
       {
         name: "Port/Airport Staff",
-        displayOrder: 5,
+        displayOrder: 7,
         skills: [
           "Cargo handling procedures",
           "Customs documentation basics",
@@ -495,7 +523,7 @@ export const skillsData: {
       },
       {
         name: "Traffic Engineers",
-        displayOrder: 6,
+        displayOrder: 8,
         skills: [
           "Traffic flow analysis",
           "Signal design and timing",
