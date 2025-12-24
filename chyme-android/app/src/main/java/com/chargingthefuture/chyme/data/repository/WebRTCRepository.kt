@@ -1,6 +1,7 @@
 package com.chargingthefuture.chyme.data.repository
 
 import android.content.Context
+import android.util.Log
 import org.webrtc.AudioSource
 import org.webrtc.AudioTrack
 import org.webrtc.MediaConstraints
@@ -45,22 +46,38 @@ class WebRTCRepository(
                 false
             }
             
-            if (environmentClassExists) {
+            peerConnectionFactory = if (environmentClassExists) {
                 // Use the builder pattern (requires org.webrtc.Environment)
-                peerConnectionFactory = PeerConnectionFactory.builder()
-                    .setOptions(options)
-                    .createPeerConnectionFactory()
+                // This is the preferred method for newer WebRTC versions
+                try {
+                    PeerConnectionFactory.builder()
+                        .setOptions(options)
+                        .createPeerConnectionFactory()
+                } catch (e: Exception) {
+                    // If builder fails, try fallback to constructor (for older WebRTC versions)
+                    Log.w("WebRTCRepository", "Builder pattern failed, trying constructor fallback: ${e.message}")
+                    try {
+                        PeerConnectionFactory(options)
+                    } catch (e2: Exception) {
+                        throw RuntimeException(
+                            "Failed to create PeerConnectionFactory with both builder and constructor: ${e2.message}",
+                            e2
+                        )
+                    }
+                }
             } else {
-                // Environment class is missing - this indicates the WebRTC library is not
-                // properly packaged in the APK. Check:
-                // 1. That org.webrtc:google-webrtc is included in dependencies
-                // 2. That ProGuard rules keep org.webrtc classes
-                // 3. That packaging options include native libraries
-                throw NoClassDefFoundError(
-                    "org.webrtc.Environment class is missing. " +
-                    "The WebRTC library dependency may be missing or improperly packaged in the final APK. " +
-                    "Please verify that org.webrtc:google-webrtc is included and properly configured."
-                )
+                // Environment class is missing - try older constructor API
+                // This doesn't require Environment class and works with older WebRTC versions
+                Log.w("WebRTCRepository", "Environment class not found, using constructor API")
+                try {
+                    PeerConnectionFactory(options)
+                } catch (e: Exception) {
+                    throw RuntimeException(
+                        "Failed to create PeerConnectionFactory: Environment class missing and constructor failed. " +
+                        "Please ensure com.infobip:google-webrtc is properly included. Error: ${e.message}",
+                        e
+                    )
+                }
             }
 
             val constraints = MediaConstraints()

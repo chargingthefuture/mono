@@ -11,7 +11,7 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        // WebRTC libraries - using com.dafruits:webrtc from Maven Central
+        // WebRTC libraries - using com.infobip:google-webrtc from Maven Central
         // No additional repositories needed as it's available on Maven Central
         // Alternative: JitPack (may have WebRTC artifacts)
         maven {
