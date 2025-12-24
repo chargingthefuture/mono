@@ -67,7 +67,7 @@ object ApiClient {
                         "url" to newRequest.url.toString(),
                         "method" to newRequest.method,
                         "status_code" to response.code.toString(),
-                        "message" to (response.message ?: "null")
+                        "message" to response.message
                     )
                 )
             }

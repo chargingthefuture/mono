@@ -372,7 +372,7 @@ class WebRTCManager(
     }
 
     private fun handleOffer(json: JSONObject, fromUserId: String) {
-        val sdp = json.optString("sdp", null) ?: return
+        val sdp = json.optString("sdp").takeIf { it.isNotEmpty() } ?: return
         
         // Get or create peer connection for this user
         val pc = peerConnections[fromUserId] ?: run {
@@ -380,7 +380,7 @@ class WebRTCManager(
             val newPc = createPeerConnection(factory, fromUserId)
             peerConnections[fromUserId] = newPc
             newPc
-        } ?: return
+        }
 
         val desc = SessionDescription(SessionDescription.Type.OFFER, sdp)
         pc.setRemoteDescription(object : SdpObserver {
@@ -403,7 +403,7 @@ class WebRTCManager(
     }
 
     private fun handleAnswer(json: JSONObject, fromUserId: String) {
-        val sdp = json.optString("sdp", null) ?: return
+        val sdp = json.optString("sdp").takeIf { it.isNotEmpty() } ?: return
         val pc = peerConnections[fromUserId] ?: return
         val desc = SessionDescription(SessionDescription.Type.ANSWER, sdp)
         pc.setRemoteDescription(object : SdpObserver {
@@ -417,9 +417,9 @@ class WebRTCManager(
 
     private fun handleRemoteCandidate(json: JSONObject, fromUserId: String) {
         val candidate = json.optJSONObject("candidate") ?: return
-        val sdpMid = candidate.optString("sdpMid", null) ?: return
+        val sdpMid = candidate.optString("sdpMid").takeIf { it.isNotEmpty() } ?: return
         val sdpMLineIndex = candidate.optInt("sdpMLineIndex", -1)
-        val sdp = candidate.optString("candidate", null) ?: return
+        val sdp = candidate.optString("candidate").takeIf { it.isNotEmpty() } ?: return
 
         val ice = IceCandidate(sdpMid, sdpMLineIndex, sdp)
         peerConnections[fromUserId]?.addIceCandidate(ice) ?: run {

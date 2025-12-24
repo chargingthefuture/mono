@@ -161,8 +161,8 @@ fun RoomDetailScreen(
                 actions = {
                     // Share room link button
                     IconButton(onClick = {
-                        val roomId = uiState.room?.id ?: return@IconButton
-                        val roomLink = "https://app.chargingthefuture.com/app/chyme/room/$roomId"
+                        val currentRoomId = uiState.room?.id ?: return@IconButton
+                        val roomLink = "https://app.chargingthefuture.com/app/chyme/room/$currentRoomId"
                         shareRoomLink(context, roomLink)
                     }) {
                         Icon(Icons.Default.Share, contentDescription = "Share Room")
@@ -827,12 +827,13 @@ fun ParticipantCard(
 }
 
 @Composable
+@Suppress("UNUSED_PARAMETER")
 fun RoomControls(
-    roomId: String,
+    roomId: String, // Kept for API compatibility
     isMuted: Boolean,
     hasRaisedHand: Boolean,
     currentRole: ParticipantRole?,
-    hasMicPermission: Boolean = false,
+    hasMicPermission: Boolean = false, // Kept for API compatibility
     connectionState: com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState = com.chargingthefuture.chyme.ui.viewmodel.WebRTCConnectionState.DISCONNECTED,
     connectionError: String? = null,
     onToggleMute: () -> Unit,

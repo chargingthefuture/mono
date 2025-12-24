@@ -175,7 +175,7 @@ class SignalingClient(
     
     private fun createWebSocketListener(): WebSocketListener {
         return object : WebSocketListener() {
-            override fun onOpen(ws: WebSocket, response: Response) {
+            override fun onOpen(webSocket: WebSocket, response: Response) {
                 Log.d("SignalingClient", "WebSocket connected roomId=$roomId")
                 _connectionState.value = SignalingConnectionState.CONNECTED
                 reconnectAttempt = 0
@@ -191,11 +191,11 @@ class SignalingClient(
                 )
             }
 
-            override fun onMessage(ws: WebSocket, text: String) {
+            override fun onMessage(webSocket: WebSocket, text: String) {
                 scope.launch { _events.emit(text) }
             }
 
-            override fun onFailure(ws: WebSocket, t: Throwable, response: Response?) {
+            override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
                 val responseCode = response?.code
                 val errorMessage = when {
                     responseCode != null -> "WebSocket connection failed: HTTP $responseCode"
@@ -207,7 +207,7 @@ class SignalingClient(
                 handleConnectionFailure(error, response)
             }
 
-            override fun onClosed(ws: WebSocket, code: Int, reason: String) {
+            override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
                 Log.d("SignalingClient", "WebSocket closed code=$code reason=$reason")
                 webSocket = null
                 
@@ -223,6 +223,7 @@ class SignalingClient(
     }
 
     private fun handleConnectionFailure(error: SignalingError, response: Response?) {
+        // response parameter kept for future use
         webSocket = null
         _connectionState.value = SignalingConnectionState.FAILED
         

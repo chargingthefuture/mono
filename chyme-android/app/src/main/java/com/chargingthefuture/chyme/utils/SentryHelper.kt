@@ -39,7 +39,7 @@ object SentryHelper {
                 options.isAttachViewHierarchy = true
                 
                 // Set beforeSend to add extra context
-                options.beforeSend = SentryOptions.BeforeSendCallback { event, hint ->
+                options.beforeSend = SentryOptions.BeforeSendCallback { event, _ ->
                     addVerboseContext(event)
                     event
                 }
