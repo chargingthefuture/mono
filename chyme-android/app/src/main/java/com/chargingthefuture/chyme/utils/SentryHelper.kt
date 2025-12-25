@@ -2,6 +2,7 @@ package com.chargingthefuture.chyme.utils
 
 import android.content.Context
 import android.util.Log
+import com.chargingthefuture.chyme.BuildConfig
 import io.sentry.Breadcrumb
 import io.sentry.Sentry
 import io.sentry.SentryEvent
@@ -24,7 +25,15 @@ object SentryHelper {
         }
         
         try {
-            val sentryDsn = dsn ?: "https://c4cabee62513c0173e0b2f0bf250e47c@o4510455625482240.ingest.us.sentry.io/4510548956151808"
+            // Use provided DSN, or BuildConfig (from CI/local.properties)
+            val sentryDsn = dsn 
+                ?: BuildConfig.SENTRY_DSN.takeIf { it.isNotEmpty() }
+            
+            // If no DSN is provided, skip initialization
+            if (sentryDsn.isNullOrEmpty()) {
+                Log.w(TAG, "Sentry DSN not configured - Sentry error tracking is disabled. Set SENTRY_DSN_ANDROID in environment or local.properties")
+                return
+            }
             
             SentryAndroid.init(context) { options ->
                 options.dsn = sentryDsn
@@ -47,7 +56,7 @@ object SentryHelper {
             
             // Mark as initialized but don't call captureMessage yet - Sentry needs a moment to fully initialize
             isInitialized = true
-            Log.d(TAG, "Sentry initialized successfully with DSN: $sentryDsn")
+            Log.d(TAG, "Sentry initialized successfully")
             
             // Use addBreadcrumb instead of captureMessage during init - it's safer
             // Don't call captureMessage here as Sentry might not be fully ready yet

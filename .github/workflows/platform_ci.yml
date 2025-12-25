@@ -147,6 +147,7 @@ jobs:
           VITE_CHIME_USERNAME: ${{ secrets.VITE_CHIME_USERNAME }}
           VITE_WISE_USERNAME: ${{ secrets.VITE_WISE_USERNAME }}
           VITE_ZELLE_EMAIL: ${{ secrets.VITE_ZELLE_EMAIL }}
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
         run: npm run build
 
       - name: Get version
@@ -185,6 +186,7 @@ jobs:
           VITE_CHIME_USERNAME: ${{ secrets.VITE_CHIME_USERNAME }}
           VITE_WISE_USERNAME: ${{ secrets.VITE_WISE_USERNAME }}
           VITE_ZELLE_EMAIL: ${{ secrets.VITE_ZELLE_EMAIL }}
+          VITE_SENTRY_DSN: ${{ secrets.VITE_SENTRY_DSN }}
         run: |
           docker build \
             --build-arg VITE_CLERK_PUBLISHABLE_KEY="$VITE_CLERK_PUBLISHABLE_KEY" \
@@ -195,6 +197,7 @@ jobs:
             --build-arg VITE_CHIME_USERNAME="$VITE_CHIME_USERNAME" \
             --build-arg VITE_WISE_USERNAME="$VITE_WISE_USERNAME" \
             --build-arg VITE_ZELLE_EMAIL="$VITE_ZELLE_EMAIL" \
+            --build-arg VITE_SENTRY_DSN="$VITE_SENTRY_DSN" \
             -t platform-webapp:${{ steps.version.outputs.version }} .
           docker save platform-webapp:${{ steps.version.outputs.version }} -o platform-image.tar
 

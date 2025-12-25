@@ -1,23 +1,26 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme - High contrast dark theme -->
+    <!-- Comic book theme - High contrast dark theme (same as light theme for consistency) -->
     <style name="Theme.Chyme" parent="Theme.MaterialComponents.DayNight.DarkActionBar">
-        <!-- Primary brand color - Bright green (same as light theme for consistency) -->
+        <!-- Primary brand color - Green (for buttons and brand elements) -->
         <item name="colorPrimary">@color/chyme_green</item>
-        <item name="colorPrimaryVariant">@color/primary_green_dark</item>
-        <item name="colorOnPrimary">@color/on_primary</item>
-        <!-- Secondary brand color - Bright blue for dark theme -->
-        <item name="colorSecondary">@color/teal_200</item>
-        <item name="colorSecondaryVariant">@color/teal_200</item>
-        <item name="colorOnSecondary">@color/black</item>
-        <!-- Background colors for high contrast -->
+        <item name="colorPrimaryVariant">@color/chyme_green</item>
+        <item name="colorOnPrimary">@color/black</item>
+        <!-- Secondary brand color - Dark gray for secondary surfaces -->
+        <item name="colorSecondary">@color/secondary_dark</item>
+        <item name="colorSecondaryVariant">@color/secondary_dark</item>
+        <item name="colorOnSecondary">@color/white</item>
+        <!-- Background colors - Comic book dark background -->
         <item name="android:colorBackground">@color/background_dark</item>
-        <item name="colorSurface">@color/background_dark</item>
-        <item name="colorOnSurface">@color/on_background_dark</item>
-        <!-- Error colors -->
+        <item name="colorSurface">@color/surface_dark</item>
+        <item name="colorOnSurface">@color/on_surface_dark</item>
+        <!-- Error colors - Comic book style uses green for destructive -->
         <item name="colorError">@color/error_dark</item>
         <item name="colorOnError">@color/white</item>
-        <!-- Status bar color. -->
+        <!-- Status bar color - Green accent -->
         <item name="android:statusBarColor" tools:targetApi="l">@color/chyme_green</item>
-        <!-- Customize your theme here. -->
+        <!-- Comic book style - No rounded corners -->
+        <item name="shapeAppearanceSmallComponent">@style/ShapeAppearance.Chyme.Small</item>
+        <item name="shapeAppearanceMediumComponent">@style/ShapeAppearance.Chyme.Medium</item>
+        <item name="shapeAppearanceLargeComponent">@style/ShapeAppearance.Chyme.Large</item>
     </style>
 </resources>

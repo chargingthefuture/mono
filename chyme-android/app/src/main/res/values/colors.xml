@@ -7,23 +7,38 @@
     <color name="teal_200">#FF03DAC5</color>
     <color name="teal_700">#FF018786</color>
     
-    <!-- High contrast accessible colors -->
-    <color name="black">#FF000000</color>
-    <color name="white">#FFFFFFFF</color>
-    <color name="chyme_green">#4ADE80</color>
+    <!-- Comic book style - High contrast colors -->
+    <color name="black">#FF141414</color> <!-- Very dark (oklch 0.08 0 0) - comic book background -->
+    <color name="white">#FFFAFAFA</color> <!-- Almost white (oklch 0.98 0 0) - comic book foreground -->
+    <color name="chyme_green">#4ADE80</color> <!-- Primary green accent -->
     
-    <!-- Primary theme colors -->
-    <color name="primary_green">#4ADE80</color>
-    <color name="primary_green_dark">#22C55E</color>
-    <color name="on_primary">#FF000000</color>
+    <!-- Primary theme colors - Comic book style -->
+    <color name="primary_green">#4ADE80</color> <!-- Dramatic green accent -->
+    <color name="primary_green_dark">#4ADE80</color> <!-- Same green for consistency -->
+    <color name="on_primary">#FF141414</color> <!-- Dark text on white/green -->
     
-    <!-- High contrast background colors -->
-    <color name="background_light">#FFFFFFFF</color>
-    <color name="background_dark">#FF000000</color>
-    <color name="on_background_light">#FF000000</color>
-    <color name="on_background_dark">#FFFFFFFF</color>
+    <!-- Comic book background colors - Dark theme with high contrast -->
+    <color name="background_light">#FF141414</color> <!-- Very dark (oklch 0.08 0 0) -->
+    <color name="background_dark">#FF141414</color> <!-- Same dark background -->
+    <color name="on_background_light">#FFFAFAFA</color> <!-- Almost white text -->
+    <color name="on_background_dark">#FFFAFAFA</color> <!-- Almost white text -->
     
-    <!-- Error colors -->
-    <color name="error_light">#FFDC2626</color>
-    <color name="error_dark">#FFEF4444</color>
+    <!-- Comic book surface colors -->
+    <color name="surface_light">#FF1F1F1F</color> <!-- Card surface (oklch 0.12 0 0) -->
+    <color name="surface_dark">#FF1F1F1F</color> <!-- Card surface -->
+    <color name="on_surface_light">#FFFAFAFA</color> <!-- Text on surface -->
+    <color name="on_surface_dark">#FFFAFAFA</color> <!-- Text on surface -->
+    
+    <!-- Comic book secondary colors -->
+    <color name="secondary_light">#FF2E2E2E</color> <!-- Secondary surface (oklch 0.18 0 0) -->
+    <color name="secondary_dark">#FF2E2E2E</color> <!-- Secondary surface -->
+    <color name="on_secondary_light">#FFFAFAFA</color> <!-- Text on secondary -->
+    <color name="on_secondary_dark">#FFFAFAFA</color> <!-- Text on secondary -->
+    
+    <!-- Comic book border color -->
+    <color name="border_color">#FF404040</color> <!-- Medium gray (oklch 0.25 0 0) -->
+    
+    <!-- Error colors - Comic book style uses green for destructive -->
+    <color name="error_light">#4ADE80</color> <!-- Green for errors (comic book style) -->
+    <color name="error_dark">#4ADE80</color> <!-- Green for errors -->
 </resources>

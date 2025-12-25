@@ -19,6 +19,20 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        
+        // Load local.properties if it exists
+        val localProperties = Properties()
+        val localPropertiesFile = rootProject.file("local.properties")
+        if (localPropertiesFile.exists()) {
+            localPropertiesFile.inputStream().use { localProperties.load(it) }
+        }
+        
+        // Read Sentry DSN from environment variable (CI) or local.properties (local)
+        val sentryDsn = System.getenv("SENTRY_DSN_ANDROID")
+            ?: localProperties.getProperty("SENTRY_DSN_ANDROID")
+            ?: "" // Empty string if not set - SentryHelper will use fallback
+        
+        buildConfigField("String", "SENTRY_DSN", "\"$sentryDsn\"")
     }
 
     signingConfigs {
@@ -96,6 +110,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.14"

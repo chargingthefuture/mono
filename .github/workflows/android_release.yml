@@ -85,6 +85,7 @@ jobs:
           fi
         env:
           PLATFORM_API_BASE_URL: ${{ secrets.PLATFORM_API_BASE_URL }}
+          SENTRY_DSN_ANDROID: ${{ secrets.SENTRY_DSN_ANDROID }}
           # From the Prepare Android keystore step (GITHUB_ENV)
           KEYSTORE_PATH: ${{ env.KEYSTORE_PATH }}
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
