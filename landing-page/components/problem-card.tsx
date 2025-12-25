@@ -94,8 +94,8 @@ export function ProblemCard({
       </div>
 
       {/* Problem Text */}
-      <div className="p-4 space-y-3">
-        <p className="font-[var(--font-inter)] text-sm leading-relaxed line-clamp-3">
+      <div className="p-3 sm:p-4 space-y-3">
+        <p className="font-[var(--font-inter)] text-xs sm:text-sm leading-relaxed break-words line-clamp-4 sm:line-clamp-3 md:line-clamp-none">
           {problem}
         </p>
 

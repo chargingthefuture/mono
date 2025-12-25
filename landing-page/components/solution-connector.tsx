@@ -42,8 +42,8 @@ const serviceDescriptions: Record<string, string> = {
   SocketRelay: "Get items through community when stores are problematic",
   CompareNotes: "Document patterns, incidents, and share evidence with the community",
   GentlePulse: "Manage stress, anxiety, and wellness when dealing with constant harassment",
-  Chyme: "Private voice conversations away from from perps",
-  "Chat Groups": "Connect with others experiencing similar situations via Signal",
+  Chyme: "Voice conversations away from from perps",
+  "Chat Groups": "Connect with others experiencing similar situations in reall time chats via Signal",
   LostMail: "Track mail tampering, loss, and delays with detailed incident reports",
 }
 
@@ -74,11 +74,11 @@ export function SolutionConnector({ problem, solutions, onClose }: SolutionConne
       <div className="max-w-4xl w-full border-[6px] border-foreground bg-card my-4 md:my-auto max-h-[calc(100vh-2rem)] md:max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="border-b-[4px] border-foreground bg-secondary p-4 flex items-start justify-between gap-4">
-          <div className="flex-1">
-            <h2 className="font-[var(--font-bangers)] text-2xl md:text-3xl mb-2">
+          <div className="flex-1 min-w-0">
+            <h2 className="font-[var(--font-bangers)] text-xl sm:text-2xl md:text-3xl mb-2">
               LOOK MA, I FIXED IT!
             </h2>
-            <p className="font-[var(--font-inter)] text-sm text-muted-foreground line-clamp-2">
+            <p className="font-[var(--font-inter)] text-xs sm:text-sm text-muted-foreground break-words">
               {problem}
             </p>
           </div>

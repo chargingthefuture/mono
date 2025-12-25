@@ -10,7 +10,6 @@ import Link from "next/link"
 // Problem-to-solution mapping
 const problemSolutions: Record<string, string[]> = {
   "Do idiots constantly try to get close to you physically, while aiming their cell phones at you and/or staring at their cell phones while invading your personal space?": [
-    "SupportMatch", // Accountability partners to document incidents
     "Chat Groups", // Connect with others experiencing similar
     "GentlePulse", // Manage stress and anxiety
   ],

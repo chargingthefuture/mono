@@ -6,7 +6,7 @@ import { UserCheck, Building2, ArrowRight, MessageCircle, Wrench, Mail, Search, 
 const services = [
   {
     title: "Chat Groups",
-    description: "Real time chats with TIs",
+    description: "Connect with others experiencing similar situations in reall time chats via Signal",
     icon: MessageCircle,
     href: "/apps/chatgroups",
     testId: "card-service-chatgroups",
@@ -48,7 +48,7 @@ const services = [
   },
   {
     title: "LostMail",
-    description: "Report mail incidents (lost, damaged, tampered, delayed) and track your reports. Admin dashboard available for incident management.",
+    description: "Track mail tampering, loss, and delays with detailed incident reports",
     icon: Mail,
     href: "/apps/lostmail",
     testId: "card-service-lostmail",
