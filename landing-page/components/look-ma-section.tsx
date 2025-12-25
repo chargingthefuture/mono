@@ -4,8 +4,23 @@ import { Wrench, ArrowRight } from "lucide-react"
 
 export function LookMaSection() {
   return (
-    <section className="py-8 sm:py-12 md:py-16 lg:py-20 bg-accent border-b-[6px] border-foreground" aria-labelledby="look-ma-heading">
-      <div className="container mx-auto px-4">
+    <section className="py-8 sm:py-12 md:py-16 lg:py-20 relative overflow-hidden border-b-[6px] border-foreground" aria-labelledby="look-ma-heading">
+      {/* Background pattern */}
+      <div className="absolute inset-0 opacity-5">
+        <div
+          className="absolute inset-0"
+          style={{
+            backgroundImage: `repeating-linear-gradient(
+            45deg,
+            transparent,
+            transparent 10px,
+            currentColor 10px,
+            currentColor 11px
+          )`,
+          }}
+        />
+      </div>
+      <div className="container mx-auto px-4 relative z-10">
         <div className="max-w-4xl mx-auto">
           {/* Header */}
           <div className="text-center mb-8 sm:mb-12">
@@ -13,7 +28,7 @@ export function LookMaSection() {
               <div className="absolute inset-0 bg-background transform rotate-3 -z-10 scale-110" />
               <div className="bg-foreground text-background px-6 py-3 md:px-10 md:py-5 border-[4px] border-foreground relative">
                 <h2 id="look-ma-heading" className="font-[var(--font-bangers)] text-2xl sm:text-3xl md:text-4xl lg:text-5xl tracking-wide">
-                  LOOK MA, I FIXED IT!
+                  A solution based community
                 </h2>
               </div>
             </div>
@@ -25,10 +40,10 @@ export function LookMaSection() {
           {/* Content Card */}
           <div className="border-[6px] border-foreground bg-card p-6 sm:p-8 md:p-12 relative">
             {/* Corner decorations */}
-            <div className="absolute -top-2 -left-2 sm:-top-3 sm:-left-3 w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 bg-background border-[3px] border-foreground" />
-            <div className="absolute -top-2 -right-2 sm:-top-3 sm:-right-3 w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 bg-background border-[3px] border-foreground" />
-            <div className="absolute -bottom-2 -left-2 sm:-bottom-3 sm:-left-3 w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 bg-background border-[3px] border-foreground" />
-            <div className="absolute -bottom-2 -right-2 sm:-bottom-3 sm:-right-3 w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 bg-background border-[3px] border-foreground" />
+            <div className="absolute -top-2 -left-2 sm:-top-3 sm:-left-3 w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 bg-accent border-[3px] border-foreground" />
+            <div className="absolute -top-2 -right-2 sm:-top-3 sm:-right-3 w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 bg-accent border-[3px] border-foreground" />
+            <div className="absolute -bottom-2 -left-2 sm:-bottom-3 sm:-left-3 w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 bg-accent border-[3px] border-foreground" />
+            <div className="absolute -bottom-2 -right-2 sm:-bottom-3 sm:-right-3 w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 bg-accent border-[3px] border-foreground" />
 
             <div className="space-y-6">
               <div className="flex items-center justify-center mb-4">
