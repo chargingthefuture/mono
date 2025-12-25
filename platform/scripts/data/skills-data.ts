@@ -995,7 +995,6 @@ export const skillsData: {
         skills: [
           "Booking and itinerary planning",
           "Vendor coordination",
-          "Customer service",
         ],
       },
       {

@@ -268,22 +268,23 @@ export class MiniAppsStorageComposed
   // DIRECTORY OPERATIONS
   // ========================================
 
-  getDirectoryProfileById = delegate(() => this.directoryStorage, 'getDirectoryProfileById');
-  getDirectoryProfileByUserId = delegate(() => this.directoryStorage, 'getDirectoryProfileByUserId');
-  listAllDirectoryProfiles = delegate(() => this.directoryStorage, 'listAllDirectoryProfiles');
-  listPublicDirectoryProfiles = delegate(() => this.directoryStorage, 'listPublicDirectoryProfiles');
-  createDirectoryProfile = delegate(() => this.directoryStorage, 'createDirectoryProfile');
-  updateDirectoryProfile = delegate(() => this.directoryStorage, 'updateDirectoryProfile');
-  deleteDirectoryProfile = delegate(() => this.directoryStorage, 'deleteDirectoryProfile');
-  createDirectoryAnnouncement = delegate(() => this.directoryStorage, 'createDirectoryAnnouncement');
-  getActiveDirectoryAnnouncements = delegate(() => this.directoryStorage, 'getActiveDirectoryAnnouncements');
-  getAllDirectoryAnnouncements = delegate(() => this.directoryStorage, 'getAllDirectoryAnnouncements');
-  updateDirectoryAnnouncement = delegate(() => this.directoryStorage, 'updateDirectoryAnnouncement');
-  deactivateDirectoryAnnouncement = delegate(() => this.directoryStorage, 'deactivateDirectoryAnnouncement');
-  getAllDirectorySkills = delegate(() => this.directoryStorage, 'getAllDirectorySkills');
-  createDirectorySkill = delegate(() => this.directoryStorage, 'createDirectorySkill');
-  deleteDirectorySkill = delegate(() => this.directoryStorage, 'deleteDirectorySkill');
-  deleteDirectoryProfileWithCascade = delegate(() => this.directoryStorage, 'deleteDirectoryProfileWithCascade');
+  getDirectoryProfileById = delegate<IDirectoryStorage['getDirectoryProfileById']>(() => this.directoryStorage, 'getDirectoryProfileById');
+  getDirectoryProfileByUserId = delegate<IDirectoryStorage['getDirectoryProfileByUserId']>(() => this.directoryStorage, 'getDirectoryProfileByUserId');
+  listAllDirectoryProfiles = delegate<IDirectoryStorage['listAllDirectoryProfiles']>(() => this.directoryStorage, 'listAllDirectoryProfiles');
+  listPublicDirectoryProfiles = delegate<IDirectoryStorage['listPublicDirectoryProfiles']>(() => this.directoryStorage, 'listPublicDirectoryProfiles');
+  listPublicDirectoryProfilesWithUsers = delegate<IDirectoryStorage['listPublicDirectoryProfilesWithUsers']>(() => this.directoryStorage, 'listPublicDirectoryProfilesWithUsers');
+  createDirectoryProfile = delegate<IDirectoryStorage['createDirectoryProfile']>(() => this.directoryStorage, 'createDirectoryProfile');
+  updateDirectoryProfile = delegate<IDirectoryStorage['updateDirectoryProfile']>(() => this.directoryStorage, 'updateDirectoryProfile');
+  deleteDirectoryProfile = delegate<IDirectoryStorage['deleteDirectoryProfile']>(() => this.directoryStorage, 'deleteDirectoryProfile');
+  createDirectoryAnnouncement = delegate<IDirectoryStorage['createDirectoryAnnouncement']>(() => this.directoryStorage, 'createDirectoryAnnouncement');
+  getActiveDirectoryAnnouncements = delegate<IDirectoryStorage['getActiveDirectoryAnnouncements']>(() => this.directoryStorage, 'getActiveDirectoryAnnouncements');
+  getAllDirectoryAnnouncements = delegate<IDirectoryStorage['getAllDirectoryAnnouncements']>(() => this.directoryStorage, 'getAllDirectoryAnnouncements');
+  updateDirectoryAnnouncement = delegate<IDirectoryStorage['updateDirectoryAnnouncement']>(() => this.directoryStorage, 'updateDirectoryAnnouncement');
+  deactivateDirectoryAnnouncement = delegate<IDirectoryStorage['deactivateDirectoryAnnouncement']>(() => this.directoryStorage, 'deactivateDirectoryAnnouncement');
+  getAllDirectorySkills = delegate<IDirectoryStorage['getAllDirectorySkills']>(() => this.directoryStorage, 'getAllDirectorySkills');
+  createDirectorySkill = delegate<IDirectoryStorage['createDirectorySkill']>(() => this.directoryStorage, 'createDirectorySkill');
+  deleteDirectorySkill = delegate<IDirectoryStorage['deleteDirectorySkill']>(() => this.directoryStorage, 'deleteDirectorySkill');
+  deleteDirectoryProfileWithCascade = delegate<IDirectoryStorage['deleteDirectoryProfileWithCascade']>(() => this.directoryStorage, 'deleteDirectoryProfileWithCascade');
 
   // ========================================
   // SKILLS OPERATIONS (Shared)
