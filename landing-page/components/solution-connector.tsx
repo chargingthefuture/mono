@@ -70,8 +70,8 @@ interface SolutionConnectorProps {
 
 export function SolutionConnector({ problem, solutions, onClose }: SolutionConnectorProps) {
   return (
-    <div className="fixed inset-0 bg-background/95 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="max-w-4xl w-full border-[6px] border-foreground bg-card">
+    <div className="fixed inset-0 bg-background/95 backdrop-blur-sm z-50 flex items-start md:items-center justify-center p-2 sm:p-4 overflow-y-auto">
+      <div className="max-w-4xl w-full border-[6px] border-foreground bg-card my-4 md:my-auto max-h-[calc(100vh-2rem)] md:max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="border-b-[4px] border-foreground bg-secondary p-4 flex items-start justify-between gap-4">
           <div className="flex-1">

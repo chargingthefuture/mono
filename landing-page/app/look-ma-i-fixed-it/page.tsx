@@ -308,7 +308,7 @@ export default function LookMaIFixedIt() {
               onSelect={() => setSelectedProblem(selectedProblem === problem ? null : problem)}
               onSolutionHover={setHoveredSolution}
               hoveredSolution={hoveredSolution}
-              imagePlaceholder={`/images/problems/problem-${index + 1}.jpg`}
+              imagePlaceholder={`/images/problems/problem-${index + 1}.png`}
             />
           ))}
         </div>
