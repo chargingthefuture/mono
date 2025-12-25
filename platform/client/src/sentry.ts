@@ -24,8 +24,8 @@ export { Sentry };
  * Must be called before React app initialization
  */
 export function initSentry() {
-  // Use environment variable if set, otherwise use default DSN
-  const dsn = import.meta.env.VITE_SENTRY_DSN || 'https://cb4b56fb7ca8bdfa89e4880a46555ee9@o4510455625482240.ingest.us.sentry.io/4510455626596352';
+  // Use environment variable - must be set in Railway for production builds
+  const dsn = import.meta.env.VITE_SENTRY_DSN;
   const environment = import.meta.env.MODE || 'development';
   const release = import.meta.env.VITE_SENTRY_RELEASE || undefined;
   const tracesSampleRate = environment === 'production' ? 0.1 : 1.0; // 10% in prod, 100% in dev
