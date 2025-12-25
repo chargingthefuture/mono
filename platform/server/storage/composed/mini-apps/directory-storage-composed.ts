@@ -31,6 +31,10 @@ export class DirectoryStorageComposed implements IDirectoryStorage {
     return this.directoryStorage.listPublicDirectoryProfiles();
   }
 
+  async listPublicDirectoryProfilesWithUsers() {
+    return this.directoryStorage.listPublicDirectoryProfilesWithUsers();
+  }
+
   async createDirectoryProfile(profile: any) {
     return this.directoryStorage.createDirectoryProfile(profile);
   }

@@ -255,10 +255,18 @@ export function registerDirectoryRoutes(app: Express) {
     const profilesWithUsers = await withDatabaseErrorHandling(
       () => storage.listPublicDirectoryProfilesWithUsers(),
       'listPublicDirectoryProfilesWithUsers'
-    );
+    ) as Array<DirectoryProfile & {
+      userFirstName: string | null;
+      userLastName: string | null;
+      userIsVerified: boolean;
+    }>;
     
     // Transform to match expected API response format
-    const withNames = profilesWithUsers.map((p) => {
+    const withNames = profilesWithUsers.map((p: DirectoryProfile & {
+      userFirstName: string | null;
+      userLastName: string | null;
+      userIsVerified: boolean;
+    }) => {
       let name: string | null = null;
       let userIsVerified = false;
       let userFirstName: string | null = null;

@@ -244,6 +244,7 @@ export class DatabaseStorage implements IStorage {
   getDirectoryProfileByUserId = delegate(() => this.miniAppsStorageComposed, 'getDirectoryProfileByUserId');
   listAllDirectoryProfiles = delegate(() => this.miniAppsStorageComposed, 'listAllDirectoryProfiles');
   listPublicDirectoryProfiles = delegate(() => this.miniAppsStorageComposed, 'listPublicDirectoryProfiles');
+  listPublicDirectoryProfilesWithUsers = delegate(() => this.miniAppsStorageComposed, 'listPublicDirectoryProfilesWithUsers');
   createDirectoryProfile = delegate(() => this.miniAppsStorageComposed, 'createDirectoryProfile');
   updateDirectoryProfile = delegate(() => this.miniAppsStorageComposed, 'updateDirectoryProfile');
   deleteDirectoryProfile = delegate(() => this.miniAppsStorageComposed, 'deleteDirectoryProfile');

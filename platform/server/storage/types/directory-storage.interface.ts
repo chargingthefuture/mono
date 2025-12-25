@@ -19,6 +19,11 @@ export interface IDirectoryStorage {
   getDirectoryProfileByUserId(userId: string): Promise<DirectoryProfile | undefined>;
   listAllDirectoryProfiles(): Promise<DirectoryProfile[]>;
   listPublicDirectoryProfiles(): Promise<DirectoryProfile[]>;
+  listPublicDirectoryProfilesWithUsers(): Promise<Array<DirectoryProfile & {
+    userFirstName: string | null;
+    userLastName: string | null;
+    userIsVerified: boolean;
+  }>>;
   createDirectoryProfile(profile: InsertDirectoryProfile): Promise<DirectoryProfile>;
   updateDirectoryProfile(id: string, profile: Partial<InsertDirectoryProfile>): Promise<DirectoryProfile>;
   deleteDirectoryProfile(id: string): Promise<void>;
