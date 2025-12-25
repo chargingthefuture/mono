@@ -38,7 +38,11 @@
     <!-- Comic book border color -->
     <color name="border_color">#FF404040</color> <!-- Medium gray (oklch 0.25 0 0) -->
     
-    <!-- Error colors - Comic book style uses green for destructive -->
-    <color name="error_light">#4ADE80</color> <!-- Green for errors (comic book style) -->
-    <color name="error_dark">#4ADE80</color> <!-- Green for errors -->
+    <!-- Error colors - High contrast red for WCAG AAA accessibility compliance -->
+    <color name="error_light">#FFEF4444</color> <!-- High contrast red for errors (WCAG AAA) -->
+    <color name="error_dark">#FFEF4444</color> <!-- High contrast red for errors (WCAG AAA) -->
+    
+    <!-- Warning colors - High contrast amber for WCAG AAA accessibility compliance -->
+    <color name="warning_light">#FFF59E0B</color> <!-- High contrast amber for warnings (WCAG AAA) -->
+    <color name="warning_dark">#FFF59E0B</color> <!-- High contrast amber for warnings (WCAG AAA) -->
 </resources>

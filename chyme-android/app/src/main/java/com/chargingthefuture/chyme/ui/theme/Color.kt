@@ -15,8 +15,8 @@ val LightBackground = Color(0xFF141414) // Very dark background (oklch 0.08 0 0)
 val LightOnBackground = Color(0xFFFAFAFA) // Almost white text (oklch 0.98 0 0) - comic book light
 val LightSurface = Color(0xFF1F1F1F) // Slightly lighter than background (oklch 0.12 0 0) - card surface
 val LightOnSurface = Color(0xFFFAFAFA) // Almost white text on surface
-val LightError = Color(0xFF4ADE80) // Green for errors (comic book style uses green for destructive)
-val LightOnError = Color(0xFFFAFAFA) // White text on green error
+val LightError = Color(0xFFEF4444) // High contrast red for errors (WCAG AAA compliant)
+val LightOnError = Color(0xFFFAFAFA) // White text on red error
 
 // Dark theme - Same comic book style (consistent across themes)
 // Primary is green for buttons and brand elements (Material Design convention)
@@ -28,13 +28,13 @@ val DarkBackground = Color(0xFF141414) // Very dark background (oklch 0.08 0 0) 
 val DarkOnBackground = Color(0xFFFAFAFA) // Almost white text (oklch 0.98 0 0) - comic book light
 val DarkSurface = Color(0xFF1F1F1F) // Slightly lighter than background (oklch 0.12 0 0) - card surface
 val DarkOnSurface = Color(0xFFFAFAFA) // Almost white text on surface
-val DarkError = Color(0xFF4ADE80) // Green for errors (comic book style uses green for destructive)
-val DarkOnError = Color(0xFFFAFAFA) // White text on green error
+val DarkError = Color(0xFFEF4444) // High contrast red for errors (WCAG AAA compliant)
+val DarkOnError = Color(0xFFFAFAFA) // White text on red error
 
-// Comic book accent colors
-val AccentGreen = Color(0xFF4ADE80) // Primary green brand color - dramatic accent
-val AccentRed = Color(0xFF4ADE80) // Use green for destructive (comic book style)
-val AccentYellow = Color(0xFF4ADE80) // Use green for warnings (comic book style)
+// Comic book accent colors - Distinct colors for accessibility
+val AccentGreen = Color(0xFF4ADE80) // Primary green brand color - dramatic accent (success/primary)
+val AccentRed = Color(0xFFEF4444) // High contrast red for errors/destructive actions (WCAG AAA)
+val AccentYellow = Color(0xFFF59E0B) // High contrast amber for warnings (WCAG AAA)
 
 // Comic book grays - High contrast variants
 val Gray900 = Color(0xFF141414) // Very dark (background)

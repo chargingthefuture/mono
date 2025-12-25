@@ -13,7 +13,7 @@
         <item name="android:colorBackground">@color/background_dark</item>
         <item name="colorSurface">@color/surface_dark</item>
         <item name="colorOnSurface">@color/on_surface_dark</item>
-        <!-- Error colors - Comic book style uses green for destructive -->
+        <!-- Error colors - High contrast red for WCAG AAA accessibility compliance -->
         <item name="colorError">@color/error_dark</item>
         <item name="colorOnError">@color/white</item>
         <!-- Status bar color - Green accent -->
