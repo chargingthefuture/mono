@@ -11,107 +11,87 @@ import Link from "next/link"
 const problemSolutions: Record<string, string[]> = {
   "Do idiots constantly try to get close to you physically, while aiming their cell phones at you and/or staring at their cell phones while invading your personal space?": [
     "SupportMatch", // Accountability partners to document incidents
-    "CompareNotes", // Document patterns and share with community
     "Chat Groups", // Connect with others experiencing similar
+    "GentlePulse", // Manage stress and anxiety
   ],
-  "Do your co workers that you have always been friendly with, suddenly start acting strange towards you and distancing themselves from you?": [
-    "SupportMatch", // Find supportive accountability partners
-    "Chat Groups", // Connect with understanding community
+  "Do your co-workers that you have always been friendly with, suddenly start acting strange towards you and distancing themselves from you?": [
+    "Workforce Recruiter", // Track job applications and applications
     "Directory", // Find new professional connections
+    "GentlePulse", // Manage stress and anxiety
   ],
   "Do idiots sit parked in their cars outside your home all the time?": [
-    "SupportMatch", // Document with accountability partner
-    "CompareNotes", // Track patterns and share evidence
     "LightHouse", // Find safe alternative housing
+    "CompareNotes", // Track patterns and share evidence
+    "GentlePulse", // Manage stress and anxiety
   ],
   "Do morons constantly get in your way and block you from where you are going out in public?/cut you in line?/hold up the line?": [
-    "SupportMatch", // Document incidents with partner
-    "TrustTransport", // Avoid public spaces, use safe rides
-    "CompareNotes", // Document patterns
+    "GentlePulse", // Manage stress and anxiety
+    "SocketRelay", // Get items through community
+    "Directory", // Find new professional connections
   ],
   "Did all your neighbors suddenly move, have their houses quickly sold and construction work done on them, then quickly have 'new neighbors' (who don't really seem to live there move in)?": [
     "LightHouse", // Find safe alternative housing
-    "SupportMatch", // Document with accountability partner
-    "CompareNotes", // Share patterns with community
   ],
   "Have any new street lamps/antennas been installed around your home/work recently?": [
+    "LightHouse", // Consider relocation if needed
     "CompareNotes", // Document and research patterns
-    "SupportMatch", // Share concerns with accountability partner
-    "Chat Groups", // Connect with others tracking similar
   ],
   "Do drones hover around you /your home/work/all the time?": [
-    "CompareNotes", // Document incidents and patterns
-    "SupportMatch", // Accountability partner to verify
     "LightHouse", // Consider relocation if needed
+    "CompareNotes", // Document incidents and patterns
   ],
   "Do you experience tinnitus/ringing in ears?": [
     "GentlePulse", // Meditation and wellness support
-    "SupportMatch", // Emotional support partner
-    "CompareNotes", // Research and document symptoms
+    "CompareNotes",
+    "Directory", // Research and document symptoms
   ],
   "Do police officers follow/harass you for no good reason?": [
-    "SupportMatch", // Document with accountability partner
+    "GentlePulse", // Manage stress and anxiety
     "CompareNotes", // Track incidents and patterns
     "Chat Groups", // Connect with others experiencing similar
-  ],
-  "Do you get denied assistance by government agencies based on arbitrary 'rules' that don't fit your situation, but they only operate in 'black and white' so they claim that you must be denied anyway?": [
-    "Workforce Recruiter", // Track job search and applications
-    "CompareNotes", // Document denials and patterns
-    "SupportMatch", // Get support navigating systems
+    "Directory", // Build new professional connections
   ],
   "Do your neighbors always seem to come outside when you are there, then go inside when you do?": [
-    "SupportMatch", // Document patterns with partner
-    "CompareNotes", // Track and share patterns
     "LightHouse", // Consider safe housing alternatives
   ],
   "Do different people seem to be coming and going from neighbors houses around you all the time?": [
-    "CompareNotes", // Document suspicious activity
-    "SupportMatch", // Share concerns with accountability partner
     "LightHouse", // Find safer housing
   ],
   "Do several of your neighbors have strange colored lights coming out their windows at night?": [
-    "CompareNotes", // Document and research
-    "SupportMatch", // Share with accountability partner
     "LightHouse", // Consider relocation
   ],
   "Do people you don't know stare at you strangely/treat you bad for no reason?": [
     "SupportMatch", // Find supportive community
     "Chat Groups", // Connect with understanding peers
-    "Directory", // Build new positive connections
+    "GentlePulse", // Build new positive connections
   ],
   "Are new people pushing hard for you to be their new 'friend/roommate/romantic partner?": [
     "SupportMatch", // Find genuine accountability partners
     "Chat Groups", // Connect with safe community
-    "Directory", // Build authentic professional connections
+    "GentlePulse",
+    "Chyme", // Build authentic professional connections
   ],
   "Do people seem to know things about you that you have never told them before?": [
-    "CompareNotes", // Document and research patterns
     "SupportMatch", // Share concerns with trusted partner
-    "Chat Groups", // Connect with others experiencing similar
-  ],
-  "Do you hear strange clicking noises on your phone when you make phone calls?": [
-    "CompareNotes", // Document phone issues
-    "SupportMatch", // Share concerns with partner
-    "Chat Groups", // Use Signal-based secure communication
+    "Chat Groups",
+    "GentlePulse",
+    "Chyme" // Connect with others experiencing similar
   ],
   "Do people you don't know constantly try to talk to you/befriend you while you are out in public?": [
     "SupportMatch", // Find genuine connections
-    "TrustTransport", // Avoid public spaces, use safe rides
-    "Chat Groups", // Connect with verified community
+    "Chat Groups",
+    "Chyme" // Connect with verified community
   ],
   "Do strange things happen around you a lot? (people fighting/arguing in the streets/causing scenes that seem staged?": [
     "CompareNotes", // Document staged incidents
-    "SupportMatch", // Share with accountability partner
-    "TrustTransport", // Avoid problematic areas
+    "LightHouse" // Share with accountability partner
   ],
   "Do you get denied jobs/housing for no good reason?": [
-    "Workforce Recruiter", // Track job applications and denials
-    "LightHouse", // Find safe housing alternatives
-    "SupportMatch", // Get support navigating systems
+    "Workforce Recruiter",
+    "Directory" // Track job applications and denials
   ],
   "Do you live close to a freemason lodge? Or know someone who is a freemason?": [
     "CompareNotes", // Research and document connections
-    "SupportMatch", // Share concerns with partner
     "LightHouse", // Consider relocation if needed
   ],
   "Does trying to do simple things like fill out an online job application become an ordeal due to endless clicking that brings you nowhere? or website conveniently won't load when you try to submit applications or important documents?": [
