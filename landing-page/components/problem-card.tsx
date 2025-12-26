@@ -17,6 +17,10 @@ import {
   Mail,
   CheckCircle2,
 } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+} from "@/components/ui/dialog"
 
 const serviceIcons: Record<string, typeof Home> = {
   LightHouse: Home,
@@ -53,6 +57,7 @@ export function ProblemCard({
   imagePlaceholder,
 }: ProblemCardProps) {
   const [imageError, setImageError] = useState(false)
+  const [isImageDialogOpen, setIsImageDialogOpen] = useState(false)
 
   return (
     <div
@@ -77,9 +82,23 @@ export function ProblemCard({
             src={imagePlaceholder}
             alt=""
             fill
-            className="object-cover group-hover:scale-110 transition-transform"
+            className="object-cover group-hover:scale-110 transition-transform cursor-pointer"
             onError={() => setImageError(true)}
+            onClick={(e) => {
+              e.stopPropagation()
+              setIsImageDialogOpen(true)
+            }}
             unoptimized
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault()
+                e.stopPropagation()
+                setIsImageDialogOpen(true)
+              }
+            }}
+            aria-label="Click to view full image"
           />
         ) : (
           <div className="w-full h-full flex items-center justify-center bg-accent/20">
@@ -92,6 +111,29 @@ export function ProblemCard({
           </div>
         )}
       </div>
+
+      {/* Full Image Dialog */}
+      <Dialog open={isImageDialogOpen} onOpenChange={setIsImageDialogOpen}>
+        <DialogContent className="max-w-[95vw] max-h-[95vh] p-2 sm:p-4 border-[4px] border-foreground">
+          <div className="relative w-full h-full max-h-[90vh] flex items-center justify-center bg-background overflow-auto">
+            {!imageError ? (
+              <Image
+                src={imagePlaceholder}
+                alt="Full comic panel"
+                width={1200}
+                height={800}
+                className="w-auto h-auto max-w-full max-h-[90vh] object-contain"
+                unoptimized
+                priority
+              />
+            ) : (
+              <div className="w-full h-full min-h-[200px] flex items-center justify-center bg-accent/20">
+                <span className="font-[var(--font-bangers)] text-6xl text-muted-foreground">?</span>
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Problem Text */}
       <div className="p-3 sm:p-4 space-y-3">
