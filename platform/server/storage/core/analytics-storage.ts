@@ -19,10 +19,10 @@ import { logError } from "../../errorLogger";
 import { getWeekStart, getWeekEnd, formatDate, getDaysInWeek } from "./utils";
 
 /**
- * Helper function to identify test users by email pattern or user ID
+ * Helper function to identify test users by email pattern, user ID, or name
  * Test users are created during E2E tests and security tests
  */
-function isTestUser(user: { id?: string; email: string | null } | null | undefined): boolean {
+function isTestUser(user: { id?: string; email: string | null; firstName?: string | null; lastName?: string | null } | null | undefined): boolean {
   if (!user) return false;
   
   // Check user ID pattern: test-user-{timestamp}-{random}
@@ -30,28 +30,40 @@ function isTestUser(user: { id?: string; email: string | null } | null | undefin
     return true;
   }
   
-  // Check email patterns
-  if (!user.email) return false;
-  
-  const email = user.email;
-  
-  // SQL injection test email pattern (from security tests)
-  if (email === "test' OR '1'='1" || email === "test' OR '1'='1'") {
+  // Check name pattern: "Test User" (CI-created test user)
+  const firstName = user.firstName?.trim().toLowerCase() || '';
+  const lastName = user.lastName?.trim().toLowerCase() || '';
+  if (firstName === 'test' && lastName === 'user') {
     return true;
   }
   
-  const emailLower = email.toLowerCase();
+  // Check email patterns
+  if (!user.email) return false;
+  
+  // Trim whitespace and convert to lowercase for consistent matching
+  const email = String(user.email).trim().toLowerCase();
+  
+  // SQL injection test email pattern (from security tests)
+  // CI creates users with email: test' OR '1'='1'
+  if (email === "test' or '1'='1" || email === "test' or '1'='1'") {
+    return true;
+  }
+  
+  // Also check for SQL injection pattern with regex (more flexible)
+  if (/^test'\s+or\s+'1'='1'?$/i.test(email)) {
+    return true;
+  }
   
   // Common test email patterns (for seed scripts and other test data)
   const testPatterns = [
-    /@example\.com$/i,                    // Any @example.com email
-    /^e2e-test@/i,                       // E2E test user
-    /^payment-test-\d+@example\.com$/i,  // Payment test users
-    /^test.*@example\.com$/i,            // Generic test@example.com
-    /^seed-.*@example\.com$/i,            // Seed script users
+    /@example\.com$/,                     // Any @example.com email
+    /^e2e-test/,                         // E2E test user (e2e-test@example.com, etc.)
+    /^payment-test-\d+@example\.com$/,   // Payment test users
+    /^test.*@example\.com$/,             // Generic test@example.com
+    /^seed-.*@example\.com$/,            // Seed script users
   ];
   
-  return testPatterns.some(pattern => pattern.test(emailLower));
+  return testPatterns.some(pattern => pattern.test(email));
 }
 
 export class AnalyticsStorage {
