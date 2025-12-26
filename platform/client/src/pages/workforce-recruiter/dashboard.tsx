@@ -177,31 +177,33 @@ export default function WorkforceRecruiterDashboard() {
     : 0;
 
   return (
-    <div className="p-4 sm:p-6 md:p-8 space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-semibold mb-2">Workforce Recruiter Tracker</h1>
-          <p className="text-muted-foreground">
+    <div className="p-4 sm:p-6 md:p-8 space-y-6 max-w-full overflow-x-hidden">
+      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div className="flex-1 min-w-0">
+          <h1 className="text-xl sm:text-2xl md:text-3xl font-semibold mb-2">Workforce Recruiter Tracker</h1>
+          <p className="text-sm sm:text-base text-muted-foreground">
             Track recruitment and distribution of workforce for a community of {config?.population.toLocaleString() || "5,000,000"}
           </p>
         </div>
-        <div className="flex gap-2">
-          <Link href="/apps/workforce-recruiter/occupations">
-            <Button variant="outline" data-testid="button-view-occupations">
-              <Briefcase className="w-4 h-4 mr-2" />
-              View Occupations
+        <div className="flex flex-col sm:flex-row gap-2 sm:flex-shrink-0">
+          <Link href="/apps/workforce-recruiter/occupations" className="w-full sm:w-auto">
+            <Button variant="outline" data-testid="button-view-occupations" className="w-full sm:w-auto text-xs sm:text-sm">
+              <Briefcase className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">View Occupations</span>
+              <span className="sm:hidden">Occupations</span>
             </Button>
           </Link>
-          <Link href="/apps/workforce-recruiter/reports">
-            <Button variant="outline" data-testid="button-view-reports">
-              <BarChart3 className="w-4 h-4 mr-2" />
+          <Link href="/apps/workforce-recruiter/reports" className="w-full sm:w-auto">
+            <Button variant="outline" data-testid="button-view-reports" className="w-full sm:w-auto text-xs sm:text-sm">
+              <BarChart3 className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
               Reports
             </Button>
           </Link>
-          <Link href="/apps/workforce-recruiter/meetup-events">
-            <Button variant="outline" data-testid="button-view-meetup-events">
-              <Calendar className="w-4 h-4 mr-2" />
-              Meetup Events
+          <Link href="/apps/workforce-recruiter/meetup-events" className="w-full sm:w-auto">
+            <Button variant="outline" data-testid="button-view-meetup-events" className="w-full sm:w-auto text-xs sm:text-sm">
+              <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Meetup Events</span>
+              <span className="sm:hidden">Events</span>
             </Button>
           </Link>
         </div>
@@ -280,12 +282,12 @@ export default function WorkforceRecruiterDashboard() {
               </div>
               <Progress value={summaryReport?.percentRecruited || 0} className="h-3" />
             </div>
-            <div className="grid grid-cols-2 gap-4 text-sm">
-              <div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4 text-sm">
+              <div className="break-words">
                 <span className="text-muted-foreground">Remaining Capacity: </span>
                 <span className="font-medium">{remainingCapacity.toLocaleString()}</span>
               </div>
-              <div>
+              <div className="break-words">
                 <span className="text-muted-foreground">Min Recruitable: </span>
                 <span className="font-medium">{config?.minRecruitable.toLocaleString() || "2,000,000"}</span>
               </div>
