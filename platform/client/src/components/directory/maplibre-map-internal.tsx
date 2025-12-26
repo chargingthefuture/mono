@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import Map, { Marker, Popup, ViewState } from "react-map-gl/maplibre";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { useErrorHandler } from "@/hooks/useErrorHandler";
@@ -28,7 +28,20 @@ export default function MapLibreMapInternal({ locations }: MapLibreMapInternalPr
   const [selectedLocation, setSelectedLocation] = useState<LocationWithCoords | null>(null);
   const [mapError, setMapError] = useState<string | null>(null);
   const [viewState, setViewState] = useState<ViewState | null>(null);
-  const { handleError } = useErrorHandler({ showToast: true, toastTitle: "Map Error" });
+  const { handleError } = useErrorHandler({ showToast: false }); // Don't show toast, we handle UI ourselves
+
+  // Check WebGL on mount
+  useEffect(() => {
+    try {
+      const canvas = document.createElement("canvas");
+      const gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+      if (!gl) {
+        setMapError("WebGL is not supported on this device. Please use a different browser or device.");
+      }
+    } catch (e) {
+      setMapError("Failed to initialize WebGL. Please refresh or try again later.");
+    }
+  }, []);
 
   // Calculate bounds to fit all markers
   const bounds = useMemo(() => {
@@ -167,9 +180,19 @@ export default function MapLibreMapInternal({ locations }: MapLibreMapInternalPr
       }}
       scrollZoom={true}
       onError={(e: any) => {
-        const errorMessage = e?.error?.message || "Failed to load map";
-        setMapError(errorMessage);
-        handleError(new Error(errorMessage), "Map Error");
+        const errorMessage = e?.error?.message || e?.message || "Failed to load map";
+        // Check if it's a WebGL error
+        const isWebGLError = 
+          errorMessage.toLowerCase().includes("webgl") ||
+          errorMessage.toLowerCase().includes("failed to initialize") ||
+          errorMessage.toLowerCase().includes("context lost");
+        
+        const displayMessage = isWebGLError
+          ? "Failed to initialize WebGL. Please refresh or try again later."
+          : errorMessage;
+        
+        setMapError(displayMessage);
+        handleError(new Error(displayMessage), "Map Error");
       }}
       onMove={handleMove}
     >

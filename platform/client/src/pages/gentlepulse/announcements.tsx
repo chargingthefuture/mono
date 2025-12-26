@@ -5,7 +5,7 @@ import type { GentlepulseAnnouncement } from "@shared/schema";
 
 export default function GentlePulseAnnouncements() {
   const { data: announcements, isLoading } = useQuery<GentlepulseAnnouncement[]>({
-    queryKey: ["/api/gentlepulse/admin/announcements"], // Admin endpoint shows all (including inactive)
+    queryKey: ["/api/gentlepulse/announcements"], // Public endpoint shows active announcements
   });
 
   if (isLoading) {
