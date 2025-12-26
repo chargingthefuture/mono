@@ -179,14 +179,8 @@ export class AnalyticsStorage {
       return true;
     });
 
-    // Get all users to identify test users (needed for filtering payments and login events)
-    const allUsers = await db.select().from(users);
-    const testUserIds = new Set<string>(
-      allUsers.filter(user => isTestUser(user)).map(user => user.id)
-    );
-
     // Get payments for current week
-    const currentWeekPaymentsRaw = await db
+    const currentWeekPayments = await db
       .select()
       .from(payments)
       .where(
@@ -196,11 +190,8 @@ export class AnalyticsStorage {
         )
       );
 
-    // Filter out payments from test users
-    const currentWeekPayments = currentWeekPaymentsRaw.filter(p => !testUserIds.has(p.userId));
-
     // Get payments for previous week
-    const previousWeekPaymentsRaw = await db
+    const previousWeekPayments = await db
       .select()
       .from(payments)
       .where(
@@ -210,11 +201,8 @@ export class AnalyticsStorage {
         )
       );
 
-    // Filter out payments from test users
-    const previousWeekPayments = previousWeekPaymentsRaw.filter(p => !testUserIds.has(p.userId));
-
     // Get login events for current week
-    const currentWeekLoginEventsRaw = await db
+    const currentWeekLoginEvents = await db
       .select()
       .from(loginEvents)
       .where(
@@ -224,11 +212,8 @@ export class AnalyticsStorage {
         )
       );
 
-    // Filter out login events from test users
-    const currentWeekLoginEvents = currentWeekLoginEventsRaw.filter(e => !testUserIds.has(e.userId));
-
     // Get login events for previous week
-    const previousWeekLoginEventsRaw = await db
+    const previousWeekLoginEvents = await db
       .select()
       .from(loginEvents)
       .where(
@@ -237,9 +222,6 @@ export class AnalyticsStorage {
           lte(loginEvents.createdAt, previousWeekEnd),
         )
       );
-
-    // Filter out login events from test users
-    const previousWeekLoginEvents = previousWeekLoginEventsRaw.filter(e => !testUserIds.has(e.userId));
 
     // Calculate daily active users
     const currentWeekDays = getDaysInWeek(currentWeekStart);
@@ -380,25 +362,23 @@ export class AnalyticsStorage {
       
       // MRR: All active monthly subscriptions for the current month
       // A monthly subscription is active if billingMonth matches the current month
-      const allMonthlyPaymentsRaw = await db
+      const allMonthlyPayments = await db
         .select()
         .from(payments)
         .where(eq(payments.billingPeriod, 'monthly'));
       
-      // Filter out payments from test users, then filter to only payments where billingMonth matches current month
-      const allMonthlyPayments = allMonthlyPaymentsRaw.filter(p => !testUserIds.has(p.userId));
+      // Filter to only payments where billingMonth matches current month
       const activeMonthlyPayments = allMonthlyPayments.filter(p => p.billingMonth === currentMonthStr);
       mrr = activeMonthlyPayments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
       
       // Calculate ARR (Annual Recurring Revenue)
       // ARR: All active yearly subscriptions where current month falls within the subscription period
-      const allYearlyPaymentsRaw = await db
+      const allYearlyPayments = await db
         .select()
         .from(payments)
         .where(eq(payments.billingPeriod, 'yearly'));
       
-      // Filter out payments from test users, then filter to only payments where current month is within the subscription period
-      const allYearlyPayments = allYearlyPaymentsRaw.filter(p => !testUserIds.has(p.userId));
+      // Filter to only payments where current month is within the subscription period
       const activeYearlyPayments = allYearlyPayments.filter(p => {
         if (!p.yearlyStartMonth || !p.yearlyEndMonth) {
           // If yearly subscription doesn't have start/end months, exclude it
@@ -412,7 +392,7 @@ export class AnalyticsStorage {
       arr = yearlyRevenue;
 
       // Calculate MAU (Monthly Active Users)
-      const monthlyLoginEventsRaw = await db
+      const monthlyLoginEvents = await db
         .select()
         .from(loginEvents)
         .where(
@@ -421,9 +401,6 @@ export class AnalyticsStorage {
             lte(loginEvents.createdAt, monthEnd),
           )
         );
-
-      // Filter out login events from test users
-      const monthlyLoginEvents = monthlyLoginEventsRaw.filter(e => !testUserIds.has(e.userId));
 
       const activeUserIds = new Set(monthlyLoginEvents.map(e => e.userId));
       mau = activeUserIds.size;
@@ -439,9 +416,7 @@ export class AnalyticsStorage {
       const previousMonthStr = `${previousMonthStart.getFullYear()}-${String(previousMonthStart.getMonth() + 1).padStart(2, '0')}`;
       
       // Get all payments to determine active subscriptions
-      const allPaymentsForChurnRaw = await db.select().from(payments);
-      // Filter out payments from test users
-      const allPaymentsForChurn = allPaymentsForChurnRaw.filter(p => !testUserIds.has(p.userId));
+      const allPaymentsForChurn = await db.select().from(payments);
       
       // Previous month active users: users with active subscriptions in previous month
       const previousMonthActiveUserIds = new Set<string>();
@@ -476,9 +451,7 @@ export class AnalyticsStorage {
       churnRate = totalPreviousMonthActiveUsers === 0 ? 0 : (churnedUsers / totalPreviousMonthActiveUsers) * 100;
 
       // Calculate CLV (Customer Lifetime Value)
-      const allPaymentsRaw = await db.select().from(payments);
-      // Filter out payments from test users
-      const allPayments = allPaymentsRaw.filter(p => !testUserIds.has(p.userId));
+      const allPayments = await db.select().from(payments);
       const userTotalRevenue = new Map<string, number>();
       allPayments.forEach(p => {
         const current = userTotalRevenue.get(p.userId) || 0;
@@ -522,7 +495,7 @@ export class AnalyticsStorage {
         previousWeekMonthARR = previousWeekMonthYearlyPayments.reduce((sum, p) => sum + parseFloat(p.amount), 0);
 
         // Previous week's month MAU
-        const previousWeekMonthLoginEventsRaw = await db
+        const previousWeekMonthLoginEvents = await db
           .select()
           .from(loginEvents)
           .where(
@@ -531,8 +504,6 @@ export class AnalyticsStorage {
               lte(loginEvents.createdAt, previousWeekMonthEnd),
             )
           );
-        // Filter out login events from test users
-        const previousWeekMonthLoginEvents = previousWeekMonthLoginEventsRaw.filter(e => !testUserIds.has(e.userId));
         const previousWeekMonthActiveUserIds = new Set(previousWeekMonthLoginEvents.map(e => e.userId));
         previousWeekMonthMAU = previousWeekMonthActiveUserIds.size;
 
@@ -571,12 +542,10 @@ export class AnalyticsStorage {
 
         // Previous week's month CLV (same calculation as current, but calculated at that point in time)
         // For CLV, we calculate based on all payments up to the end of previous week's month
-        const prevWeekMonthAllPaymentsRaw = await db
+        const prevWeekMonthAllPayments = await db
           .select()
           .from(payments)
           .where(lte(payments.paymentDate, previousWeekMonthEnd));
-        // Filter out payments from test users
-        const prevWeekMonthAllPayments = prevWeekMonthAllPaymentsRaw.filter(p => !testUserIds.has(p.userId));
         const prevWeekMonthUserTotalRevenue = new Map<string, number>();
         prevWeekMonthAllPayments.forEach(p => {
           const current = prevWeekMonthUserTotalRevenue.get(p.userId) || 0;
@@ -688,15 +657,11 @@ export class AnalyticsStorage {
         .from(users)
         .where(lte(users.createdAt, currentWeekEnd));
       
-      // Filter out deleted users (those with IDs starting with "deleted_user_") and test users
+      // Filter out deleted users (those with IDs starting with "deleted_user_")
       const currentWeekUsers = currentWeekUsersRaw.filter(user => {
         if (!user || !user.id) return false;
         const id = String(user.id);
-        // Exclude deleted users
-        if (id.startsWith("deleted_user_")) return false;
-        // Exclude test users
-        if (isTestUser(user)) return false;
-        return true;
+        return !id.startsWith("deleted_user_");
       });
       
       totalUsersCurrentWeek = currentWeekUsers.length;
@@ -713,15 +678,11 @@ export class AnalyticsStorage {
         .from(users)
         .where(lte(users.createdAt, previousWeekEnd));
       
-      // Filter out deleted users and test users
+      // Filter out deleted users
       const previousWeekUsers = previousWeekUsersRaw.filter(user => {
         if (!user || !user.id) return false;
         const id = String(user.id);
-        // Exclude deleted users
-        if (id.startsWith("deleted_user_")) return false;
-        // Exclude test users
-        if (isTestUser(user)) return false;
-        return true;
+        return !id.startsWith("deleted_user_");
       });
       
       totalUsersPreviousWeek = previousWeekUsers.length;
