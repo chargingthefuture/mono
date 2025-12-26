@@ -69,16 +69,16 @@ const problemSolutions: Record<string, string[]> = {
     "Chyme",
   ],
   "Do people seem to know things about you that you have never told them before?": [
-    "SupportMatch", // Share concerns with trusted partner
-    "Chat Groups", // Connect with understanding peers
-    "GentlePulse", // Manage stress and anxiety
-    "Chyme", // Connect with others experiencing similar experiences
+    "SupportMatch",
+    "Chat Groups",
+    "GentlePulse",
+    "Chyme",
   ],
   "Do people you don't know constantly try to talk to you/befriend you while you are out in public?": [
-    "SupportMatch", // Share concerns with trusted partner
-    "Chat Groups", // Connect with understanding peers
-    "GentlePulse", // Manage stress and anxiety
-    "Chyme", // Connect with others experiencing similar experiences
+    "SupportMatch",
+    "Chat Groups",
+    "GentlePulse",
+    "Chyme",
   ],
   "Do strange things happen around you a lot? (people fighting/arguing in the streets/causing scenes that seem staged?": [
     "CompareNotes",
@@ -94,110 +94,110 @@ const problemSolutions: Record<string, string[]> = {
     "LightHouse",
   ],
   "Does trying to do simple things like fill out an online job application become an ordeal due to endless clicking that brings you nowhere? or website conveniently won't load when you try to submit applications or important documents?": [
-    "Workforce Recruiter", // Track applications and technical issues
+    "Workforce Recruiter",
     "Directory",
-    "CompareNotes", // Document website problems
+    "CompareNotes",
   ],
   "Do doctors deny you proper care?/ghost you?/tell you you are fine when you know something is wrong?/not get back to you with test results, then claim to have never received them, or have 'no record' of them.": [
-    "Workforce Recruiter", // Track applications and technical issues
-    "Directory", // Track job applications and denials
+    "Workforce Recruiter",
+    "Directory",
   ],
   "Do you hear strange humming/buzzing noises/sound of a machine running around you a lot, but can't pinpoint exactly where it's coming from?": [
-    "CompareNotes", // Document and research sounds
-    "GentlePulse", // Manage stress and anxiety
+    "CompareNotes",
+    "GentlePulse",
   ],
   "Does your mail get lost/tampered with a lot?": [
-    "LostMail", // Track mail incidents
-    "CompareNotes", // Document website problems
-    "Workforce Recruiter", // Track applications and technical issues
-    "Directory", // Track job applications and denials
+    "LostMail",
+    "CompareNotes",
+    "Workforce Recruiter",
+    "Directory",
   ],
   "Do you get tired more than you should?": [
-    "GentlePulse", // Track mood and wellness
-    "CompareNotes", // Document symptoms
+    "GentlePulse",
+    "CompareNotes",
   ],
   "Do people try to bait you into doing drugs? buying guns? buying self-defense gear? drinking? committing illegal acts?": [
-    "SupportMatch", // Find accountability partners
-    "Chat Groups", // Connect with supportive community
-    "GentlePulse", // Wellness and stress management
-    "CompareNotes", // Document symptoms
+    "SupportMatch",
+    "Chat Groups",
+    "GentlePulse",
+    "CompareNotes",
     "Chyme",
   ],
   "If you are a woman, do perverted guys you don't know or just met straight up ask you for sex?": [
-    "SupportMatch", // Find accountability partners
-    "Chat Groups", // Connect with supportive community
-    "GentlePulse", // Wellness and stress management
-    "CompareNotes", // Document symptoms
+    "SupportMatch",
+    "Chat Groups",
+    "GentlePulse",
+    "CompareNotes",
     "Chyme",
   ],
   "If you are sitting in your car minding your own business do idiots come and park right by/next to you and sit there too? usually buried in their phone? even if you are parked in an isolated area?": [
-    "SupportMatch", // Find accountability partners
-    "Chat Groups", // Connect with supportive community
-    "GentlePulse", // Wellness and stress management
-    "CompareNotes", // Document symptoms
+    "SupportMatch",
+    "Chat Groups",
+    "GentlePulse",
+    "CompareNotes",
     "Chyme",
   ],
   "Do idiots constantly shine their bright headlights/flashlights/dews on you?": [
-    "CompareNotes", // Track incidents
-    "TrustTransport", // Avoid driving in problematic areas
+    "CompareNotes",
+    "TrustTransport",
   ],
   "Do you often pull up to an empty store, and then it suddenly becomes busy after you go in? even at non busy business hours?": [
-    "SocketRelay", // Get items delivered instead
+    "SocketRelay",
     "Workforce Recruiter",
     "Directory",
   ],
   "Do weirdos try to get you to say bad things about other people? as if they are recording you?": [
-    "SupportMatch", // Learn to recognize manipulation
-    "Chat Groups", // Connect with understanding community
-    "CompareNotes", // Document attempts
+    "SupportMatch",
+    "Chat Groups",
+    "CompareNotes",
     "Chyme",
   ],
   "Have you been falsely accused of shoplifting, then still treated like a criminal after you have proven you did not steal anything?": [
-    "CompareNotes", // Document false accusations
-    "SupportMatch", // Get support and accountability
-    "Chat Groups", // Share experiences
+    "CompareNotes",
+    "SupportMatch",
+    "Chat Groups",
     "Chyme",
   ],
   "Do you notice strange flashes of light wherever you go? or at home/work?": [
-    "CompareNotes", // Document and research
-    "SupportMatch", // Share with accountability partner
+    "CompareNotes",
+    "SupportMatch",
     "Chat Groups",
     "Chyme",
-    "LightHouse", // Consider relocation if needed
+    "LightHouse",
   ],
   "Does everyone around you seem to be keeping some sort of a secret?": [
-    "SupportMatch", // Find genuine connections
-    "Chat Groups", // Connect with transparent community
-    "Directory", // Build authentic relationships
+    "SupportMatch",
+    "Chat Groups",
+    "Directory",
     "Chyme",
   ],
   "Do weirdos offer you rides/solicit you for prostitution when you are just trying to walk down the street? even during the day?": [
-    "TrustTransport", // Use safe, verified transportation
-    "SupportMatch", // Find accountability partners
-    "Chat Groups", // Connect with safe community
+    "TrustTransport",
+    "SupportMatch",
+    "Chat Groups",
     "Chyme",
   ],
   "Do you get strange phone calls/texts from numbers you don't know a lot?": [
-    "Chat Groups", // Use Signal-based secure communication
-    "CompareNotes", // Document suspicious contacts
-    "SupportMatch", // Share concerns with partner
+    "Chat Groups",
+    "CompareNotes",
+    "SupportMatch",
     "Chyme",
   ],
   "Do your pets seem to sense that something is off/someone you don't know is near?": [
-    "SupportMatch", // Trust your instincts and partner's validation
-    "CompareNotes", // Document pet behavior patterns
-    "LightHouse", // Consider if environment is unsafe
+    "SupportMatch",
+    "CompareNotes",
+    "LightHouse",
     "Chyme",
     "Chat Groups",
   ],
   "Do people seem like they are only pretending to be your friend/partner?": [
-    "SupportMatch", // Find genuine accountability partners
-    "Chat Groups", // Connect with authentic community
-    "Directory", // Build real professional connections
+    "SupportMatch",
+    "Chat Groups",
+    "Directory",
   ],
   "Do store/hotel clerks suddenly act strangely when you give your name/id?": [
-    "CompareNotes", // Document incidents
-    "SupportMatch", // Share with accountability partner
+    "CompareNotes",
+    "SupportMatch",
   ],
   "If you go to walmart/target do the theft detectors beep once quickly when you walk in?": [
     "CompareNotes",
@@ -205,30 +205,30 @@ const problemSolutions: Record<string, string[]> = {
     "SocketRelay",
   ],
   "Do people like to waste your time, sending you on wild goose chases to accomplish simple tasks/appointments?": [
-    "Workforce Recruiter", // Track if related to job search
-    "SocketRelay", // Get items through community instead
+    "Workforce Recruiter",
+    "SocketRelay",
     "Directory",
   ],
   "Anytime you have to call a customer service line you are put on hold forever only to be hung up on and start the cycle again and again?": [
-    "Workforce Recruiter", // Track if related to benefits/applications
+    "Workforce Recruiter",
     "Directory",
   ],
   "Do you have an unusually large amount of car problems?": [
-    "MechanicMatch", // Find trusted mechanics
+    "MechanicMatch",
   ],
   "Do items disappear, then reappear weeks/months later?": [
-    "SocketRelay", // Get items through community
+    "SocketRelay",
     "Lighthouse",
   ],
   "Do people you've never introduced yourself to somehow already know your name?": [
-    "CompareNotes", // Document incidents
-    "SupportMatch", // Share concerns with partner
-    "Chat Groups", // Connect with others experiencing similar
+    "CompareNotes",
+    "SupportMatch",
+    "Chat Groups",
     "Chyme",
   ],
   "Do you experience unexplained bruising/cuts/pain/injuries?": [
-    "CompareNotes", // Document injuries
-    "GentlePulse", // Manage pain and stress
+    "CompareNotes",
+    "GentlePulse",
   ],
 }
 
