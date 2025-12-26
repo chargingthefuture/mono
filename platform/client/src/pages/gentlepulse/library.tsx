@@ -32,15 +32,17 @@ export default function GentlePulseLibrary() {
   });
 
   useEffect(() => {
-    // Show mood dialog if eligible and hasn't been shown today
+    // Show mood dialog if eligible and hasn't been shown in this session
+    // Backend already enforces 7-day check, so we only need to prevent showing multiple times per session
     if (moodEligible?.eligible) {
-      const lastShown = localStorage.getItem("gentlepulse_mood_last_shown");
-      const today = new Date().toDateString();
-      if (lastShown !== today) {
+      const sessionKey = `gentlepulse_mood_shown_${clientId}`;
+      const shownThisSession = sessionStorage.getItem(sessionKey);
+      if (!shownThisSession) {
         setShowMoodDialog(true);
+        sessionStorage.setItem(sessionKey, "true");
       }
     }
-  }, [moodEligible]);
+  }, [moodEligible, clientId]);
 
   // Fetch favorites - always fetch if clientId exists, but only use when filtering
   const { data: favoriteIds = [] } = useQuery<string[]>({
@@ -101,7 +103,11 @@ export default function GentlePulseLibrary() {
   });
 
   const handleMoodSubmitted = (showSafety: boolean) => {
-    localStorage.setItem("gentlepulse_mood_last_shown", new Date().toDateString());
+    // Backend already tracks submission date, no need for localStorage
+    // Clear session flag so it can show again after 7 days (when backend says eligible)
+    if (clientId) {
+      sessionStorage.removeItem(`gentlepulse_mood_shown_${clientId}`);
+    }
     if (showSafety) {
       setShowSafetyMessage(true);
     }

@@ -16,15 +16,12 @@ const problemSolutions: Record<string, string[]> = {
   "Do your co-workers that you have always been friendly with, suddenly start acting strange towards you and distancing themselves from you?": [
     "Workforce Recruiter", // Track job applications and applications
     "Directory", // Find new professional connections
-    "GentlePulse", // Manage stress and anxiety
   ],
   "Do idiots sit parked in their cars outside your home all the time?": [
     "LightHouse", // Find safe alternative housing
     "CompareNotes", // Track patterns and share evidence
-    "GentlePulse", // Manage stress and anxiety
   ],
   "Do morons constantly get in your way and block you from where you are going out in public?/cut you in line?/hold up the line?": [
-    "GentlePulse", // Manage stress and anxiety
     "SocketRelay", // Get items through community
     "Directory", // Find new professional connections
   ],
