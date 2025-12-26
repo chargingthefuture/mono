@@ -13,7 +13,7 @@ const problemSolutions: Record<string, string[]> = {
     "GentlePulse",
     "Chyme",
   ],
-  "Do your co-workers that you have always been friendly with, suddenly start acting strange towards you and distancing themselves from you?": [
+  "Do your co-workers that you have always been friendly with, suddenly start acting strange towards you and distancing themselves from you? Are they lie about your work performance, try to get you to quit or begin bumping shoulders with you?": [
     "Workforce Recruiter",
     "Directory",
   ],
