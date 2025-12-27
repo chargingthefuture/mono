@@ -423,7 +423,6 @@ export default function WorkforceRecruiterAdminOccupations() {
                     <th className="text-left p-2 text-sm font-medium">Sector</th>
                     <th className="text-left p-2 text-sm font-medium">Occupation</th>
                     <th className="text-right p-2 text-sm font-medium">Target</th>
-                    <th className="text-right p-2 text-sm font-medium">Recruited</th>
                     <th className="text-center p-2 text-sm font-medium">Skill</th>
                     <th className="text-right p-2 text-sm font-medium">Training Target</th>
                     <th className="text-center p-2 text-sm font-medium">Actions</th>
@@ -435,7 +434,6 @@ export default function WorkforceRecruiterAdminOccupations() {
                       <td className="p-2 text-sm">{occupation.sector}</td>
                       <td className="p-2 text-sm font-medium">{occupation.occupationTitle}</td>
                       <td className="p-2 text-sm text-right">{occupation.headcountTarget.toLocaleString()}</td>
-                      <td className="p-2 text-sm text-right">{occupation.currentRecruited.toLocaleString()}</td>
                       <td className="p-2 text-center">
                         <Badge variant={getSkillLevelBadgeVariant(occupation.skillLevel)}>
                           {occupation.skillLevel}

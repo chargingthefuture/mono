@@ -473,10 +473,10 @@ export function registerWorkforceRecruiterRoutes(app: Express) {
       
       // Occupations
       csvRows.push('Occupations');
-      csvRows.push('Sector,Occupation Title,Headcount Target,Current Recruited,Skill Level,Annual Training Target,Notes');
+      csvRows.push('Sector,Occupation Title,Headcount Target,Skill Level,Annual Training Target,Notes');
       occupations.forEach(occ => {
         const notes = (occ.notes || '').replace(/,/g, ';').replace(/\n/g, ' ');
-        csvRows.push(`${occ.sector},${occ.occupationTitle},${occ.headcountTarget},${occ.currentRecruited},${occ.skillLevel},${occ.annualTrainingTarget},"${notes}"`);
+        csvRows.push(`${occ.sector},${occ.occupationTitle},${occ.headcountTarget},${occ.skillLevel},${occ.annualTrainingTarget},"${notes}"`);
       });
       
       const csv = csvRows.join('\n');

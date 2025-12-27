@@ -4,7 +4,6 @@ import { useParams, Link } from "wouter";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
 import { ArrowLeft, Calendar } from "lucide-react";
 import { AnnouncementBanner } from "@/components/announcement-banner";
 import { PaginationControls } from "@/components/pagination-controls";
@@ -57,10 +56,6 @@ export default function WorkforceRecruiterOccupationDetail() {
       </div>
     );
   }
-
-  const percentFilled = occupation.headcountTarget > 0
-    ? (occupation.currentRecruited / occupation.headcountTarget) * 100
-    : 0;
 
   const getSkillLevelBadgeVariant = (skillLevel: string) => {
     switch (skillLevel) {
@@ -130,27 +125,8 @@ export default function WorkforceRecruiterOccupationDetail() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <div className="flex justify-between text-sm mb-2">
-                <span className="text-muted-foreground">Recruitment Progress</span>
-                <span className="font-medium">{percentFilled.toFixed(1)}%</span>
-              </div>
-              <Progress value={Math.min(percentFilled, 100)} className="h-3" />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <p className="text-sm text-muted-foreground">Headcount Target</p>
-                <p className="text-2xl font-bold">{occupation.headcountTarget.toLocaleString()}</p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Current Recruited</p>
-                <p className="text-2xl font-bold">{occupation.currentRecruited.toLocaleString()}</p>
-              </div>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Remaining</p>
-              <p className="text-xl font-semibold">
-                {(occupation.headcountTarget - occupation.currentRecruited).toLocaleString()}
-              </p>
+              <p className="text-sm text-muted-foreground">Headcount Target</p>
+              <p className="text-2xl font-bold">{occupation.headcountTarget.toLocaleString()}</p>
             </div>
           </CardContent>
         </Card>

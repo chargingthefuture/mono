@@ -86,7 +86,6 @@ export const workforceRecruiterOccupations = pgTable("workforce_recruiter_occupa
   headcountTarget: integer("headcount_target").notNull(),
   skillLevel: varchar("skill_level", { length: 20 }).notNull(), // 'Foundational', 'Intermediate', 'Advanced'
   annualTrainingTarget: integer("annual_training_target").notNull(),
-  currentRecruited: integer("current_recruited").notNull().default(0),
   notes: text("notes"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
@@ -96,7 +95,6 @@ export const insertWorkforceRecruiterOccupationSchema = createInsertSchema(workf
   id: true,
   createdAt: true,
   updatedAt: true,
-  currentRecruited: true,
 }).extend({
   sector: z.string().min(1, "Sector is required").max(100),
   occupationTitle: z.string().min(1, "Occupation title is required").max(200),

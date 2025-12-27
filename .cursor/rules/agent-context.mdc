@@ -179,6 +179,8 @@ Each service is a self-contained mini-app with its own:
 - Frontend pages
 - Sidebar navigation
 
+**🚨 CRITICAL:** The webapp should be mobile responsive. All pages should render correctly on an iPhone SE, for example.
+
 **🚨 CRITICAL:** Never mix concerns between mini-apps. Each operates independently.
 
 ## 🔧 How to Add a New Feature

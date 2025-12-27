@@ -6,7 +6,6 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "wouter";
-import { Progress } from "@/components/ui/progress";
 import { Label } from "@/components/ui/label";
 import { useFuzzySearch } from "@/hooks/useFuzzySearch";
 import { PaginationControls } from "@/components/pagination-controls";
@@ -184,50 +183,34 @@ export default function OccupationsPage() {
                     <th className="text-left p-2 text-sm font-medium">Sector</th>
                     <th className="text-left p-2 text-sm font-medium">Occupation</th>
                     <th className="text-right p-2 text-sm font-medium">Target</th>
-                    <th className="text-right p-2 text-sm font-medium">Recruited</th>
-                    <th className="text-center p-2 text-sm font-medium">Progress</th>
                     <th className="text-center p-2 text-sm font-medium">Skill</th>
                     <th className="text-right p-2 text-sm font-medium">Annual Training</th>
                     <th className="text-center p-2 text-sm font-medium">View</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredOccupations.map((occupation) => {
-                    const percentFilled = occupation.headcountTarget > 0
-                      ? (occupation.currentRecruited / occupation.headcountTarget) * 100
-                      : 0;
-                    return (
-                      <tr key={occupation.id} className="border-b hover:bg-accent/50">
-                        <td className="p-2 text-sm">{occupation.sector}</td>
-                        <td className="p-2 text-sm font-medium">{occupation.occupationTitle}</td>
-                        <td className="p-2 text-sm text-right">{occupation.headcountTarget.toLocaleString()}</td>
-                        <td className="p-2 text-sm text-right">{occupation.currentRecruited.toLocaleString()}</td>
-                        <td className="p-2">
-                          <div className="space-y-1">
-                            <Progress value={Math.min(percentFilled, 100)} className="h-2" />
-                            <p className="text-xs text-center text-muted-foreground">
-                              {percentFilled.toFixed(1)}%
-                            </p>
-                          </div>
-                        </td>
-                        <td className="p-2 text-center">
-                          <Badge variant={getSkillLevelBadgeVariant(occupation.skillLevel)}>
-                            {occupation.skillLevel}
-                          </Badge>
-                        </td>
-                        <td className="p-2 text-sm text-right">{occupation.annualTrainingTarget.toLocaleString()}</td>
-                        <td className="p-2">
-                          <div className="flex items-center justify-center">
-                            <Link href={`/apps/workforce-recruiter/occupations/${occupation.id}`}>
-                              <Button variant="ghost" size="sm" data-testid={`button-view-${occupation.id}`}>
-                                <Eye className="w-4 h-4" />
-                              </Button>
-                            </Link>
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
+                  {filteredOccupations.map((occupation) => (
+                    <tr key={occupation.id} className="border-b hover:bg-accent/50">
+                      <td className="p-2 text-sm">{occupation.sector}</td>
+                      <td className="p-2 text-sm font-medium">{occupation.occupationTitle}</td>
+                      <td className="p-2 text-sm text-right">{occupation.headcountTarget.toLocaleString()}</td>
+                      <td className="p-2 text-center">
+                        <Badge variant={getSkillLevelBadgeVariant(occupation.skillLevel)}>
+                          {occupation.skillLevel}
+                        </Badge>
+                      </td>
+                      <td className="p-2 text-sm text-right">{occupation.annualTrainingTarget.toLocaleString()}</td>
+                      <td className="p-2">
+                        <div className="flex items-center justify-center">
+                          <Link href={`/apps/workforce-recruiter/occupations/${occupation.id}`}>
+                            <Button variant="ghost" size="sm" data-testid={`button-view-${occupation.id}`}>
+                              <Eye className="w-4 h-4" />
+                            </Button>
+                          </Link>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
