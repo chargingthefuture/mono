@@ -42,8 +42,8 @@ const serviceDescriptions: Record<string, string> = {
   SocketRelay: "Get items through our community when stores are problematic",
   CompareNotes: "Document patterns, incidents, and share evidence with the community",
   GentlePulse: "Manage stress, anxiety, and wellness when dealing with constant harassment",
-  Chyme: "Social audio conversations away from from perps",
-  "Chat Groups": "Connect with others experiencing similar situations in reall time chats via Signal",
+  Chyme: "Social audio conversations away from perps",
+  "Chat Groups": "Connect with others experiencing similar situations in real-time chats via Signal",
   LostMail: "Track mail tampering, loss, and delays with detailed incident reports",
 }
 
