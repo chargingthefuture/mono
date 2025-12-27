@@ -411,14 +411,38 @@ export class WorkforceRecruiterReports {
     const percent = target > 0 ? (recruited / target) * 100 : 0;
 
     // Get job titles from occupations
-    const jobTitleIds = occupations.map(occ => occ.jobTitleId).filter((id): id is string => id !== null);
-    const jobTitles = jobTitleIds.length > 0
-      ? await db.select().from(skillsJobTitles).where(inArray(skillsJobTitles.id, jobTitleIds))
+    const jobTitleIdsFromOccupations = occupations.map(occ => occ.jobTitleId).filter((id): id is string => id !== null);
+    
+    // Also get all job titles that belong to this sector (from skills table)
+    // This ensures we count profiles with job titles in the sector even if they're not in occupations
+    const allSectors = await db.select().from(skillsSectors);
+    const sectorRecord = allSectors.find(s => normalizeString(s.name) === normalizedSector);
+    const jobTitleIdsFromSector = sectorRecord
+      ? (await db.select().from(skillsJobTitles).where(eq(skillsJobTitles.sectorId, sectorRecord.id))).map(jt => jt.id)
+      : [];
+    
+    // Also get job titles directly from profiles in this sector
+    // This catches cases where profiles have job titles that might not be in occupations or the sector lookup
+    const jobTitleIdsFromProfiles = new Set<string>();
+    profilesInSector.forEach(profile => {
+      if (profile.jobTitles && profile.jobTitles.length > 0) {
+        profile.jobTitles.forEach(jobTitleId => {
+          jobTitleIdsFromProfiles.add(jobTitleId);
+        });
+      }
+    });
+    
+    // Combine job title IDs from all sources (occupations, sector, and profiles)
+    const allJobTitleIds = Array.from(new Set([...jobTitleIdsFromOccupations, ...jobTitleIdsFromSector, ...Array.from(jobTitleIdsFromProfiles)]));
+    
+    // Get all job titles (from both sources)
+    const jobTitles = allJobTitleIds.length > 0
+      ? await db.select().from(skillsJobTitles).where(inArray(skillsJobTitles.id, allJobTitleIds))
       : [];
 
     // Pre-load all job title skills for efficient matching
-    const allJobTitleSkills = jobTitleIds.length > 0
-      ? await db.select().from(skillsSkills).where(inArray(skillsSkills.jobTitleId, jobTitleIds))
+    const allJobTitleSkills = allJobTitleIds.length > 0
+      ? await db.select().from(skillsSkills).where(inArray(skillsSkills.jobTitleId, allJobTitleIds))
       : [];
     
     // Build a map of jobTitleId -> normalized skill names for fast lookup
@@ -428,7 +452,7 @@ export class WorkforceRecruiterReports {
     const jobTitleCounts = new Map<string, number>();
     
     // Initialize all job titles with 0 count
-    jobTitleIds.forEach(jobTitleId => {
+    allJobTitleIds.forEach(jobTitleId => {
       jobTitleCounts.set(jobTitleId, 0);
     });
     
@@ -449,7 +473,7 @@ export class WorkforceRecruiterReports {
           profile.skills.map(skill => normalizeString(skill))
         );
         
-        jobTitleIds.forEach(jobTitleId => {
+        allJobTitleIds.forEach(jobTitleId => {
           // Skip if already counted via direct job title match
           if (profile.jobTitles && profile.jobTitles.includes(jobTitleId)) {
             return;
@@ -469,9 +493,16 @@ export class WorkforceRecruiterReports {
       }
     });
     
-    // Include all job titles from occupations in this sector, even if count is 0
-    // This ensures users can see what job titles exist in the sector, even if not filled yet
+    // Build job title breakdown:
+    // 1. Always include job titles from occupations (even with 0 count) - so users see what's available
+    // 2. Also include job titles from profiles that have a count > 0 (even if not in occupations)
+    const jobTitleIdsFromOccupationsSet = new Set(jobTitleIdsFromOccupations);
     const jobTitleBreakdown = jobTitles
+      .filter(jobTitle => {
+        // Include if: (1) it's from an occupation, OR (2) it has a count > 0
+        const count = jobTitleCounts.get(jobTitle.id) || 0;
+        return jobTitleIdsFromOccupationsSet.has(jobTitle.id) || count > 0;
+      })
       .map(jobTitle => {
         const count = jobTitleCounts.get(jobTitle.id) || 0;
         return {

@@ -21,6 +21,7 @@ import type { IChatGroupsStorage } from '../types/chatgroups-storage.interface';
 import type { IGentlePulseStorage } from '../types/gentlepulse-storage.interface';
 import type { IChymeStorage } from '../types/chyme-storage.interface';
 import type { IWorkforceRecruiterStorage } from '../types/workforce-recruiter-storage.interface';
+import type { IBlogStorage } from '../types/blog-storage.interface';
 import type { IDefaultAliveOrDeadStorage } from '../types/default-alive-or-dead-storage.interface';
 
 import {
@@ -37,6 +38,7 @@ import {
   GentlePulseStorageComposed,
   ChymeStorageComposed,
   WorkforceRecruiterStorageComposed,
+  BlogStorageComposed,
   DefaultAliveOrDeadStorageComposed,
 } from './mini-apps';
 
@@ -67,7 +69,7 @@ function delegate<T extends (...args: any[]) => any>(
 export class MiniAppsStorageComposed 
   implements ISupportMatchStorage, ILighthouseStorage, IMechanicMatchStorage, ISocketRelayStorage, IDirectoryStorage, ISkillsStorage,
              IResearchStorage, ILostMailStorage, ITrustTransportStorage, IChatGroupsStorage, IGentlePulseStorage, IChymeStorage,
-             IWorkforceRecruiterStorage, IDefaultAliveOrDeadStorage {
+             IWorkforceRecruiterStorage, IBlogStorage, IDefaultAliveOrDeadStorage {
   
   private supportMatchStorage: SupportMatchStorageComposed;
   private lighthouseStorage: LighthouseStorageComposed;
@@ -82,6 +84,7 @@ export class MiniAppsStorageComposed
   private gentlePulseStorage: GentlePulseStorageComposed;
   private chymeStorage: ChymeStorageComposed;
   private workforceRecruiterStorage: WorkforceRecruiterStorageComposed;
+  private blogStorage: BlogStorageComposed;
   private defaultAliveOrDeadStorage: DefaultAliveOrDeadStorageComposed;
 
   constructor() {
@@ -98,6 +101,7 @@ export class MiniAppsStorageComposed
     this.gentlePulseStorage = new GentlePulseStorageComposed();
     this.chymeStorage = new ChymeStorageComposed();
     this.workforceRecruiterStorage = new WorkforceRecruiterStorageComposed();
+    this.blogStorage = new BlogStorageComposed();
     this.defaultAliveOrDeadStorage = new DefaultAliveOrDeadStorageComposed();
   }
 
@@ -497,6 +501,23 @@ export class MiniAppsStorageComposed
   getAllWorkforceRecruiterAnnouncements = delegate(() => this.workforceRecruiterStorage, 'getAllWorkforceRecruiterAnnouncements');
   updateWorkforceRecruiterAnnouncement = delegate(() => this.workforceRecruiterStorage, 'updateWorkforceRecruiterAnnouncement');
   deactivateWorkforceRecruiterAnnouncement = delegate(() => this.workforceRecruiterStorage, 'deactivateWorkforceRecruiterAnnouncement');
+
+  // ========================================
+  // BLOG OPERATIONS
+  // ========================================
+
+  getPublishedBlogPosts = delegate(() => this.blogStorage, 'getPublishedBlogPosts');
+  getBlogPostBySlug = delegate(() => this.blogStorage, 'getBlogPostBySlug');
+  getAllBlogPosts = delegate(() => this.blogStorage, 'getAllBlogPosts');
+  createBlogPost = delegate(() => this.blogStorage, 'createBlogPost');
+  updateBlogPost = delegate(() => this.blogStorage, 'updateBlogPost');
+  deleteBlogPost = delegate(() => this.blogStorage, 'deleteBlogPost');
+  getBlogCommentsForTopic = delegate(() => this.blogStorage, 'getBlogCommentsForTopic');
+  createBlogAnnouncement = delegate(() => this.blogStorage, 'createBlogAnnouncement');
+  getActiveBlogAnnouncements = delegate(() => this.blogStorage, 'getActiveBlogAnnouncements');
+  getAllBlogAnnouncements = delegate(() => this.blogStorage, 'getAllBlogAnnouncements');
+  updateBlogAnnouncement = delegate(() => this.blogStorage, 'updateBlogAnnouncement');
+  deactivateBlogAnnouncement = delegate(() => this.blogStorage, 'deactivateBlogAnnouncement');
 
   // ========================================
   // DEFAULT ALIVE OR DEAD OPERATIONS

@@ -8,6 +8,8 @@ import { Switch, Route } from "wouter";
 import { ProtectedRoute, AdminRoute, RootRoute } from "./route-wrappers";
 import NotFound from "@/pages/not-found";
 import Terms from "@/pages/terms";
+import BlogIndex from "@/pages/blog/index";
+import BlogPostPage from "@/pages/blog/post";
 import Services from "@/pages/services";
 import UserPayments from "@/pages/user-payments";
 import DeleteAccount from "@/pages/account/delete";

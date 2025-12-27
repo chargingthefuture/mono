@@ -144,6 +144,12 @@ const baseAdminMenuItems = [
     testId: "link-gentlepulse-admin",
   },
   {
+    title: "Blog Admin",
+    url: "/apps/blog/admin",
+    icon: PenSquare,
+    testId: "link-blog-admin",
+  },
+  {
     title: "Chyme Admin",
     url: "/apps/chyme/admin",
     icon: Radio,
@@ -273,6 +279,13 @@ const miniAppMenuItems = [
     url: "/apps/trusttransport",
     icon: Car,
     testId: "link-trusttransport",
+  },
+  {
+    title: "Blog",
+    url: "/blog",
+    icon: PenSquare,
+    testId: "link-blog",
+    showBeta: true,
   },
 ];
 

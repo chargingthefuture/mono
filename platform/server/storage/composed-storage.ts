@@ -524,6 +524,23 @@ export class DatabaseStorage implements IStorage {
   deactivateWorkforceRecruiterAnnouncement = delegate(() => this.miniAppsStorageComposed, 'deactivateWorkforceRecruiterAnnouncement');
 
   // ========================================
+  // BLOG OPERATIONS
+  // ========================================
+
+  getPublishedBlogPosts = delegate(() => this.miniAppsStorageComposed, 'getPublishedBlogPosts');
+  getBlogPostBySlug = delegate(() => this.miniAppsStorageComposed, 'getBlogPostBySlug');
+  getAllBlogPosts = delegate(() => this.miniAppsStorageComposed, 'getAllBlogPosts');
+  createBlogPost = delegate(() => this.miniAppsStorageComposed, 'createBlogPost');
+  updateBlogPost = delegate(() => this.miniAppsStorageComposed, 'updateBlogPost');
+  deleteBlogPost = delegate(() => this.miniAppsStorageComposed, 'deleteBlogPost');
+  getBlogCommentsForTopic = delegate(() => this.miniAppsStorageComposed, 'getBlogCommentsForTopic');
+  createBlogAnnouncement = delegate(() => this.miniAppsStorageComposed, 'createBlogAnnouncement');
+  getActiveBlogAnnouncements = delegate(() => this.miniAppsStorageComposed, 'getActiveBlogAnnouncements');
+  getAllBlogAnnouncements = delegate(() => this.miniAppsStorageComposed, 'getAllBlogAnnouncements');
+  updateBlogAnnouncement = delegate(() => this.miniAppsStorageComposed, 'updateBlogAnnouncement');
+  deactivateBlogAnnouncement = delegate(() => this.miniAppsStorageComposed, 'deactivateBlogAnnouncement');
+
+  // ========================================
   // DEFAULT ALIVE OR DEAD OPERATIONS
   // ========================================
 

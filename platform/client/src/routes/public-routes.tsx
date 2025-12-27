@@ -11,6 +11,8 @@ import PublicMechanicMatchList from "@/pages/mechanicmatch/public-list";
 import PublicMechanicMatchProfile from "@/pages/mechanicmatch/public";
 import PublicCompareNotesQuestion from "@/pages/research/public";
 import Terms from "@/pages/terms";
+import BlogIndex from "@/pages/blog/index";
+import BlogPostPage from "@/pages/blog/post";
 
 export function PublicRoutes() {
   return (
@@ -27,8 +29,10 @@ export function PublicRoutes() {
       {/* Publicly viewable CompareNotes questions */}
       <Route path="/apps/comparenotes/public/:id" component={PublicCompareNotesQuestion} />
       
-      {/* Public Terms page */}
+      {/* Public Terms & Blog pages */}
       <Route path="/terms" component={Terms} />
+      <Route path="/blog" component={BlogIndex} />
+      <Route path="/blog/:slug" component={BlogPostPage} />
     </>
   );
 }

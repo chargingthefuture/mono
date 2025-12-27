@@ -988,6 +988,69 @@ CREATE INDEX IF NOT EXISTS chyme_user_blocks_blocked_user_id_idx ON chyme_user_b
 CREATE UNIQUE INDEX IF NOT EXISTS chyme_user_blocks_unique_idx ON chyme_user_blocks(user_id, blocked_user_id);
 
 -- ========================================
+-- BLOG (CONTENT-ONLY) APP TABLES
+-- ========================================
+
+-- Blog posts imported from Discourse (and future native posts)
+CREATE TABLE IF NOT EXISTS blog_posts (
+  id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+  title VARCHAR(300) NOT NULL,
+  slug VARCHAR(300) NOT NULL UNIQUE,
+  excerpt TEXT,
+  content_md TEXT NOT NULL,
+  content_html TEXT,
+  author_name VARCHAR(200),
+  source VARCHAR(50) NOT NULL DEFAULT 'discourse',
+  discourse_topic_id INTEGER,
+  discourse_post_id INTEGER,
+  tags TEXT,
+  category VARCHAR(100),
+  is_published BOOLEAN NOT NULL DEFAULT true,
+  published_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  view_count INTEGER NOT NULL DEFAULT 0,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Blog comments imported from Discourse (replies to blog posts)
+CREATE TABLE IF NOT EXISTS blog_comments (
+  id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+  discourse_topic_id INTEGER NOT NULL,
+  discourse_post_id INTEGER NOT NULL UNIQUE,
+  post_number INTEGER NOT NULL,
+  source VARCHAR(50) NOT NULL DEFAULT 'discourse',
+  content_md TEXT NOT NULL,
+  content_html TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Blog comments imported from Discourse (replies to blog posts)
+CREATE TABLE IF NOT EXISTS blog_comments (
+  id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+  discourse_topic_id INTEGER NOT NULL,
+  discourse_post_id INTEGER NOT NULL UNIQUE,
+  post_number INTEGER NOT NULL,
+  source VARCHAR(50) NOT NULL DEFAULT 'discourse',
+  content_md TEXT NOT NULL,
+  content_html TEXT,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- Blog Announcements
+CREATE TABLE IF NOT EXISTS blog_announcements (
+  id VARCHAR PRIMARY KEY DEFAULT gen_random_uuid(),
+  title VARCHAR(200) NOT NULL,
+  content TEXT NOT NULL,
+  type VARCHAR(50) NOT NULL DEFAULT 'info',
+  is_active BOOLEAN NOT NULL DEFAULT true,
+  expires_at TIMESTAMP,
+  created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+);
+
+-- ========================================
 -- WORKFORCE RECRUITER TRACKER APP TABLES
 -- ========================================
 
