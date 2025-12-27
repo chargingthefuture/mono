@@ -416,21 +416,70 @@ export class WorkforceRecruiterReports {
       ? await db.select().from(skillsJobTitles).where(inArray(skillsJobTitles.id, jobTitleIds))
       : [];
 
-    // Count job titles
+    // Pre-load all job title skills for efficient matching
+    const allJobTitleSkills = jobTitleIds.length > 0
+      ? await db.select().from(skillsSkills).where(inArray(skillsSkills.jobTitleId, jobTitleIds))
+      : [];
+    
+    // Build a map of jobTitleId -> normalized skill names for fast lookup
+    const jobTitleSkillsMap = buildJobTitleSkillsMap(allJobTitleSkills);
+
+    // Count profiles that match each job title (not occupations per job title)
     const jobTitleCounts = new Map<string, number>();
-    occupations.forEach(occ => {
-      if (occ.jobTitleId) {
-        jobTitleCounts.set(occ.jobTitleId, (jobTitleCounts.get(occ.jobTitleId) || 0) + 1);
+    
+    // Initialize all job titles with 0 count
+    jobTitleIds.forEach(jobTitleId => {
+      jobTitleCounts.set(jobTitleId, 0);
+    });
+    
+    // Count profiles matching each job title
+    profilesInSector.forEach(profile => {
+      // Method 1: Direct job title match (profile.jobTitles includes the job title ID)
+      if (profile.jobTitles && profile.jobTitles.length > 0) {
+        profile.jobTitles.forEach(jobTitleId => {
+          if (jobTitleCounts.has(jobTitleId)) {
+            jobTitleCounts.set(jobTitleId, (jobTitleCounts.get(jobTitleId) || 0) + 1);
+          }
+        });
+      }
+      
+      // Method 2: Match via skills (profile.skills match job title skills)
+      if (profile.skills && profile.skills.length > 0) {
+        const normalizedProfileSkills = new Set(
+          profile.skills.map(skill => normalizeString(skill))
+        );
+        
+        jobTitleIds.forEach(jobTitleId => {
+          // Skip if already counted via direct job title match
+          if (profile.jobTitles && profile.jobTitles.includes(jobTitleId)) {
+            return;
+          }
+          
+          const jobTitleSkills = jobTitleSkillsMap.get(jobTitleId);
+          if (jobTitleSkills && jobTitleSkills.size > 0) {
+            // Check if any profile skill matches any job title skill
+            const hasMatchingSkill = Array.from(jobTitleSkills).some(jobSkill => 
+              normalizedProfileSkills.has(jobSkill)
+            );
+            if (hasMatchingSkill) {
+              jobTitleCounts.set(jobTitleId, (jobTitleCounts.get(jobTitleId) || 0) + 1);
+            }
+          }
+        });
       }
     });
-    const jobTitleBreakdown = Array.from(jobTitleCounts.entries()).map(([id, count]) => {
-      const jobTitle = jobTitles.find(jt => jt.id === id);
-      return {
-        id,
-        name: jobTitle?.name || 'Unknown',
-        count,
-      };
-    });
+    
+    const jobTitleBreakdown = Array.from(jobTitleCounts.entries())
+      .map(([id, count]) => {
+        const jobTitle = jobTitles.find(jt => jt.id === id);
+        return {
+          id,
+          name: jobTitle?.name || 'Unknown',
+          count,
+        };
+      })
+      .filter(jt => jt.count > 0) // Only show job titles with matching profiles
+      .sort((a, b) => b.count - a.count); // Sort by count descending
 
     // Count skills from directory profiles (skills are stored as text names, not IDs)
     const skillCounts = new Map<string, number>();
@@ -468,15 +517,8 @@ export class WorkforceRecruiterReports {
       };
     }).sort((a, b) => b.count - a.count);
 
-    // Pre-load all job title skills for efficient matching
-    const allJobTitleSkills = jobTitleIds.length > 0
-      ? await db.select().from(skillsSkills).where(inArray(skillsSkills.jobTitleId, jobTitleIds))
-      : [];
-    
-    // Build a map of jobTitleId -> normalized skill names for fast lookup
-    const jobTitleSkillsMap = buildJobTitleSkillsMap(allJobTitleSkills);
-
     // Get profiles matching this sector (use case-insensitive matching)
+    // Note: jobTitleSkillsMap was already built earlier for job title counting
     const profiles = profilesInSector.map(profile => {
       const matchResult = matchProfileToOccupations(
         profile,
