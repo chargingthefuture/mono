@@ -262,17 +262,20 @@ export default function UserPayments() {
           <p className="text-sm text-muted-foreground">
             You can pay securely by card using our billing provider, powered by Clerk and Stripe.
           </p>
-          <p className="text-sm text-muted-foreground">
-            If the Pay by Card subscribe button is not working, please access the payment portal directly to subscribe:{" "}
-            <button
-              onClick={() => openExternal("https://accounts.app.chargingthefuture.com/user/billing/plans")}
-              className="text-primary underline hover:text-primary/80"
-              data-testid="link-payment-portal"
-            >
-              https://accounts.app.chargingthefuture.com/user/billing/plans
-            </button>
-            .
-          </p>
+          <div className="text-xs sm:text-sm text-muted-foreground space-y-1">
+            <p>
+              If the Pay by Card subscribe button is not working, please access the payment portal directly to subscribe:
+            </p>
+            <p>
+              <button
+                onClick={() => openExternal("https://accounts.app.chargingthefuture.com/user/billing/plans")}
+                className="text-primary underline hover:text-primary/80 break-all text-left"
+                data-testid="link-payment-portal"
+              >
+                https://accounts.app.chargingthefuture.com/user/billing/plans
+              </button>
+            </p>
+          </div>
           <div className="rounded-lg border border-dashed bg-muted/40 p-4 text-sm text-muted-foreground">
             <PricingTable
               for="user"

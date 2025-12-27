@@ -1084,7 +1084,6 @@ CREATE TABLE IF NOT EXISTS workforce_recruiter_occupations (
   headcount_target INTEGER NOT NULL,
   skill_level VARCHAR(20) NOT NULL,
   annual_training_target INTEGER NOT NULL,
-  current_recruited INTEGER NOT NULL DEFAULT 0,
   notes TEXT,
   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
   updated_at TIMESTAMP NOT NULL DEFAULT NOW()
