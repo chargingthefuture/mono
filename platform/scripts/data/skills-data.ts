@@ -682,9 +682,6 @@ export const skillsData: {
         name: "Police Officers",
         displayOrder: 1,
         skills: [
-          "Law enforcement techniques",
-          "Community policing and investigation",
-          "CCTV",
           "Evidence handling and reporting",
         ],
       },
