@@ -595,6 +595,13 @@ export const skillsData: {
           "Customer premises equipment setup",
         ],
       },
+      {
+        name: "IT Security Specialists",
+        displayOrder: 7,
+        skills: [
+          "CCTV",
+        ],
+      },
     ],
   },
   {
@@ -684,7 +691,6 @@ export const skillsData: {
         skills: [
           "Law enforcement techniques",
           "Community policing and investigation",
-          "CCTV",
           "Evidence handling and reporting",
         ],
       },
