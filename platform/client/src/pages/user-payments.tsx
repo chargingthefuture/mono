@@ -22,6 +22,7 @@ import { useToast } from "@/hooks/use-toast";
 import { PrivacyField } from "@/components/ui/privacy-field";
 import type { Payment } from "@shared/schema";
 import { formatCurrency } from "@/lib/utils";
+import { useExternalLink } from "@/hooks/useExternalLink";
 
 const PAYMENT_ACKNOWLEDGMENT_KEY = "payment-person-acknowledged";
 
@@ -47,6 +48,7 @@ const isAcknowledgmentValid = (): boolean => {
 export default function UserPayments() {
   const { user } = useAuth();
   const { toast } = useToast();
+  const { openExternal, ExternalLinkDialog } = useExternalLink();
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [acknowledged, setAcknowledged] = useState<boolean>(false);
 
@@ -259,6 +261,17 @@ export default function UserPayments() {
         <CardContent className="space-y-3">
           <p className="text-sm text-muted-foreground">
             You can pay securely by card using our billing provider, powered by Clerk and Stripe.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            If the Pay by Card subscribe button is not working, please access the payment portal directly to subscribe:{" "}
+            <button
+              onClick={() => openExternal("https://accounts.app.chargingthefuture.com/user/billing/plans")}
+              className="text-primary underline hover:text-primary/80"
+              data-testid="link-payment-portal"
+            >
+              https://accounts.app.chargingthefuture.com/user/billing/plans
+            </button>
+            .
           </p>
           <div className="rounded-lg border border-dashed bg-muted/40 p-4 text-sm text-muted-foreground">
             <PricingTable
@@ -632,6 +645,7 @@ export default function UserPayments() {
           )}
         </CardContent>
       </Card>
+      <ExternalLinkDialog />
     </div>
   );
 }
