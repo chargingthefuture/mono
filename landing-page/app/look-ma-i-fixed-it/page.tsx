@@ -15,7 +15,7 @@ const problemSolutions: Record<string, string[]> = {
     "Chyme",
   ],
   // Image: problem-2.png
-  "Do your co-workers that you have always been friendly with, suddenly start acting strange towards you and distancing themselves from you? Are they lie about your work performance, try to get you to quit or begin bumping shoulders with you?": [
+  "Do your co-workers that you have always been friendly with, suddenly start acting strange towards you and distancing themselves from you? Or they begin to lie about your work performance, try to get you to quit or begin bumping shoulders with you?": [
     "Workforce Recruiter",
     "Directory",
   ],
@@ -30,7 +30,7 @@ const problemSolutions: Record<string, string[]> = {
     "Workforce Recruiter",
   ],
   // Image: problem-5.png
-  "Did all your neighbors suddenly move, have their houses quickly sold and construction work done on them, then quickly have 'new neighbors' (who don't really seem to live there move in)?": [
+  "Did all your neighbors suddenly move, have their houses quickly sold and construction work done on them, then quickly have 'new neighbors' (who don't seem to live there move in)?": [
     "LightHouse",
   ],
   // Image: problem-6.png
@@ -38,7 +38,7 @@ const problemSolutions: Record<string, string[]> = {
     "LightHouse",
   ],
   // Image: problem-7.png
-  "Do drones hover around you /your home/work/all the time?": [
+  "Do drones hover around you/your home/work/all the time?": [
     "LightHouse",
   ],
   // Image: problem-8.png
@@ -46,7 +46,6 @@ const problemSolutions: Record<string, string[]> = {
     "GentlePulse",
     "CompareNotes",
     "Directory",
-    "Workforce Recruiter",
   ],
   // Image: problem-9.png
   "Do police officers follow/harass you for no good reason?": [
@@ -76,7 +75,7 @@ const problemSolutions: Record<string, string[]> = {
     "CompareNotes",
   ],
   // Image: problem-14.png
-  "Are new people pushing hard for you to be their new 'friend/roommate/romantic partner?": [
+  "Are new people pushing hard for you to be their new friend/roommate/romantic partner?": [
     "SupportMatch",
     "Chat Groups",
     "GentlePulse",
@@ -97,7 +96,7 @@ const problemSolutions: Record<string, string[]> = {
     "Chyme",
   ],
   // Image: problem-17.png
-  "Do strange things happen around you a lot? (people fighting/arguing in the streets/causing scenes that seem staged?": [
+  "Do strange things happen around you a lot? People fighting/arguing in the streets/causing scenes that are scripted/staged? With occasional onlookers smirking or re-enacting the scripted scenes?": [
     "CompareNotes",
     "LightHouse",
   ],
@@ -113,10 +112,9 @@ const problemSolutions: Record<string, string[]> = {
     "LightHouse",
   ],
   // Image: problem-20.png
-  "Does trying to do simple things like fill out an online job application become an ordeal due to endless clicking that brings you nowhere? or website conveniently won't load when you try to submit applications or important documents?": [
+  "Does trying to do simple things like fill out an online job application become an ordeal due to endless clicking that brings you nowhere? Or website conveniently won't load when you try to submit applications or important documents?": [
     "Workforce Recruiter",
     "Directory",
-    "CompareNotes",
   ],
   // Image: problem-21.png
   "Do doctors deny you proper care?/ghost you?/tell you you are fine when you know something is wrong?/not get back to you with test results, then claim to have never received them, or have 'no record' of them.": [
@@ -139,9 +137,10 @@ const problemSolutions: Record<string, string[]> = {
   "Do you get tired more than you should?": [
     "GentlePulse",
     "CompareNotes",
+    "LightHouse",
   ],
   // Image: problem-25.png
-  "Do people try to bait you into doing drugs? buying guns? buying self-defense gear? drinking? committing illegal acts?": [
+  "Do people try to bait you into doing drugs? buying a gun? buying self-defense gear? drinking? committing illegal acts?": [
     "SupportMatch",
     "Chat Groups",
     "GentlePulse",
@@ -157,7 +156,7 @@ const problemSolutions: Record<string, string[]> = {
     "Chyme",
   ],
   // Image: problem-27.png
-  "If you are sitting in your car minding your own business do idiots come and park right by/next to you and sit there too? usually buried in their phone? even if you are parked in an isolated area?": [
+  "If you are sitting in your car minding your own business do idiots come and park right by/next to you and sit there too? Usually buried in their phone? Even if you are parked in an isolated area?": [
     "SupportMatch",
     "Chat Groups",
     "GentlePulse",
@@ -165,18 +164,18 @@ const problemSolutions: Record<string, string[]> = {
     "Chyme",
   ],
   // Image: problem-28.png
-  "Do idiots constantly shine their bright headlights/flashlights/dews on you?": [
+  "Do idiots constantly shine their bright headlights/flashlights/DEWs on you?": [
     "CompareNotes",
     "TrustTransport",
   ],
   // Image: problem-29.png
-  "Do you often pull up to an empty store, and then it suddenly becomes busy after you go in? even at non busy business hours?": [
+  "Do you often pull up to an empty store, and then it suddenly becomes busy after you go in? Even at non busy business hours?": [
     "SocketRelay",
     "Workforce Recruiter",
     "Directory",
   ],
   // Image: problem-30.png
-  "Do weirdos try to get you to say bad things about other people? as if they are recording you?": [
+  "Do weirdos try to get you to say bad things about other people? Or force a conversation about sex, politics or celebrities as if they are recording you?": [
     "SupportMatch",
     "Chat Groups",
     "CompareNotes",
@@ -190,7 +189,7 @@ const problemSolutions: Record<string, string[]> = {
     "Chyme",
   ],
   // Image: problem-32.png
-  "Do you notice strange flashes of light wherever you go? or at home/work?": [
+  "Do you notice strange flashes of light wherever you go? Or at home/work?": [
     "CompareNotes",
     "SupportMatch",
     "Chat Groups",
@@ -205,7 +204,7 @@ const problemSolutions: Record<string, string[]> = {
     "Chyme",
   ],
   // Image: problem-34.png
-  "Do weirdos offer you rides/solicit you for prostitution when you are just trying to walk down the street? even during the day?": [
+  "Do weirdos offer you rides/solicit you for prostitution when you are just trying to walk down the street? Even during the day?": [
     "TrustTransport",
     "SupportMatch",
     "Chat Groups",
@@ -250,7 +249,7 @@ const problemSolutions: Record<string, string[]> = {
     "Directory",
   ],
   // Image: problem-41.png
-  "Anytime you have to call a customer service line you are put on hold forever only to be hung up on and start the cycle again and again?": [
+  "Anytime you have to call a customer service you are put on hold forever only to be hung up on and start the cycle again and again?": [
     "Workforce Recruiter",
     "Directory",
   ],
@@ -274,6 +273,31 @@ const problemSolutions: Record<string, string[]> = {
   "Do you experience unexplained bruising/cuts/pain/injuries?": [
     "CompareNotes",
     "GentlePulse",
+  ],
+  // Image: problem-46.png
+  "Do you notice Jehovah Witnesses following you and/or lurking in your neighborhood that were not there previously?": [
+    "LightHouse",
+  ],
+  // Image: problem-47.png
+  "Do motorcycles, fire trucks and police cars with sirens circle around you?": [
+    "LightHouse",
+    "GentlePulse"
+  ],
+  // Image: problem-48.png
+  "Do idoits mirror your behaivor and how you dress and follow you around in public smirking?": [
+    "LightHouse",
+    "Directory",
+    "Workforce Recruiter"
+  ],
+  // Image: problem-49.png
+  "Do idoit acquiantiances/family you have not see in decades or family members you never met trying to force their way into your life?": [
+    "LightHouse",
+    "Directory",
+    "Workforce Recruiter"
+  ],
+  // Image: problem-49.png
+  "Do weirdos issue attack or guard commands to have dogs bark or whimper at your presence?": [
+    "LightHouse",
   ],
 }
 
