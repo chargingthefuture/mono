@@ -226,7 +226,7 @@ export default function AdminDirectoryPage() {
 
   const handleDeleteSkillConfirm = () => {
     if (skillToDelete) {
-      deleteSkill.mutate(skillToDelete.name, {
+      deleteSkill.mutate(skillToDelete.id, {
         onSuccess: () => {
           setDeleteSkillDialogOpen(false);
           setSkillToDelete(null);

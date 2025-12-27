@@ -6,12 +6,14 @@ export function useDirectoryAdminSkills() {
   const { toast } = useToast();
 
   const deleteSkill = useMutation({
-    mutationFn: async (skillName: string) => {
-      // Send skill name in request body to avoid URL encoding issues
-      return apiRequest("DELETE", "/api/directory/admin/skills", { name: skillName });
+    mutationFn: async (skillId: string) => {
+      // Use the hierarchical skills API endpoint with skill ID
+      return apiRequest("DELETE", `/api/skills/skills/${skillId}`);
     },
     onSuccess: async () => {
+      // Invalidate both the Directory admin skills list and the main skills hierarchy
       await queryClient.invalidateQueries({ queryKey: ["/api/directory/admin/skills"] });
+      await queryClient.invalidateQueries({ queryKey: ["/api/skills/hierarchy"] });
       toast({ title: "Deleted", description: "Skill deleted successfully" });
     },
     onError: (e: any) =>
