@@ -80,50 +80,6 @@ export function DirectoryAdminProfileForm({
   return (
     <div className="space-y-4">
       <div className="space-y-2">
-        <Label>Description</Label>
-        <Textarea
-          value={formData.description}
-          onChange={(e) => onFormDataChange({ description: e.target.value.slice(0, 140) })}
-          placeholder="140 chars max"
-          rows={3}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor={`${testIdPrefix}-first-name`}>First Name</Label>
-        <Input
-          id={`${testIdPrefix}-first-name`}
-          value={formData.firstName}
-          onChange={(e) => onFormDataChange({ firstName: e.target.value })}
-          placeholder="First name (for unclaimed profiles)"
-          data-testid={`input-${testIdPrefix}-first-name`}
-        />
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor={`${testIdPrefix}-signal-url`}>Signal URL</Label>
-        <Input
-          id={`${testIdPrefix}-signal-url`}
-          type="url"
-          value={formData.signalUrl}
-          onChange={(e) => onFormDataChange({ signalUrl: e.target.value })}
-          placeholder="https://signal.me/#p/…"
-          data-testid={`input-${testIdPrefix}-signal-url`}
-        />
-        {formData.signalUrl && (
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => openExternal(formData.signalUrl)}
-            className="justify-start px-0 text-primary"
-            data-testid={`button-preview-signal-${testIdPrefix}`}
-          >
-            <ExternalLink className="w-4 h-4 mr-2" /> Open Signal link
-          </Button>
-        )}
-      </div>
-
-      <div className="space-y-2">
         <Label htmlFor={`${testIdPrefix}-quora-url`}>Quora Profile URL</Label>
         <Input
           id={`${testIdPrefix}-quora-url`}
@@ -146,6 +102,17 @@ export function DirectoryAdminProfileForm({
         )}
       </div>
 
+      <div className="space-y-2">
+        <Label htmlFor={`${testIdPrefix}-first-name`}>First Name</Label>
+        <Input
+          id={`${testIdPrefix}-first-name`}
+          value={formData.firstName}
+          onChange={(e) => onFormDataChange({ firstName: e.target.value })}
+          placeholder="First name (for unclaimed profiles)"
+          data-testid={`input-${testIdPrefix}-first-name`}
+        />
+      </div>
+
       <DirectoryAdminSkillsSelector
         skills={skills}
         selectedSkills={formData.skills}
@@ -157,23 +124,45 @@ export function DirectoryAdminProfileForm({
         required
       />
 
-      <DirectoryAdminSectorsSelector
-        sectors={sectors}
-        selectedSectors={formData.sectors}
-        onSectorsChange={(sectors) => onFormDataChange({ sectors })}
-        isLoading={isLoading.sectors}
-        labelId={`${testIdPrefix}-sectors-label`}
-        testIdPrefix={`combo-${testIdPrefix}-sectors`}
-      />
-
-      <DirectoryAdminJobTitlesSelector
-        jobTitles={jobTitles}
-        selectedJobTitles={formData.jobTitles}
-        onJobTitlesChange={(jobTitles) => onFormDataChange({ jobTitles })}
-        isLoading={isLoading.jobTitles}
-        labelId={`${testIdPrefix}-job-titles-label`}
-        testIdPrefix={`combo-${testIdPrefix}-job-titles`}
-      />
+      <div className="space-y-2">
+        <Label id={`${testIdPrefix}-country-label`}>
+          Country <span className="text-red-600">*</span>
+        </Label>
+        <Popover>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-haspopup="listbox"
+              aria-labelledby={`${testIdPrefix}-country-label`}
+              data-testid={`combo-country-${testIdPrefix}-trigger`}
+              className="w-full justify-between"
+            >
+              {formData.country || "Select country"}
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
+            <Command shouldFilter>
+              <CommandInput placeholder="Search countries…" />
+              <CommandEmpty>No countries found.</CommandEmpty>
+              <CommandGroup>
+                {COUNTRIES.map((c) => (
+                  <CommandItem
+                    key={c}
+                    value={c}
+                    onSelect={() => onFormDataChange({ country: c })}
+                    data-testid={`combo-country-${testIdPrefix}-item-${c}`}
+                    aria-selected={formData.country === c}
+                  >
+                    <Check className={`mr-2 h-4 w-4 ${formData.country === c ? "opacity-100" : "opacity-0"}`} />
+                    <span>{c}</span>
+                  </CommandItem>
+                ))}
+              </CommandGroup>
+            </Command>
+          </PopoverContent>
+        </Popover>
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-2">
@@ -225,44 +214,55 @@ export function DirectoryAdminProfileForm({
         </div>
       </div>
 
+      <DirectoryAdminSectorsSelector
+        sectors={sectors}
+        selectedSectors={formData.sectors}
+        onSectorsChange={(sectors) => onFormDataChange({ sectors })}
+        isLoading={isLoading.sectors}
+        labelId={`${testIdPrefix}-sectors-label`}
+        testIdPrefix={`combo-${testIdPrefix}-sectors`}
+      />
+
+      <DirectoryAdminJobTitlesSelector
+        jobTitles={jobTitles}
+        selectedJobTitles={formData.jobTitles}
+        onJobTitlesChange={(jobTitles) => onFormDataChange({ jobTitles })}
+        isLoading={isLoading.jobTitles}
+        labelId={`${testIdPrefix}-job-titles-label`}
+        testIdPrefix={`combo-${testIdPrefix}-job-titles`}
+      />
+
       <div className="space-y-2">
-        <Label id={`${testIdPrefix}-country-label`}>
-          Country <span className="text-red-600">*</span>
-        </Label>
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              aria-haspopup="listbox"
-              aria-labelledby={`${testIdPrefix}-country-label`}
-              data-testid={`combo-country-${testIdPrefix}-trigger`}
-              className="w-full justify-between"
-            >
-              {formData.country || "Select country"}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[--radix-popover-trigger-width] p-0" align="start">
-            <Command shouldFilter>
-              <CommandInput placeholder="Search countries…" />
-              <CommandEmpty>No countries found.</CommandEmpty>
-              <CommandGroup>
-                {COUNTRIES.map((c) => (
-                  <CommandItem
-                    key={c}
-                    value={c}
-                    onSelect={() => onFormDataChange({ country: c })}
-                    data-testid={`combo-country-${testIdPrefix}-item-${c}`}
-                    aria-selected={formData.country === c}
-                  >
-                    <Check className={`mr-2 h-4 w-4 ${formData.country === c ? "opacity-100" : "opacity-0"}`} />
-                    <span>{c}</span>
-                  </CommandItem>
-                ))}
-              </CommandGroup>
-            </Command>
-          </PopoverContent>
-        </Popover>
+        <Label>Description</Label>
+        <Textarea
+          value={formData.description}
+          onChange={(e) => onFormDataChange({ description: e.target.value.slice(0, 140) })}
+          placeholder="140 chars max"
+          rows={3}
+        />
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor={`${testIdPrefix}-signal-url`}>Signal URL</Label>
+        <Input
+          id={`${testIdPrefix}-signal-url`}
+          type="url"
+          value={formData.signalUrl}
+          onChange={(e) => onFormDataChange({ signalUrl: e.target.value })}
+          placeholder="https://signal.me/#p/…"
+          data-testid={`input-${testIdPrefix}-signal-url`}
+        />
+        {formData.signalUrl && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => openExternal(formData.signalUrl)}
+            className="justify-start px-0 text-primary"
+            data-testid={`button-preview-signal-${testIdPrefix}`}
+          >
+            <ExternalLink className="w-4 h-4 mr-2" /> Open Signal link
+          </Button>
+        )}
       </div>
 
       <label className="flex items-center gap-2 text-sm">
