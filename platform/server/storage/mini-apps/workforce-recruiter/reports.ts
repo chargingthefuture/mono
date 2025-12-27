@@ -469,17 +469,24 @@ export class WorkforceRecruiterReports {
       }
     });
     
-    const jobTitleBreakdown = Array.from(jobTitleCounts.entries())
-      .map(([id, count]) => {
-        const jobTitle = jobTitles.find(jt => jt.id === id);
+    // Include all job titles from occupations in this sector, even if count is 0
+    // This ensures users can see what job titles exist in the sector, even if not filled yet
+    const jobTitleBreakdown = jobTitles
+      .map(jobTitle => {
+        const count = jobTitleCounts.get(jobTitle.id) || 0;
         return {
-          id,
-          name: jobTitle?.name || 'Unknown',
+          id: jobTitle.id,
+          name: jobTitle.name,
           count,
         };
       })
-      .filter(jt => jt.count > 0) // Only show job titles with matching profiles
-      .sort((a, b) => b.count - a.count); // Sort by count descending
+      .sort((a, b) => {
+        // Sort by count descending, then by name ascending
+        if (b.count !== a.count) {
+          return b.count - a.count;
+        }
+        return a.name.localeCompare(b.name);
+      });
 
     // Count skills from directory profiles (skills are stored as text names, not IDs)
     const skillCounts = new Map<string, number>();
