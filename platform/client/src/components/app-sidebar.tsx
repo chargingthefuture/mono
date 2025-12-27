@@ -22,6 +22,7 @@ import {
   Briefcase,
   Activity,
   PenSquare,
+  BookOpen,
 } from "lucide-react";
 import { Link, useLocation } from "wouter";
 import { useClerk } from "@clerk/clerk-react";
@@ -303,6 +304,7 @@ export function AppSidebar() {
   const clerk = useClerk();
   const { isMobile, setOpenMobile } = useSidebar();
 
+  const blogUrl = "https://github.com/chargingthefuture/mono/wiki";
   const codeUrl = "https://github.com/chargingthefuture";
 
   // Close sidebar on mobile when navigation link is clicked
@@ -399,6 +401,15 @@ export function AppSidebar() {
         )}
       </SidebarContent>
       <SidebarFooter className="p-4 border-t space-y-2">
+        <Button
+          variant="outline"
+          className="w-full justify-start"
+          onClick={() => openExternal(blogUrl)}
+          data-testid="link-blog"
+        >
+          <BookOpen className="w-4 h-4 mr-2" />
+          Blog
+        </Button>
         <Button
           variant="outline"
           className="w-full justify-start"
