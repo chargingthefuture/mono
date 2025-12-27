@@ -17,7 +17,6 @@ import type { IChatGroupsStorage } from './chatgroups-storage.interface';
 import type { IGentlePulseStorage } from './gentlepulse-storage.interface';
 import type { IChymeStorage } from './chyme-storage.interface';
 import type { IWorkforceRecruiterStorage } from './workforce-recruiter-storage.interface';
-import type { IBlogStorage } from './blog-storage.interface';
 import type { IDefaultAliveOrDeadStorage } from './default-alive-or-dead-storage.interface';
 
 /**
@@ -37,7 +36,6 @@ export interface IMiniAppsStorage
           IGentlePulseStorage,
           IChymeStorage,
           IWorkforceRecruiterStorage,
-          IBlogStorage,
           IDefaultAliveOrDeadStorage {}
 
 // Re-export individual interfaces for convenience
@@ -54,7 +52,6 @@ export type { IChatGroupsStorage } from './chatgroups-storage.interface';
 export type { IGentlePulseStorage } from './gentlepulse-storage.interface';
 export type { IChymeStorage } from './chyme-storage.interface';
 export type { IWorkforceRecruiterStorage } from './workforce-recruiter-storage.interface';
-export type { IBlogStorage } from './blog-storage.interface';
 export type { IDefaultAliveOrDeadStorage } from './default-alive-or-dead-storage.interface';
 export type { IProfileDeletionStorage } from './profile-deletion-storage.interface';
 

@@ -30,7 +30,7 @@ import {
   type InsertSupportmatchAnnouncement,
 } from "@shared/schema";
 import { db } from "../../db";
-import { eq, and, desc, or, gte, sql, inArray } from "drizzle-orm";
+import { eq, and, desc, or, gte, lt, sql, inArray } from "drizzle-orm";
 import { NotFoundError } from "../../errors";
 import { generateAnonymizedUserId, logProfileDeletion } from "../profile-deletion";
 
@@ -243,6 +243,43 @@ export class SupportMatchStorage {
     // Filter to only unmatched users
     const unmatchedProfiles = allProfiles.filter(p => !matchedUserIds.has(p.userId));
     
+    // Get all historical partnerships to check for 6-month cooldown
+    // Calculate the date 6 months ago
+    const sixMonthsAgo = new Date();
+    sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
+    
+    // Get all partnerships that started within the last 6 months
+    const recentPartnerships = await db
+      .select()
+      .from(partnerships)
+      .where(gte(partnerships.startDate, sixMonthsAgo));
+    
+    // Create a map to track recent matches between user pairs
+    // Key: sorted user pair (userId1 < userId2), Value: most recent startDate
+    const recentMatchesMap = new Map<string, Date>();
+    recentPartnerships.forEach(p => {
+      // Create a consistent key for the pair (always sort IDs to handle both directions)
+      const [id1, id2] = [p.user1Id, p.user2Id].sort();
+      const pairKey = `${id1}:${id2}`;
+      const existingDate = recentMatchesMap.get(pairKey);
+      // Keep the most recent start date for this pair
+      if (!existingDate || p.startDate > existingDate) {
+        recentMatchesMap.set(pairKey, p.startDate);
+      }
+    });
+    
+    // Helper function to check if two users were matched within the last 6 months
+    const wereMatchedRecently = (userId1: string, userId2: string): boolean => {
+      const [id1, id2] = [userId1, userId2].sort();
+      const pairKey = `${id1}:${id2}`;
+      const lastMatchDate = recentMatchesMap.get(pairKey);
+      if (!lastMatchDate) {
+        return false; // Never matched before
+      }
+      // Check if the last match was within 6 months
+      return lastMatchDate >= sixMonthsAgo;
+    };
+    
     // Get all exclusions
     const allExclusions = await db.select().from(exclusions);
     const exclusionMap = new Map<string, Set<string>>();
@@ -255,6 +292,11 @@ export class SupportMatchStorage {
     
     // Helper function to check if two users are compatible
     const areCompatible = (user1: typeof unmatchedProfiles[0], user2: typeof unmatchedProfiles[0]): boolean => {
+      // Check if these users were matched within the last 6 months
+      if (wereMatchedRecently(user1.userId, user2.userId)) {
+        return false;
+      }
+      
       // Check gender preference compatibility (bidirectional)
       // Options: 'any' (matches any gender) or 'same_gender' (matches only same gender as user)
       const user1GenderMatch = 

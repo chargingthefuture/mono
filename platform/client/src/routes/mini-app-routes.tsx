@@ -87,8 +87,6 @@ import GentlePulseAdmin from "@/pages/gentlepulse/admin";
 import GentlePulseAdminAnnouncements from "@/pages/gentlepulse/admin-announcements";
 import GentlePulseAnnouncements from "@/pages/gentlepulse/announcements";
 import { GentlePulseBottomNav } from "@/components/gentlepulse/bottom-nav";
-import BlogAdmin from "@/pages/blog/admin";
-import BlogAdminAnnouncements from "@/pages/blog/admin-announcements";
 import ChymeDashboard from "@/pages/chyme/dashboard";
 import ChymeAdmin from "@/pages/chyme/admin";
 import ChymeAdminAnnouncements from "@/pages/chyme/admin-announcements";
@@ -557,18 +555,6 @@ export function MiniAppRoutes() {
             <GentlePulseAnnouncements />
             <GentlePulseBottomNav />
           </>
-        </ProtectedRoute>
-      </Route>
-
-      {/* Blog admin routes */}
-      <Route path="/apps/blog/admin">
-        <ProtectedRoute>
-          <BlogAdmin />
-        </ProtectedRoute>
-      </Route>
-      <Route path="/apps/blog/admin/announcements">
-        <ProtectedRoute>
-          <BlogAdminAnnouncements />
         </ProtectedRoute>
       </Route>
 

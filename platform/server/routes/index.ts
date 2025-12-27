@@ -22,7 +22,6 @@ import { registerTrustTransportRoutes } from "./trusttransport.routes";
 import { registerMechanicMatchRoutes } from "./mechanicmatch.routes";
 import { registerResearchRoutes } from "./research.routes";
 import { registerGentlePulseRoutes } from "./gentlepulse.routes";
-import { registerBlogRoutes } from "./blog.routes";
 import { registerLostMailRoutes } from "./lostmail.routes";
 import { registerChymeRoutes } from "./chyme.routes";
 import { registerChymeRoomsRoutes } from "./chyme-rooms.routes";
@@ -51,7 +50,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   registerMechanicMatchRoutes(app);
   registerResearchRoutes(app);
   registerGentlePulseRoutes(app);
-  registerBlogRoutes(app);
   registerLostMailRoutes(app);
   registerChymeRoutes(app);
   registerChymeRoomsRoutes(app);
