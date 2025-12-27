@@ -87,7 +87,7 @@ async function removeDuplicateSkills() {
 }
 
 // Run if called directly
-if (require.main === module) {
+if (import.meta.url === `file://${process.argv[1]}`) {
   removeDuplicateSkills()
     .then(() => {
       console.log("\n✅ Script completed successfully");

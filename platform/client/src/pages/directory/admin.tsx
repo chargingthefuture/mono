@@ -67,13 +67,19 @@ export default function AdminDirectoryPage() {
   const { data: users = [] } = useQuery<User[]>({ queryKey: ["/api/admin/users"] });
   const { data: skills = [], isLoading: skillsLoading } = useQuery<DirectorySkill[]>({
     queryKey: ["/api/directory/admin/skills"],
+    // Skills data can be updated by admins, so use shorter staleTime (2 minutes)
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
   const { data: availableSectors = [], isLoading: sectorsLoading } = useQuery<SkillsSector[]>({
     queryKey: ["/api/directory/sectors"],
+    // Sectors can be updated by admins, so use shorter staleTime (2 minutes)
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
   const { data: availableJobTitles = [], isLoading: jobTitlesLoading } = useQuery<SkillsJobTitle[]>({
     queryKey: ["/api/directory/job-titles"],
+    // Job titles can be updated by admins, so use shorter staleTime (2 minutes)
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
   // Create form state

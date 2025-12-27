@@ -378,7 +378,6 @@ export const skillsData: {
           "Group therapy",
           "Family systems therapy",
           "Trauma-informed therapy",
-          "Cognitive behavioral therapy",
           "Dialectical behavior therapy",
           "Art and expressive therapies",
           "Play therapy",
@@ -773,7 +772,6 @@ export const skillsData: {
         displayOrder: 3,
         skills: [
           "Legal adjudication",
-          "Case management",
           "Legal reasoning and sentencing",
         ],
       },

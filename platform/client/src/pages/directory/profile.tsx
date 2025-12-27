@@ -45,14 +45,21 @@ export default function DirectoryProfilePage() {
   });
   const { data: availableSkillsData, isLoading: skillsLoading } = useQuery<DirectorySkill[]>({
     queryKey: ["/api/directory/skills"],
+    // Skills data can be updated by admins, so use shorter staleTime (2 minutes)
+    // This ensures users see updated skills within 2 minutes of admin changes
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
   const availableSkills = availableSkillsData ?? [];
   const { data: availableSectorsData, isLoading: sectorsLoading } = useQuery<SkillsSector[]>({
     queryKey: ["/api/directory/sectors"],
+    // Sectors can be updated by admins, so use shorter staleTime (2 minutes)
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
   const availableSectors = availableSectorsData ?? [];
   const { data: availableJobTitlesData, isLoading: jobTitlesLoading } = useQuery<SkillsJobTitle[]>({
     queryKey: ["/api/directory/job-titles"],
+    // Job titles can be updated by admins, so use shorter staleTime (2 minutes)
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
   const availableJobTitles = availableJobTitlesData ?? [];
   

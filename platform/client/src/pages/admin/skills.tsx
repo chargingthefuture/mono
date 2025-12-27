@@ -38,6 +38,8 @@ export default function AdminSkillsPage() {
   // Fetch full hierarchy
   const { data: hierarchy = [], isLoading } = useQuery<SkillsHierarchy>({
     queryKey: ["/api/skills/hierarchy"],
+    // Skills hierarchy can be updated by admins, so use shorter staleTime (2 minutes)
+    staleTime: 2 * 60 * 1000, // 2 minutes
   });
 
   // Sector management
