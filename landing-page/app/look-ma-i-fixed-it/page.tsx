@@ -285,7 +285,7 @@ const problemSolutions: Record<string, string[]> = {
     "GentlePulse",
   ],
   // Image: problem-48.png
-  "Do idoits mirror your behaivor and how you dress and follow you around in public?": [
+  "Do idiots mirror your behaivor and how you dress and follow you around in public?": [
     "LightHouse",
     "Directory",
     "Workforce Recruiter",
