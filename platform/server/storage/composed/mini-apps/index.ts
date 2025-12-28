@@ -17,6 +17,5 @@ export { ChatGroupsStorageComposed } from './chatgroups-storage-composed';
 export { GentlePulseStorageComposed } from './gentlepulse-storage-composed';
 export { ChymeStorageComposed } from './chyme-storage-composed';
 export { WorkforceRecruiterStorageComposed } from './workforce-recruiter-storage-composed';
-export { BlogStorageComposed } from './blog-storage-composed';
 export { DefaultAliveOrDeadStorageComposed } from './default-alive-or-dead-storage-composed';
 

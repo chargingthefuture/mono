@@ -144,12 +144,6 @@ const baseAdminMenuItems = [
     testId: "link-gentlepulse-admin",
   },
   {
-    title: "Blog Admin",
-    url: "/apps/blog/admin",
-    icon: PenSquare,
-    testId: "link-blog-admin",
-  },
-  {
     title: "Chyme Admin",
     url: "/apps/chyme/admin",
     icon: Radio,

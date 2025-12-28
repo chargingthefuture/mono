@@ -34,7 +34,6 @@ function ConditionalNotFound() {
     "/account/",
     "/admin",
     "/terms",
-    "/blog",
   ];
   
   // Check if this location starts with any known route base

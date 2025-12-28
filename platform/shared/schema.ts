@@ -527,22 +527,3 @@ export {
   type InsertDefaultAliveOrDeadEbitdaSnapshot,
   type DefaultAliveOrDeadEbitdaSnapshot,
 } from "./schema/defaultaliveordead";
-
-// ========================================
-// BLOG (CONTENT-ONLY) APP TABLES - Re-exported from module
-// ========================================
-
-export {
-  blogPosts,
-  blogComments,
-  blogAnnouncements,
-  insertBlogPostSchema,
-  insertBlogCommentSchema,
-  insertBlogAnnouncementSchema,
-  type InsertBlogPost,
-  type BlogPost,
-  type InsertBlogComment,
-  type BlogComment,
-  type InsertBlogAnnouncement,
-  type BlogAnnouncement,
-} from "./schema/blog";
