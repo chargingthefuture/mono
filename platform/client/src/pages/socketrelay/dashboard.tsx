@@ -287,6 +287,8 @@ export default function SocketRelayDashboard() {
     );
   }
 
+  const publicSocketRelayUrl = `${window.location.origin}/apps/socketrelay/public`;
+
   return (
     <div className="p-6 md:p-8 space-y-8">
       <div className="flex items-start justify-between gap-4">
@@ -303,6 +305,86 @@ export default function SocketRelayDashboard() {
           </Button>
         </Link>
       </div>
+
+      {/* Public SocketRelay Link */}
+      <Card>
+        <CardContent className="pt-6 space-y-4">
+          <div className="space-y-2">
+            <Label className="text-sm font-medium">Public SocketRelay Link</Label>
+            <p className="text-sm text-muted-foreground">Share this link to view all public SocketRelay requests.</p>
+            <div className="flex items-center gap-2">
+              <code className="flex-1 font-mono text-xs sm:text-sm bg-muted px-2 py-1.5 rounded break-all">
+                {publicSocketRelayUrl}
+              </code>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => copyUrl(publicSocketRelayUrl)}
+                className="flex-shrink-0"
+                data-testid="button-copy-public-socketrelay"
+                aria-label="Copy public SocketRelay link"
+              >
+                {copiedUrl === publicSocketRelayUrl ? (
+                  <Check className="w-4 h-4 text-primary" />
+                ) : (
+                  <Copy className="w-4 h-4" />
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => openExternal(publicSocketRelayUrl)}
+                className="flex-shrink-0"
+                data-testid="button-open-public-socketrelay"
+              >
+                <ExternalLink className="w-4 h-4 mr-2" /> Open
+              </Button>
+            </div>
+          </div>
+          
+          {/* Wish List Link */}
+          {user?.id && (
+            <div className="space-y-2 pt-4 border-t">
+              <Label className="text-sm font-medium">My Wish List Link</Label>
+              <p className="text-sm text-muted-foreground">Share this link to show only your public requests (your wish list).</p>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 font-mono text-xs sm:text-sm bg-muted px-2 py-1.5 rounded break-all">
+                  {`${window.location.origin}/apps/socketrelay/public?user=${encodeURIComponent(user.id)}`}
+                </code>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => {
+                    const wishListUrl = `${window.location.origin}/apps/socketrelay/public?user=${encodeURIComponent(user.id)}`;
+                    copyUrl(wishListUrl);
+                  }}
+                  className="flex-shrink-0"
+                  data-testid="button-copy-wish-list"
+                  aria-label="Copy wish list link"
+                >
+                  {copiedUrl?.includes(`user=${encodeURIComponent(user.id)}`) ? (
+                    <Check className="w-4 h-4 text-primary" />
+                  ) : (
+                    <Copy className="w-4 h-4" />
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const wishListUrl = `${window.location.origin}/apps/socketrelay/public?user=${encodeURIComponent(user.id)}`;
+                    openExternal(wishListUrl);
+                  }}
+                  className="flex-shrink-0"
+                  data-testid="button-open-wish-list"
+                >
+                  <ExternalLink className="w-4 h-4 mr-2" /> Open
+                </Button>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       <AnnouncementBanner 
         apiEndpoint="/api/socketrelay/announcements"

@@ -157,9 +157,14 @@ export function registerSocketRelayRoutes(app: Express) {
       await addAntiScrapingDelay(false, 50, 200);
     }
 
+    // Check for optional user filter query parameter
+    const userId = req.query.user as string | undefined;
+    
     const requests = await withDatabaseErrorHandling(
-      () => storage.listPublicSocketrelayRequests(),
-      'listPublicSocketrelayRequests'
+      () => userId 
+        ? storage.listPublicSocketrelayRequestsByUser(userId)
+        : storage.listPublicSocketrelayRequests(),
+      userId ? 'listPublicSocketrelayRequestsByUser' : 'listPublicSocketrelayRequests'
     ) as SocketrelayRequest[];
     
     // Enrich requests with creator info

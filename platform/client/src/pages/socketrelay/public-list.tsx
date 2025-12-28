@@ -30,13 +30,19 @@ type PublicRequest = {
 };
 
 export default function PublicSocketRelayList() {
-  const [, setLocation] = useLocation();
+  const [location, setLocation] = useLocation();
   const { openExternal, ExternalLinkDialog } = useExternalLink();
   const { toast } = useToast();
   const { handleError } = useErrorHandler({ showToast: false }); // UI handles error display
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   
-  const publicSocketRelayUrl = `${window.location.origin}/apps/socketrelay/public`;
+  // Extract user query parameter from URL
+  const urlParams = new URLSearchParams(location.split("?")[1]);
+  const userId = urlParams.get("user") || undefined;
+  
+  const publicSocketRelayUrl = userId 
+    ? `${window.location.origin}/apps/socketrelay/public?user=${encodeURIComponent(userId)}`
+    : `${window.location.origin}/apps/socketrelay/public`;
   
   const copyUrl = async (url: string) => {
     try {
@@ -44,7 +50,7 @@ export default function PublicSocketRelayList() {
       setCopiedUrl(url);
       toast({
         title: "Copied!",
-        description: "Public SocketRelay link copied to clipboard",
+        description: userId ? "Wish list link copied to clipboard" : "Public SocketRelay link copied to clipboard",
       });
       setTimeout(() => setCopiedUrl(null), 2000);
     } catch (error) {
@@ -57,10 +63,15 @@ export default function PublicSocketRelayList() {
     }
   };
 
+  // Build API URL with optional user parameter
+  const apiUrl = userId 
+    ? `/api/socketrelay/public?user=${encodeURIComponent(userId)}`
+    : "/api/socketrelay/public";
+
   const { data: requests = [], isLoading, error } = useQuery<PublicRequest[]>({
-    queryKey: ["/api/socketrelay/public"],
+    queryKey: [apiUrl],
     queryFn: async () => {
-      const res = await fetch("/api/socketrelay/public");
+      const res = await fetch(apiUrl);
       if (!res.ok) {
         const errorText = await res.text();
         const error = new Error(errorText || `Failed to load requests: ${res.status} ${res.statusText}`);
@@ -70,6 +81,21 @@ export default function PublicSocketRelayList() {
       return await res.json();
     }
   });
+
+  // Get the first request's creator info for wish list header (all requests will be from same user when filtered)
+  const wishListCreator = requests.length > 0 && requests[0]?.creator 
+    ? (() => {
+        const creator = requests[0].creator;
+        if (creator.firstName) {
+          return creator.firstName;
+        }
+        if (creator.displayName) {
+          const [firstToken] = creator.displayName.split(" ");
+          return firstToken || "Someone";
+        }
+        return "Someone";
+      })()
+    : null;
 
   // Log errors to Sentry when they occur
   useEffect(() => {
@@ -116,42 +142,65 @@ export default function PublicSocketRelayList() {
         <div className="text-center space-y-4 sm:space-y-6 pt-8 sm:pt-12">
           <div className="flex items-center justify-center gap-3 mb-4">
             <Package className="w-8 h-8 sm:w-10 sm:h-10 text-primary" />
-            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold">SocketRelay</h1>
+            <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold">
+              {userId ? `${wishListCreator ? wishListCreator + "'s" : "Wish List"}` : "SocketRelay"}
+            </h1>
           </div>
-          <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
-            Find what you need or help others get the goods and services they request
-          </p>
-          <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
-            Join our community of survivors supporting each other through mutual aid and resource sharing
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
-            <Button
-              onClick={handleSignUp}
-              size="lg"
-              className="text-base sm:text-lg px-8"
-              data-testid="button-sign-up"
-            >
-              Sign Up to Get Started
-              <ArrowRight className="w-4 h-4 ml-2" />
-            </Button>
-          </div>
+          {userId ? (
+            <>
+              <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
+                {wishListCreator ? `${wishListCreator}'s public requests` : "Public requests from this user"}
+              </p>
+              <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
+                Help fulfill these requests by connecting with the requester
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-lg sm:text-xl md:text-2xl text-muted-foreground max-w-3xl mx-auto">
+                Find what you need or help others get the goods and services they request
+              </p>
+              <p className="text-base sm:text-lg text-muted-foreground max-w-2xl mx-auto">
+                Join our community of survivors supporting each other through mutual aid and resource sharing
+              </p>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4">
+                <Button
+                  onClick={handleSignUp}
+                  size="lg"
+                  className="text-base sm:text-lg px-8"
+                  data-testid="button-sign-up"
+                >
+                  Sign Up to Get Started
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </div>
+            </>
+          )}
         </div>
 
         {/* Active Requests Section */}
         <div className="space-y-6">
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-2xl sm:text-3xl font-semibold">Active Requests</h2>
+              <h2 className="text-2xl sm:text-3xl font-semibold">
+                {userId ? "Wish List Requests" : "Active Requests"}
+              </h2>
               <p className="text-muted-foreground mt-1">
-                {requests.length} {requests.length === 1 ? "request" : "requests"} currently active
+                {requests.length} {requests.length === 1 ? "request" : "requests"} {userId ? "in this wish list" : "currently active"}
               </p>
             </div>
           </div>
           
-          {/* Public SocketRelay Link */}
+          {/* Public SocketRelay Link / Wish List Link */}
           <div className="space-y-2">
-            <label className="text-sm font-medium">Public SocketRelay Link</label>
-            <p className="text-sm text-muted-foreground">Share this link to view all public SocketRelay requests.</p>
+            <label className="text-sm font-medium">
+              {userId ? "Wish List Link" : "Public SocketRelay Link"}
+            </label>
+            <p className="text-sm text-muted-foreground">
+              {userId 
+                ? "Share this link to show this user's public requests."
+                : "Share this link to view all public SocketRelay requests."}
+            </p>
             <div className="flex items-center gap-2">
               <code className="flex-1 font-mono text-xs sm:text-sm bg-muted px-2 py-1.5 rounded break-all">
                 {publicSocketRelayUrl}
@@ -161,8 +210,8 @@ export default function PublicSocketRelayList() {
                 size="icon"
                 onClick={() => copyUrl(publicSocketRelayUrl)}
                 className="flex-shrink-0"
-                data-testid="button-copy-public-socketrelay"
-                aria-label="Copy public SocketRelay link"
+                data-testid={userId ? "button-copy-wish-list" : "button-copy-public-socketrelay"}
+                aria-label={userId ? "Copy wish list link" : "Copy public SocketRelay link"}
               >
                 {copiedUrl === publicSocketRelayUrl ? (
                   <Check className="w-4 h-4 text-primary" />
@@ -175,7 +224,7 @@ export default function PublicSocketRelayList() {
                 size="sm"
                 onClick={() => openExternal(publicSocketRelayUrl)}
                 className="flex-shrink-0"
-                data-testid="button-open-public-socketrelay"
+                data-testid={userId ? "button-open-wish-list" : "button-open-public-socketrelay"}
               >
                 <ExternalLink className="w-4 h-4 mr-2" /> Open
               </Button>
@@ -187,14 +236,20 @@ export default function PublicSocketRelayList() {
               <CardContent className="pt-6">
                 <div className="text-center py-12 sm:py-16">
                   <Package className="w-12 h-12 sm:w-16 sm:h-16 text-muted-foreground mx-auto mb-4" />
-                  <p className="text-lg sm:text-xl font-medium mb-2">No active requests yet</p>
-                  <p className="text-muted-foreground mb-6">
-                    Be the first to create a request and start connecting with others
+                  <p className="text-lg sm:text-xl font-medium mb-2">
+                    {userId ? "No public requests in this wish list" : "No active requests yet"}
                   </p>
-                  <Button onClick={handleSignUp} data-testid="button-sign-up-empty">
-                    Sign Up to Create a Request
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </Button>
+                  <p className="text-muted-foreground mb-6">
+                    {userId 
+                      ? "This user hasn't created any public requests yet."
+                      : "Be the first to create a request and start connecting with others"}
+                  </p>
+                  {!userId && (
+                    <Button onClick={handleSignUp} data-testid="button-sign-up-empty">
+                      Sign Up to Create a Request
+                      <ArrowRight className="w-4 h-4 ml-2" />
+                    </Button>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -280,7 +335,7 @@ export default function PublicSocketRelayList() {
         </div>
 
         {/* Call to Action Section */}
-        {requests.length > 0 && (
+        {requests.length > 0 && !userId && (
           <Card className="bg-primary/5 border-primary/20">
             <CardContent className="pt-6">
               <div className="text-center space-y-4">

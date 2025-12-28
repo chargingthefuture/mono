@@ -119,6 +119,22 @@ export class SocketRelayStorage {
       .orderBy(desc(socketrelayRequests.createdAt));
   }
 
+  async listPublicSocketrelayRequestsByUser(userId: string): Promise<SocketrelayRequest[]> {
+    const now = new Date();
+    return await db
+      .select()
+      .from(socketrelayRequests)
+      .where(
+        and(
+          eq(socketrelayRequests.userId, userId),
+          eq(socketrelayRequests.isPublic, true),
+          eq(socketrelayRequests.status, 'active'),
+          gte(socketrelayRequests.expiresAt, now)
+        )
+      )
+      .orderBy(desc(socketrelayRequests.createdAt));
+  }
+
   async getAllSocketrelayRequests(): Promise<any[]> {
     const requests = await db
       .select()

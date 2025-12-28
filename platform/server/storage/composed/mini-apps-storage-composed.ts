@@ -238,6 +238,7 @@ export class MiniAppsStorageComposed
   getSocketrelayRequestsByUser = delegate(() => this.socketRelayStorage, 'getSocketrelayRequestsByUser');
   getPublicSocketrelayRequestById = delegate(() => this.socketRelayStorage, 'getPublicSocketrelayRequestById');
   listPublicSocketrelayRequests = delegate(() => this.socketRelayStorage, 'listPublicSocketrelayRequests');
+  listPublicSocketrelayRequestsByUser = delegate(() => this.socketRelayStorage, 'listPublicSocketrelayRequestsByUser');
   updateSocketrelayRequest = delegate(() => this.socketRelayStorage, 'updateSocketrelayRequest');
   updateSocketrelayRequestStatus = delegate(() => this.socketRelayStorage, 'updateSocketrelayRequestStatus');
   repostSocketrelayRequest = delegate(() => this.socketRelayStorage, 'repostSocketrelayRequest');

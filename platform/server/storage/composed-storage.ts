@@ -215,6 +215,7 @@ export class DatabaseStorage implements IStorage {
   getSocketrelayRequestsByUser = delegate(() => this.miniAppsStorageComposed, 'getSocketrelayRequestsByUser');
   getPublicSocketrelayRequestById = delegate(() => this.miniAppsStorageComposed, 'getPublicSocketrelayRequestById');
   listPublicSocketrelayRequests = delegate(() => this.miniAppsStorageComposed, 'listPublicSocketrelayRequests');
+  listPublicSocketrelayRequestsByUser = delegate(() => this.miniAppsStorageComposed, 'listPublicSocketrelayRequestsByUser');
   updateSocketrelayRequest = delegate(() => this.miniAppsStorageComposed, 'updateSocketrelayRequest');
   updateSocketrelayRequestStatus = delegate(() => this.miniAppsStorageComposed, 'updateSocketrelayRequestStatus');
   repostSocketrelayRequest = delegate(() => this.miniAppsStorageComposed, 'repostSocketrelayRequest');

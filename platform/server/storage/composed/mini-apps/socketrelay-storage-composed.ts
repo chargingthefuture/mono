@@ -43,6 +43,10 @@ export class SocketRelayStorageComposed implements ISocketRelayStorage {
     return this.socketRelayStorage.listPublicSocketrelayRequests();
   }
 
+  async listPublicSocketrelayRequestsByUser(userId: string) {
+    return this.socketRelayStorage.listPublicSocketrelayRequestsByUser(userId);
+  }
+
   async updateSocketrelayRequest(id: string, userId: string, description: string, isPublic?: boolean) {
     return this.socketRelayStorage.updateSocketrelayRequest(id, userId, description, isPublic);
   }

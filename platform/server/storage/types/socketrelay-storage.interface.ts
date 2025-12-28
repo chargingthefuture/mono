@@ -26,6 +26,7 @@ export interface ISocketRelayStorage {
   getSocketrelayRequestsByUser(userId: string): Promise<SocketrelayRequest[]>;
   getPublicSocketrelayRequestById(id: string): Promise<SocketrelayRequest | undefined>;
   listPublicSocketrelayRequests(): Promise<SocketrelayRequest[]>;
+  listPublicSocketrelayRequestsByUser(userId: string): Promise<SocketrelayRequest[]>;
   updateSocketrelayRequest(id: string, userId: string, description: string, isPublic?: boolean): Promise<SocketrelayRequest>;
   updateSocketrelayRequestStatus(id: string, status: string): Promise<SocketrelayRequest>;
   repostSocketrelayRequest(id: string, userId: string): Promise<SocketrelayRequest>;
