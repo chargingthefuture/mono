@@ -36,7 +36,7 @@ const serviceDescriptions: Record<string, string> = {
   LightHouse: "Find safe accommodations and escape dangerous living situations",
   TrustTransport: "Get safe rides to avoid public harassment and surveillance",
   MechanicMatch: "Connect with trusted mechanics when your car breaks down or is tampered with",
-  "Workforce Recruiter": "Review the collective skillset of the TI Skills Economy and find or expand your career amongst TIs",
+  "Workforce Recruiter": "Review the collective skillsets of the TI Skills Economy and find or expand your career amongst TIs",
   SupportMatch: "Find accountability partners who understand",
   Directory: "Build genuine professional connections away from manipulation",
   SocketRelay: "Get items through our community when stores are problematic",

@@ -273,6 +273,7 @@ const problemSolutions: Record<string, string[]> = {
   "Do you experience unexplained bruising/cuts/pain/injuries?": [
     "CompareNotes",
     "GentlePulse",
+    "Directory",
   ],
   // Image: problem-46.png
   "Do you notice Jehovah Witnesses following you and/or lurking in your neighborhood that were not there previously?": [
@@ -281,23 +282,28 @@ const problemSolutions: Record<string, string[]> = {
   // Image: problem-47.png
   "Do motorcycles, fire trucks and police cars with sirens circle around you?": [
     "LightHouse",
-    "GentlePulse"
+    "GentlePulse",
   ],
   // Image: problem-48.png
-  "Do idoits mirror your behaivor and how you dress and follow you around in public smirking?": [
+  "Do idoits mirror your behaivor and how you dress and follow you around in public?": [
     "LightHouse",
     "Directory",
-    "Workforce Recruiter"
+    "Workforce Recruiter",
   ],
   // Image: problem-49.png
   "Do idoit acquiantiances/family you have not see in decades or family members you never met trying to force their way into your life?": [
     "LightHouse",
     "Directory",
-    "Workforce Recruiter"
+    "Workforce Recruiter",
+    "Chat Groups",
+    "GentlePUlse",
   ],
   // Image: problem-49.png
   "Do weirdos issue attack or guard commands to have dogs bark or whimper at your presence?": [
     "LightHouse",
+    "GentlePusle",
+    "Chat Groups",
+    "CompareNotes",
   ],
 }
 
