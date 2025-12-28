@@ -291,14 +291,14 @@ const problemSolutions: Record<string, string[]> = {
     "Workforce Recruiter",
   ],
   // Image: problem-49.png
-  "Do idoit acquiantiances/family you have not see in decades or family members you never met trying to force their way into your life?": [
+  "Do idiot acquaintances/family you have not seen in decades, or family members you never met, try to force their way into your life?": [
     "LightHouse",
     "Directory",
     "Workforce Recruiter",
     "Chat Groups",
-    "GentlePUlse",
+    "GentlePulse",
   ],
-  // Image: problem-49.png
+  // Image: problem-50.png
   "Do weirdos issue attack or guard commands to have dogs bark or whimper at your presence?": [
     "LightHouse",
     "GentlePusle",
