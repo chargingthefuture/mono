@@ -1,0 +1,126 @@
+{
+    // Theme
+    "workbench.colorTheme": "High Contrast Dark",
+  
+    // Font & UI
+    "editor.fontSize": 14,
+    "editor.fontFamily": "Consolas, 'Courier New', monospace",
+    "editor.lineHeight": 22,
+    "editor.cursorBlinking": "blink",
+  
+    // Accessibility & contrast tweaks
+    "workbench.colorCustomizations": {
+      // Ensure strong contrast for editor background and foreground
+      "editor.background": "#000000",
+      "editor.foreground": "#FFFFFF",
+      "editorLineNumber.foreground": "#8A8A8A",
+      "editorLineNumber.activeForeground": "#FFFFFF",
+      "editorCursor.foreground": "#FFFFFF",
+      "editor.selectionBackground": "#264F78",
+      "editor.linkedEditingBackground": "#003A6D33",
+      "editorIndentGuide.background": "#404040",
+      "editorIndentGuide.activeBackground": "#707070",
+      "sideBar.background": "#0B0B0B",
+      "sideBar.foreground": "#FFFFFF",
+      "activityBar.background": "#111111",
+      "statusBar.background": "#000000",
+      "statusBar.foreground": "#FFFFFF",
+      "titleBar.activeBackground": "#000000",
+      "titleBar.activeForeground": "#FFFFFF"
+    },
+  
+    // High contrast editor token colors (improves syntax readability)
+    "editor.tokenColorCustomizations": {
+      "textMateRules": [
+        {
+          "scope": [
+            "comment",
+            "punctuation.definition.comment"
+          ],
+          "settings": {
+            "foreground": "#6A9955",
+            "fontStyle": "italic"
+          }
+        },
+        {
+          "scope": [
+            "string",
+            "constant.other.symbol"
+          ],
+          "settings": {
+            "foreground": "#CE9178"
+          }
+        },
+        {
+          "scope": [
+            "constant.numeric",
+            "constant.language.boolean"
+          ],
+          "settings": {
+            "foreground": "#B5CEA8"
+          }
+        },
+        {
+          "scope": [
+            "keyword",
+            "storage.type"
+          ],
+          "settings": {
+            "foreground": "#C586C0",
+            "fontStyle": "bold"
+          }
+        },
+        {
+          "scope": [
+            "variable",
+            "identifier"
+          ],
+          "settings": {
+            "foreground": "#9CDCFE"
+          }
+        },
+        {
+          "scope": [
+            "entity.name.function",
+            "support.function"
+          ],
+          "settings": {
+            "foreground": "#DCDCAA"
+          }
+        },
+        {
+          "scope": [
+            "invalid",
+            "invalid.broken"
+          ],
+          "settings": {
+            "foreground": "#FFFFFF",
+            "background": "#FF0000"
+          }
+        }
+      ]
+    },
+  
+    // Editor accessibility
+    "editor.accessibilitySupport": "on",
+    "editor.minimap.enabled": false,
+    "editor.renderWhitespace": "all",
+    "editor.cursorStyle": "line",
+    "editor.hover.enabled": true,
+  
+    // File icon & contrast
+    "workbench.iconTheme": "vscode-icons",
+    "workbench.tree.indent": 20,
+  
+    // Terminal
+    "terminal.integrated.cursorStyle": "block",
+    "terminal.integrated.fontFamily": "Consolas, 'Courier New', monospace",
+    "terminal.integrated.background": "#000000",
+    "terminal.integrated.foreground": "#CCCCCC",
+  
+    // Other helpful settings
+    "editor.suggestSelection": "first",
+    "explorer.compactFolders": false,
+    "window.zoomLevel": 0
+  }
+  
