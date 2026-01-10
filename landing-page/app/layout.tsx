@@ -4,6 +4,7 @@ import { Bangers, Inter } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { ErrorBoundary } from "@/components/error-boundary"
 import "./globals.css"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const bangers = Bangers({
   weight: "400",

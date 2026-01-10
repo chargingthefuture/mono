@@ -2,6 +2,7 @@ import Image from "next/image"
 import { Button } from "@/components/ui/button"
 import { Shield, Lock, Users } from "lucide-react"
 import { config } from "@/lib/config"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 export function HeroSection() {
   return (
