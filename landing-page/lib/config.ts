@@ -10,7 +10,7 @@ export const config = {
   links: {
     app: "https://app.chargingthefuture.com",
     github: "https://github.com/chargingthefuture",
-    githubReleases: "https://github.com/chargingthefuture/mono/releases/",
+    townhall: "https://app.chargingthefuture.com/apps/chyme/room/43d5333a-1c86-462a-b600-7fbb3ccca285",
     discourse: "https://chargingthefuture.discourse.group",
     signalGroup: "https://signal.group/#CjQKILHj7074l2Kl-oYy0qGSFdydXbtu0Pf66Z_88K9IlSCtEhDDdqV_BFAW2qm2EiTGEaNs",
     terms: "https://app.chargingthefuture.com/terms",

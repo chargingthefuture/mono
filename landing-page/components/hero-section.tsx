@@ -76,7 +76,7 @@ export function HeroSection() {
               </Button>
             </a>
             <a
-              href={config.links.githubReleases}
+              href={config.links.townhall}
               target="_blank"
               rel="noopener noreferrer"
               aria-label="Join Town Hall on GitHub"
